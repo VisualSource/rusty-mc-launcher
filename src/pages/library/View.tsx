@@ -67,14 +67,13 @@ export default function View(){
         }
     
         // if modded do mod handling
-   
+
         const run = await toast.promise(invoke("run_minecraft", { params: {profile: user.profile, version: data?.lastVersionId} }),{
             pending: "Launching Minecraft",
             error: "Failed to launch Minecraft",
             success: "Launched Minecraft"
         });
     }
-
 
     if(isError) return (
         <div>{error?.message}</div>

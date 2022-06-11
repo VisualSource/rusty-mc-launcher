@@ -3,7 +3,7 @@ use mc_laucher_lib_rs::login;
 use tauri::{WindowBuilder, Manager};
 use std::env;
 use tauri::{Runtime, WindowUrl};
-
+use log::error;
 const REDIRECT_URI: &str = "https://login.microsoftonline.com/common/oauth2/nativeclient";
 
 #[tauri::command]
@@ -21,16 +21,16 @@ pub async fn login_done<R: Runtime>(window: tauri::Window<R>, code: String) -> R
     match login::login_microsoft(String::from(env!("CLIENT_ID")), REDIRECT_URI.into(), code).await {
         Ok(value) => {
             if let Err(err) = window.emit_to("main", "login_done", value) {
-                eprintln!("{}",err);
+                error!("{}",err);
             }
         }
         Err(err) => {
-            eprintln!("{}",err);
+            error!("{}",err);
         }
     }
 
     if let Err(err) = window.close() {
-        eprintln!("{}",err);
+        error!("{}",err);
     }
 
     Ok(())
@@ -40,7 +40,7 @@ pub async fn login_done<R: Runtime>(window: tauri::Window<R>, code: String) -> R
 pub async fn logout_done<R: Runtime>(window: tauri::Window<R>) -> Result<(), String> {
     if window.label() == "ms-logout" {
         if let Err(err) = window.close() {
-            eprintln!("{}",err);
+            error!("{}",err);
         }
     }
     Ok(())
@@ -50,11 +50,11 @@ pub async fn logout_done<R: Runtime>(window: tauri::Window<R>) -> Result<(), Str
 pub async fn auth_error<R: Runtime>(window: tauri::Window<R>, error: String) -> Result<(), String> {
     if window.label() == "ms-login" || window.label() == "ms-logout" {
        if let Err(err) = window.emit_to("main", "auth_error", error) {
-           eprintln!("{}",err);
+           error!("{}",err);
        }
 
        if let Err(err) = window.close() {
-           eprintln!("{}",err);
+           error!("{}",err);
        }
        return Ok(());
     }

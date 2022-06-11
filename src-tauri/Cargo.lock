@@ -67,9 +67,10 @@ checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
 
 [[package]]
 name = "app"
-version = "0.1.0"
+version = "0.1.0-alpha"
 dependencies = [
  "app_dirs2",
+ "log",
  "log4rs",
  "mc-laucher-lib-rs",
  "semver_rs",
@@ -1806,7 +1807,7 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "mc-laucher-lib-rs"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "base64",
  "futures",

@@ -1,6 +1,5 @@
 use mc_laucher_lib_rs::utils::get_minecraft_directory;
 
-
 #[tauri::command]
 pub async fn game_dir() -> Result<String, String> {
     match get_minecraft_directory() {

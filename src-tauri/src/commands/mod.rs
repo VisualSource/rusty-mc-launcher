@@ -5,4 +5,5 @@ pub mod login;
 pub mod check;
 pub mod run;
 pub mod install;
+pub mod logger;
 

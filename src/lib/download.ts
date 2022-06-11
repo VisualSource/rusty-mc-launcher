@@ -7,6 +7,7 @@ import { ParseID } from './ids';
 export default class DownloadManger extends EventEmitter {
     private _queue: { type: "mod" | "modpack" | "client", data: any}[] = [];
     private occupited: boolean = false;
+    public downloading: string = "Downloading Resource"; 
     static INSTANCE: DownloadManger | null = null;
     static Get(): DownloadManger {
         if(DownloadManger.INSTANCE) return DownloadManger.INSTANCE;
@@ -60,8 +61,10 @@ export default class DownloadManger extends EventEmitter {
        
         switch (current?.type) {
             case "client":{
-
                try {
+                    this.downloading = `Minecraft Client ${current.data}`;
+                    this.emit("downloading",this.downloading);
+
                     const data = ParseID(current.data);
 
                     const manifest: InstallManifest = {

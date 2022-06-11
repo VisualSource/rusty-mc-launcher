@@ -6,17 +6,21 @@ export default function Footer(){
     const navigate = useNavigate();
     const dl = useRef(DownloadManger.Get());
     const [isDownload,setIsDownload] = useState<boolean>(false);
+    const [resource, setResource] = useState("Downloading Resource");
 
     useEffect(()=>{
         const end = () => setIsDownload(false);
         const start = () => setIsDownload(true);
+        const r = (e: any) => setResource(e);
 
+        dl.current.on("downloading",r);
         dl.current.on("download_done",end);
         dl.current.on("download_start",start);
 
         return () => {
             dl.current.off("download_done",end);
             dl.current.off("download_start",start);
+            dl.current.off("downloading",r);
         }
     },[]);
 
@@ -24,7 +28,7 @@ export default function Footer(){
         <footer className={css.footer}>
                 <div onClick={()=>navigate("/download")}>
                     <span className={css.download_title}>DOWNLOADS</span>
-                    <span className={css.download_subtitle}>{ isDownload ? `Downloading resouce` : "View"}</span>
+                    <span className={css.download_subtitle}>{ isDownload ? resource : "View"}</span>
                 </div>
         </footer>
     );

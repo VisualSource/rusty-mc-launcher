@@ -31,7 +31,7 @@ root.render(
         </QueryClientProvider>
       </BrowserRouter>
     </RecoilRoot>
-    <ToastContainer position="bottom-left" draggable={false} theme="dark"/>
+    <ToastContainer position="bottom-right" draggable={false} theme="dark"/>
   </React.StrictMode>
 );
 

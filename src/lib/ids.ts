@@ -1,5 +1,47 @@
 import { Loader, Minecraft, VersionId, OptifineVersionId, FabricVersionId, ForgeVersionId } from "../types";
+import { FabricIcon, ForgeIcon, OptiFineIcon } from "./images";
 
+export function GetLoaderCard(lastVersionId: VersionId): string {
+    const id = ParseID(lastVersionId);
+    switch(id.loader) {
+        case "fabric":
+            return "/images/FabricCard.webp";
+        case "forge":
+            return "/images/ForgeCard.webp";
+        case "optifine":
+            return "/images/OptiFineCard.webp";
+        case "vanilla":
+            return "/images/VanillaCard.webp";
+    }
+}
+
+export function GetLoaderBanner(lastVersionId: VersionId): string {
+    const id = ParseID(lastVersionId);
+    switch(id.loader) {
+        case "fabric":
+            return "/images/FabricBanner.webp";
+        case "forge":
+            return "/images/ForgeBanner.webp";
+        case "optifine":
+            return "/images/OptiFineBanner.webp";
+        case "vanilla":
+            return "/images/VanillaBanner.webp";
+    }
+}
+
+export function GetLoaderIcon(lastVersionId: VersionId): string {
+    const id = ParseID(lastVersionId);
+    switch(id.loader) {
+        case "fabric":
+            return FabricIcon;
+        case "forge":
+            return ForgeIcon;
+        case "optifine":
+            return OptiFineIcon;
+        case "vanilla":
+            return "/images/Vanilla.webp";
+    }
+}
 
 export function StringifyID(minecraft: string | null, loader: string | null, loader_v: string | null, mc: Minecraft[]): VersionId {
     let v = minecraft;

@@ -2,6 +2,7 @@ use mc_laucher_lib_rs::{client::ClientBuilder, json::{ install::Event}};
 use tauri::Runtime;
 use app_dirs2::{AppDataType,app_dir};
 use crate::consts::APP_INFO;
+use log::error;
 
 #[tauri::command]
 pub async fn install_client<R: Runtime>(window: tauri::Window<R> ,manifest: String) -> Result<(), String> {
@@ -19,17 +20,17 @@ pub async fn install_client<R: Runtime>(window: tauri::Window<R> ,manifest: Stri
   if let Err(err) = ClientBuilder::install_str(manifest, None, 
     &|ev|{  
       match ev {
-        Event::Download { state: _, msg } => {
-          if let Err(err) = window.emit("rustydownload://download", msg){ eprintln!("{}",err); }
+        Event::Download { state, msg } => {
+          if let Err(err) = window.emit("rustydownload://download", format!("{} {}",state.to_string(),msg)){ error!("{}",err); }
         },
         Event::Error(err) => {
-          if let Err(err) = window.emit("rustydownload://error", err){ eprintln!("{}",err); }
+          if let Err(err) = window.emit("rustydownload://error", err){ error!("{}",err); }
         }
         Event::Progress { max, current } => {
-          if let Err(err) = window.emit("rustydownload://progress", (max,current)){ eprintln!("{}",err); }
+          if let Err(err) = window.emit("rustydownload://progress", (max,current)){ error!("{}",err); }
         }
         Event::Status(status) => {
-          if let Err(err) = window.emit("rustydownload://status", status){ eprintln!("{}",err); }
+          if let Err(err) = window.emit("rustydownload://status", status){ error!("{}",err); }
         }
       }
     }, Some(temp), Some(cache), None).await {

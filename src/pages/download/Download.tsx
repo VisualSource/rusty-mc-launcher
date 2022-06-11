@@ -9,37 +9,51 @@ export default function Download(){
     const [progress,setProgress] = useState<number[]>([0,0]);
     const [error,setError] = useState<string>("");
     const [queue,setQueue] = useState<any[]>([]);
+    const [downloading,setDownloading] = useState<string>("Downloading Resource");
 
     useEffect(()=>{
-        
-        setIsDownloading(dl.current.is_occupited());
-        setQueue(dl.current.queue());
-
-        dl.current.on("enqueue",()=>setQueue(dl.current.queue()));
-        dl.current.on("dequeue",()=>setQueue(dl.current.queue()));
-        dl.current.on("progress",(ev)=>setProgress(ev));
-        dl.current.on("error",(err)=>setError(err));
-        dl.current.on("status",(ev)=>setStatus(ev));
-        dl.current.on("download",(ev)=>setDownload(ev));
-        dl.current.on("download_done",()=>{
+        const di = (ev: any)=>setDownloading(ev);
+        const enqueue = ()=>setQueue(dl.current.queue());
+        const dequeue = ()=>setQueue(dl.current.queue());
+        const pro = (ev: any)=>setProgress(ev);
+        const err = (err: any)=>setError(err);
+        const stat = (ev: any)=>setStatus(ev);
+        const dn = (ev: any)=>setDownload(ev);
+        const dd = ()=>{
             setStatus("");
             setDownload("");
             setProgress([]);
             setError("");
             setQueue([]);
             setIsDownloading(false);
-        });
-        dl.current.on("download_start",()=>{
-            setIsDownloading(true);
-        });
+            setDownloading("No Download")
+        };
+        const ds = ()=>setIsDownloading(true);
+        
+        di(dl.current.downloading);
+        setIsDownloading(dl.current.is_occupited());
+        setQueue(dl.current.queue());
+
+        dl.current.on("downloading",di);
+        dl.current.on("enqueue",enqueue);
+        dl.current.on("dequeue",dequeue);
+        dl.current.on("progress",pro);
+        dl.current.on("error",err);
+        dl.current.on("status",stat);
+        dl.current.on("download",dn);
+        dl.current.on("download_done",dd);
+        dl.current.on("download_start",ds);
 
         return () => {
-            dl.current.removeAllListeners("enqueue");
-            dl.current.removeAllListeners("dequeue");
-            dl.current.removeAllListeners("progress");
-            dl.current.removeAllListeners("error");
-            dl.current.removeAllListeners("status");
-            dl.current.removeAllListeners("dowload");
+            dl.current.off("downloading",di);
+            dl.current.off("enqueue",enqueue);
+            dl.current.off("dequeue",dequeue);
+            dl.current.off("progress",pro);
+            dl.current.off("error",err);
+            dl.current.off("status",stat);
+            dl.current.off("download",dn);
+            dl.current.off("download_done",dd);
+            dl.current.off("download_start",ds);
         }
     },[]);
 
@@ -53,7 +67,7 @@ export default function Download(){
                     <span>Error: {error}</span>
                     <span>Dowload: {download}</span>
                     <span> File {progress[1]} of {progress[0]}</span>
-                    <span>Downloaing: {"Minecraft Client 1.19"}</span>
+                    <span>Downloaing: {downloading}</span>
                 </div>
             ) : null }
             </div>

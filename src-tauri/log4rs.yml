@@ -1,0 +1,22 @@
+refresh_rate: 30 seconds
+appenders:
+  requests:
+    kind: file
+    path: "C:/Users/Collin/AppData/Roaming/VisualSource/RustyMinecraftLauncher/logs/latest.log"
+    encoder:
+      pattern: "{d} - {m}{n}"
+root:
+  level: trace
+  appenders:
+    - requests
+loggers:
+  app::commands::install:
+    level: debug
+    appenders:
+      - requests
+    additive: true
+  app::commands::login:
+    level: debug
+    appenders:
+      - requests
+    additive: true

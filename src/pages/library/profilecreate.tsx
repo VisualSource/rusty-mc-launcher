@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import DB from '../../lib/db';
 import type { Loader, Minecraft, Profile } from '../../types';
-import { StringifyID } from '../../lib/ids';
+import { GetLoaderBanner, GetLoaderCard, GetLoaderIcon, StringifyID } from '../../lib/ids';
 import css from './createprofile.module.sass';
 
 
@@ -33,9 +33,9 @@ async function CreateNewProfile(ev: React.FormEvent<HTMLFormElement>, minecraft:
             isModpack: false,
             uuid: nanoid(),
             category: check(data.get("category"),"DEFAULT").toUpperCase(),
-            card: check(data.get("card"),"/card.jpg"),
-            banner: check(data.get("banner"),"/minecraft_mainbanner.webp"),
-            icon: check(data.get("icon"),"/pack.png"),
+            card: check(data.get("card"),GetLoaderCard(lastVersionId)),
+            banner: check(data.get("banner"),GetLoaderBanner(lastVersionId)),
+            icon: check(data.get("icon"),GetLoaderIcon(lastVersionId)),
             type: "custom",
             mods: [],
             lastVersionId,

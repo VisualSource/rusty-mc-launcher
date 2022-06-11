@@ -1,10 +1,10 @@
 [package]
 name = "app"
-version = "0.1.0"
+version = "0.1.0-alpha"
 description = "A Minecraft"
 authors = ["VisualSource"]
 license = "MIT"
-repository = ""
+repository = "https://github.com/VisualSource/rusty-mc-launcher"
 default-run = "app"
 edition = "2021"
 rust-version = "1.57"
@@ -18,6 +18,7 @@ tauri-build = { version = "1.0.0-rc.12", features = [] }
 tokio = { version = "1.18.2", features = [ "test-util", "macros" ] }
 
 [dependencies]
+log = "0.4.17"
 log4rs = { version = "1.1.1", features = ["background_rotation"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
