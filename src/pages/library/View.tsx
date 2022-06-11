@@ -1,7 +1,5 @@
-import { Button, Divider, HTMLSelect, InputGroup, Intent, NumericInput, Spinner } from "@blueprintjs/core";
+import { Button, Divider, Intent, Spinner } from "@blueprintjs/core";
 import { invoke } from "@tauri-apps/api/tauri";
-import { readDir } from '@tauri-apps/api/fs';
-import { localDataDir } from '@tauri-apps/api/path';
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import DB from "../../lib/db";
@@ -68,7 +66,7 @@ export default function View(){
     
         // if modded do mod handling
 
-        const run = await toast.promise(invoke("run_minecraft", { params: {profile: user.profile, version: data?.lastVersionId} }),{
+        await toast.promise(invoke("run_minecraft", { params: {profile: user.profile, version: data?.lastVersionId} }),{
             pending: "Launching Minecraft",
             error: "Failed to launch Minecraft",
             success: "Launched Minecraft"
@@ -126,24 +124,3 @@ export default function View(){
         </div>
     );
 }
-
-/*
- <div className={css.group}>
-                <h3 id="mods">Mods</h3>
-                <Divider/>
-                <ul>
-                    <li className={css.mod}>
-                        <div>
-                            <img src="/pack.png" alt="mod preivew"/>
-                            <h4>Mod Name</h4>
-                        </div>
-                        <Button icon="trash" intent={Intent.DANGER}/>
-                    </li>
-                </ul>
-            </div>
-            <div>
-                <h3>Advanced Settings</h3>
-            </div>
-
-
-*/

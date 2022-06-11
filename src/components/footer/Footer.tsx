@@ -16,12 +16,6 @@ export default function Footer(){
         dl.current.on("downloading",r);
         dl.current.on("download_done",end);
         dl.current.on("download_start",start);
-
-        return () => {
-            dl.current.off("download_done",end);
-            dl.current.off("download_start",start);
-            dl.current.off("downloading",r);
-        }
     },[]);
 
     return (

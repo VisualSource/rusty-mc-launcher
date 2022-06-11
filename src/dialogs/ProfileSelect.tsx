@@ -1,5 +1,5 @@
 import { Dialog} from "@blueprintjs/core";
-import { atom, useRecoilState } from 'recoil';
+import { atom, useRecoilState, useSetRecoilState } from 'recoil';
 import { useQuery } from 'react-query';
 import DB from "../lib/db";
 import css from './profileselect.module.sass';
@@ -14,8 +14,10 @@ const profileSelect = atom<{open: boolean, mod: any | null}>({
     }
  });
 
+
+
 export const useModInstallDialog = () => {
-    const dialog = useRecoilState(profileSelect);
+    const dialog = useSetRecoilState(profileSelect);
 
     return dialog;
 }

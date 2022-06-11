@@ -1,10 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { Account } from "../../types";
 import {Logout,Login, RefreshToken} from '../../lib/accout';
-import DB from "../../lib/db";
 import { toast } from "react-toastify";
-
-
 interface User {
     profile: Account | null;
     active: boolean;

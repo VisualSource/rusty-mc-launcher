@@ -15,17 +15,17 @@ export default function NavbarComponent() {
           <MenuDivider/>
           <MenuItem text="DOWNLOADS" onClick={()=>navigate("/download")}/>
         </Menu>
-    ),[]);
+    ),[navigate]);
     const USER_MENU = useMemo(()=>(
         <Menu>
           { user.active ? <MenuItem text="Logout" onClick={()=>user.logout()}/> : <MenuItem text="Login" onClick={()=>user.login()}/> }
         </Menu>
-    ),[user.active]);
+    ),[user]);
     const LAUNCHER_MENU = useMemo(()=>(
       <Menu>
          <MenuItem text="Settings" onClick={()=>navigate("/settings")}/>
       </Menu>
-    ),[]);
+    ),[navigate]);
     const HELP_MENU = useMemo(()=>(
       <Menu>
           <MenuItem text="Github" href="https://github.com/VisualSource/rusty-mc-launcher" target="_blank"/>
@@ -54,7 +54,7 @@ export default function NavbarComponent() {
           </div>
           <div data-tauri-drag-region className={css.navbar_left}>
                 <div className={css.user}> 
-                  <img alt="user profile image" src="/images/Vanilla.webp"/>
+                  <img alt="user profile" src="/images/Vanilla.webp"/>
                   <Popover2 modifiers={{ arrow: { enabled: false } }} content={USER_MENU} placement="bottom-end">
                     <Button className={user.loading ? Classes.SKELETON: ""} text={user.profile?.profile.name ?? "LOGIN"} rightIcon="caret-down"/>
                   </Popover2>

@@ -45,7 +45,7 @@ export default function Mods(){
     const { data, isError, isLoading, error } = useQuery<Mod[],Error>("modslist",GetModsList);
     const [mods,setMods] = useState<Mod[]>([]);
     const tags = useDeferredValue<string[]>(ctx.tags);
-    const [dialog,setDialog] = useModInstallDialog();
+    const setDialog = useModInstallDialog();
 
     useEffect(()=>{
         const search = async () => {
