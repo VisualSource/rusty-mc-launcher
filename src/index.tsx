@@ -13,8 +13,6 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 
 const queryClient = new QueryClient();
 
-
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -34,6 +32,13 @@ root.render(
     <ToastContainer position="bottom-right" draggable={false} theme="dark"/>
   </React.StrictMode>
 );
+
+if(process.env.NODE_ENV === "development"){
+    const devtools = document.createElement("script");
+    devtools.setAttribute("src","http://localhost:8097");
+    devtools.setAttribute("data-react-devtools",React.version);
+    document.body.appendChild(devtools);
+}
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
