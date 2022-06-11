@@ -43,17 +43,18 @@ export default function Download(){
         dl.current.on("download",dn);
         dl.current.on("download_done",dd);
         dl.current.on("download_start",ds);
-
+        
+        const a = dl.current;
         return () => {
-            dl.current.off("downloading",di);
-            dl.current.off("enqueue",enqueue);
-            dl.current.off("dequeue",dequeue);
-            dl.current.off("progress",pro);
-            dl.current.off("error",err);
-            dl.current.off("status",stat);
-            dl.current.off("download",dn);
-            dl.current.off("download_done",dd);
-            dl.current.off("download_start",ds);
+            a.off("downloading",di);
+            a.off("enqueue",enqueue);
+            a.off("dequeue",dequeue);
+            a.off("progress",pro);
+            a.off("error",err);
+            a.off("status",stat);
+            a.off("download",dn);
+            a.off("download_done",dd);
+            a.off("download_start",ds);
         }
     },[]);
 
