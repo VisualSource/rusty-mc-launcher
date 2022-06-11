@@ -1,15 +1,37 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
+import { ToastContainer } from 'react-toastify';
+import { QueryClient, QueryClientProvider } from 'react-query'
+import { RecoilRoot } from 'recoil';
+import { BrowserRouter } from "react-router-dom";
+import App from './pages/App';
+import { UserProvider } from './components/account/Account';
 import reportWebVitals from './reportWebVitals';
+import "./styles/global.sass";
+
+import { ReactQueryDevtools } from 'react-query/devtools'
+
+const queryClient = new QueryClient();
+
+
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
 root.render(
   <React.StrictMode>
-    <App />
+    <RecoilRoot>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <UserProvider>
+            <App />
+          </UserProvider>
+          {process.env.NODE_ENV === "development" ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+        </QueryClientProvider>
+      </BrowserRouter>
+    </RecoilRoot>
+    <ToastContainer position="bottom-left" draggable={false} theme="dark"/>
   </React.StrictMode>
 );
 

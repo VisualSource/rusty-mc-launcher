@@ -1,0 +1,53 @@
+@import "~@blueprintjs/core/lib/scss/variables"
+.view
+    display: flex
+    flex-direction: column
+    height: 100%
+    width: 100%
+.mod 
+    display: flex 
+    align-items: center 
+    align-content: center
+    justify-content: space-between
+    padding: 5px 10px 5px 10px
+    cursor: pointer
+    &:hover
+        background-color: $dark-gray2
+    > div 
+        display: flex 
+        align-items: center 
+        align-content: center 
+        gap: 10px
+        > h4 
+            user-select: none
+        > img 
+            height: 40px 
+            width: 40px
+.header
+    width: 100%
+    > img
+        width: 100%
+        height: 160px
+    > div 
+        position: relative
+        bottom: 2.6rem
+        display: flex 
+        align-items: center 
+        align-content: center 
+        justify-content:  flex-start
+        padding-left: 10px
+        gap: 10px
+        background-color: #1c2127d1
+        padding-top: 5px
+        > div 
+            > span
+                color: $gray2
+            > h4
+                margin: 0 
+.view_main
+    padding-left: 10px
+    padding-right: 10px
+.view_quick_links
+    display: flex 
+    gap: 5px
+    align-items: center

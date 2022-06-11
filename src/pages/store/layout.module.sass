@@ -1,0 +1,29 @@
+@import "~@blueprintjs/core/lib/scss/variables"
+.layout
+    height: 100%
+    display: flex 
+    flex-direction: column
+    overflow: hidden
+
+    > header 
+        margin-top: 20px
+        margin-left: 30px 
+        margin-right: 30px
+        margin-bottom: 20px
+
+.store_list
+    display: flex 
+    flex-direction: column 
+    gap: 10px
+    scroll-behavior: smooth
+    overflow-y: scroll
+    margin-left: 30px 
+    margin-right: 30px
+    padding-bottom: 20px
+    &::-webkit-scrollbar 
+        width: 5px
+    &::-webkit-scrollbar-track
+        background-color: $dark-gray3
+    &::-webkit-scrollbar-thumb
+        background-color: $gray1
+        border-radius: 4px

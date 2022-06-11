@@ -1,0 +1,61 @@
+@import "~@blueprintjs/core/lib/scss/variables"
+
+.lib_load
+    display: flex 
+    flex-direction: column
+    height: 100%
+    justify-content: center
+    align-content: center 
+    align-items: center
+.lib_err
+    display: flex 
+    flex-direction: column
+    height: 100%
+    justify-content: center
+    align-content: center 
+    align-items: center
+    > div 
+        width: 80%
+.icon_card
+    display: flex 
+    flex-direction: column 
+    justify-content: center
+    align-items: center 
+    align-content: center
+    > span > svg 
+        color: $gray3
+
+.library
+    height: 100%
+    width: 100%
+    padding-left: 5px 
+    padding-top: 5px
+    display: grid
+    grid-template-columns: repeat(auto-fit, minmax(100px,200px))
+    gap: 10px
+    place-content: start
+    scroll-behavior: smooth
+.library_name
+    position: relative
+    background-color: $dark-gray4
+    width: 100px
+    padding: 2px 5px
+    bottom: 30px
+    left: calc( 200px - 150px )
+    overflow: hidden
+    text-overflow: fade
+    white-space: nowrap
+    border-radius: 4px
+    text-align: center
+    box-shadow: 1px 0 0 1px rgba(17, 20, 24, 0.1), 0 2px 4px rgba(17, 20, 24, 0.2), 0 8px 24px rgba(17, 20, 24, 0.2)
+.library_card
+    &:hover 
+        > img 
+            filter: blur(1px) grayscale(50%)
+    transition: all 0.2s
+    max-width: 200px
+    max-height: 300px
+    padding: 0 !important
+    > img 
+        height: 300px
+        width: 200px

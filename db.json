@@ -1,0 +1,112 @@
+{
+    "modpacks":[
+        {
+            "uuid": "d9139c4e-63bf-4b10-82a5-7005e2ff7763",
+            "update": "10/20/10",
+            "description": "In Valhelsia: Enhanced Vanilla, your abilities evolve through a system of skills and levels, adding new challenge to the early game and giving clear objectives to work towards as you play.",
+            "tags": ["Adventure & RPG","Explortaion","Magic","Vanilla+","Tech"],
+            "minecraft": ["1.18.2"],
+            "loaders": ["fabric"],
+            "name": "Valhelsia: Enhanced Vanilla",
+            "icon": "https://media.forgecdn.net/avatars/thumbnails/481/121/64/64/637780327883756539.png",
+            "card": "",
+            "banner": "",
+            "author": "ValhelsiaTeam",
+            "mods": []
+        }
+    ],
+    "mods": [
+        {
+            "update": "10/20/10",
+            "uuid": "9aafee3e-57eb-4c81-8331-88aa5a91755f",
+            "description": "Sodium is a free and open-source rendering engine replacement for the Minecraft client which greatly improves frame rates and stuttering while fixing many graphical issues. It boasts wide compatibility with the Fabric mod ecosystem when compared to other mods, and it does so without compromising on how the game looks, giving you that authentic block game feel.",
+            "icon": "https://media.forgecdn.net/avatars/thumbnails/284/773/64/64/637298471098686391.png",
+            "name": "Sodium",
+            "author": "jellysquid3_",
+            "tags": ["Qol","Miscellanious"],
+            "minecraft": ["1.18.2"],
+            "loaders": ["forge"],
+            "required" : null,
+            "inconpatable": {
+                "fabric": []
+            },
+            "download": {
+                "fabric": {
+                    "1.18.2": {
+                        "url": "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.18.2-0.4.1/sodium-fabric-mc1.18.2-0.4.1+build.15.jar",
+                        "version": "0.4.1+build.15"
+                    }
+                }
+            }
+        },
+        {
+            "update": "10/20/10",
+            "uuid": "9aafee3e-57eb-4c81-8331-88aa5a91755f",
+            "description": "Sodium is a free and open-source rendering engine replacement for the Minecraft client which greatly improves frame rates and stuttering while fixing many graphical issues. It boasts wide compatibility with the Fabric mod ecosystem when compared to other mods, and it does so without compromising on how the game looks, giving you that authentic block game feel.",
+            "icon": "https://media.forgecdn.net/avatars/thumbnails/284/773/64/64/637298471098686391.png",
+            "name": "Sodium",
+            "author": "jellysquid3_",
+            "tags": ["Qol","Miscellanious"],
+            "minecraft": ["1.18.2"],
+            "loaders": ["fabric"],
+            "required" : null,
+            "inconpatable": {
+                "fabric": []
+            },
+            "download": {
+                "fabric": {
+                    "1.18.2": {
+                        "url": "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.18.2-0.4.1/sodium-fabric-mc1.18.2-0.4.1+build.15.jar",
+                        "version": "0.4.1+build.15"
+                    }
+                }
+            }
+        },
+        {
+            "update": "10/20/10",
+            "uuid": "9aafee3e-57eb-4c81-8331-88aa5a91755f",
+            "description": "Sodium is a free and open-source rendering engine replacement for the Minecraft client which greatly improves frame rates and stuttering while fixing many graphical issues. It boasts wide compatibility with the Fabric mod ecosystem when compared to other mods, and it does so without compromising on how the game looks, giving you that authentic block game feel.",
+            "icon": "https://media.forgecdn.net/avatars/thumbnails/284/773/64/64/637298471098686391.png",
+            "name": "Sodium",
+            "author": "jellysquid3_",
+            "tags": ["Qol","Miscellanious"],
+            "minecraft": ["1.18.2"],
+            "loaders": ["fabric"],
+            "required" : null,
+            "inconpatable": {
+                "fabric": []
+            },
+            "download": {
+                "fabric": {
+                    "1.18.2": {
+                        "url": "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.18.2-0.4.1/sodium-fabric-mc1.18.2-0.4.1+build.15.jar",
+                        "version": "0.4.1+build.15"
+                    }
+                }
+            }
+        },
+        {
+            "update": "10/20/10",
+            "uuid": "9aafee3e-57eb-4c81-8331-88aa5a91755f",
+            "description": "Sodium is a free and open-source rendering engine replacement for the Minecraft client which greatly improves frame rates and stuttering while fixing many graphical issues. It boasts wide compatibility with the Fabric mod ecosystem when compared to other mods, and it does so without compromising on how the game looks, giving you that authentic block game feel.",
+            "icon": "https://media.forgecdn.net/avatars/thumbnails/284/773/64/64/637298471098686391.png",
+            "name": "Sodium",
+            "author": "jellysquid3_",
+            "tags": ["Cosmetic"],
+            "minecraft": ["1.18.2"],
+            "loaders": ["fabric"],
+            "required" : null,
+            "inconpatable": {
+                "fabric": []
+            },
+            "download": {
+                "fabric": {
+                    "1.18.2": {
+                        "url": "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.18.2-0.4.1/sodium-fabric-mc1.18.2-0.4.1+build.15.jar",
+                        "version": "0.4.1+build.15"
+                    }
+                }
+            }
+        }
+    ]
+}
