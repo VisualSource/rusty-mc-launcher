@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "rusty-mc-launcher",
-    "version": "0.1.1-alpha"
+    "version": "0.1.2-alpha"
   },
   "tauri": {
     "allowlist": {
