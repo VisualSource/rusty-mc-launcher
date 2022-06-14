@@ -1,14 +1,13 @@
 import { InputGroup, HTMLSelect, NumericInput, Button, Intent, Divider, Spinner } from '@blueprintjs/core';
-import { invoke } from '@tauri-apps/api';
 import { nanoid } from 'nanoid';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import DB from '../../lib/db';
-import type { Loader, Minecraft, Profile } from '../../types';
 import { GetLoaderBanner, GetLoaderCard, GetLoaderIcon, StringifyID } from '../../lib/ids';
 import css from './createprofile.module.sass';
-
+import type { Loader, Minecraft, Profile } from '../../types';
+import { GetLoaderVersions, GetVanillaVersions } from '../../lib/invoke';
 
 const check = (a: FormDataEntryValue | null, def: string): string => {
     if(!a) return def;
@@ -55,8 +54,8 @@ async function CreateNewProfile(ev: React.FormEvent<HTMLFormElement>, minecraft:
 
     if(Width || Height) {
         profile.resolution = {
-            width: Width ? parseInt(Width.toString()) : 1080,
-            height: Height ? parseInt(Height.toString()) : 1920
+            width: Width ? parseInt(Width.toString()) : 1920,
+            height: Height ? parseInt(Height.toString()) : 1080 
         }
     }
 
@@ -72,8 +71,8 @@ export default function CreateProfile() {
     const queryClient = useQueryClient();
     const [loader,setLoader] = useState<(Loader | "none")>("none");
     const [mc,setMC] = useState<Minecraft | "latest-release">("latest-release");
-    const minecraft = useQuery("mclist",()=>invoke<Minecraft[]>("get_vanilla_versions"));
-    const loaders = useQuery(["loaderlist",loader,mc],()=>invoke<string[]>("get_loader_versions",{ loader: loader, minecraft: mc === "latest-release" ? (minecraft as any).data.at(0) : mc }),  { enabled: !!minecraft?.data });
+    const minecraft = useQuery("mclist",()=>GetVanillaVersions());
+    const loaders = useQuery(["loaderlist",loader,mc],()=>GetLoaderVersions(loader,mc === "latest-release" ? (minecraft as any).data.at(0) : mc),  { enabled: !!minecraft?.data });
     const mutation = useMutation<any,any,any>((ev)=>CreateNewProfile(ev,minecraft.data as Minecraft[]), { 
         onSuccess() {
             queryClient.invalidateQueries("profileslist");

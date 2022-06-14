@@ -6,47 +6,18 @@
 mod commands;
 mod consts;
 
-use log4rs::{ 
-  init_config,
-  append::file::FileAppender, 
-  encode::pattern::{
-    PatternEncoder
-  }, 
-  config::{Config, Appender, Root}
-};
-use app_dirs2::{ app_root , AppDataType};
 use commands::{news, game_dir, mc_versions, login, check, run, install, logger};
+use consts::APP_INFO;
 
 fn main() -> std::io::Result<()> {
-  use std::io::{Error, ErrorKind};
   // init app root
   // and setup logger
-  match app_root(AppDataType::UserConfig, &consts::APP_INFO) {
-    Ok(value) => {
-      let log_level = log::LevelFilter::Debug;
-      let log_file = value.join("logs/latest.log");
-   
-      let logger = match FileAppender::builder()
-      .encoder(Box::new(PatternEncoder::new("[{d(%Y-%m-%d %H:%M:%S %Z)(utc)}][{M}][{l}] | {m} \n")))
-      .build(log_file) {
-        Ok(value) => value,
-        Err(err) => return Err(Error::new(ErrorKind::Other, err))
-      };
-   
-      let config = match Config::builder()
-      .appender(Appender::builder().build("logger",Box::new(logger))).build(
-        Root::builder().appender("logger").build(log_level)
-      ) {
-        Ok(value) => value,
-        Err(err) => return Err(Error::new(ErrorKind::Other,err))
-      };
 
-      if let Err(err) = init_config(config) {
-        return Err(Error::new(ErrorKind::Other,err));
-      }
-    }
-    Err(err) => return Err(Error::new(ErrorKind::Other,err))
+  if let Err(err) = app_dirs2::app_root( app_dirs2::AppDataType::UserConfig , &APP_INFO) {
+      return Err(std::io::Error::new(std::io::ErrorKind::Other, err));
   }
+  
+  log4rs::init_raw_config(serde_yaml::from_str(include_str!("log4rs.yml")).unwrap()).unwrap();
 
   tauri::Builder::default()
   .invoke_handler(tauri::generate_handler![
@@ -63,7 +34,7 @@ fn main() -> std::io::Result<()> {
     check::check_version,
     run::run_minecraft,
     install::install_client,
-    logger::error
+    logger::log
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

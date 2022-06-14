@@ -1,6 +1,6 @@
 {
   "name": "rusty-mc-launcher",
-  "version": "0.1.0-alpha",
+  "version": "0.1.1-alpha",
   "private": true,
   "dependencies": {
     "@blueprintjs/core": "^4.4.0",
@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.0.0-rc.13",
+    "@tauri-apps/tauricon": "^1.0.2",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",

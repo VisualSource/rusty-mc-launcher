@@ -1,7 +1,7 @@
 import { useQuery } from 'react-query';
-import { invoke } from '@tauri-apps/api/tauri';
 import { AnchorButton, Card, Elevation, Intent, Spinner } from '@blueprintjs/core';
 import css from './news.module.sass';
+import { InvokeNews } from '../../lib/invoke';
 
 interface INews {
     article_count: number;
@@ -18,7 +18,7 @@ interface INews {
                 content_type: string;
                 imageURL: string;
             },
-            sub_header:"Don’t miss this mammoth mash-up!",
+            sub_header: string,
             tile_size: string,
             title: string;
         }
@@ -36,7 +36,7 @@ interface INews {
 }
 
 async function GetNews(): Promise<INews["article_grid"]> {
-    const request = await invoke<string>("news", { pages: 10 });
+    const request = await InvokeNews();
 
     const data: INews = JSON.parse(request);
 

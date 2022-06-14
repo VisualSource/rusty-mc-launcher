@@ -1,7 +1,9 @@
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api';
+import { InvokeLogin, InvokeLogout, TokenRefresh } from './invoke';
 import DB from './db';
 import type {Account} from '../types';
+
+
 export async function Logout(xuid: string | undefined){
    if(!xuid) return;
 
@@ -9,7 +11,7 @@ export async function Logout(xuid: string | undefined){
       let errorFn: UnlistenFn | undefined;
       try {
          errorFn = await listen("auth_error",(ev)=>{throw ev.payload;});
-         await invoke("logout");
+         await InvokeLogout();
          const db = DB.Get();
          await db.users.remove({ xuid });
          if(errorFn) errorFn();
@@ -40,7 +42,7 @@ export async function Login(){
             throw ev.payload;
          });
       
-         await invoke<string>("login");
+         await InvokeLogin();
       } catch (error) {
          reject(error);
       }   
@@ -54,17 +56,20 @@ export async function RefreshToken(xuid: string | undefined){
 
       const user = await db.users.findOne({ xuid }) as Account;
 
-      const payload = user.access_token.split(".").at(1);
+      const jwt = user.access_token.split(".");
+      if(jwt.length !== 3) throw new Error("JWT does not have the current number of parts.");
+      const payload = jwt.at(1);
 
-      if(!payload) throw new Error("Invaild jwt token");
+      if(!payload) throw new Error("Failed to get JWT payload");
 
       const data: { exp: number } = JSON.parse(atob(payload));
 
-      const exp = new Date(data.exp  * 1000);
-      const now = new Date(Date.now());
-      
-      if(!(exp > now)) {
-         const account = await invoke<Account>("token_refresh",{ token: user.refresh_token });
+      // @see https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L50
+      // https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L151
+      const clockTimestamp = Math.floor(Date.now() / 1000);
+      if(clockTimestamp >= data.exp) {
+         console.log("Token expired, refreshing");
+         const account = await TokenRefresh(user.refresh_token);
          await db.users.update({ xuid }, account);
       }
 

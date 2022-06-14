@@ -2,11 +2,6 @@ use mc_laucher_lib_rs::client::ClientBuilder;
 use mc_laucher_lib_rs::json::authentication_microsoft::Account;
 use serde::Deserialize;
 
-#[derive(Default)]
-pub struct MyState {
- 
-}
-
 #[derive(Deserialize)]
 pub struct RunMinecraft {
     version: String,
@@ -26,9 +21,9 @@ pub async fn run_minecraft(/*state: tauri::State<'_, MyState>,*/ params: RunMine
         return Err(err.to_string());
     }
     client.as_msa_user(params.profile);
-    client.enable_logging();
     client.set_client_id("Minecraft".to_string());
-    client.set_jvm_args("-Dorg.lwjgl.util.Debug=true -Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M".to_string());
+    client.enable_debug();
+    client.set_jvm_args("-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M".to_string());
 
     match client.build() {
         Ok(mut cli) => {

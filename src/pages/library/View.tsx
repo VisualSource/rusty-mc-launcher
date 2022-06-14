@@ -1,14 +1,13 @@
 import { Button, Divider, Intent, Spinner } from "@blueprintjs/core";
-import { invoke } from "@tauri-apps/api/tauri";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import DB from "../../lib/db";
-import type { Profile } from "../../types";
-import css from "./view.module.sass";
+import { RunMinecraft, CheckVersion } from '../../lib/invoke';
 import { useUser } from "../../components/account/Account";
 import DownloadManger from "../../lib/download";
-import { toast } from "react-toastify";
-
+import css from "./view.module.sass";
+import type { Profile } from "../../types";
 
 const parseTime = (time: string): string => {
     const formater = Intl.DateTimeFormat("en-us",{});
@@ -52,25 +51,32 @@ export default function View(){
     const { data, error, isError, isLoading  } = useQuery<Profile,Error>(["profile",uuid],()=>GetProfile(uuid as string),{ enabled: !!uuid });
    
     const run = async () => {
-        if(!user.active) return;
+        try {
+            if(!user.active || !user.profile) throw new Error("User is not authorized");
+            if(!data) throw new Error("Profile is invaild");
+            
 
-        const installed = await invoke("check_version",{ version: data?.lastVersionId });
+            const installed = await CheckVersion(data.lastVersionId);
+            
+            if(!installed) {
+            const res = await DownloadManger.Get().install({ type: "client", data: data?.lastVersionId });
+            if(res === null) {
+                navigate("/download");
+                return;
+            }
+            }
         
-        if(!installed) {
-           const res = await DownloadManger.Get().install({ type: "client", data: data?.lastVersionId });
-           if(res === null) {
-               navigate("/download");
-               return;
-           }
-        }
-    
-        // if modded do mod handling
+            // if modded do mod handling
+            // probbly would do modpack update checking here
 
-        await toast.promise(invoke("run_minecraft", { params: {profile: user.profile, version: data?.lastVersionId} }),{
-            pending: "Launching Minecraft",
-            error: "Failed to launch Minecraft",
-            success: "Launched Minecraft"
-        });
+            await toast.promise(RunMinecraft({ profile: user.profile, version: data.lastVersionId }),{
+                pending: "Launching Minecraft",
+                error: "Failed to launch Minecraft",
+                success: "Launched Minecraft"
+            });
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     if(isError) return (
@@ -89,7 +95,7 @@ export default function View(){
             <header className={css.header}>
                 <img src={data?.banner} alt="profile banner"/>
                 <div>
-                    <Button icon="play" large text={`Play: ${data?.name}`} intent={Intent.SUCCESS} onClick={run}/>
+                    <Button disabled={!(user?.active)} icon="play" large text={user?.active ? `Play: ${data?.name}` : "Login to play." } intent={user?.active ? Intent.SUCCESS : Intent.DANGER} onClick={run}/>
                     <div>
                         <h4>Last Played</h4>
                         <span>{parseTime(data?.lastUsed ?? new Date().toISOString())}</span>

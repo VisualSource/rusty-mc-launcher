@@ -51,7 +51,6 @@ export default function Modspacks(){
                     tags.some(tag=>mod.minecraft.includes(tag as any)) ||
                     tags.includes(mod.author)
                 )
-
             });
             setModPacks(wanted);
         }

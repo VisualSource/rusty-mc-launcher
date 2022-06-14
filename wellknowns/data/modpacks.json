@@ -1,0 +1,16 @@
+[
+    {
+        "uuid": "d9139c4e-63bf-4b10-82a5-7005e2ff7763",
+        "update": "10/20/10",
+        "description": "In Valhelsia: Enhanced Vanilla, your abilities evolve through a system of skills and levels, adding new challenge to the early game and giving clear objectives to work towards as you play.",
+        "tags": ["Adventure & RPG","Explortaion","Magic","Vanilla+","Tech"],
+        "minecraft": ["1.18.2"],
+        "loaders": ["fabric"],
+        "name": "Valhelsia: Enhanced Vanilla",
+        "icon": "https://media.forgecdn.net/avatars/thumbnails/481/121/64/64/637780327883756539.png",
+        "card": "",
+        "banner": "",
+        "author": "ValhelsiaTeam",
+        "mods": []
+    }
+]

@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Popover2 } from '@blueprintjs/popover2';
 import { appWindow } from '@tauri-apps/api/window';
-import css from './navbar.module.sass';
 import { useUser } from "../account/Account";
+import css from './navbar.module.sass';
 
 export default function NavbarComponent() {
     const user = useUser();

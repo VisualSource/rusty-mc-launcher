@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { Account } from "../../types";
-import {Logout,Login, RefreshToken} from '../../lib/accout';
+import {Logout,Login, RefreshToken} from '../../lib/auth';
 import { toast } from "react-toastify";
 interface User {
     profile: Account | null;
@@ -23,7 +23,12 @@ export function UserProvider(props: any) {
            try {
                 setLoading(true);
                 const active = localStorage.getItem("active_user");
-                if(!active) return;
+                if(!active) {
+                    setActice(false);
+                    setProfile(null);
+                    setLoading(false);
+                    return;
+                }
 
                 const user = await RefreshToken(active);
             

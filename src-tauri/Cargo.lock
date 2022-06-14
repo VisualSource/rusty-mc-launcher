@@ -67,7 +67,7 @@ checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
 
 [[package]]
 name = "app"
-version = "0.1.0-alpha"
+version = "0.1.1-alpha"
 dependencies = [
  "app_dirs2",
  "log",
@@ -76,6 +76,7 @@ dependencies = [
  "semver_rs",
  "serde",
  "serde_json",
+ "serde_yaml",
  "tauri",
  "tauri-build",
  "tokio",
@@ -1693,6 +1694,7 @@ dependencies = [
  "arc-swap",
  "chrono",
  "derivative",
+ "flate2",
  "fnv",
  "humantime",
  "libc",

@@ -1,8 +1,9 @@
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api/tauri";
 import EventEmitter from 'events';
-import type { InstallManifest } from '../types';
+import { toast } from 'react-toastify';
 import { ParseID } from './ids';
+import type { InstallManifest } from '../types';
 
 export default class DownloadManger extends EventEmitter {
     private _queue: { type: "mod" | "modpack" | "client", data: any}[] = [];
@@ -79,26 +80,17 @@ export default class DownloadManger extends EventEmitter {
 
                    await invoke("install_client",{ manifest: JSON.stringify(manifest) });
                } catch (error) {
-                   console.error(error);
+                    console.error(error);
                     this.emit("error","Download failure");
+                    toast.error("Failed to download Minecraft!");
                }
                 break;
             }
             case "mod": 
-                await new Promise<void>((ok,err)=>{
-                    this.emit("progress",[1,0]);
-                    this.emit("status","Downloading");
-                    setTimeout(()=>{
-                        this.emit("download","file://test.html");
-                        this.emit("progress",[1,1]);
-                        this.emit("status","Installing");
-                        ok();
-                    },1000);
-                });
-                //await invoke("install_mod", {});
+                toast.error("Mod installs have not been implemented yet.");
                 break;
             case "modpack":
-              //  await invoke("install_modpack",{});
+                toast.error("Mod installs have not been implemented yet.");
                 break;
             default:
                 throw new Error("Unkown install type");
