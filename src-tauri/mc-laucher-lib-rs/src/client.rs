@@ -4,8 +4,8 @@
 use crate::command::get_launch_command;
 use crate::expections::{LauncherLibError,LibResult};
 use crate::json::install::Event;
-use crate::utils::get_minecraft_directory;
-use crate::install::install_minecraft_version;
+use crate::utils::{get_minecraft_directory, read_manifest_inherit};
+use crate::install::{install_minecraft_version, install_libraries};
 use crate::fabric::install_fabric;
 use crate::forge::install_forge;
 use crate::optifine::install_optifine;
@@ -15,6 +15,7 @@ use crate::json::{
         UserType
     },
     authentication_microsoft::Account,
+    install::VersionManifest,
     client::{ InstallManifest, Loader }
 };
 use std::path::PathBuf;
@@ -102,6 +103,33 @@ pub struct ClientBuilder {
 }
 
 impl ClientBuilder {
+    /// Install natives jars without having download everything else.
+    pub async fn install_natives(minecraft: String, minecraft_directory: Option<PathBuf>, callback: &impl Fn(Event)) -> LibResult<()> {
+        let game_dir = if let Some(dir) = minecraft_directory { dir } else { 
+            match get_minecraft_directory() {
+                Ok(value) => value,
+                Err(err) => return Err(err)
+            } 
+        };
+
+        let manifest = game_dir.join("versions").join(minecraft.clone()).join(format!("{}.json",minecraft.clone()));
+
+        if !manifest.is_file() {
+            return Err(LauncherLibError::NotFound("Failed to find version manifest".into()));
+        }
+
+        let manifest: VersionManifest = match read_manifest_inherit(manifest,&game_dir).await {
+            Ok(value) => value,
+            Err(err) => return Err(err)
+        };
+
+        callback(Event::Status("Installing libraries".into()));
+        if let Err(err) = install_libraries(manifest.id.clone(), &manifest.libraries, game_dir,callback).await {
+            return Err(err);
+        }
+
+        Ok(())
+    }
     /// installs the minecraft client
     pub async fn install(manifest: InstallManifest, minecraft_directory: Option<PathBuf>, callback: &impl Fn(Event), temp_path: Option<PathBuf>, cache_path: Option<PathBuf>, java: Option<PathBuf>) -> LibResult<()> {
         let mc_dir = if let Some(dir) = minecraft_directory { dir } else { 

@@ -55,15 +55,25 @@ export default function View(){
             if(!user.active || !user.profile) throw new Error("User is not authorized");
             if(!data) throw new Error("Profile is invaild");
             
-
-            const installed = await CheckVersion(data.lastVersionId);
+            const [installed,check_type] = await CheckVersion(data.lastVersionId);
             
             if(!installed) {
-            const res = await DownloadManger.Get().install({ type: "client", data: data?.lastVersionId });
-            if(res === null) {
-                navigate("/download");
-                return;
-            }
+                switch (check_type) {
+                    case "no_jar":
+                    case "no_manifest":
+                    case "no_root": {
+                        const res = await DownloadManger.Get().install({ type: "client", data: data.lastVersionId });
+                        toast.info(`Installing ${data.lastVersionId}`);
+                        if(res === null) return navigate("/download");
+                        break;
+                    }
+                    case "no_natives": {
+                        const res = await DownloadManger.Get().install({ type: "natives_install", data: data.lastVersionId });
+                        toast.info(`Installing Natives for ${data.lastVersionId}`)
+                        if(res === null) return navigate("/download");
+                        break;
+                    }
+                }
             }
         
             // if modded do mod handling

@@ -34,6 +34,7 @@ fn main() -> std::io::Result<()> {
     check::check_version,
     run::run_minecraft,
     install::install_client,
+    install::install_natives,
     logger::log
     ])
     .run(tauri::generate_context!())

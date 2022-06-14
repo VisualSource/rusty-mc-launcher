@@ -70,7 +70,7 @@ pub fn parse_java_dep_native(name: String, url: Option<String>, native: String) 
 
 
 
-async fn install_libraries(id: String, libraries: &Vec<Library>, path: PathBuf, callback: &impl Fn(Event)) -> LibResult<()> {
+pub async fn install_libraries(id: String, libraries: &Vec<Library>, path: PathBuf, callback: &impl Fn(Event)) -> LibResult<()> {
 
     // check rules
     // if lib does not have download artifacts 
@@ -248,9 +248,10 @@ async fn install_assets(manifest: &VersionManifest, path: PathBuf, callback: &im
     Ok(())
 }
 
+
+
 async fn do_version_install(version_id: String, path: PathBuf, callback: &impl Fn(Event), url: Option<String>) -> LibResult<()> {
 
-   
     let version_manifest = path.join("versions").join(version_id.clone()).join(format!("{}.json",version_id.clone()));
     callback(Event::Status("Getting version.json file".into()));
     if let Some(url_d) = url {
@@ -274,8 +275,6 @@ async fn do_version_install(version_id: String, path: PathBuf, callback: &impl F
         return Err(err);
     }   
 
-
-
     if let Some(logging) = manifest.logging {
         callback(Event::Status("Setting up logging".into()));
         if let Some(client) = logging.get("client") {
@@ -289,7 +288,7 @@ async fn do_version_install(version_id: String, path: PathBuf, callback: &impl F
     }
 
     if let Some(downloads) = manifest.downloads {
-        callback(Event::Status("Installing downloads".into()));
+        callback(Event::Status("Downloading Client jar".into()));
         if let Some(client) = downloads.get("client") {
             if let Err(err) = download_file(client.url.clone(), path.join("versions").join(manifest.id.clone()).join(format!("{}.jar",manifest.id.clone())), callback, Some(client.sha1.clone()), false).await {
                 return Err(err);

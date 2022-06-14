@@ -1,12 +1,14 @@
 import { listen } from '@tauri-apps/api/event';
-import { invoke } from "@tauri-apps/api/tauri";
 import EventEmitter from 'events';
 import { toast } from 'react-toastify';
 import { ParseID } from './ids';
+import { InstallClient, InstallNatives } from './invoke';
 import type { InstallManifest } from '../types';
 
+export type InstallType = "mod" | "modpack" | "client" | "natives_install";
+
 export default class DownloadManger extends EventEmitter {
-    private _queue: { type: "mod" | "modpack" | "client", data: any}[] = [];
+    private _queue: { type: InstallType, data: any}[] = [];
     private occupited: boolean = false;
     public downloading: string = "Downloading Resource"; 
     static INSTANCE: DownloadManger | null = null;
@@ -78,7 +80,7 @@ export default class DownloadManger extends EventEmitter {
                         mods: []
                     }   
 
-                   await invoke("install_client",{ manifest: JSON.stringify(manifest) });
+                   await InstallClient(manifest);
                } catch (error) {
                     console.error(error);
                     this.emit("error","Download failure");
@@ -92,6 +94,18 @@ export default class DownloadManger extends EventEmitter {
             case "modpack":
                 toast.error("Mod installs have not been implemented yet.");
                 break;
+            case "natives_install": {
+                try {
+                    this.downloading = `Natives ${current.data}`;
+                    this.emit("downloading",this.downloading);
+                    await InstallNatives(current.data);
+                } catch (error) {
+                    console.error(error);
+                    this.emit("error","Download failure");
+                    toast.error("Failed to install natives!");
+                }
+                break;
+            }
             default:
                 throw new Error("Unkown install type");
         }
@@ -104,7 +118,7 @@ export default class DownloadManger extends EventEmitter {
         }
         this.occupited = false;
     }
-    async install(request: { type: "mod" | "modpack" | "client", data: any} ){
+    async install(request: { type: InstallType, data: any} ){
         return new Promise<null | boolean>(async (ok,reject)=>{
             try {
                 this.enqueue(request);

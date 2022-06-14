@@ -38,3 +38,28 @@ pub async fn install_client<R: Runtime>(window: tauri::Window<R> ,manifest: Stri
   }
   Ok(())
 }
+
+#[tauri::command]
+pub async fn install_natives<R: Runtime>(window: tauri::Window<R>, version: String) -> Result<(), String> {
+
+  if let Err(err) = ClientBuilder::install_natives(version, None, 
+    &|ev|{  
+      match ev {
+        Event::Download { state, msg } => {
+          if let Err(err) = window.emit("rustydownload://download", format!("{} {}",state.to_string(),msg)){ error!("{}",err); }
+        },
+        Event::Error(err) => {
+          if let Err(err) = window.emit("rustydownload://error", err){ error!("{}",err); }
+        }
+        Event::Progress { max, current } => {
+          if let Err(err) = window.emit("rustydownload://progress", (max,current)){ error!("{}",err); }
+        }
+        Event::Status(status) => {
+          if let Err(err) = window.emit("rustydownload://status", status){ error!("{}",err); }
+        }
+      }
+    }).await {
+    return Err(err.to_string());
+  }
+  Ok(())
+}
