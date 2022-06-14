@@ -1,46 +1,70 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Rusty Minecraft Launcher
+![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/VisualSource/rusty-mc-launcher?include_prereleases)[![publish](https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml/badge.svg)](https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml)[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/VisualSource/rusty-mc-launcher/blob/master/LICENSEs)
+Rusty Minecraft Launcher is a Minecraft Client launcher and a simple one click mod installer.
+Supports Forge, Fabric, Vanilla, and OptiFine clients
 
-## Available Scripts
 
-In the project directory, you can run:
 
-### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+![Logo](https://raw.githubusercontent.com/VisualSource/rusty-mc-launcher/master/src-tauri/icons/Square310x310Logo.png)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
 
-### `npm test`
+## Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Installable Clients 
+    - [x] Vanilla
+    - [x] Forge
+    - [x] Fabric
+    - [x] OptiFine
+- Profile Support 
+    - [ ] Import From Offical Launcher
+    - [ ] Export to Offical Launcher
+- Modpacks
+    - [ ] One click Install
+    - [ ] Auto update
+- Mods 
+    - [ ] One Click Install 
+    - [ ] Auto update
+- Account
+    - [ ] Multi account support 
+## Roadmap
 
-### `npm run build`
+  1. [ ] Client install and MSA testing
+  3. [ ] Tauri update Test
+  2. [ ] Single Mod install testing
+  3. [ ] Modpack install testing 
+  4. [ ] Modpack updates events
+  5. [ ] Single Mods update events
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### Possible Support
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+   1. linux and macos support
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Installation
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Click releases and select the latest release and download 
+the installer for your platform
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+    
+## Feedback
 
-## Learn More
+If you have any feedback, please reach out to us at supprt@visualsource.us
+or create a github issue for any suggestions or features that you would think would benefit this project.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Contributing
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Contributions are always welcome!
+
+See `contributing.md` for ways to get started.
+
+Please adhere to this project's `code of conduct`.
+
+
+## Authors
+
+- [VisualSource](https://www.github.com/VisualSource)
+
