@@ -17,7 +17,6 @@ use std::path::PathBuf;
 
 const JVM_MANIFEST_URL: &str = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
 
-
 /// Get the name that is used to identify the platform
 fn get_jvm_platform_string() -> LibResult<String> {
     match consts::OS {
@@ -158,59 +157,6 @@ pub async fn install_jvm_runtime(jvm_version: MinecraftJavaRuntime, minecraft_di
      ).buffer_unordered(8).collect::<Vec<Result<(),LauncherLibError>>>();
 
      files.await;
-    /*for (key, value) in &src_download.files {
-        let cur = root.join(key.clone());
-        match value.action.as_str() {
-            "file" => {
-                if let Some(download) = &value.downloads {
-                    if let Some(lzma) = download.lzma.clone() {
-                        if let Err(error) = download_file(lzma.url, cur.clone(), callback, Some(lzma.sha1), true).await {
-                             return Err(error);
-                        }
-                    } else {
-                        if let Err(error) = download_file(download.raw.url.clone(), cur.clone(), callback, Some(download.raw.sha1.clone()), false).await {
-                            return Err(error);
-                        }
-                    }
-                    count += 1;
-                    callback(Event::progress(count,file_count));
-                }
-            }
-            "directory" => {
-                if !cur.exists() {
-                    if let Err(error) = create_dir_all(cur).await {
-                        return Err(LauncherLibError::OS {
-                            source: error,
-                            msg: "Failed to create directory".into()
-                        });
-                    }
-                }
-                count += 1;
-                callback(Event::progress(count,file_count));
-            }
-            _ => {}
-        }
-    }*/
-
-    /*for (key, value) in &src_download.files {
-        let cur = root.join(key.clone());
-        if cur.is_file() {
-            if !cur.exists() {
-                println!("Redownloading \033[48;5;57m {}",key);
-                if let Some(download) = &value.downloads {
-                    if let Some(lzma) = download.lzma.clone() {
-                        if let Err(error) = download_file(lzma.url, cur.clone(), callback, Some(lzma.sha1), true).await {
-                             return Err(error);
-                        }
-                    } else {
-                        if let Err(error) = download_file(download.raw.url.clone(), cur.clone(), callback, Some(download.raw.sha1.clone()), false).await {
-                            return Err(error);
-                        }
-                    }
-                }
-            }
-        }
-    }*/
 
     let version = minecraft_dir.join("runtime").join(jvm_version.to_string()).join(arch).join(".version");
 
@@ -229,7 +175,7 @@ pub fn get_exectable_path(jvm_version: MinecraftJavaRuntime, minecraft_dir: Path
     let version = jvm_version.to_string();
     match get_jvm_platform_string() {
         Ok(platform) => {
-            let mut java_path = minecraft_dir.join("runtime").join(version.clone()).join(platform).join(version).join("bin").join("java");
+            let mut java_path = minecraft_dir.join("runtime").join(version.clone()).join(platform).join(version).join("bin").join("javaw");
 
             if java_path.is_file() {
                 return Ok(Some(java_path));
@@ -244,7 +190,7 @@ pub fn get_exectable_path(jvm_version: MinecraftJavaRuntime, minecraft_dir: Path
             java_path.pop();
             java_path.pop();
 
-            let jre = java_path.join("jre.bundle").join("Contents").join("Home").join("bin").join("java");
+            let jre = java_path.join("jre.bundle").join("Contents").join("Home").join("bin").join("javaw");
 
             if jre.is_file() {
                 return Ok(Some(jre));
@@ -264,7 +210,7 @@ pub fn does_runtime_exist(jvm_version: MinecraftJavaRuntime, minecraft_dir: Path
         Ok(value) => value,
         Err(err) => return Err(err)
     };
-    let java_path = minecraft_dir.join("runtime").join(version.clone()).join(platform).join(version).join("bin").join("java");
+    let java_path = minecraft_dir.join("runtime").join(version.clone()).join(platform).join(version).join("bin").join("javaw");
 
     if java_path.is_file() {
         return Ok(true);

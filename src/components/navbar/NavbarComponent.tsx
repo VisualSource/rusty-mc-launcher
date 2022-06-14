@@ -5,7 +5,7 @@ import { Popover2 } from '@blueprintjs/popover2';
 import { appWindow } from '@tauri-apps/api/window';
 import { useUser } from "../account/Account";
 import css from './navbar.module.sass';
-
+// @see https://docs.microsoft.com/en-us/graph/api/profilephoto-get?view=graph-rest-1.0
 export default function NavbarComponent() {
     const user = useUser();
     const navigate = useNavigate();

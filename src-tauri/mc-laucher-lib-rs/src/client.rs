@@ -20,7 +20,7 @@ use crate::json::{
 use std::path::PathBuf;
 use log::info;
 use uuid::Uuid;
-use std::process::{ Command, Child};
+use std::process::{ Command, Child };
 
 /// Created by the ClientBuilder, the client holds all data for launching minecraft and holds the process handle
 /// for minecraft. Use the ClientBuilder to get a Client
@@ -66,7 +66,8 @@ impl Client {
 
         info!("{:#?}",args);
 
-        let handler: Child = match Command::new(java).args(args).current_dir(self.minecraft_directory.clone()).spawn() {
+        let handler: Child = match Command::new(java)
+        .args(args).current_dir(self.minecraft_directory.clone()).spawn() {
             Err(err) => return Err(LauncherLibError::OS {
                 source: err,
                 msg: "Failed to launch minecraft".into()

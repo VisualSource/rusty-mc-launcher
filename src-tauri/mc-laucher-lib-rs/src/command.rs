@@ -216,14 +216,14 @@ pub async fn get_launch_command(version: String, mc_dir: PathBuf, options: &mut 
                         command.push(value.to_str().expect("Failed to make path a string").to_string())
                     }
                     None => {
-                        command.push("java".into())
+                        command.push("javaw".into())
                     }
                 }
             }
             Err(err) => return Err(err)
         }
     } else {
-        command.push("java".into())
+        command.push("javaw".into())
     }
 
     if let Some(args) = options.jvm_arguments.clone() {
