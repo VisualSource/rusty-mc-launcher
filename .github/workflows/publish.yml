@@ -21,7 +21,7 @@ jobs:
       with:
         toolchain: stable
     - name: install app dependencies and build it
-      run: npm && npm build
+      run: yarn && yarn build
     - uses: tauri-apps/tauri-action@v0
       env:
         TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
