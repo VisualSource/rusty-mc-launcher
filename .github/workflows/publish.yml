@@ -11,26 +11,31 @@ jobs:
       fail-fast: false
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: setup node
-      uses: actions/setup-node@v1
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+    - name: Install NodeJS
+      uses: actions/setup-node@v3
       with:
-        node-version: 16
-    - name: install Rust stable
+        node-version: 18
+    - name: Install Rust stable
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
-    - uses: Swatinem/rust-cache@v1 #https://github.com/marketplace/actions/rust-cache
-    - name: Mode Modules Cache
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v1 #https://github.com/marketplace/actions/rust-cache
+      with: 
+        working-directory: ./src-tauri
+    - name: Node Cache
       uses: actions/cache@v3
       id: npm-cache
       with:
         path: node_modules
         key:  node-${{ hashFiles('package-lock.json') }}
-    - name: install node modules
+    - name: Install node_modules
       if: steps.npm-cache.outputs.cache-hit != 'true'
       run: npm install
-    - uses: tauri-apps/tauri-action@v0
+    - name: Tauri Build
+      uses: tauri-apps/tauri-action@v0
       env:
         TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -40,7 +45,7 @@ jobs:
         tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
         releaseName: "App v__VERSION__"
         releaseBody: "See the assets to download this version and install.\r\n See [Release Notes](RELEASE_NOTES.md) for update info."
-    - name: Create update json file
+    - name: Generate Update File
       run: |
         node ./.github/generate_update.mjs
       env:
