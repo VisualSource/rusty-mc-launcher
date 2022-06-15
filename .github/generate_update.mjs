@@ -1,4 +1,5 @@
-import GitHub from "github-api";
+import { Octokit } from "@octokit/core";
+import {restEndpointMethods} from '@octokit/plugin-rest-endpoint-methods';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 
@@ -15,58 +16,62 @@ const tauri_update_file = (name,sig,url) => ({
     }
 });
 
-const read_package = async () => {
+/**
+ * @return {Promise<string>} 
+ */
+const read_package_version = async () => {
   const file = await readFile("package.json",{encoding:"utf-8"});
-  return JSON.parse(file);
+  const data = JSON.parse(file);
+  return data.version;
 }
 
 const read_signature = async (id) => {
   const file = `Rusty Minecraft Launcher_${id}_x64_en-US.msi.zip.sig`;
   const path = join("src-tauri/target/release/bundle/msi/",file);
  
-
   const content = await readFile(path,{ encoding: "utf-8"});
 
   return content;
 }
 
-async function create_commit(repo,content){
-  return await repo.writeFile("master","latest_version.json",JSON.stringify(content,undefined,2),`Updated latest_version.json`,{ auther: "Tauri updater"});
-}
-
-async function fetch_release(repo) {
-  const releases = await repo.listReleases();
-  const release = releases.data.at(0);
-  if(!release) throw new Error("Failed to get the the list of releases.");
-  const asset = release.assets.at(1);
-  if(!asset) throw new Error("Failed to get the first release");
-
-  return asset;
-}
-
-function format_download_url(asset, id) {
-  return asset.replace(/\/untagged-(\d?\w?)*\//,`/v${id}/`);
-}
-
 async function main(){
+    const owner = { owner: "VisualSource", repo: "rusty-mc-launcher" };
     console.log("Setting up github");
-    const gh = new GitHub({
-        token: token
-    });
-    console.log("reading package.json");
-    const pack = await read_package();
-    const repo = gh.getRepo("VisualSource","rusty-mc-launcher");
 
-    console.log("Fetching lastet release");
-    const asset = await fetch_release(repo);
-    console.log(asset);
-    console.log("Reading update signature")
-    const sig = await read_signature(pack.version);
-    console.log("Creating update json");
-    const update = tauri_update_file(`v${pack.version}`,sig,format_download_url(asset.browser_download_url,pack.version));
-    console.log("Commiting file");
-    await create_commit(repo,update);
-}
+    const plugin = Octokit.plugin(restEndpointMethods);
+    const github = new plugin({ auth: token });
+    console.log("Read Package Json");
+    const update_id = await read_package_version();
+    console.log(`== Update v${update_id} ==`);
+    console.log("Getting latest release");
+    const releases = await github.request("GET /repos/{owner}/{repo}/releases/latest", owner);
+    
+    const asset = releases.data.assets.find(asset=>asset.name.endsWith(".zip"));
+
+    console.log("Reading signaure");
+    const signature = await read_signature(update_id);
+
+    console.log("Generation File");
+    const file = tauri_update_file(`v${update_id}`,signature,asset.browser_download_url);
+    console.log(JSON.stringify(file,undefined,2));
+
+    console.log("Getting update tag")
+    const update_tag = await github.request("GET /repos/{owner}/{repo}/releases/tags/{tag}",{
+      ...owner,
+      tag: "Updater"
+    });
+
+    const RELASE = update_tag.data;
+
+    const FILE_ID = RELASE.assets?.at(0);
+    if(FILE_ID) {
+      console.log("Removing file");
+      await github.rest.repos.deleteReleaseAsset({...owner, asset_id: FILE_ID.id });
+    }
+    console.log("Uploading new file");
+    await github.rest.repos.uploadReleaseAsset({ ...owner, release_id: RELASE.id, name: "latest_version.json", data: JSON.stringify(file) });
+  }
+   
 
 main();
 

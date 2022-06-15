@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Rusty Minecraft Launcher",
-    "version": "0.1.4"
+    "version": "0.1.5"
   },
   "tauri": {
     "allowlist": {
@@ -59,7 +59,7 @@
         "installMode": "passive"
       },
       "endpoints": [
-        "https://raw.githubusercontent.com/VisualSource/rusty-mc-launcher/master/latest_version.json"
+        "https://github.com/VisualSource/rusty-mc-launcher/releases/download/Updater/latest_version.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCRUI2NTY1NDBFQzIwRTEKUldUaElPeEFaV1hyeTFweE15UkJzb1kwMzcrY2NTWkRHR3RBZTdxUWNkQmVpazd3L2ErNXp5TlIK",
       "active": true
