@@ -25,12 +25,14 @@ async function WriteTomlFile(path,content) {
 
 async function main() {
     try {
+        const EXEC = promisify(exec);
         let question = promisify(rl.question).bind(rl);
         let version = await question("Enter version id. Ext 0.1.0\n");
         if(!(/\d+.\d+.\d+/.test(version))) throw new Error("Invaild version format");
         let areyousure = await question(`Is version ${version} Ok. (y/N)\n`);
         if(areyousure.toLowerCase().trim() !== "y") throw new Error("Aborting update creation");
 
+        console.log("Reading Configs");
         const cargo_config = await ReadTomlFile("./src-tauri/Cargo.toml");
         const tauri_config = await ReadJsonFile("./src-tauri/tauri.conf.json");
         const npm_config = await ReadJsonFile("./package.json");
@@ -39,11 +41,17 @@ async function main() {
         tauri_config.package.version = version;
         npm_config.version = version;
 
-
+        console.log("Writing Configs");
         await WriteJsonFile("./src-tauri/tauri.conf.json",tauri_config);
         await WriteJsonFile("./package.json",npm_config);
         await WriteTomlFile("./src-tauri/Cargo.toml",out);
 
+        const commnet_msg = await question(`Comment Message:\n`);
+        console.log("Running Git Commands")
+        EXEC(`git commit -a -m "${commnet_msg}"`);
+        EXEC("git push origin");
+        EXEC(`git tag -a v${version} -m "Creating Updated"`);
+        EXEC(`git push origin v${version}`);
 
         return 0;
     } catch (error) {
