@@ -47,11 +47,11 @@ async function main() {
         await WriteTomlFile("./src-tauri/Cargo.toml",out);
 
         const commnet_msg = await question(`Comment Message:\n`);
-        console.log("Running Git Commands")
-        EXEC(`git commit -a -m "${commnet_msg}"`);
-        EXEC("git push origin");
-        EXEC(`git tag -a v${version} -m "Creating Updated"`);
-        EXEC(`git push origin v${version}`);
+        console.log("Running Git Commands");
+        await EXEC(`git commit -a -m "${commnet_msg}"`);
+        await EXEC("git push origin");
+        await EXEC(`git tag -a v${version} -m "Creating Updated"`);
+        await EXEC(`git push origin v${version}`);
 
         return 0;
     } catch (error) {
