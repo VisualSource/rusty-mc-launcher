@@ -7,8 +7,8 @@
     "distDir": "../build"
   },
   "package": {
-    "productName": "rusty-mc-launcher",
-    "version": "0.1.2"
+    "productName": "Rusty Minecraft Launcher",
+    "version": "0.1.3"
   },
   "tauri": {
     "allowlist": {
@@ -42,6 +42,10 @@
       "shortDescription": "",
       "targets": "all",
       "windows": {
+        "wix": {
+          "language": "en-US",
+          "license": "../LICENSE"
+        },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": ""

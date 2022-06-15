@@ -20,9 +20,13 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Log file**
-If applicable, add log file.
+**App log file**
+If applicable, add App file.
 On windows it is in %APPDATA%/VisualSource/RustyMinecraftLauncher/logs
+
+**Minecraft log file**
+If applicable, add App log file.
+On windows it is in %APPDATA%/.minecraft/logs
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.

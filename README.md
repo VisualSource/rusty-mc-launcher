@@ -10,6 +10,9 @@ Supports Forge, Fabric, Vanilla, and OptiFine clients
 ![Logo](https://raw.githubusercontent.com/VisualSource/rusty-mc-launcher/master/src-tauri/icons/Square310x310Logo.png)
 
 
+## Releases 
+ See [Relase Notes](RELEASE_NOTES.md)
+
 ## Features
 
 - Installable Clients 

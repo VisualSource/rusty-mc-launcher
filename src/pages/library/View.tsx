@@ -42,9 +42,8 @@ export default function View(){
     const mutate = useMutation(handleMutation, { 
         async onSuccess(data) {
             if(data === "del") {
-               await queryClient.invalidateQueries("profileslist");
-                navigate('/');
-                return;
+                await queryClient.invalidateQueries("profileslist");
+                return navigate('/');
             }
             await queryClient.invalidateQueries(["profile",uuid]);
     }, });
@@ -62,14 +61,14 @@ export default function View(){
                     case "no_jar":
                     case "no_manifest":
                     case "no_root": {
-                        const res = await DownloadManger.Get().install({ type: "client", data: data.lastVersionId });
                         toast.info(`Installing ${data.lastVersionId}`);
+                        const res = await DownloadManger.Get().install({ type: "client", data: data.lastVersionId });
                         if(res === null) return navigate("/download");
                         break;
                     }
                     case "no_natives": {
+                        toast.info(`Installing Natives for ${data.lastVersionId}`);
                         const res = await DownloadManger.Get().install({ type: "natives_install", data: data.lastVersionId });
-                        toast.info(`Installing Natives for ${data.lastVersionId}`)
                         if(res === null) return navigate("/download");
                         break;
                     }

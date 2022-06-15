@@ -21,7 +21,7 @@ const read_package = async () => {
 }
 
 const read_signature = async (id) => {
-  const file = `rusty-mc-launcher_${id}_x64_en-US.msi.zip.sig`;
+  const file = `Rusty Minecraft Launcher_${id}_x64_en-US.msi.zip.sig`;
   const path = join("src-tauri/target/release/bundle/msi/",file);
  
 
