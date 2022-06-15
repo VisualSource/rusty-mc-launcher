@@ -1,10 +1,10 @@
 {
-  "name": "v0.1.3",
-  "pub_date": "2022-06-15T01:10:13.570Z",
+  "name": "v0.1.4",
+  "pub_date": "2022-06-15T02:09:51.373Z",
   "platforms": {
     "win64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaElPeEFaV1hyeSs3WXd2Q2NHVlk4Zi9GSDVIR1F6WVdoM28zOXdQOXdxait6TElWZThFN3lqa2F0Qnk4VmsySjlqbVQ5SnFRSU54d1gwbmtWQStQM2FwRklsTXNEVmc4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU1MjU1NDA3CWZpbGU6RDpcYVxydXN0eS1tYy1sYXVuY2hlclxydXN0eS1tYy1sYXVuY2hlclxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9SdXN0eSBNaW5lY3JhZnQgTGF1bmNoZXJfMC4xLjNfeDY0X2VuLVVTLm1zaS56aXAKQVlEck44UG03MmhSaSsydHViYnh6WEIyODM2RjhUUktpbGtMMWp4OGcwb1A4VXE2dVRWcnU3MXFDM0JJdnk0WFZXNW96UEN6KzdaU3p4QmI4TFFyQVE9PQo=",
-      "url": "https://github.com/VisualSource/rusty-mc-launcher/releases/download/untagged-5c6af54631c7513af539/Rusty.Minecraft.Launcher_0.1.3_x64_en-US.msi.zip"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaElPeEFaV1hyeXlEb0FKWnlGZnNVSU9hbThBSmVHVkJXK09uRmxRRGVXalE3UFFqaTZwVU1SckNGQ0VLcmJ4RTdCQVdBdnl3WEs3RjBHQnFrSFFReWV6dmtnUlkrZ0FVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU1MjU4OTg0CWZpbGU6RDpcYVxydXN0eS1tYy1sYXVuY2hlclxydXN0eS1tYy1sYXVuY2hlclxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9SdXN0eSBNaW5lY3JhZnQgTGF1bmNoZXJfMC4xLjRfeDY0X2VuLVVTLm1zaS56aXAKTk5DVFVUSis3dGhIZHdTSnNJd21YUlpvU1l0V2czOFdNeEFadXBZZFNDWVJSdUM3WGtNRGJtdVBTOVd5TEJMY1lUTCtsc1dxU0tYNVVkckdYVFB1RFE9PQo=",
+      "url": "https://github.com/VisualSource/rusty-mc-launcher/releases/download/v0.1.4/Rusty.Minecraft.Launcher_0.1.4_x64_en-US.msi.zip"
     }
   }
 }
