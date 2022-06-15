@@ -44,6 +44,10 @@ async function fetch_release(repo) {
   return asset;
 }
 
+function format_download_url(asset, id) {
+  return asset.replace(/\/untagged-(\d?\w?)*\//,`/v${id}/`);
+}
+
 async function main(){
     console.log("Setting up github");
     const gh = new GitHub({
@@ -55,10 +59,11 @@ async function main(){
 
     console.log("Fetching lastet release");
     const asset = await fetch_release(repo);
+    console.log(asset);
     console.log("Reading update signature")
     const sig = await read_signature(pack.version);
     console.log("Creating update json");
-    const update = tauri_update_file(`v${pack.version}`,sig,asset.browser_download_url);
+    const update = tauri_update_file(`v${pack.version}`,sig,format_download_url(asset.browser_download_url,pack.version));
     console.log("Commiting file");
     await create_commit(repo,update);
 }
