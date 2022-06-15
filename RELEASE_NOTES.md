@@ -1,5 +1,8 @@
 # Release Notes
 
+### V0.1.4
+    - fix github action update file invaild url
+
 ### V0.1.3 
     - update tauri dependencies to latest
     - changed minecraft launcher command from java to javaw
