@@ -1,5 +1,5 @@
 import { Octokit } from "@octokit/core";
-import {restEndpointMethods} from '@octokit/plugin-rest-endpoint-methods';
+import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 
@@ -10,6 +10,10 @@ const tauri_update_file = (name,sig,url) => ({
     pub_date: new Date().toISOString(),
     platforms: {
       win64: {
+        signature: sig,
+        url
+      },
+      "windows-x86_64": {
         signature: sig,
         url
       }

@@ -55,9 +55,6 @@
       "csp": null
     },
     "updater": {
-      "windows": {
-        "installMode": "passive"
-      },
       "endpoints": [
         "https://github.com/VisualSource/rusty-mc-launcher/releases/download/Updater/latest_version.json"
       ],
