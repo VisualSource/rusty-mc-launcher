@@ -48,11 +48,13 @@ async function main() {
 
         const commnet_msg = await question(`Comment Message:\n`);
         console.log("Running Git Commands");
-        await EXEC(`git commit -a -m "${commnet_msg}"`);
-        await EXEC("git push origin");
-        await EXEC(`git tag -a v${version} -m "Creating Updated"`);
-        await EXEC(`git push origin v${version}`);
-
+        const commit_out = await EXEC(`git commit -a -m "${commnet_msg}"`);
+        console.log(commit_out.stdout.toString());
+        const push_out = await EXEC("git push origin");
+        console.log(push_out.stdout.toString());
+        await EXEC(`git tag -a v${version} -m "Creating Updated"`).catch((err)=>console.warn(err.message)).then(o=>{ console.log(o.stdout.toString()); });
+        const tag_origin = await EXEC(`git push origin v${version}`);
+        console.log(tag_origin.stdout.toString());
         return 0;
     } catch (error) {
         console.log(error.message);
