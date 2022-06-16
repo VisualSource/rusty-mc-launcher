@@ -34,11 +34,12 @@ Supports Forge, Fabric, Vanilla, and OptiFine clients
 ## Roadmap
 
   1. [ ] Client install and MSA testing
+  2. [ ] Better client launch feedback
   3. [ ] Tauri update Test
-  2. [ ] Single Mod install testing
-  3. [ ] Modpack install testing 
-  4. [ ] Modpack updates events
-  5. [ ] Single Mods update events
+  4. [ ] Single Mod install testing
+  5. [ ] Modpack install testing 
+  6. [ ] Modpack updates events
+  7. [ ] Single Mods update events
 
 #### Possible Support
 
