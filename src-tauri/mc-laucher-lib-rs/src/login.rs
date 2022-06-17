@@ -376,7 +376,7 @@ mod tests {
     async fn test_get_authorization_token() {
         let (client_id,redirect_id) = shared();
 
-        match get_authorization_token(client_id,redirect_id,"M.R3_SN1.2e537af0-91d0-a0b4-92d0-4a064d226c36".into()).await {
+        match get_authorization_token(client_id,redirect_id,"".into()).await {
             Ok(value) => {
                 debug!("{:#?}",value);
             }
@@ -389,7 +389,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_photo() {
         init_logger();
-        let token = "EwAwA+pvBAAUKods63Ys1fGlwiccIFJ+qE1hANsAAYeRtgBA86jOK80bggxkNpbQzvMWO/uwMjsIA8t6KJeFdAT22F2syuA+qHQFNTvnl+TinpGKHgIUTtZpgHauug/n1WlqEoC8b9seNYrZsSedd0H4/4xTYNSwZRrHRrPPOZJPgEhjKqSIRg6J+AxARXhGUAFrr5Zu9DGLfKoE86802QCYNXH3Hl5sr6nfyyITjMzga5cM3GPwVWdXOBE48fS4XkCfea9Ou83Iypg95VplnAH7wlKMb85Rvke0vd9/eaYfTP1KVVZYovifd1/lLra8oxmGNGH47YlF1ftfEYGRYLg4Hx7sx2AAYW8XK/LHVSY8RQdGEQ4PiuihPHIKllUDZgAACErgAuuDYz2+AAKCfMpInw5Vd3zUEKKlL8ewWPbJuFIVFCpOV1w/57si9SlEQcyyku+pyCZNTLVyJfK5ZcD640QI0svO99egTySNUANWgDiovtnYS4Tr1GVuP3vp+ftvqXTHxRm5SqPkNY3LYDXkAj2Fnsar/Z2rFekDmdw5edEvzFP3AIqy215CPLzBg+KJpe0w0lQzmLqemX+NE7taBaotmlc4QQs7aE+SKDvI/Jud1TG0f39afXZa02/sDNGhotMZVEKSQSkx7kUubg4gufUYYmJfVEV25sBAOM+WrQcwBICwv/R//CbwGuRu5XHR6QW1cifUoM9aRz7RhfKJ1jw8XVQK1mxLn65VhI72JumLzyFWSJP2FqIlRHQYfUxwxGjXVxXLWQJTzWmIsY7B3RBwbKpDAVOjfKkcgj2YyJilPBynz5vH3KP3/0NhFUB5hyItvvHHtjAAZZQuSauqmK78APgXKxDjWfef5jcRnPg+9r2lMsAgyoBy/F7S+TbHrXsGPteFbWY1abCnsGImEjXBANkdpY9+2B950RqKb10ecFQDzhMn/iOxETITpZpTNWG3/TVqxKvkXJyBFtqd3u5zwJFp+deuw5k1zT9xIbTKsHFCbHkKsXVkdlNEak7sO+QrGs1IZLnlHfpmRxsy5Fq9NZwxu6akiMnWa3Zs2kajrG5Mx86g11uEwzIC".to_string();
+        let token = "".to_string();
         match get_photo(token).await {
             Ok(value) => {
                 info!("{}",value);
