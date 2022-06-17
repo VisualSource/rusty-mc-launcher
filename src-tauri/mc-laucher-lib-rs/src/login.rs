@@ -10,16 +10,34 @@ use crate::json::{
         Account
     }
 };
+use log::debug;
 use serde_json::json;
 
 const MS_TOKEN_AUTHORIZATION_URL: &str = "https://login.live.com/oauth20_token.srf";
 
 pub fn ms_login_url(client_id: String, redirect_uri: String) -> String {
     format!(
-        "https://login.live.com/oauth20_authorize.srf?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope=XboxLive.signin%20offline_access&state=<optional;",
+        "https://login.live.com/oauth20_authorize.srf?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope=XboxLive.signin,User.Read%20offline_access&state=<optional;",
         client_id=client_id,
         redirect_uri=redirect_uri    
     ).to_string()
+}
+
+async fn get_photo(token: String) -> LibResult<String> {
+    let client = match get_http_client().await {
+        Ok(value) => value,
+        Err(err) => return Err(err)
+    };
+
+    match client.get("https://graph.microsoft.com/v1.0/me/photos/48x48/$value").bearer_auth(token).send().await {
+        Ok(value) => {
+            debug!("{:#?}",value);
+            Ok(String::default())
+        }
+        Err(err) => {
+            Err(LauncherLibError::HTTP { msg: "".into(), source: err })
+        }
+    }
 }
 
 pub fn get_auth_code(url: String) -> Option<String> {
@@ -337,12 +355,49 @@ pub async fn login_microsoft_refresh(client_id: String, redirect_uri: String, re
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_ms_login_url() {
+    use log::{ info, error };
+    fn init_logger(){
+        let _ = env_logger::builder().filter_level(log::LevelFilter::Trace).is_test(true).try_init();
+    }
+    fn shared() -> (String,String) {
+        init_logger();
         let client_id = std::env::var("CLIENT_ID").expect("Expected CLIENT ID").to_string();
         let redirect_uri = "https://login.microsoftonline.com/common/oauth2/nativeclient".to_string();
+        (client_id,redirect_uri)
+    }
+    #[test]
+    fn test_ms_login_url() {
+        let (client_id,redirect_uri) = shared();
         let url = ms_login_url(client_id, redirect_uri);
 
-        println!("{}",url);
+        info!("{}",url);
+    }
+    #[tokio::test]
+    async fn test_get_authorization_token() {
+        let (client_id,redirect_id) = shared();
+
+        match get_authorization_token(client_id,redirect_id,"M.R3_SN1.2e537af0-91d0-a0b4-92d0-4a064d226c36".into()).await {
+            Ok(value) => {
+                debug!("{:#?}",value);
+            }
+            Err(err) => {
+                error!("{}",err);
+                panic!();
+            }
+        }
+    }
+    #[tokio::test]
+    async fn test_get_photo() {
+        init_logger();
+        let token = "EwAwA+pvBAAUKods63Ys1fGlwiccIFJ+qE1hANsAAYeRtgBA86jOK80bggxkNpbQzvMWO/uwMjsIA8t6KJeFdAT22F2syuA+qHQFNTvnl+TinpGKHgIUTtZpgHauug/n1WlqEoC8b9seNYrZsSedd0H4/4xTYNSwZRrHRrPPOZJPgEhjKqSIRg6J+AxARXhGUAFrr5Zu9DGLfKoE86802QCYNXH3Hl5sr6nfyyITjMzga5cM3GPwVWdXOBE48fS4XkCfea9Ou83Iypg95VplnAH7wlKMb85Rvke0vd9/eaYfTP1KVVZYovifd1/lLra8oxmGNGH47YlF1ftfEYGRYLg4Hx7sx2AAYW8XK/LHVSY8RQdGEQ4PiuihPHIKllUDZgAACErgAuuDYz2+AAKCfMpInw5Vd3zUEKKlL8ewWPbJuFIVFCpOV1w/57si9SlEQcyyku+pyCZNTLVyJfK5ZcD640QI0svO99egTySNUANWgDiovtnYS4Tr1GVuP3vp+ftvqXTHxRm5SqPkNY3LYDXkAj2Fnsar/Z2rFekDmdw5edEvzFP3AIqy215CPLzBg+KJpe0w0lQzmLqemX+NE7taBaotmlc4QQs7aE+SKDvI/Jud1TG0f39afXZa02/sDNGhotMZVEKSQSkx7kUubg4gufUYYmJfVEV25sBAOM+WrQcwBICwv/R//CbwGuRu5XHR6QW1cifUoM9aRz7RhfKJ1jw8XVQK1mxLn65VhI72JumLzyFWSJP2FqIlRHQYfUxwxGjXVxXLWQJTzWmIsY7B3RBwbKpDAVOjfKkcgj2YyJilPBynz5vH3KP3/0NhFUB5hyItvvHHtjAAZZQuSauqmK78APgXKxDjWfef5jcRnPg+9r2lMsAgyoBy/F7S+TbHrXsGPteFbWY1abCnsGImEjXBANkdpY9+2B950RqKb10ecFQDzhMn/iOxETITpZpTNWG3/TVqxKvkXJyBFtqd3u5zwJFp+deuw5k1zT9xIbTKsHFCbHkKsXVkdlNEak7sO+QrGs1IZLnlHfpmRxsy5Fq9NZwxu6akiMnWa3Zs2kajrG5Mx86g11uEwzIC".to_string();
+        match get_photo(token).await {
+            Ok(value) => {
+                info!("{}",value);
+            }
+            Err(err) => {
+                error!("{:#?}",err);
+                panic!();
+            }
+        }
     }
 }
