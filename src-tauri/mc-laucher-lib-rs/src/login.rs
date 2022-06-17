@@ -125,33 +125,6 @@ async fn authenticate_with_xbl(access_token: String) -> LibResult<XboxLiveJson> 
     }
 }
 
-/*async fn get_display_info(access_token: String) -> LibResult<()> {
-   /*  let client = match get_http_client().await {
-        Ok(value) => value,
-        Err(err) => return Err(err)
-    };
-
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert("content-type","application/json");
-    headers.insert("x-xbl-contract-version",2);
-
-    match client.get("https:/profile.xboxlive.com/users/me/profile/settings/people/people")
-    .headers(headers)
-    .query([("settings","GameDisplayName,GameDisplayPicRaw,Gamertag")]) {
-        Ok(res) => {
-            match res.json::<serde_json::Value>().await {
-                Ok(value) => Ok(value),
-                Err(err) => Err(LauncherLibError::PraseJsonReqwest(err))
-            }
-        }
-        Err(err) => Err(LauncherLibError::HTTP {
-            source: err,
-            msg: "Failed to authenticate with xbox live".into()
-        })
-    }*/
-    Ok(())
-}*/
-
 async fn authenticate_with_xsts(xbl_token: String) -> LibResult<XboxLiveJson> {
     let client = match get_http_client().await {
         Ok(value) => value,
