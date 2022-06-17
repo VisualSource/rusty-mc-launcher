@@ -4,7 +4,8 @@ use tauri::{WindowBuilder, Manager};
 use std::env;
 use tauri::{Runtime, WindowUrl};
 use log::error;
-const REDIRECT_URI: &str = "https://login.microsoftonline.com/common/oauth2/nativeclient";
+use crate::consts::REDIRECT_URI;
+
 
 #[tauri::command]
 pub async fn token_refresh(token: String) -> Result<mc_laucher_lib_rs::json::authentication_microsoft::Account, String> {

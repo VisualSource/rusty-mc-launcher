@@ -15,19 +15,24 @@ window.__RUN = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.has("code")) {
         const bg = document.createElement('style');
-        bg.textContent = `
-            body {
+        bg.textContent = `body {
                 margin: 0;
                 height: 100vh;
                 width: 100vw;
                 background: #f2f2f2;
-                background-image: url("tauri://images/mc_bg.svg");
+                background-image: url("/images/mc_bg.svg");
                 background-repeat: no-repeat, no-repeat;
                 background-position: center center, center center;
                 background-size: cover, cover;
-            }
-        `;
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                align-items: center;
+                color: black;
+                font-family: -apple-system, "BlinkMacSystemFont", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", "Helvetica Neue", "blueprint-icons-16", sans-serif;
+            }`;
         document.head.appendChild(bg);
+        document.body.innerHTML = "<h2>Loading!</h2>"
         __TAURI_POST_MESSAGE__({
             cmd: "login_done",
             callback: 0,

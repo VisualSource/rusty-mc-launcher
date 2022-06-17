@@ -80,17 +80,20 @@ impl Client {
 
         Ok(())
     }
-    pub fn exit(&mut self) -> LibResult<()> {
+    pub fn exit(&mut self) -> LibResult<Option<std::process::ExitStatus>> {
         if let Some(process) = &mut self.process {
             match process.wait() {
                 Err(err) => return Err(LauncherLibError::OS { 
                     source: err,
                     msg: "Minecraft was not running".into()
                 }),
-                Ok(_) => { self.process = None; }
+                Ok(status) => { 
+                    self.process = None;
+                    return Ok(Some(status));
+                }
             }
         }
-        Ok(())
+        Ok(None)
     }
 }
 

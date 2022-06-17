@@ -118,21 +118,6 @@ pub mod authentication_microsoft {
         pub refresh_token: String,
         pub xuid: String
     }
-
-    #[derive(Deserialize, Debug)]
-    pub struct GameOwnerShipItem {
-        pub name: String,
-        pub signature: String
-    }
-
-    #[derive(Deserialize, Debug)]
-    pub struct GameOwnership {
-        pub items: Vec<GameOwnerShipItem>,
-        pub signature: String,
-        #[serde(rename="keyId")]
-        pub key_id: String
-    }
-
     #[derive(Deserialize, Debug)]
     pub struct MinecraftJson {
         pub access_token: String,

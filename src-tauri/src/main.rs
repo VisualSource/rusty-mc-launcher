@@ -6,7 +6,7 @@
 mod commands;
 mod consts;
 
-use commands::{news, game_dir, mc_versions, login, check, run, install, logger};
+use commands::{news, mc_versions, login, minecraft, run, install, logger};
 use consts::APP_INFO;
 
 fn main() -> std::io::Result<()> {
@@ -22,7 +22,7 @@ fn main() -> std::io::Result<()> {
   tauri::Builder::default()
   .invoke_handler(tauri::generate_handler![
     news::news,
-    game_dir::game_dir,
+    minecraft::game_dir,
     mc_versions::get_vanilla_versions,
     mc_versions::get_loader_versions,
     login::login,
@@ -31,7 +31,7 @@ fn main() -> std::io::Result<()> {
     login::token_refresh,
     login::logout_done,
     login::auth_error,
-    check::check_version,
+    minecraft::check_version,
     run::run_minecraft,
     install::install_client,
     install::install_natives,

@@ -14,16 +14,17 @@
             background-repeat: no-repeat, no-repeat;
             background-position: center center, center center;
             background-size: cover, cover;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            align-items: center;
         }
     </style>
 </head>
 
 <body>
     <script defer>
-        window.addEventListener("load", () => {
-            document.cookie.split(";").forEach(c=>document.cookie=c.replace(/^ +/,"").replace(/=.*/,"=;expires="+new Date().toUTCString()+";path=/"));
-            window.location.replace(window.__LOAD);
-        });
+        window.addEventListener("load",()=>window.location.replace(window.__LOAD));
     </script>
 </body>
 

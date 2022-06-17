@@ -18,7 +18,6 @@ import News from "./news/News";
 import ProfileSelect from "../dialogs/ProfileSelect";
 import CreateProfile from "./library/profilecreate";
 
-
 export default function App() {
   return (
     <>
