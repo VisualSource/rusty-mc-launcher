@@ -1,5 +1,10 @@
 # Release Notes
 
+### V0.1.7
+    - fix login caching
+#### mc_launcher_lib_rs
+        - remove jsonwebtoken dep
+        - remove ownership check (xbox game pass)
 ### V0.1.4
     - fix github action update file invaild url
 
