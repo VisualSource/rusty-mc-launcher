@@ -1,1 +1,30 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;height:100vh;width:100vw;background:#f2f2f2;background-image: url("/images/mc_bg.svg");background-repeat:no-repeat,no-repeat;background-position:center center,center center;background-size:cover,cover;}</style></head><body><script defer>window.addEventListener("load",()=>{window.location.replace(window.__LOAD);});</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            background: #f2f2f2;
+            background-image: url("/images/mc_bg.svg");
+            background-repeat: no-repeat, no-repeat;
+            background-position: center center, center center;
+            background-size: cover, cover;
+        }
+    </style>
+</head>
+
+<body>
+    <script defer>
+        window.addEventListener("load", () => {
+            document.cookie.split(";").forEach(c=>document.cookie=c.replace(/^ +/,"").replace(/=.*/,"=;expires="+new Date().toUTCString()+";path=/"));
+            window.location.replace(window.__LOAD);
+        });
+    </script>
+</body>
+
+</html>

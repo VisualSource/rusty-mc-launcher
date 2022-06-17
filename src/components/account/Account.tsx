@@ -51,10 +51,13 @@ export function UserProvider(props: any) {
             setActice(true);
             setProfile(user);
             localStorage.setItem("active_user",user.xuid);
-        } catch (error) {
+        } catch (error: any) {
+            if((error as string)?.includes("Minecraft Launcher Lib | General | Account does not own a copy of minecraft")) toast.error("Account does not own a copy of Minecraft");
             console.error(error);
         }
     }
+    //@ts-ignore;
+    window.login = login;
     const logout = async () => {
         try {
             await Logout(profile?.xuid);
