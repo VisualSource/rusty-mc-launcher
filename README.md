@@ -56,7 +56,7 @@ the installer for your platform
     
 ## Feedback
 
-If you have any feedback, please reach out to us at supprt@visualsource.us
+If you have any feedback, please reach out to us at support@visualsource.us
 or create a github issue for any suggestions or features that you would think would benefit this project.
 
 ## Contributing
