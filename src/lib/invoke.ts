@@ -11,5 +11,11 @@ export const TokenRefresh = (token: string) => invoke<Account>("token_refresh",{
 export const CheckVersion = (version: VersionId) => invoke<[boolean,"no_root" | "no_natives" | "no_manifest" | "no_jar" | "ok"]>("check_version",{ version });
 export const RunMinecraft = (props: { version: VersionId, profile: Account }) => invoke("run_minecraft",{ params: props });
 export const InstallClient = (manifest: InstallManifest) => invoke<void>("install_client", { manifest: JSON.stringify(manifest) });
+/**
+ *  Log function for printing outout to log file
+ * @param msg 
+ * @param level 
+ * @returns 
+ */
 export const Log = (msg: string, level: "info" | "warn" | "debug" | "error" | null = null) => invoke<void>("log", { msg, level });
 export const InstallNatives = (version: VersionId) => invoke<void>("install_natives",{ version }); 

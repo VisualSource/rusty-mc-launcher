@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Account } from "../../types";
-import {Logout,Login, RefreshToken} from '../../lib/auth';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { toast } from "react-toastify";
+import { Log, TokenRefresh, InvokeLogin, InvokeLogout } from '../../lib/invoke';
+import DB from "../../lib/db";
+import type { Account } from "../../types";
 interface User {
     profile: Account | null;
     active: boolean;
@@ -14,7 +16,7 @@ interface User {
 export const UserContext = createContext<User>();
 
 export function UserProvider(props: any) {
-    const [active,setActice] = useState<boolean>(false);
+    const [active,setActive] = useState<boolean>(false);
     const [profile,setProfile] = useState<Account | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
@@ -22,24 +24,43 @@ export function UserProvider(props: any) {
         const init = async () => {
            try {
                 setLoading(true);
-                const active = localStorage.getItem("active_user");
-                if(!active) {
-                    setActice(false);
+                const xuid = localStorage.getItem("active_user");
+                if(!xuid) {
+                    setActive(false);
                     setProfile(null);
                     setLoading(false);
                     return;
                 }
 
-                const user = await RefreshToken(active);
-            
-                setProfile(user);
-                setActice(true);
+                const db = DB.Get();
 
+                let user = await db.users.findOne({ xuid: active }) as Account;
+                if(!user) throw new Error("Failed to find user");
+
+                const jwt = user.access_token.split(".");
+                if(jwt.length !== 3) throw new Error("JWT is invaild");
+                
+                const payload = jwt.at(1);
+                if(!payload) throw new Error("Failed to get payload from JWT");
+
+                const data: { exp: number } = JSON.parse(atob(payload));
+
+                // @see https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L50
+                // https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L151
+                const clockTimestamp = Math.floor(Date.now() / 1000);
+                if(clockTimestamp >= data.exp) {
+                    console.log("Token expired, refreshing");
+                    user = await TokenRefresh(user.refresh_token);
+                    await db.users.update({ xuid }, user);
+                }
+
+                setProfile(user);
+                setActive(true);
                 setLoading(false);
-           } catch (error) {
+           } catch (error: any) {
                 setLoading(false);
                 toast.error("Failed to log user in");
-                console.error(error);
+                Log(error.message,"error");
            }
         }
         init();
@@ -47,25 +68,78 @@ export function UserProvider(props: any) {
 
     const login = async () => {
         try {
-            const user = await Login();
-            setActice(true);
+            setLoading(true);
+
+            const user = await new Promise<Account>(async (ok,reject)=>{
+                    let error: UnlistenFn | undefined;
+                    let done: UnlistenFn | undefined;
+                    try {
+                        error = await listen<string>("auth_error",(ev)=>{
+                            throw new Error(ev.payload);
+                        });
+                        done = await listen<Account>("login_done",async(ev)=>{
+                            const db = DB.Get();
+                            await db.users.insert(ev.payload);
+
+                            if(done) done();
+                            if(error) error();
+                            ok(ev.payload);
+                        });
+                        await InvokeLogin();
+                    } catch (err: any) {
+                        if(error) error();
+                        if(done) done();
+                        reject(err);
+                    }
+            });
+
+            setActive(true);
             setProfile(user);
-            localStorage.setItem("active_user",user.xuid);
+            window.localStorage.setItem("active_user",user.xuid);
+            setLoading(false);
         } catch (error: any) {
-            if(typeof error === "string") {
-                toast.error(error);
-            }
-            console.error(error);
+            setLoading(false);
+            setActive(false);
+            setProfile(null);
+
+            if(typeof error === "string") toast.error(error);
+            Log(error,"error");
         }
     }
     
     const logout = async () => {
         try {
-            await Logout(profile?.xuid);
-            setActice(false);
+            if(!profile) return;
+            setLoading(true);
+
+            await new Promise<void>(async(ok,reject)=>{
+                let error: UnlistenFn | undefined;
+                try {
+                    error = await listen<string>("auth_error",(ev)=>{
+                        throw new Error(ev.payload);
+                    });
+
+                    await InvokeLogout();
+
+                    const db = DB.Get();
+
+                    await db.users.remove({ xuid: profile.xuid });
+
+                    if(error) error();
+                    ok();
+                } catch (err: any) {
+                    if(error) error();
+                    reject(err);
+                }
+            });
+
+            setActive(false);
             setProfile(null);
-            localStorage.removeItem("active_user");
-        } catch (error) {
+            window.localStorage.removeItem("active_user");
+            setLoading(false);
+        } catch (error: any) {
+            setLoading(false);
+            Log(error.message,"error");
             console.error(error);
         }
     }

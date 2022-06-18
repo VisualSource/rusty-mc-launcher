@@ -1,6 +1,13 @@
 import { Loader, Minecraft, VersionId, OptifineVersionId, FabricVersionId, ForgeVersionId } from "../types";
 import { FabricIcon, ForgeIcon, OptiFineIcon } from "./images";
 
+/**
+ * Returns the default icon for a give loader version.
+ *
+ * @export
+ * @param {VersionId} lastVersionId
+ * @return {*}  {string}
+ */
 export function GetLoaderCard(lastVersionId: VersionId): string {
     const id = ParseID(lastVersionId);
     switch(id.loader) {
@@ -15,6 +22,13 @@ export function GetLoaderCard(lastVersionId: VersionId): string {
     }
 }
 
+/**
+ * Gets the default banner icon for a given loader
+ *
+ * @export
+ * @param {VersionId} lastVersionId
+ * @return {*}  {string}
+ */
 export function GetLoaderBanner(lastVersionId: VersionId): string {
     const id = ParseID(lastVersionId);
     switch(id.loader) {
@@ -29,6 +43,13 @@ export function GetLoaderBanner(lastVersionId: VersionId): string {
     }
 }
 
+/**
+ * Gets a give loader default icon
+ *
+ * @export
+ * @param {VersionId} lastVersionId
+ * @return {*}  {string}
+ */
 export function GetLoaderIcon(lastVersionId: VersionId): string {
     const id = ParseID(lastVersionId);
     switch(id.loader) {
@@ -43,6 +64,16 @@ export function GetLoaderIcon(lastVersionId: VersionId): string {
     }
 }
 
+/**
+ * takes the minecraft version, loader, and loader version and combines them into a single string 
+ * as used in the offical launcher. Ext 1.18.2-forge-0.11.1
+ * @export
+ * @param {(string | null)} minecraft
+ * @param {(string | null)} loader
+ * @param {(string | null)} loader_v
+ * @param {Minecraft[]} mc
+ * @return {*}  {VersionId}
+ */
 export function StringifyID(minecraft: string | null, loader: string | null, loader_v: string | null, mc: Minecraft[]): VersionId {
     let v = minecraft;
     if(minecraft === "latest-release") v = mc[0];

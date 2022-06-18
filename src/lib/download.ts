@@ -7,6 +7,14 @@ import type { InstallManifest } from '../types';
 
 export type InstallType = "mod" | "modpack" | "client" | "natives_install";
 
+/**
+ * Mannager for handling install of mod,modpacks,clients,and installtion of natives
+ * has queue system so mods and a client can be installed without forgeting about it.
+ *
+ * @export
+ * @class DownloadManger
+ * @extends {EventEmitter}
+ */
 export default class DownloadManger extends EventEmitter {
     private _queue: { type: InstallType, data: any}[] = [];
     private occupited: boolean = false;
