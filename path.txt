@@ -1,4 +1,4 @@
-Mod Install Flow
+#### Mod Install Flow
 
 From mod list user select wanted mod, user then clicks btn[Install] 
 this displays a list of all profiles that the mod can be installed to.
@@ -23,7 +23,7 @@ Idea .minecraft
             --- {uuid}
         --- mods
 
-Modded Profile Launcher Flow
+#### Modded Profile Launcher Flow
 
 on start check are done 
 
@@ -52,10 +52,7 @@ mod/modpack update check
 launch game
 
 
+#### More
 
-
-
-
-
-
-
+Mod name format
+{name}-{version}.jar
