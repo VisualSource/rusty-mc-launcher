@@ -1,11 +1,13 @@
 import { listen } from '@tauri-apps/api/event';
 import EventEmitter from 'events';
 import { toast } from 'react-toastify';
-import { ParseID } from './ids';
+import { ParseID, StringHash } from './ids';
 import { InstallClient, InstallNatives } from './invoke';
 import type { InstallManifest } from '../types';
 
 export type InstallType = "mod" | "modpack" | "client" | "natives_install";
+type DownloadRequest = { type: InstallType, data: any, id: number };
+
 
 /**
  * Mannager for handling install of mod,modpacks,clients,and installtion of natives
@@ -16,8 +18,9 @@ export type InstallType = "mod" | "modpack" | "client" | "natives_install";
  * @extends {EventEmitter}
  */
 export default class DownloadManger extends EventEmitter {
-    private _queue: { type: InstallType, data: any}[] = [];
+    private _queue: DownloadRequest[] = [];
     private occupited: boolean = false;
+    private current: DownloadRequest | null | undefined;
     public downloading: string = "Downloading Resource"; 
     static INSTANCE: DownloadManger | null = null;
     static Get(): DownloadManger {
@@ -44,9 +47,21 @@ export default class DownloadManger extends EventEmitter {
     public is_occupited(): boolean {
         return this.occupited;
     }
-    private enqueue(el: any): void {
-        this._queue.push(el);
+    private enqueue(el: { type: InstallType, data: any}): boolean {
+
+        let data = { ...el, id: StringHash(JSON.stringify(el.data)) };
+
+        if(this.current?.id === data.id) {
+            return false;
+        }
+
+        if(this._queue.some(value=>value.id===data.id)) {
+            return false;
+        }
+
+        this._queue.push();
         this.emit("enqueue");
+        return true;
     }
     private dequeue() {
         if(this.is_empty()) return null;
@@ -63,20 +78,22 @@ export default class DownloadManger extends EventEmitter {
     public is_empty(): boolean {
         return this._queue.length === 0;
     }
-    private async run(){
+    private async run(): Promise<void> {
         this.occupited = true;
 
-        const current = this.dequeue();
+        this.current = this.dequeue();
+
+        if(!this.current) return;
 
         this.emit("download_start");
        
-        switch (current?.type) {
+        switch (this.current.type) {
             case "client":{
                try {
-                    this.downloading = `Minecraft Client ${current.data}`;
+                    this.downloading = `Minecraft Client ${this.current.data}`;
                     this.emit("downloading",this.downloading);
 
-                    const data = ParseID(current.data);
+                    const data = ParseID(this.current.data);
 
                     const manifest: InstallManifest = {
                         cache_cli: true,
@@ -104,9 +121,9 @@ export default class DownloadManger extends EventEmitter {
                 break;
             case "natives_install": {
                 try {
-                    this.downloading = `Natives ${current.data}`;
+                    this.downloading = `Natives ${this.current.data}`;
                     this.emit("downloading",this.downloading);
-                    await InstallNatives(current.data);
+                    await InstallNatives(this.current.data);
                 } catch (error) {
                     console.error(error);
                     this.emit("error","Download failure");
@@ -129,7 +146,9 @@ export default class DownloadManger extends EventEmitter {
     async install(request: { type: InstallType, data: any} ){
         return new Promise<null | boolean>(async (ok,reject)=>{
             try {
-                this.enqueue(request);
+                if(!this.enqueue(request)) {
+                    return ok(true);
+                }
 
                 if(!this.occupited) {
                     await this.run();

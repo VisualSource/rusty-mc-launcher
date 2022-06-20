@@ -135,7 +135,6 @@ export function UserProvider(props: any) {
                 }
             });
 
-
             setActive(false);
             setProfile(null);
             window.localStorage.removeItem("active_user");

@@ -130,3 +130,24 @@ export function ParseID(lastVersionId: VersionId): { minecraft: Minecraft, loade
         loader_version: version
     };
 }
+
+/**
+ * SHA-1 string hashing
+ *
+ * @export
+ * @param {string} str
+ * @return {*}  {number}
+ */
+export function StringHash(str: string): number {
+    let hash = 0;
+
+    if(str.length === 0) return hash;
+
+    for(const i of str) {
+        const char = i.charCodeAt(0);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+
+    return hash;
+}

@@ -2,7 +2,7 @@ window.__LOAD = "(:URL)";
 window._0 = ev => console.log(ev);
 window._1 = err => console.error(err);
 window.__RUN = () => {
-   // document.cookie.split(";").forEach(c=>document.cookie=c.replace(/^ +/,"").replace(/=.*/,"=;expires="+new Date().toUTCString()+";path=/"));
+    document.cookie.split(";").forEach(c=>document.cookie=c.replace(/^ +/,"").replace(/=.*/,"=;expires="+new Date().toUTCString()+";path=/"));
     if (location.href === "chrome-error://chromewebdata/") {
         __TAURI_POST_MESSAGE__({
             cmd: "auth_error",
