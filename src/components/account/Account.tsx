@@ -104,13 +104,19 @@ export function UserProvider(props: any) {
 
             if(typeof error === "string") toast.error(error);
             Log(error,"error");
+            // to help if webview caches login
+            await InvokeLogout();
         }
     }
     
     const logout = async () => {
         try {
-            if(!profile) return;
             setLoading(true);
+
+            if(profile){
+                const db = DB.Get();
+                await db.users.remove({ xuid: profile.xuid });
+            }
 
             await new Promise<void>(async(ok,reject)=>{
                 let error: UnlistenFn | undefined;
@@ -121,10 +127,6 @@ export function UserProvider(props: any) {
 
                     await InvokeLogout();
 
-                    const db = DB.Get();
-
-                    await db.users.remove({ xuid: profile.xuid });
-
                     if(error) error();
                     ok();
                 } catch (err: any) {
@@ -132,6 +134,7 @@ export function UserProvider(props: any) {
                     reject(err);
                 }
             });
+
 
             setActive(false);
             setProfile(null);

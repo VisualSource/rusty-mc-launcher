@@ -10,37 +10,27 @@ use crate::json::{
     }
 };
 use serde_json::json;
+use uuid::Uuid;
 
+const MS_LOGIN: &str = "https://login.live.com/oauth20_authorize.srf"; 
 const MS_TOKEN_AUTHORIZATION_URL: &str = "https://login.live.com/oauth20_token.srf";
 const MC_PROFILE: &str = "https://api.minecraftservices.com/minecraft/profile";
 const MINECRAFT_AUTH_LOGIN: &str = "https://api.minecraftservices.com/authentication/login_with_xbox";
 const AUTH_XSTS: &str = "https://xsts.auth.xboxlive.com/xsts/authorize";
 const XBOX_LOGIN: &str = "https://user.auth.xboxlive.com/user/authenticate";
 
+/// https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
 pub fn ms_login_url(client_id: String, redirect_uri: String) -> String {
+    let state = Uuid::new_v4();
+    
     format!(
-        "https://login.live.com/oauth20_authorize.srf?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope=XboxLive.signin,User.Read%20offline_access&state=<optional;",
+        "{route}?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope=XboxLive.signin%20XboxLive.offline_access&state={state}&prompt=login",
         client_id=client_id,
-        redirect_uri=redirect_uri    
+        redirect_uri=redirect_uri,
+        state=state.as_simple().to_string(),
+        route=MS_LOGIN  
     ).to_string()
 }
-
-/*async fn get_photo(token: String) -> LibResult<String> {
-    let client = match get_http_client().await {
-        Ok(value) => value,
-        Err(err) => return Err(err)
-    };
-
-    match client.get("https://graph.microsoft.com/v1.0/me/photos/48x48/$value").bearer_auth(token).send().await {
-        Ok(value) => {
-            debug!("{:#?}",value);
-            Ok(String::default())
-        }
-        Err(err) => {
-            Err(LauncherLibError::HTTP { msg: "".into(), source: err })
-        }
-    }
-}*/
 
 pub fn get_auth_code(url: String) -> Option<String> {
     let query = urlparse::urlparse(url);
@@ -319,7 +309,7 @@ pub async fn login_microsoft_refresh(client_id: String, redirect_uri: String, re
 #[cfg(test)]
 mod tests {
     use super::*;
-    use log::{ info, error };
+    use log::{ info, error, debug };
     fn init_logger(){
         let _ = env_logger::builder().filter_level(log::LevelFilter::Trace).is_test(true).try_init();
     }
@@ -346,20 +336,6 @@ mod tests {
             }
             Err(err) => {
                 error!("{}",err);
-                panic!();
-            }
-        }
-    }
-    #[tokio::test]
-    async fn test_get_photo() {
-        init_logger();
-        let token = "".to_string();
-        match get_photo(token).await {
-            Ok(value) => {
-                info!("{}",value);
-            }
-            Err(err) => {
-                error!("{:#?}",err);
                 panic!();
             }
         }
