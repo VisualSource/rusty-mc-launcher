@@ -19,7 +19,6 @@ export default function NavbarComponent() {
     const USER_MENU = useMemo(()=>(
         <Menu>
           { user.active ? <MenuItem text="Logout" onClick={()=>user.logout()}/> : <MenuItem text="Login" onClick={()=>user.login()}/> }
-          <MenuItem text="Force Logout" onClick={()=>user.logout()}/>
         </Menu>
     ),[user]);
     const LAUNCHER_MENU = useMemo(()=>(
