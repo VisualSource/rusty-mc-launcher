@@ -3,6 +3,7 @@ use crate::utils::download_file;
 use crate::mod_utiles::get_metadata;
 use crate::runtime::get_exectable_path;
 use crate::install::install_minecraft_version;
+use crate::runtime::{ install_jvm_runtime, does_runtime_exist };
 use crate::json::{
     runtime::MinecraftJavaRuntime,
     install::{ Event }
@@ -71,6 +72,18 @@ pub async fn vaild_forge_version(forge: String, mc: Option<String>) -> LibResult
 }
 
 pub async fn install_forge(mc: String, mc_dir: PathBuf, temp_path: PathBuf,  callback: &impl Fn(Event), cache_path: Option<PathBuf>, loader: Option<String>, java: Option<PathBuf>, cache_headless: bool, cache_installer: bool) -> LibResult<()> {
+
+    let runtime = MinecraftJavaRuntime::use_latest();
+    match does_runtime_exist(runtime.clone(), mc_dir.clone()) {
+        Ok(value) => {
+            if !value {
+                if let Err(err) = install_jvm_runtime(runtime, mc_dir.clone(), callback).await {
+                    return Err(err);
+                }
+            }
+        }
+        Err(err) => return Err(err)
+    }
 
     let loader_version = match loader {
         Some(value) => {
