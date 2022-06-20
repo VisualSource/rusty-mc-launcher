@@ -1,18 +1,39 @@
-import { StringHash, StringifyID } from './ids';
+import { ParseID, StringHash, StringifyID } from './ids';
 
-test("StringHash generation", ()=>{
+describe("Ids Methods",()=>{
+    describe("StringHash",()=>{
+        it("should create the same output with same state regradless of object",()=>{
+            let a = StringHash(JSON.stringify({ test_data: "world", int: 123 }));
+            let b = StringHash(JSON.stringify({ test_data: "world", int: 123 }));
 
-    let a = StringHash(JSON.stringify({ test_data: "world", int: 123 }));
-    let b = StringHash(JSON.stringify({ test_data: "world", int: 123 }));
-    let c = StringHash(JSON.stringify({ test_data: "after", int: 343 }));
+            expect(a).toBe(b);
+        });
+        it("should create different outputs",()=>{
+            let a = StringHash(JSON.stringify({ test_data: "world", int: 123 }));
+            let b = StringHash(JSON.stringify({ test_data: "after world war", int: 3433 }));
 
-    
-    expect(a).toBe(b);
-    expect(a).not.toBe(c);
-});
+            expect(a).not.toBe(b);
+        });
+    });
+    describe("Stringify Id",()=>{
+        it("should take parts of a minecraft version and combine them",()=>{
+            const id = StringifyID("1.19","forge","40.30.33",[]);
 
-test("Minecraft version id stringify",()=>{
-    const id = StringifyID("1.19","forge","40.30.33",[]);
+            expect(id).toBe("1.19-forge-40.30.33");
+        });
+    });
+    describe("Parse ID",()=>{
 
-    expect(id).toBe("1.19-forge-40.30.33");
+        it("sould parse a string into the three parts",()=>{
+
+            const output = ParseID("fabric-loader-1.11.0-1.19")
+
+            expect(output).toMatchObject({
+                minecraft: "1.19",
+                loader: "fabric",
+                loader_version: "1.11.0"
+            })
+
+        });
+    });
 });

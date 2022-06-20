@@ -64,7 +64,7 @@ export function UserProvider(props: any) {
            }
         }
         init();
-    },[]);
+    },[active]);
 
     const login = async () => {
         try {

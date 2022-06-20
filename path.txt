@@ -3,7 +3,7 @@
 From mod list user select wanted mod, user then clicks btn[Install] 
 this displays a list of all profiles that the mod can be installed to.
 
-on Click => check for incompiable mods is done if conflicting mod(s) a toast is shown 
+on Click => check for incompiable mods is done if conflicting mod(s) a toast/dialog is shown 
             that has the name mod that has conflicted. EXT => 'Fabric Optifine conficts with sodium'
 
 after the checks the mod is added to profiles mod array.

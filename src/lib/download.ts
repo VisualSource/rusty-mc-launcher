@@ -59,7 +59,7 @@ export default class DownloadManger extends EventEmitter {
             return false;
         }
 
-        this._queue.push();
+        this._queue.push(data);
         this.emit("enqueue");
         return true;
     }

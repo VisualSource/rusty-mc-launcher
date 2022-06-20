@@ -6,6 +6,8 @@ import css from './profileselect.module.sass';
 import { Profile } from "../types";
 import { type Mod, GetModsList } from "../pages/store/Mods";
 import { toast } from "react-toastify";
+import { ParseID } from "../lib/ids";
+import { AddModToProfile } from "../lib/install";
 
 const profileSelect = atom<{open: boolean, mod: any | null}>({ 
     key: "ProfileSelect",
@@ -56,7 +58,12 @@ export default function ProfileSelect(){
         }).map((pro,i)=>(
             <div key={i} className={css.profile} onClick={()=>{
                 setDialog({ open: false, mod: null });
-                toast.error("Mod Installs are not implemented");
+                if(!mods.data) return;
+                try {
+                    AddModToProfile(dialog.mod,pro,mods.data);
+                } catch (error: any) {
+                    toast.error(error.message);
+                }
             }}>
                 <img src={pro.icon} alt="preview"/>
                 <div>
