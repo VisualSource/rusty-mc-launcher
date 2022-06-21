@@ -126,6 +126,32 @@ describe("AddModToProfile",()=>{
 
         const output = AddModToProfile(mod,profile,mods);
 
+
+        expect(output.profile.mods).toEqual( 
+            expect.arrayContaining([
+                expect.objectContaining({
+                    version: "1.13.0",
+                    name: "OptiFabric",
+                    id: "ea98224a-67b9-4e4c-a3e3-fb29a38fbf78",
+                    icon: "https://media.forgecdn.net/avatars/thumbnails/204/621/64/64/636941511294490034.png"
+                })
+            ])
+        );
+
+        expect(output.download).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    name: "OptiFabric", 
+                    id: "ea98224a-67b9-4e4c-a3e3-fb29a38fbf78", 
+                    download: {
+                        url: "https://media.forgecdn.net/files/3717/575/optifabric-1.13.0.jar",
+                        version: "1.13.0"
+                    }
+                })
+            ])
+        );
+
+
         expect(output.profile.mods).toEqual( 
             expect.arrayContaining([
                 expect.objectContaining({

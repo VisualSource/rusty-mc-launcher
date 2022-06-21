@@ -16,6 +16,10 @@ export function AddModToProfile(mod: Mod, profile: Profile, modsList: Mod[]): Ad
     const inconpatable = mod.inconpatable
     const required = mod.required;
 
+    if(mods.some(value=>value.id===mod.uuid)){
+        throw new Error(`The mod ${mod.name} is already installed on profile ${profile.name}`);
+    }
+
     // Run inconpatable check
     if(inconpatable){
         const inconpatable_mod_uuid = inconpatable[profile_info.loader].find(value=>{
@@ -27,7 +31,6 @@ export function AddModToProfile(mod: Mod, profile: Profile, modsList: Mod[]): Ad
             throw new Error(`Mod ${mod.name} is Inconpatable with ${inconpate?.name}`);
         }
     }
-
 
     let download_list: { name: string, id: string, download: { url: string, version: string } }[] = [];
 

@@ -1,4 +1,5 @@
-import { Loader, Minecraft, VersionId, OptifineVersionId, FabricVersionId, ForgeVersionId } from "../types";
+import type { Loader, Minecraft, VersionId, OptifineVersionId, FabricVersionId, ForgeVersionId } from "../types";
+import { satisfies, coerce } from "semver";
 import { FabricIcon, ForgeIcon, OptiFineIcon } from "./images";
 
 /**
@@ -130,6 +131,23 @@ export function ParseID(lastVersionId: VersionId): { minecraft: Minecraft, loade
         loader_version: version
     };
 }
+
+export function SatisfiesMinecraftVersion(lastVersionId: VersionId, version: Minecraft): boolean {
+    const { minecraft } = ParseID(lastVersionId);
+
+    let range = version;
+    if(!version.includes("*")) {
+        const fixed_range = coerce(version);
+        if(!fixed_range) throw new Error("Failed to coerce version");
+        range = fixed_range.version as Minecraft;
+    }
+
+    const fixed_mc = coerce(minecraft);
+    if(!fixed_mc) throw new Error("Failed to coerce version");
+
+    return satisfies(fixed_mc.version,range);
+}
+
 
 /**
  * SHA-1 string hashing

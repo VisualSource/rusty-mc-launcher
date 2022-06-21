@@ -17,6 +17,7 @@ import News from "./news/News";
 
 import ProfileSelect from "../dialogs/ProfileSelect";
 import CreateProfile from "./library/profilecreate";
+import ErrorDialog from "../dialogs/ErrorDialog";
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
       </Routes>
       <Footer/>
       <ProfileSelect/>
+      <ErrorDialog/>
     </>
   );
 }

@@ -1,10 +1,13 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { toast } from "react-toastify";
-import { Log, TokenRefresh, InvokeLogin, InvokeLogout } from '../../lib/invoke';
+import { useComponentDidMount } from '../../lib/hooks';
+import { TokenRefresh, InvokeLogin, InvokeLogout } from '../../lib/invoke';
+import { AuthError } from '../../lib/errors';
 import DB from "../../lib/db";
 import type { Account } from "../../types";
-interface User {
+import { useErrorDialog } from "../../dialogs/ErrorDialog";
+export interface User {
     profile: Account | null;
     active: boolean;
     loading: boolean;
@@ -16,55 +19,54 @@ interface User {
 export const UserContext = createContext<User>();
 
 export function UserProvider(props: any) {
+    const errorDialog = useErrorDialog();
     const [active,setActive] = useState<boolean>(false);
     const [profile,setProfile] = useState<Account | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    useEffect(()=>{
-        const init = async () => {
-           try {
-                setLoading(true);
-                const xuid = localStorage.getItem("active_user");
-                if(!xuid) {
-                    setActive(false);
-                    setProfile(null);
-                    setLoading(false);
-                    return;
-                }
+    useComponentDidMount(async ()=>{
+        try {
+            setLoading(true);
+            const xuid = window.localStorage.getItem("active_user");
+            if(!xuid) {
+                setActive(false);
+                setProfile(null);
+                setLoading(false);
+                return;
+            }
 
-                const db = DB.Get();
+            const db = DB.Get();
 
-                let user = await db.users.findOne({ xuid: active }) as Account;
-                if(!user) throw new Error("Failed to find user");
+            let user = await db.users.findOne({ xuid }) as Account;
+            if(!user) throw new Error("Failed to vaild user");
 
-                const jwt = user.access_token.split(".");
-                if(jwt.length !== 3) throw new Error("JWT is invaild");
+            /// check for invaild token
+            const jwt = user.access_token.split(".");
+            if(jwt.length !== 3) throw new Error("JWT is invaild");
                 
-                const payload = jwt.at(1);
-                if(!payload) throw new Error("Failed to get payload from JWT");
+            const payload = jwt.at(1);
+            if(!payload) throw new Error("Failed to get payload from JWT");
 
-                const data: { exp: number } = JSON.parse(atob(payload));
+            const data: { exp: number } = JSON.parse(atob(payload));
 
-                // @see https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L50
-                // https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L151
-                const clockTimestamp = Math.floor(Date.now() / 1000);
-                if(clockTimestamp >= data.exp) {
-                    console.log("Token expired, refreshing");
-                    user = await TokenRefresh(user.refresh_token);
-                    await db.users.update({ xuid }, user);
-                }
+            // @see https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L50
+            // https://github.com/auth0/node-jsonwebtoken/blob/74d5719bd03993fcf71e3b176621f133eb6138c0/verify.js#L151
+            const clockTimestamp = Math.floor(Date.now() / 1000);
+            if(clockTimestamp >= data.exp) {
+                user = await TokenRefresh(user.refresh_token);
+                const { access_token, refresh_token } = user;
+                await db.users.update({ xuid }, { access_token, refresh_token });
+            }
 
-                setProfile(user);
-                setActive(true);
-                setLoading(false);
-           } catch (error: any) {
-                setLoading(false);
-                toast.error("Failed to log user in");
-                Log(error.message,"error");
-           }
+            setProfile(user);
+            setActive(true);
+            setLoading(false);
+        } catch (error: any) {
+            console.error(error)
+            setLoading(false);
+            toast.error("Failed to log user in");
         }
-        init();
-    },[active]);
+    });
 
     const login = async () => {
         try {
@@ -75,12 +77,9 @@ export function UserProvider(props: any) {
                     let done: UnlistenFn | undefined;
                     try {
                         error = await listen<string>("auth_error",(ev)=>{
-                            throw new Error(ev.payload);
+                            throw new AuthError(ev.payload);
                         });
                         done = await listen<Account>("login_done",async(ev)=>{
-                            const db = DB.Get();
-                            await db.users.insert(ev.payload);
-
                             if(done) done();
                             if(error) error();
                             ok(ev.payload);
@@ -93,6 +92,9 @@ export function UserProvider(props: any) {
                     }
             });
 
+            const db = DB.Get();
+            await db.users.insert(user);
+
             setActive(true);
             setProfile(user);
             window.localStorage.setItem("active_user",user.xuid);
@@ -101,9 +103,9 @@ export function UserProvider(props: any) {
             setLoading(false);
             setActive(false);
             setProfile(null);
-
+            window.localStorage.removeItem("active_user");
+            if(error instanceof AuthError) errorDialog({ open: true, error });
             if(typeof error === "string") toast.error(error);
-            Log(error,"error");
             // to help if webview caches login
             await InvokeLogout();
         }
@@ -122,7 +124,7 @@ export function UserProvider(props: any) {
                 let error: UnlistenFn | undefined;
                 try {
                     error = await listen<string>("auth_error",(ev)=>{
-                        throw new Error(ev.payload);
+                        throw new AuthError(ev.payload);
                     });
 
                     await InvokeLogout();
@@ -141,7 +143,8 @@ export function UserProvider(props: any) {
             setLoading(false);
         } catch (error: any) {
             setLoading(false);
-            Log(error.message,"error");
+            if(error instanceof AuthError) errorDialog({ open: true, error });
+            if(typeof error === "string") toast.error(error);
             console.error(error);
         }
     }

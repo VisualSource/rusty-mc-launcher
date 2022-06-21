@@ -1,6 +1,6 @@
 {
   "name": "rusty-mc-launcher",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "private": true,
   "dependencies": {
     "@blueprintjs/core": "^4.4.0",

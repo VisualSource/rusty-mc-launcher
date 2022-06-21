@@ -1,4 +1,4 @@
-import { ParseID, StringHash, StringifyID } from './ids';
+import { ParseID, StringHash, StringifyID, SatisfiesMinecraftVersion } from './ids';
 
 describe("Ids Methods",()=>{
     describe("StringHash",()=>{
@@ -35,5 +35,16 @@ describe("Ids Methods",()=>{
             })
 
         });
+    });
+
+    describe("SatisfiesMinecraftVersion",()=>{
+        it("sould return true for satisfies range",()=>{
+            const output = SatisfiesMinecraftVersion("fabric-loader-1.11.0-1.19","1.19");
+            expect(output).toBeTruthy();
+        }); 
+        it("sould return true for a wild card range",()=>{
+            const output = SatisfiesMinecraftVersion("fabric-loader-1.11.0-1.19","1.19.*");
+            expect(output).toBeTruthy();
+        }); 
     });
 });

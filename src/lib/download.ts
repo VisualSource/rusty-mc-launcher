@@ -2,7 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 import EventEmitter from 'events';
 import { toast } from 'react-toastify';
 import { ParseID, StringHash } from './ids';
-import { InstallClient, InstallNatives } from './invoke';
+import { InstallClient, InstallNatives, Log } from './invoke';
 import type { InstallManifest } from '../types';
 
 export type InstallType = "mod" | "modpack" | "client" | "natives_install";
@@ -113,9 +113,24 @@ export default class DownloadManger extends EventEmitter {
                }
                 break;
             }
-            case "mod": 
-                toast.error("Mod installs have not been implemented yet.");
+            case "mod": {
+                try {
+                    this.downloading = `Mod Install`;
+                    this.emit("downloading",this.downloading);
+
+
+
+                    // run native command
+                  
+                  
+                } catch (error: any) {
+                    console.error(error);
+                    this.emit("error","Download failure");
+                    toast.error("There was an error in download a mod");
+                    if(error instanceof Error) Log(error.message,"error");
+                }
                 break;
+            }
             case "modpack":
                 toast.error("Mod installs have not been implemented yet.");
                 break;
@@ -144,7 +159,7 @@ export default class DownloadManger extends EventEmitter {
         this.occupited = false;
     }
     async install(request: { type: InstallType, data: any} ){
-        return new Promise<null | boolean>(async (ok,reject)=>{
+        return new Promise<boolean>(async (ok,reject)=>{
             try {
                 if(!this.enqueue(request)) {
                     return ok(true);
@@ -154,7 +169,7 @@ export default class DownloadManger extends EventEmitter {
                     await this.run();
                     ok(true)
                 } else {
-                    ok(null)
+                    ok(false)
                 }
             } catch (error) {
                 reject(error);
