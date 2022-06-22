@@ -3,8 +3,15 @@ import { ParseID } from "./ids";
 import type { Mod } from "../pages/store/Mods";
 import type { Profile } from "../types";
 
+
+export interface DownloadMod { 
+    name: string, 
+    uuid: string, 
+    url: string, 
+    version: string 
+}
 interface AddToProfileList {
-    download: { name: string, id: string, download: { url: string, version: string } }[],
+    download: DownloadMod[],
     profile: Profile
 }
 
@@ -32,7 +39,7 @@ export function AddModToProfile(mod: Mod, profile: Profile, modsList: Mod[]): Ad
         }
     }
 
-    let download_list: { name: string, id: string, download: { url: string, version: string } }[] = [];
+    let download_list: DownloadMod[] = [];
 
     const mc_verison = coerce(profile_info.minecraft);
     if(!mc_verison) throw new Error(`Failed to coerce minecraft version into a vaild format`);
@@ -58,7 +65,7 @@ export function AddModToProfile(mod: Mod, profile: Profile, modsList: Mod[]): Ad
         id: mod.uuid
     });
     
-    download_list.push({ name: mod.name, id: mod.uuid, download });
+    download_list.push({ name: mod.name, uuid: mod.uuid, ...download });
 
     if(required) {
         required[profile_info.loader].forEach(value=>{

@@ -11,7 +11,7 @@ use crate::json::{
 use std::env::consts;
 use std::path::PathBuf;
 use futures::StreamExt;
-use tokio::fs::read_to_string;
+use tokio::fs::{read_to_string, create_dir_all, remove_dir};
 use log::{ error, info };
 use serde::Deserialize;
 
@@ -67,8 +67,6 @@ pub fn parse_java_dep_native(name: String, url: Option<String>, native: String) 
 
     Ok((outpath,download_url))
 }
-
-
 
 pub async fn install_libraries(id: String, libraries: &Vec<Library>, path: PathBuf, callback: &impl Fn(Event)) -> LibResult<()> {
 
@@ -248,8 +246,6 @@ async fn install_assets(manifest: &VersionManifest, path: PathBuf, callback: &im
     Ok(())
 }
 
-
-
 async fn do_version_install(version_id: String, path: PathBuf, callback: &impl Fn(Event), url: Option<String>) -> LibResult<()> {
 
     let version_manifest = path.join("versions").join(version_id.clone()).join(format!("{}.json",version_id.clone()));
@@ -331,9 +327,94 @@ pub async fn install_minecraft_version(version_id: String, mc_dir: PathBuf, call
     }
 }
 
+pub async fn swap_mods_folder(profile: String, game_dir: PathBuf) -> LibResult<()> {
+
+    let dir = game_dir.clone().join("system_mods").join(profile);
+    let mod_dir = game_dir.join("mods");
+    
+    if !dir.is_dir() {
+        if let Err(err) = create_dir_all(dir.clone()).await {
+            return Err(LauncherLibError::OS { msg: "Failed to create system mods directory".into(), source: err });
+        }
+    }
+
+    if mod_dir.exists() {
+        if let Err(err) = remove_dir(mod_dir.clone()).await {
+            return Err(LauncherLibError::OS { msg: "Failed to remove mods link".into(), source: err });
+        }
+    }
+
+
+    // can't create a symlink on windows without admin, this should work, needs testing
+    #[cfg(windows)]
+    {
+        use tokio::process::Command;
+
+        if let Err(err) = Command::new("powershell").args(
+            ["New-Item","-ItemType","Junction","-Path",mod_dir.to_str().expect("Failed to make str"),"-Target",dir.to_str().expect("Failed to make str")]
+        ).output().await {
+            return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
+        }
+    }
+
+    #[cfg(not(windows))]
+    {
+        use tokio::fs::symlink_dir;
+
+        if let Err(err) = symlink_dir(src, dst).await {
+            return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
+        }
+    }
+  
+
+    Ok(())
+}
+
+#[derive(Deserialize)]
+pub struct Mod {
+    name: String,
+    version: String,
+    uuid: String,
+    url: String
+}
+
+//https://patshaughnessy.net/2020/1/20/downloading-100000-files-using-async-rust
+pub async fn install_mods(profile: String, game_dir: PathBuf, mods: Vec<Mod>, callback: &impl Fn(Event)) -> LibResult<()> {
+
+    let outdir = game_dir.join("system_mods").join(profile);
+
+    let fetches = futures::stream::iter(
+        mods.into_iter().map(|item|{
+            let dir = outdir.clone();
+            async move {
+                let file = dir.join(format!("{}-({}-{}).jar",item.uuid,item.name,item.version));
+                if let Err(err) = download_file(item.url, file, callback, None, false).await {
+                    return Err(err);
+                }
+
+                Ok(())
+            }
+        })
+    ).buffer_unordered(8).collect::<Vec<LibResult<()>>>();
+
+    fetches.await;
+
+    Ok(())
+}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::get_minecraft_directory;
+
+    #[tokio::test]
+    async fn test_swap_system_mods(){
+        let mc = get_minecraft_directory().expect("Failed to get mc dir");
+
+        if let Err(err) = swap_mods_folder("889asdfedf".into(),mc).await {
+            eprintln!("{}",err);
+        }
+    }
+
     #[test]
     fn test_parse_name(){
         match parse_java_dep("org.lwjgl:lwjgl-jemalloc:3.3.1".to_string(),None){

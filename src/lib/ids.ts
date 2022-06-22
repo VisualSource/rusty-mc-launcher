@@ -148,6 +148,10 @@ export function SatisfiesMinecraftVersion(lastVersionId: VersionId, version: Min
     return satisfies(fixed_mc.version,range);
 }
 
+export function isModded(lastVersionId: VersionId): boolean {
+    return lastVersionId.includes("fabric") || lastVersionId.includes("forge");
+}
+
 
 /**
  * SHA-1 string hashing

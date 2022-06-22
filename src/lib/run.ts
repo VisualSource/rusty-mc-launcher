@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import DowloadMannager from './download';
-import { RunMinecraft, CheckVersion } from './invoke';
+import { RunMinecraft, CheckVersion, SawpModsFolders, Log } from './invoke';
+import { isModded } from "./ids";
 import { MinecraftLaunchError } from './errors';
 import type { User } from "../components/account/Account";
 import type { Profile } from "../types";
@@ -34,18 +35,22 @@ export default async function LaunchGame(profile: Profile | undefined, user: Use
 
     // mod/modpack update check 
         // do update
+    if(isModded(profile.lastVersionId)) {
+        if(profile.isModpack) {
 
-        
+        } else {
+
+        }
+    }
+
     const db = DB.Get();
 
-    // update profile
     await db.profiles.update({ uuid: profile.uuid }, { lastUsed: new Date().toISOString(), mods: profile.mods });
-
-
-    const lastPlayed = window.localStorage.getItem("last_profile");
-    // switch mod folders
-    // await SwitchModsFolder(lastPlayed, lastPlayed);
-
+    
+    if(isModded(profile.lastVersionId)) {
+        Log("Swaping folders");
+        await SawpModsFolders(profile.uuid);
+    }
     // set mod folder
     window.localStorage.setItem("last_profile",profile.uuid);
 

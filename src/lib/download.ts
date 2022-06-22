@@ -2,7 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 import EventEmitter from 'events';
 import { toast } from 'react-toastify';
 import { ParseID, StringHash } from './ids';
-import { InstallClient, InstallNatives, Log } from './invoke';
+import { InstallClient, InstallNatives, Log, InstallMods } from './invoke';
 import type { InstallManifest } from '../types';
 
 export type InstallType = "mod" | "modpack" | "client" | "natives_install";
@@ -117,12 +117,9 @@ export default class DownloadManger extends EventEmitter {
                 try {
                     this.downloading = `Mod Install`;
                     this.emit("downloading",this.downloading);
-
-
-
-                    // run native command
-                  
-                  
+                    
+                    await InstallMods(this.current.data.profile,this.current.data.mods);
+              
                 } catch (error: any) {
                     console.error(error);
                     this.emit("error","Download failure");

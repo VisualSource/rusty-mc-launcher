@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import type { Account, InstallManifest, Loader, Minecraft, VersionId } from "../types";
+import { DownloadMod } from "./install";
 
 export const InvokeNews = (pages: number = 10) => invoke<string>("news", { pages });
 export const InvokeGameDir = () => invoke<string>("game_dir");
@@ -19,3 +20,6 @@ export const InstallClient = (manifest: InstallManifest) => invoke<void>("instal
  */
 export const Log = (msg: string, level: "info" | "warn" | "debug" | "error" | null = null) => invoke<void>("log", { msg, level });
 export const InstallNatives = (version: VersionId) => invoke<void>("install_natives",{ version }); 
+export const SawpModsFolders = (profile: string) => invoke<void>("sawp_mods_folders",{ profile });
+export const InstallMods = (profile: string, mods: DownloadMod[]) => invoke<void>("install_mods_list",{ profile, mods });
+export const RemoveModsFolder = (profile: string) => invoke<void>("remove_mods_folder",{ profile });

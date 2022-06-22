@@ -22,7 +22,7 @@ async function handleMutation(ev: { type: "edit" | "del", data: any }){
     const db = DB.Get();
 
     if(ev.type === "del") {
-        await db.profiles.remove({ uuid: ev.data });
+        await db.dropProfile(ev.data);
         return ev.type;
     }
 
@@ -102,8 +102,8 @@ export default function View(){
                     <details className={css.mods_list}>
                         <summary>Click to view mod list</summary>
                         <ul>
-                            { data?.mods.map((mod=>(
-                                <li className={css.mod_item}>
+                            { data?.mods.map(((mod,i)=>(
+                                <li className={css.mod_item} key={i}>
                                     <div>
                                         <img src={mod.icon} alt="mod preview" />
                                         <span>{mod.name}</span>

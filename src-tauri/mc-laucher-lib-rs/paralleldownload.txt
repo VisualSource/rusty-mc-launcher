@@ -1,1 +1,0 @@
-https://users.rust-lang.org/t/download-multiple-files-in-parallel/26906/2

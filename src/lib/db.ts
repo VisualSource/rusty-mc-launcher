@@ -1,4 +1,5 @@
 import { Db } from 'zangodb';
+import { RemoveModsFolder } from './invoke';
 import { Profile } from '../types';
 export default class DB {
     static INSTANCE: DB | null = null;
@@ -28,5 +29,10 @@ export default class DB {
     }
     get mods(){
         return this.db.collection("mods");
+    }
+    public async dropProfile(uuid: string): Promise<void> {
+
+        await RemoveModsFolder(uuid);
+        await this.profiles.remove({ uuid });
     }
 }
