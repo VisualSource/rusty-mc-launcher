@@ -2,10 +2,10 @@ import { listen } from '@tauri-apps/api/event';
 import EventEmitter from 'events';
 import { toast } from 'react-toastify';
 import { ParseID, StringHash } from './ids';
-import { InstallClient, InstallNatives, Log, InstallMods } from './invoke';
+import { InstallClient, InstallNatives, Log, InstallMods, UpdateModList } from './invoke';
 import type { InstallManifest } from '../types';
 
-export type InstallType = "mod" | "modpack" | "client" | "natives_install";
+export type InstallType = "install_mods" | "update_mods" | "client" | "natives_install";
 type DownloadRequest = { type: InstallType, data: any, id: number };
 
 
@@ -113,13 +113,15 @@ export default class DownloadManger extends EventEmitter {
                }
                 break;
             }
-            case "mod": {
+            case "install_mods": {
                 try {
-                    this.downloading = `Mod Install`;
+                    this.downloading = `Installing mods`;
                     this.emit("downloading",this.downloading);
                     
                     await InstallMods(this.current.data.profile,this.current.data.mods);
-              
+                    
+
+                    toast.info("Finished Downloading Mods");
                 } catch (error: any) {
                     console.error(error);
                     this.emit("error","Download failure");
@@ -128,9 +130,21 @@ export default class DownloadManger extends EventEmitter {
                 }
                 break;
             }
-            case "modpack":
-                toast.error("Mod installs have not been implemented yet.");
-                break;
+            case "update_mods": {
+              try {
+                this.downloading = `Updating mods`;
+                this.emit("downloading",this.downloading);
+
+                await UpdateModList(this.current.data.profile,this.current.data.mods);
+
+              } catch (error) {
+                console.error(error);
+                this.emit("error","Download failure");
+                toast.error("There was an error in download a mod");
+                if(error instanceof Error) Log(error.message,"error");
+              }
+              break;
+            }
             case "natives_install": {
                 try {
                     this.downloading = `Natives ${this.current.data}`;

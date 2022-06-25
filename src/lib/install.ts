@@ -1,14 +1,20 @@
 import { satisfies, coerce } from "semver";
-import { ParseID } from "./ids";
-import type { Mod } from "../pages/store/Mods";
-import type { Profile } from "../types";
+import { GetLoaderVersions } from './invoke';
+import { ParseID, StringifyID } from "./ids";
+import { GetModsList, Mod } from "../pages/store/Mods";
+import type { Minecraft, Profile } from "../types";
+import type { ModPack } from "../pages/store/Modpacks";
+import { nanoid } from "nanoid";
+import DB from "./db";
+import DownloadManger from "./download";
 
 
 export interface DownloadMod { 
     name: string, 
     uuid: string, 
     url: string, 
-    version: string 
+    version: string,
+    sha1: string;
 }
 interface AddToProfileList {
     download: DownloadMod[],
@@ -56,7 +62,7 @@ export function AddModToProfile(mod: Mod, profile: Profile, modsList: Mod[]): Ad
 
     if(!version) throw new Error(`Failed to find supported minecraft version for ${mod.name}`);
 
-    const download = mod.download[profile_info.loader][version];
+    const download = mod.download[profile_info.loader][version as Minecraft];
 
     profile.mods.push({
         name: mod.name,
@@ -87,4 +93,56 @@ export function AddModToProfile(mod: Mod, profile: Profile, modsList: Mod[]): Ad
         profile,
         download: download_list
     };
+}
+
+
+export async function CreateModpack(pack: ModPack): Promise<void> {
+    const minecraft = pack.minecraft[0];
+    const loader = pack.loaders[0];
+
+    const loader_versions = await GetLoaderVersions(loader,minecraft);
+    const mod_list = await GetModsList();
+
+    const latest = loader_versions.at(0);
+
+    if(!latest) throw new Error("Failed to get latest loader version");
+
+
+    const lastVersionId = StringifyID(minecraft,loader,latest,[]);
+
+    let created = new Date().toISOString();
+
+    let downloads: DownloadMod[] = [];
+
+    let profile: Profile = {
+        isModpack: true,
+        name: pack.name,
+        uuid: nanoid(),
+        lastVersionId,
+        type: "custom",
+        created,
+        lastUsed: created,
+        category: "MODPACK",
+        banner: "/images/VanillaBanner.webp",//pack.banner,
+        icon: pack.icon,// pack.icon,
+        card: "/images/VanillaCard.webp",//pack.card,
+        mods: []    
+    };
+
+
+    for(const mod of pack.mods) {
+        const data = mod_list.find(i=>i.uuid===mod);
+        if(!data) continue;
+        const output = AddModToProfile(data,profile,mod_list);
+        downloads = downloads.concat(output.download);
+        profile = output.profile;
+    }
+
+
+    const db = DB.Get();
+    const dl = DownloadManger.Get();
+
+    await db.profiles.insert(profile);
+
+    await dl.install({ type: "install_mods", data: { profile: profile.uuid, mods: downloads } });
 }

@@ -1,4 +1,11 @@
-use mc_laucher_lib_rs::{client::ClientBuilder, json::{ install::Event}, Mod, install_mods, utils::get_minecraft_directory };
+use mc_laucher_lib_rs::{
+  client::ClientBuilder, 
+  json::{ install::Event }, 
+  Mod, 
+  install_mods, 
+  update_mods,
+  utils::get_minecraft_directory 
+};
 use tauri::Runtime;
 use app_dirs2::{AppDataType,app_dir};
 use crate::consts::APP_INFO;
@@ -89,5 +96,36 @@ pub async fn install_natives<R: Runtime>(window: tauri::Window<R>, version: Stri
     }).await {
     return Err(err.to_string());
   }
+  Ok(())
+}
+
+
+#[tauri::command]
+pub async fn update_mods_list<R: Runtime>(window: tauri::Window<R>, profile: String, mods: Vec<Mod>) -> Result<(), String> {
+  let game_dir = match get_minecraft_directory() {
+    Ok(value) => value,
+    Err(err) => return Err(err.to_string())
+  };
+
+  if let Err(err) = update_mods(profile, game_dir, mods, &|ev|{  
+    match ev {
+      Event::Download { state, msg } => {
+        if let Err(err) = window.emit("rustydownload://download", format!("{} {}",state.to_string(),msg)){ error!("{}",err); }
+      },
+      Event::Error(err) => {
+        if let Err(err) = window.emit("rustydownload://error", err){ error!("{}",err); }
+      }
+      Event::Progress { max, current } => {
+        if let Err(err) = window.emit("rustydownload://progress", (max,current)){ error!("{}",err); }
+      }
+      Event::Status(status) => {
+        if let Err(err) = window.emit("rustydownload://status", status){ error!("{}",err); }
+      }
+    }
+  }).await {
+    return Err(err.to_string());
+  }
+
+
   Ok(())
 }

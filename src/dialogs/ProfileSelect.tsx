@@ -66,7 +66,7 @@ export default function ProfileSelect(){
                     const db = DB.Get();
                     db.profiles.update({ uuid: output.profile.uuid }, output.profile);
                     const dl = DownloadManger.Get();
-                    await dl.install({ type: "mod", data: { profile: output.profile.uuid, mods: output.download } });
+                    await dl.install({ type: "install_mods", data: { profile: output.profile.uuid, mods: output.download } });
                 } catch (error: any) {
                     errorDialog({ open: true, error: error });
                 }

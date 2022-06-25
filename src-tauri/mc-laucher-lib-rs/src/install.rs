@@ -11,7 +11,7 @@ use crate::json::{
 use std::env::consts;
 use std::path::PathBuf;
 use futures::StreamExt;
-use tokio::fs::{read_to_string, create_dir_all, remove_dir};
+use tokio::fs::{read_to_string, create_dir_all, remove_dir, remove_file };
 use log::{ error, info };
 use serde::Deserialize;
 
@@ -375,7 +375,8 @@ pub struct Mod {
     name: String,
     version: String,
     uuid: String,
-    url: String
+    url: String,
+    sha1: String
 }
 
 //https://patshaughnessy.net/2020/1/20/downloading-100000-files-using-async-rust
@@ -383,14 +384,23 @@ pub async fn install_mods(profile: String, game_dir: PathBuf, mods: Vec<Mod>, ca
 
     let outdir = game_dir.join("system_mods").join(profile);
 
+    let max = mods.len();
+    let mut idx = 0;
+
+    callback(Event::Status("Downloading Mods".into()));
+    callback(Event::Progress { max, current: 0 });
+
     let fetches = futures::stream::iter(
         mods.into_iter().map(|item|{
             let dir = outdir.clone();
             async move {
                 let file = dir.join(format!("{}-({}-{}).jar",item.uuid,item.name,item.version));
-                if let Err(err) = download_file(item.url, file, callback, None, false).await {
+                if let Err(err) = download_file(item.url, file, callback, Some(item.sha1), false).await {
                     return Err(err);
                 }
+
+                idx += 1;
+                callback(Event::Progress { max, current: idx });
 
                 Ok(())
             }
@@ -401,11 +411,84 @@ pub async fn install_mods(profile: String, game_dir: PathBuf, mods: Vec<Mod>, ca
 
     Ok(())
 }
+
+pub async fn update_mods(profile: String, game_dir: PathBuf, mods: Vec<Mod>,  callback: &impl Fn(Event)) -> LibResult<()> {
+    let profile_dir = game_dir.join("system_mods").join(profile.clone());
+
+    if profile_dir.is_dir() {
+        let dir = match profile_dir.read_dir() {
+            Ok(value) => value.into_iter(),
+            Err(err) => return Err(LauncherLibError::OS { msg: "Failed to read mods directory".into(), source: err })
+        };
+
+        let max = mods.len();
+        let mut idx = 0;
+
+        callback(Event::Status("Removing old files".into()));
+        callback(Event::Progress { max, current: 0 });
+    
+        for file in dir {
+            match file {
+                Ok(value) => {
+                    let file_name = value.file_name().into_string().expect("Failed to get file name");
+                    for i in &mods {
+                        if !file_name.starts_with(&i.uuid) {
+                            continue;
+                        }
+                        if let Err(err) = remove_file(value.path()).await {
+                            return Err(LauncherLibError::OS { msg: "Failed to remove file".into(), source: err })
+                        }
+                        idx += 1;
+                        callback(Event::Progress { max, current: idx });
+                    }
+                }
+                Err(err) => {
+                    error!("{}",err);
+                }
+            }
+        }
+    }
+
+    if let Err(err) = install_mods(profile,game_dir,mods,callback).await { 
+        return Err(err); 
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::utils::get_minecraft_directory;
+    use log::{error,info};
 
+    fn init_logger(){
+       let _ = env_logger::builder().filter_level(log::LevelFilter::Trace).is_test(true).try_init();
+    }
+
+    #[tokio::test]
+    async fn test_update_mods() {
+        init_logger();
+        let mc = get_minecraft_directory().expect("Failed to get mc dir");
+        let profile = "d3b7c726-f461-4d58-9e04-14ab2b9b6380".to_string();
+        let mods: Vec<Mod> = vec![ Mod { 
+            name: "Sodium".into(), 
+            version: "0.4.2+build.16".into(), 
+            url: "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.19-0.4.2/sodium-fabric-mc1.19-0.4.2+build.16.jar".into(), 
+            sha1: "6c1b055bce99d0bf64733e0ff95f347e4cd171f3".into(), 
+            uuid: "cec101023728409abc947c4102204b01".into() 
+        } ];
+
+
+        if let Err(err) = update_mods(profile, mc, mods, &|e|{
+            info!("{:#?}",e);
+        }).await {
+            error!("{}",err);
+            panic!();
+        }
+
+    }
+    
     #[tokio::test]
     async fn test_swap_system_mods(){
         let mc = get_minecraft_directory().expect("Failed to get mc dir");

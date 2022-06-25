@@ -106,11 +106,10 @@ describe("AddModToProfile",()=>{
             expect.arrayContaining([
                 expect.objectContaining({
                     name: "Sodium", 
-                    id: "9aafee3e-57eb-4c81-8331-88aa5a91755f", 
-                    download: {
-                        url: "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.18.2-0.4.1/sodium-fabric-mc1.18.2-0.4.1+build.15.jar",
-                        version: "0.4.1+build.15"
-                    }
+                    uuid: "9aafee3e-57eb-4c81-8331-88aa5a91755f", 
+                    url: "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.18.2-0.4.1/sodium-fabric-mc1.18.2-0.4.1+build.15.jar",
+                    version: "0.4.1+build.15",
+                    sha1: ""
                 })
             ])
         );
@@ -142,11 +141,10 @@ describe("AddModToProfile",()=>{
             expect.arrayContaining([
                 expect.objectContaining({
                     name: "OptiFabric", 
-                    id: "ea98224a-67b9-4e4c-a3e3-fb29a38fbf78", 
-                    download: {
-                        url: "https://media.forgecdn.net/files/3717/575/optifabric-1.13.0.jar",
-                        version: "1.13.0"
-                    }
+                    uuid: "ea98224a-67b9-4e4c-a3e3-fb29a38fbf78", 
+                    url: "https://media.forgecdn.net/files/3717/575/optifabric-1.13.0.jar",
+                    version: "1.13.0",
+                    sha1: ""
                 })
             ])
         );
@@ -167,11 +165,10 @@ describe("AddModToProfile",()=>{
             expect.arrayContaining([
                 expect.objectContaining({
                     name: "OptiFine", 
-                    id: "42d8622a-fdf4-4f8c-ba6e-106ccf762e63", 
-                    download: {
-                        url: "https://optifine.net/downloadx?f=OptiFine_1.18.2_HD_U_H7.jar&x=7b1ab8c724a72121db100463d726b921",
-                        version: "HD_U_H7"
-                    }
+                    uuid: "42d8622a-fdf4-4f8c-ba6e-106ccf762e63", 
+                    url: "https://optifine.net/downloadx?f=OptiFine_1.18.2_HD_U_H7.jar&x=68dd4ac0c862b18d1d5190d64dff774f",
+                    version: "HD_U_H7",
+                    sha1: ""
                 })
             ])
         );

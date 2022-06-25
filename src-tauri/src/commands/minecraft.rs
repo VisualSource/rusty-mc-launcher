@@ -12,8 +12,18 @@ pub async fn remove_mods_folder(profile: String) -> Result<(), String> {
 
     let dir = game_dir.join("system_mods").join(profile);
 
-    if let Err(err) = remove_dir_all(dir).await {
-        return Err(err.to_string());
+    if dir.is_dir() {
+        if let Err(err) = remove_dir_all(dir).await {
+            return Err(err.to_string());
+        }
+    }
+
+    let mods_link = game_dir.join("mods");
+
+    if mods_link.is_dir() {
+        if let Err(err) = remove_dir_all(mods_link).await {
+            return Err(err.to_string());
+        }
     }
 
     Ok(())

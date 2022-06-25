@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { toast } from "react-toastify";
-import { useComponentDidMount } from '../../lib/hooks';
+import useComponentDidMount from '../../lib/hooks/useComponentDidMount';
 import { TokenRefresh, InvokeLogin, InvokeLogout } from '../../lib/invoke';
 import { AuthError } from '../../lib/errors';
 import DB from "../../lib/db";

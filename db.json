@@ -12,7 +12,7 @@
             "card": "",
             "banner": "",
             "author": "ValhelsiaTeam",
-            "mods": []
+            "mods": ["9aafee3e-57eb-4c81-8331-88aa5a91755f"]
         }
     ],
     "mods": [
@@ -35,8 +35,9 @@
             "download": {
                 "fabric":{
                     "1.18.2": {
-                        "url": "https://optifine.net/downloadx?f=OptiFine_1.18.2_HD_U_H7.jar&x=7b1ab8c724a72121db100463d726b921",
-                        "version": "HD_U_H7"
+                        "url": "https://optifine.net/downloadx?f=OptiFine_1.18.2_HD_U_H7.jar&x=68dd4ac0c862b18d1d5190d64dff774f",
+                        "version": "HD_U_H7",
+                        "sha1":""
                     }
                 }
             }
@@ -61,7 +62,8 @@
                 "fabric":{
                     "1.18.*": {
                         "url": "https://media.forgecdn.net/files/3717/575/optifabric-1.13.0.jar",
-                        "version": "1.13.0"
+                        "version": "1.13.0",
+                        "sha1":""
                     }
                 }
             }
@@ -84,11 +86,13 @@
                 "fabric": {
                     "1.19": {
                         "url": "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.19-0.4.2/sodium-fabric-mc1.19-0.4.2+build.16.jar",
-                        "version": "0.4.2+build.16"
+                        "version": "0.4.2+build.16",
+                        "sha1": "6c1b055bce99d0bf64733e0ff95f347e4cd171f3"
                     },
                     "1.18.2": {
                         "url": "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.18.2-0.4.1/sodium-fabric-mc1.18.2-0.4.1+build.15.jar",
-                        "version": "0.4.1+build.15"
+                        "version": "0.4.1+build.15",
+                        "sha1":""
                     }
                 }
             }

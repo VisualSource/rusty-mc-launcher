@@ -36,6 +36,14 @@ export default function View(){
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const { uuid } = useParams();
+    const mutate_profile = useMutation<any,any,any,any>(async (data: { uuid: string, profile: string })=>{
+        await DB.Get().removeMod(data.profile,data.uuid);
+        return data.profile;
+    },{
+        async onSuccess(data) {
+            await queryClient.invalidateQueries(["profile",data]);
+        }
+    });
     const mutate = useMutation(handleMutation, { 
         async onSuccess(data) {
             if(data === "del") {
@@ -108,7 +116,7 @@ export default function View(){
                                         <img src={mod.icon} alt="mod preview" />
                                         <span>{mod.name}</span>
                                     </div>
-                                    <Button icon="trash" small intent="danger"/>
+                                    <Button icon="trash" small intent="danger" onClick={()=>mutate_profile.mutate({ profile: data.uuid, uuid: mod.id })}/>
                                 </li>
                             ))) }
                         </ul>

@@ -23,3 +23,4 @@ export const InstallNatives = (version: VersionId) => invoke<void>("install_nati
 export const SawpModsFolders = (profile: string) => invoke<void>("sawp_mods_folders",{ profile });
 export const InstallMods = (profile: string, mods: DownloadMod[]) => invoke<void>("install_mods_list",{ profile, mods });
 export const RemoveModsFolder = (profile: string) => invoke<void>("remove_mods_folder",{ profile });
+export const UpdateModList = (profile: string, mods: DownloadMod[]) => invoke<void>("update_mods_list",{profile,mods});

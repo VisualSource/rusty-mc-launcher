@@ -24,9 +24,10 @@ export interface Mod {
     } | null
     download: {
         [loader: string]: {
-            [minecraft: string]: {
+            [minecraft: Minecraft]: {
                 url: string;
                 version: string;
+                sha1: string;
             }
         }
     }
