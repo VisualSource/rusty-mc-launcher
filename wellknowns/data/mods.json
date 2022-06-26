@@ -1,6 +1,28 @@
 [
     {
         "update": "6/25/22",
+        "uuid": "DfxA0pLashTHp_MMtCUyN",
+        "description": "Adds a screen for viewing a list of installed mods.",
+        "icon": "https://media.forgecdn.net/avatars/thumbnails/281/367/64/64/637285257027983134.png",
+        "name": "Mod Menu",
+        "author": "TerraformersMC",
+        "tags": ["Cosmetic"],
+        "minecraft": ["1.19"],
+        "loaders": ["fabric"],
+        "required" : null,
+        "inconpatable": null,
+        "download": {
+            "fabric": {
+                "1.19": {
+                    "url": "https://github.com/TerraformersMC/ModMenu/releases/download/v4.0.0/modmenu-4.0.0.jar",
+                    "version": "4.0.0",
+                    "sha1": "04be7e499bf67be0fea40d15f17a9ec47f21c309"
+                }
+            }
+        }
+    },
+    {
+        "update": "6/25/22",
         "uuid": "3PIk6jr0docAbsUOVKSf0",
         "description": "The Iris Project is a collaborative open-source project created by a team of passionate developers seeking to make the Minecraft shaders experience the best that it can be. Iris is developed by the community, for the community.",
         "icon": "https://media.forgecdn.net/avatars/thumbnails/393/276/64/64/637588493674460514.png",

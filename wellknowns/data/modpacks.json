@@ -3,7 +3,7 @@
         "uuid": "3mXM_3C2rhjJBgpAxtWYX",
         "update": "6/25/22",
         "description": "A pack to replace OptiFine, and with better performance",
-        "tags": ["Adventure & RPG","Explortaion","Magic","Vanilla+","Tech"],
+        "tags": ["Vanilla+"],
         "minecraft": ["1.19"],
         "loaders": ["fabric"],
         "name": "Vanilla+",
@@ -17,7 +17,8 @@
             "tEwWpOubfBBIzQ6vyq2lX",
             "cAws6S_LZuiab3cN4SBYx",
             "g7m8nXabxxZq1pL1Jw1QG",
-            "TDFgF_QqAKLSGA1cT6hfL"
+            "TDFgF_QqAKLSGA1cT6hfL",
+            "DfxA0pLashTHp_MMtCUyN"
         ]
     }
 ]
