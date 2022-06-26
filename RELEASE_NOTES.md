@@ -1,5 +1,9 @@
 # Release Notes
 
+### V0.1.9
+   - disable msa single sign-on
+   - add duplicate download check
+
 ### V0.1.7
     - fix login caching
 #### mc_launcher_lib_rs

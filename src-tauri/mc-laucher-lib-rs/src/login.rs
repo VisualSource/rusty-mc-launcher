@@ -11,18 +11,25 @@ use crate::json::{
 };
 use log::debug;
 use serde_json::json;
+use uuid::Uuid;
 
+const MS_LOGIN: &str = "https://login.live.com/oauth20_authorize.srf"; 
 const MS_TOKEN_AUTHORIZATION_URL: &str = "https://login.live.com/oauth20_token.srf";
 const MC_PROFILE: &str = "https://api.minecraftservices.com/minecraft/profile";
 const MINECRAFT_AUTH_LOGIN: &str = "https://api.minecraftservices.com/authentication/login_with_xbox";
 const AUTH_XSTS: &str = "https://xsts.auth.xboxlive.com/xsts/authorize";
 const XBOX_LOGIN: &str = "https://user.auth.xboxlive.com/user/authenticate";
 
+/// https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
 pub fn ms_login_url(client_id: String, redirect_uri: String) -> String {
+    let state = Uuid::new_v4();
+    
     format!(
-        "https://login.live.com/oauth20_authorize.srf?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope=XboxLive.signin%20Xboxlive.offline_access&state=<optional;",
+        "{route}?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope=XboxLive.signin%20XboxLive.offline_access&state={state}&prompt=login",
         client_id=client_id,
-        redirect_uri=redirect_uri    
+        redirect_uri=redirect_uri,
+        state=state.as_simple().to_string(),
+        route=MS_LOGIN  
     ).to_string()
 }
 
@@ -58,7 +65,6 @@ async fn get_xbox_profile(xsts_token: String, xuid: String) -> LibResult<String>
         }
     }
 }
-
 
 pub fn get_auth_code(url: String) -> Option<String> {
     let query = urlparse::urlparse(url);
@@ -281,10 +287,10 @@ pub async fn login_microsoft(client_id: String, redirect_uri: String, auth_code:
     };
 
 
-    match get_xbox_profile(xsts.token, xuid.clone()).await {
+   /*  match get_xbox_profile(xsts.token, xuid.clone()).await {
         Ok(_value) => {}
         Err(err) => return Err(err)
-    }
+    }*/
 
     Ok(Account {
         profile,
@@ -343,7 +349,7 @@ pub async fn login_microsoft_refresh(client_id: String, redirect_uri: String, re
 #[cfg(test)]
 mod tests {
     use super::*;
-    use log::{ info, error };
+    use log::{ info, error, debug };
     fn init_logger(){
         let _ = env_logger::builder().filter_level(log::LevelFilter::Trace).is_test(true).try_init();
     }

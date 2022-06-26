@@ -1,4 +1,48 @@
 use mc_laucher_lib_rs::utils::get_minecraft_directory;
+use mc_laucher_lib_rs::swap_mods_folder;
+use tokio::fs::remove_dir_all;
+
+
+#[tauri::command]
+pub async fn remove_mods_folder(profile: String) -> Result<(), String> {
+    let game_dir = match get_minecraft_directory() {
+        Ok(value) => value,
+        Err(err) => return Err(err.to_string())
+    };
+
+    let dir = game_dir.join("system_mods").join(profile);
+
+    if dir.is_dir() {
+        if let Err(err) = remove_dir_all(dir).await {
+            return Err(err.to_string());
+        }
+    }
+
+    let mods_link = game_dir.join("mods");
+
+    if mods_link.is_dir() {
+        if let Err(err) = remove_dir_all(mods_link).await {
+            return Err(err.to_string());
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn sawp_mods_folders(profile: String) -> Result<(), String> {
+    let game_dir = match get_minecraft_directory() {
+        Ok(value) => value,
+        Err(err) => return Err(err.to_string())
+    };
+
+    if let Err(err) = swap_mods_folder(profile,game_dir).await {
+        return Err(err.to_string());
+    }
+
+    Ok(())
+}
+
 
 #[tauri::command]
 pub async fn check_version(version: String) -> Result<(bool,&'static str), String> {

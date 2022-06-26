@@ -9,6 +9,17 @@ import App from './pages/App';
 import { UserProvider } from './components/account/Account';
 import reportWebVitals from './reportWebVitals';
 import "./styles/global.sass";
+import DB from './lib/db';
+
+
+const update_check = window.localStorage.getItem("update_check");
+
+if(!update_check || update_check !== "V1.9") {
+    console.log("Update Check");
+    DB.Get().Clear();
+    window.localStorage.clear();
+    window.localStorage.setItem("update_check","V1.9");
+}
 
 const queryClient = new QueryClient();
 

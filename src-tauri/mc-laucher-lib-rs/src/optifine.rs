@@ -2,6 +2,7 @@ use crate::utils::{ get_http_client, download_file };
 use crate::expections::{ LauncherLibError,LibResult };
 use crate::runtime::get_exectable_path;
 use crate::install::install_minecraft_version;
+use crate::runtime::{ install_jvm_runtime, does_runtime_exist };
 use crate::json::{
     runtime::MinecraftJavaRuntime,
     install::{
@@ -15,7 +16,7 @@ use std::process::{ Stdio };
 use std::path::PathBuf;
 use log::{info};
 
-const OPTIFINE_HEADLESS: &str = "https://github.com/VisualSource/mc-installer-v2/raw/master/wellknowns/jars/optifineheadless.jar";
+const OPTIFINE_HEADLESS: &str = "https://github.com/VisualSource/rusty-mc-launcher/raw/master/wellknowns/jars/optifineheadless.jar";
 //const OPTIFINE_HEADLESS_SHA1: &str = "";
 const OPTIFINE_DOWNLOADS_PAGE: &str = "https://optifine.net/downloads";
 
@@ -111,6 +112,19 @@ pub async fn get_optifine_download(url: String) -> LibResult<String> {
 }
 
 pub async fn install_optifine(mc: String, mc_dir: PathBuf, temp_path: PathBuf, callback: &impl Fn(Event), cache_path: Option<PathBuf>, loader: Option<String>, java: Option<PathBuf>, cache_headless: bool, cache_installer: bool) -> LibResult<()> {
+    
+    let runtime = MinecraftJavaRuntime::use_latest();
+    match does_runtime_exist(runtime.clone(), mc_dir.clone()) {
+        Ok(value) => {
+            if !value {
+                if let Err(err) = install_jvm_runtime(runtime, mc_dir.clone(), callback).await {
+                    return Err(err);
+                }
+            }
+        }
+        Err(err) => return Err(err)
+    }
+    
     let versions: Vec<OptifineVersion> = match get_optifine_versions().await {
         Ok(value) => value,
         Err(err) => return Err(err)

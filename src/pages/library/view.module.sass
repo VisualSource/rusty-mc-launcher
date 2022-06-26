@@ -47,7 +47,37 @@
 .view_main
     padding-left: 10px
     padding-right: 10px
+    &:last-child
+        padding-bottom: 10px
 .view_quick_links
     display: flex 
     gap: 5px
     align-items: center
+
+.mods_list
+    > ul 
+        list-style: none
+        padding-left: 0
+        gap: 2px
+.mod_item
+    &:hover
+        background-color: $dark-gray3
+    display: flex 
+    justify-content: space-between
+    background-color: $dark-gray2
+    padding-bottom: 5px
+    padding-top: 5px
+    cursor: pointer
+    user-select: none
+    border: 1px solid rgba(255, 255, 255, 0.2)
+    > button 
+        margin-right: 10px
+    div 
+        margin-left: 10px
+        display: flex
+        align-content: center 
+        align-items: center
+        gap: 10px
+        > img
+          height: 40px
+          width: 40px 

@@ -1,6 +1,14 @@
-import { Loader, Minecraft, VersionId, OptifineVersionId, FabricVersionId, ForgeVersionId } from "../types";
+import type { Loader, Minecraft, VersionId, OptifineVersionId, FabricVersionId, ForgeVersionId } from "../types";
+import { satisfies, coerce } from "semver";
 import { FabricIcon, ForgeIcon, OptiFineIcon } from "./images";
 
+/**
+ * Returns the default icon for a give loader version.
+ *
+ * @export
+ * @param {VersionId} lastVersionId
+ * @return {*}  {string}
+ */
 export function GetLoaderCard(lastVersionId: VersionId): string {
     const id = ParseID(lastVersionId);
     switch(id.loader) {
@@ -15,6 +23,13 @@ export function GetLoaderCard(lastVersionId: VersionId): string {
     }
 }
 
+/**
+ * Gets the default banner icon for a given loader
+ *
+ * @export
+ * @param {VersionId} lastVersionId
+ * @return {*}  {string}
+ */
 export function GetLoaderBanner(lastVersionId: VersionId): string {
     const id = ParseID(lastVersionId);
     switch(id.loader) {
@@ -29,6 +44,13 @@ export function GetLoaderBanner(lastVersionId: VersionId): string {
     }
 }
 
+/**
+ * Gets a give loader default icon
+ *
+ * @export
+ * @param {VersionId} lastVersionId
+ * @return {*}  {string}
+ */
 export function GetLoaderIcon(lastVersionId: VersionId): string {
     const id = ParseID(lastVersionId);
     switch(id.loader) {
@@ -43,6 +65,16 @@ export function GetLoaderIcon(lastVersionId: VersionId): string {
     }
 }
 
+/**
+ * takes the minecraft version, loader, and loader version and combines them into a single string 
+ * as used in the offical launcher. Ext 1.18.2-forge-0.11.1
+ * @export
+ * @param {(string | null)} minecraft
+ * @param {(string | null)} loader
+ * @param {(string | null)} loader_v
+ * @param {Minecraft[]} mc
+ * @return {*}  {VersionId}
+ */
 export function StringifyID(minecraft: string | null, loader: string | null, loader_v: string | null, mc: Minecraft[]): VersionId {
     let v = minecraft;
     if(minecraft === "latest-release") v = mc[0];
@@ -98,4 +130,46 @@ export function ParseID(lastVersionId: VersionId): { minecraft: Minecraft, loade
         loader: modloader,
         loader_version: version
     };
+}
+
+export function SatisfiesMinecraftVersion(lastVersionId: VersionId, version: Minecraft): boolean {
+    const { minecraft } = ParseID(lastVersionId);
+
+    let range = version;
+    if(!version.includes("*")) {
+        const fixed_range = coerce(version);
+        if(!fixed_range) throw new Error("Failed to coerce version");
+        range = fixed_range.version as Minecraft;
+    }
+
+    const fixed_mc = coerce(minecraft);
+    if(!fixed_mc) throw new Error("Failed to coerce version");
+
+    return satisfies(fixed_mc.version,range);
+}
+
+export function isModded(lastVersionId: VersionId): boolean {
+    return lastVersionId.includes("fabric") || lastVersionId.includes("forge");
+}
+
+
+/**
+ * SHA-1 string hashing
+ *
+ * @export
+ * @param {string} str
+ * @return {*}  {number}
+ */
+export function StringHash(str: string): number {
+    let hash = 0;
+
+    if(str.length === 0) return hash;
+
+    for(const i of str) {
+        const char = i.charCodeAt(0);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+
+    return hash;
 }

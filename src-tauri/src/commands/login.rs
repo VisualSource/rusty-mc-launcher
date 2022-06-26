@@ -48,16 +48,17 @@ pub async fn logout_done<R: Runtime>(window: tauri::Window<R>) -> Result<(), Str
 }
 
 #[tauri::command]
-pub async fn auth_error<R: Runtime>(window: tauri::Window<R>, error: String) -> Result<(), String> {
+pub async fn auth_error<R: Runtime>(window: tauri::Window<R>, msg: String) -> Result<(), String> {
     if window.label() == "ms-login" || window.label() == "ms-logout" {
-       if let Err(err) = window.emit_to("main", "auth_error", error) {
+        error!("{}",msg);
+        if let Err(err) = window.emit_to("main", "auth_error", msg) {
            error!("{}",err);
-       }
+        }
 
-       if let Err(err) = window.close() {
+        if let Err(err) = window.close() {
            error!("{}",err);
-       }
-       return Ok(());
+        }
+        return Ok(());
     }
 
     Err("Can't operate on given window".to_string())

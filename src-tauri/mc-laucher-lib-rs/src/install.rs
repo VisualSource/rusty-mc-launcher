@@ -11,7 +11,7 @@ use crate::json::{
 use std::env::consts;
 use std::path::PathBuf;
 use futures::StreamExt;
-use tokio::fs::read_to_string;
+use tokio::fs::{read_to_string, create_dir_all, remove_dir, remove_file };
 use log::{ error, info };
 use serde::Deserialize;
 
@@ -67,8 +67,6 @@ pub fn parse_java_dep_native(name: String, url: Option<String>, native: String) 
 
     Ok((outpath,download_url))
 }
-
-
 
 pub async fn install_libraries(id: String, libraries: &Vec<Library>, path: PathBuf, callback: &impl Fn(Event)) -> LibResult<()> {
 
@@ -248,8 +246,6 @@ async fn install_assets(manifest: &VersionManifest, path: PathBuf, callback: &im
     Ok(())
 }
 
-
-
 async fn do_version_install(version_id: String, path: PathBuf, callback: &impl Fn(Event), url: Option<String>) -> LibResult<()> {
 
     let version_manifest = path.join("versions").join(version_id.clone()).join(format!("{}.json",version_id.clone()));
@@ -331,9 +327,177 @@ pub async fn install_minecraft_version(version_id: String, mc_dir: PathBuf, call
     }
 }
 
+pub async fn swap_mods_folder(profile: String, game_dir: PathBuf) -> LibResult<()> {
+
+    let dir = game_dir.clone().join("system_mods").join(profile);
+    let mod_dir = game_dir.join("mods");
+    
+    if !dir.is_dir() {
+        if let Err(err) = create_dir_all(dir.clone()).await {
+            return Err(LauncherLibError::OS { msg: "Failed to create system mods directory".into(), source: err });
+        }
+    }
+
+    if mod_dir.exists() {
+        if let Err(err) = remove_dir(mod_dir.clone()).await {
+            return Err(LauncherLibError::OS { msg: "Failed to remove mods link".into(), source: err });
+        }
+    }
+
+
+    // can't create a symlink on windows without admin, this should work, needs testing
+    #[cfg(windows)]
+    {
+        use tokio::process::Command;
+
+        if let Err(err) = Command::new("powershell").args(
+            ["New-Item","-ItemType","Junction","-Path",mod_dir.to_str().expect("Failed to make str"),"-Target",dir.to_str().expect("Failed to make str")]
+        ).output().await {
+            return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
+        }
+    }
+
+    #[cfg(not(windows))]
+    {
+        use tokio::fs::symlink_dir;
+
+        if let Err(err) = symlink_dir(src, dst).await {
+            return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
+        }
+    }
+  
+
+    Ok(())
+}
+
+#[derive(Deserialize)]
+pub struct Mod {
+    name: String,
+    version: String,
+    uuid: String,
+    url: String,
+    sha1: String
+}
+
+//https://patshaughnessy.net/2020/1/20/downloading-100000-files-using-async-rust
+pub async fn install_mods(profile: String, game_dir: PathBuf, mods: Vec<Mod>, callback: &impl Fn(Event)) -> LibResult<()> {
+
+    let outdir = game_dir.join("system_mods").join(profile);
+
+    let max = mods.len();
+    let mut idx = 0;
+
+    callback(Event::Status("Downloading Mods".into()));
+    callback(Event::Progress { max, current: 0 });
+
+    let fetches = futures::stream::iter(
+        mods.into_iter().map(|item|{
+            let dir = outdir.clone();
+            async move {
+                let file = dir.join(format!("{}-({}-{}).jar",item.uuid,item.name,item.version));
+                if let Err(err) = download_file(item.url, file, callback, Some(item.sha1), false).await {
+                    return Err(err);
+                }
+
+                idx += 1;
+                callback(Event::Progress { max, current: idx });
+
+                Ok(())
+            }
+        })
+    ).buffer_unordered(8).collect::<Vec<LibResult<()>>>();
+
+    fetches.await;
+
+    Ok(())
+}
+
+pub async fn update_mods(profile: String, game_dir: PathBuf, mods: Vec<Mod>,  callback: &impl Fn(Event)) -> LibResult<()> {
+    let profile_dir = game_dir.join("system_mods").join(profile.clone());
+
+    if profile_dir.is_dir() {
+        let dir = match profile_dir.read_dir() {
+            Ok(value) => value.into_iter(),
+            Err(err) => return Err(LauncherLibError::OS { msg: "Failed to read mods directory".into(), source: err })
+        };
+
+        let max = mods.len();
+        let mut idx = 0;
+
+        callback(Event::Status("Removing old files".into()));
+        callback(Event::Progress { max, current: 0 });
+    
+        for file in dir {
+            match file {
+                Ok(value) => {
+                    let file_name = value.file_name().into_string().expect("Failed to get file name");
+                    for i in &mods {
+                        if !file_name.starts_with(&i.uuid) {
+                            continue;
+                        }
+                        if let Err(err) = remove_file(value.path()).await {
+                            return Err(LauncherLibError::OS { msg: "Failed to remove file".into(), source: err })
+                        }
+                        idx += 1;
+                        callback(Event::Progress { max, current: idx });
+                    }
+                }
+                Err(err) => {
+                    error!("{}",err);
+                }
+            }
+        }
+    }
+
+    if let Err(err) = install_mods(profile,game_dir,mods,callback).await { 
+        return Err(err); 
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::get_minecraft_directory;
+    use log::{error,info};
+
+    fn init_logger(){
+       let _ = env_logger::builder().filter_level(log::LevelFilter::Trace).is_test(true).try_init();
+    }
+
+    #[tokio::test]
+    async fn test_update_mods() {
+        init_logger();
+        let mc = get_minecraft_directory().expect("Failed to get mc dir");
+        let profile = "d3b7c726-f461-4d58-9e04-14ab2b9b6380".to_string();
+        let mods: Vec<Mod> = vec![ Mod { 
+            name: "Sodium".into(), 
+            version: "0.4.2+build.16".into(), 
+            url: "https://github.com/CaffeineMC/sodium-fabric/releases/download/mc1.19-0.4.2/sodium-fabric-mc1.19-0.4.2+build.16.jar".into(), 
+            sha1: "6c1b055bce99d0bf64733e0ff95f347e4cd171f3".into(), 
+            uuid: "cec101023728409abc947c4102204b01".into() 
+        } ];
+
+
+        if let Err(err) = update_mods(profile, mc, mods, &|e|{
+            info!("{:#?}",e);
+        }).await {
+            error!("{}",err);
+            panic!();
+        }
+
+    }
+    
+    #[tokio::test]
+    async fn test_swap_system_mods(){
+        let mc = get_minecraft_directory().expect("Failed to get mc dir");
+
+        if let Err(err) = swap_mods_folder("889asdfedf".into(),mc).await {
+            eprintln!("{}",err);
+        }
+    }
+
     #[test]
     fn test_parse_name(){
         match parse_java_dep("org.lwjgl:lwjgl-jemalloc:3.3.1".to_string(),None){

@@ -1,14 +1,11 @@
 import { Button, Divider, Intent, Spinner } from "@blueprintjs/core";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
 import DB from "../../lib/db";
-import { RunMinecraft, CheckVersion } from '../../lib/invoke';
 import { useUser } from "../../components/account/Account";
-import DownloadManger from "../../lib/download";
+import LaunchGame from "../../lib/run";
 import css from "./view.module.sass";
 import type { Profile } from "../../types";
-
 const parseTime = (time: string): string => {
     const formater = Intl.DateTimeFormat("en-us",{});
     const og = Date.parse(time);
@@ -25,7 +22,7 @@ async function handleMutation(ev: { type: "edit" | "del", data: any }){
     const db = DB.Get();
 
     if(ev.type === "del") {
-        await db.profiles.remove({ uuid: ev.data });
+        await db.dropProfile(ev.data);
         return ev.type;
     }
 
@@ -39,6 +36,14 @@ export default function View(){
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const { uuid } = useParams();
+    const mutate_profile = useMutation<any,any,any,any>(async (data: { uuid: string, profile: string })=>{
+        await DB.Get().removeMod(data.profile,data.uuid);
+        return data.profile;
+    },{
+        async onSuccess(data) {
+            await queryClient.invalidateQueries(["profile",data]);
+        }
+    });
     const mutate = useMutation(handleMutation, { 
         async onSuccess(data) {
             if(data === "del") {
@@ -51,38 +56,7 @@ export default function View(){
    
     const run = async () => {
         try {
-            if(!user.active || !user.profile) throw new Error("User is not authorized");
-            if(!data) throw new Error("Profile is invaild");
-            
-            const [installed,check_type] = await CheckVersion(data.lastVersionId);
-            
-            if(!installed) {
-                switch (check_type) {
-                    case "no_jar":
-                    case "no_manifest":
-                    case "no_root": {
-                        toast.info(`Installing ${data.lastVersionId}`);
-                        const res = await DownloadManger.Get().install({ type: "client", data: data.lastVersionId });
-                        if(res === null) return navigate("/download");
-                        break;
-                    }
-                    case "no_natives": {
-                        toast.info(`Installing Natives for ${data.lastVersionId}`);
-                        const res = await DownloadManger.Get().install({ type: "natives_install", data: data.lastVersionId });
-                        if(res === null) return navigate("/download");
-                        break;
-                    }
-                }
-            }
-        
-            // if modded do mod handling
-            // probbly would do modpack update checking here
-
-            await toast.promise(RunMinecraft({ profile: user.profile, version: data.lastVersionId }),{
-                pending: "Launching Minecraft",
-                error: "Failed to launch Minecraft",
-                success: "Launched Minecraft"
-            });
+            await LaunchGame(data,user);
         } catch (error) {
             console.error(error);
         }
@@ -129,10 +103,27 @@ export default function View(){
                     <Divider/>
                     <div>UUID: {data?.uuid}</div>
                     <div>Minecraft: {data?.lastVersionId}</div>
-                    <div>Modpack: {JSON.stringify(data?.isModpack)}</div>
+                    <div>Modpack: {data?.isModpack ? "yes" : "no"}</div>
+                </div>
+                <div className={css.group}>
+                    <h3 id="mods">Mods</h3>
+                    <details className={css.mods_list}>
+                        <summary>Click to view mod list</summary>
+                        <ul>
+                            { data?.mods.map(((mod,i)=>(
+                                <li className={css.mod_item} key={i}>
+                                    <div>
+                                        <img src={mod.icon} alt="mod preview" />
+                                        <span>{mod.name}</span>
+                                    </div>
+                                    <Button icon="trash" small intent="danger" onClick={()=>mutate_profile.mutate({ profile: data.uuid, uuid: mod.id })}/>
+                                </li>
+                            ))) }
+                        </ul>
+                    </details>
                 </div>
                 <div>
-                    <h3 id="#general">Settings</h3>
+                    <h3 id="general">Settings</h3>
                     <Button text="Delete Profile" icon="trash" intent={Intent.DANGER} onClick={()=>mutate.mutate({ type: "del", data: uuid })}/>
                 </div>
             </main>

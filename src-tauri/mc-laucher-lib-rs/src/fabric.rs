@@ -4,6 +4,7 @@ use crate::vanilla::get_vanilla_versions;
 use crate::mod_utiles::get_metadata;
 use crate::runtime::get_exectable_path;
 use crate::install::install_minecraft_version;
+use crate::runtime::{ install_jvm_runtime, does_runtime_exist };
 use crate::json::{
     runtime::MinecraftJavaRuntime,
     install::{ Event }
@@ -127,6 +128,18 @@ async fn get_latest_installer() -> LibResult<String> {
 }
 /// handles that install of the fabric client along with minecraft
 pub async fn install_fabric(mc: String, mc_dir: PathBuf, loader: Option<String>, callback: &impl Fn(Event), java: Option<PathBuf>, temp_path: PathBuf) -> LibResult<()> {
+
+    let runtime = MinecraftJavaRuntime::use_latest();
+    match does_runtime_exist(runtime.clone(), mc_dir.clone()) {
+        Ok(value) => {
+            if !value {
+                if let Err(err) = install_jvm_runtime(runtime, mc_dir.clone(), callback).await {
+                    return Err(err);
+                }
+            }
+        }
+        Err(err) => return Err(err)
+    }
 
     let mc_path = mc_dir.join("versions").join(mc.clone()).join(format!("{}.json",mc));
 

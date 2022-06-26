@@ -32,9 +32,13 @@ fn main() -> std::io::Result<()> {
     login::logout_done,
     login::auth_error,
     minecraft::check_version,
+    minecraft::sawp_mods_folders,
+    minecraft::remove_mods_folder,
     run::run_minecraft,
     install::install_client,
     install::install_natives,
+    install::install_mods_list,
+    install::update_mods_list,
     logger::log
     ])
     .run(tauri::generate_context!())

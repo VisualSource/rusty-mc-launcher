@@ -1,15 +1,26 @@
 import { listen } from '@tauri-apps/api/event';
 import EventEmitter from 'events';
 import { toast } from 'react-toastify';
-import { ParseID } from './ids';
-import { InstallClient, InstallNatives } from './invoke';
+import { ParseID, StringHash } from './ids';
+import { InstallClient, InstallNatives, Log, InstallMods, UpdateModList } from './invoke';
 import type { InstallManifest } from '../types';
 
-export type InstallType = "mod" | "modpack" | "client" | "natives_install";
+export type InstallType = "install_mods" | "update_mods" | "client" | "natives_install";
+type DownloadRequest = { type: InstallType, data: any, id: number };
 
+
+/**
+ * Mannager for handling install of mod,modpacks,clients,and installtion of natives
+ * has queue system so mods and a client can be installed without forgeting about it.
+ *
+ * @export
+ * @class DownloadManger
+ * @extends {EventEmitter}
+ */
 export default class DownloadManger extends EventEmitter {
-    private _queue: { type: InstallType, data: any}[] = [];
+    private _queue: DownloadRequest[] = [];
     private occupited: boolean = false;
+    private current: DownloadRequest | null | undefined;
     public downloading: string = "Downloading Resource"; 
     static INSTANCE: DownloadManger | null = null;
     static Get(): DownloadManger {
@@ -36,9 +47,21 @@ export default class DownloadManger extends EventEmitter {
     public is_occupited(): boolean {
         return this.occupited;
     }
-    private enqueue(el: any): void {
-        this._queue.push(el);
+    private enqueue(el: { type: InstallType, data: any}): boolean {
+
+        let data = { ...el, id: StringHash(JSON.stringify(el.data)) };
+
+        if(this.current?.id === data.id) {
+            return false;
+        }
+
+        if(this._queue.some(value=>value.id===data.id)) {
+            return false;
+        }
+
+        this._queue.push(data);
         this.emit("enqueue");
+        return true;
     }
     private dequeue() {
         if(this.is_empty()) return null;
@@ -55,20 +78,22 @@ export default class DownloadManger extends EventEmitter {
     public is_empty(): boolean {
         return this._queue.length === 0;
     }
-    private async run(){
+    private async run(): Promise<void> {
         this.occupited = true;
 
-        const current = this.dequeue();
+        this.current = this.dequeue();
+
+        if(!this.current) return;
 
         this.emit("download_start");
        
-        switch (current?.type) {
+        switch (this.current.type) {
             case "client":{
                try {
-                    this.downloading = `Minecraft Client ${current.data}`;
+                    this.downloading = `Minecraft Client ${this.current.data}`;
                     this.emit("downloading",this.downloading);
 
-                    const data = ParseID(current.data);
+                    const data = ParseID(this.current.data);
 
                     const manifest: InstallManifest = {
                         cache_cli: true,
@@ -88,17 +113,43 @@ export default class DownloadManger extends EventEmitter {
                }
                 break;
             }
-            case "mod": 
-                toast.error("Mod installs have not been implemented yet.");
+            case "install_mods": {
+                try {
+                    this.downloading = `Installing mods`;
+                    this.emit("downloading",this.downloading);
+                    
+                    await InstallMods(this.current.data.profile,this.current.data.mods);
+                    
+
+                    toast.info("Finished Downloading Mods");
+                } catch (error: any) {
+                    console.error(error);
+                    this.emit("error","Download failure");
+                    toast.error("There was an error in download a mod");
+                    if(error instanceof Error) Log(error.message,"error");
+                }
                 break;
-            case "modpack":
-                toast.error("Mod installs have not been implemented yet.");
-                break;
+            }
+            case "update_mods": {
+              try {
+                this.downloading = `Updating mods`;
+                this.emit("downloading",this.downloading);
+
+                await UpdateModList(this.current.data.profile,this.current.data.mods);
+
+              } catch (error) {
+                console.error(error);
+                this.emit("error","Download failure");
+                toast.error("There was an error in download a mod");
+                if(error instanceof Error) Log(error.message,"error");
+              }
+              break;
+            }
             case "natives_install": {
                 try {
-                    this.downloading = `Natives ${current.data}`;
+                    this.downloading = `Natives ${this.current.data}`;
                     this.emit("downloading",this.downloading);
-                    await InstallNatives(current.data);
+                    await InstallNatives(this.current.data);
                 } catch (error) {
                     console.error(error);
                     this.emit("error","Download failure");
@@ -119,15 +170,17 @@ export default class DownloadManger extends EventEmitter {
         this.occupited = false;
     }
     async install(request: { type: InstallType, data: any} ){
-        return new Promise<null | boolean>(async (ok,reject)=>{
+        return new Promise<boolean>(async (ok,reject)=>{
             try {
-                this.enqueue(request);
+                if(!this.enqueue(request)) {
+                    return ok(true);
+                }
 
                 if(!this.occupited) {
                     await this.run();
                     ok(true)
                 } else {
-                    ok(null)
+                    ok(false)
                 }
             } catch (error) {
                 reject(error);

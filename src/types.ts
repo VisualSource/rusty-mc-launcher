@@ -1,5 +1,5 @@
 export type Loader = "vanilla" | "fabric" | "forge" | "optifine";
-export type Minecraft = `${number}.${number}.${number | string}`;
+export type Minecraft = `${number}.${number}.${number}` | `${number}.${number}.*` | `${number}.${number}`;
 
 export type OptifineVersionId = `${Minecraft}-OptiFine_${string}_${string}_${string}${number}`;
 export type ForgeVersionId = `${Minecraft}-forge-${number}.${number}.${number}`;
@@ -33,7 +33,12 @@ export interface Account {
 export interface Profile {
     isModpack: boolean;
     uuid: string;
-    mods: string[],
+    mods: {
+        version: string;
+        id: string;
+        name: string;
+        icon: string;
+    }[],
     category: string;
     created: string;
     icon: string;

@@ -5,8 +5,11 @@ import { useDeferredValue, useEffect, useState } from "react";
 import { useOutletContext } from 'react-router-dom';
 import css from './view.module.sass';
 import { Loader, Minecraft } from "../../types";
+import { CreateModpack } from "../../lib/install";
+import { Log } from "../../lib/invoke";
+import { toast } from "react-toastify";
 
-interface ModPack {
+export interface ModPack {
     uuid: string;
     update: string;
     description: string;
@@ -57,8 +60,16 @@ export default function Modspacks(){
         search();
     },[tags,data,isLoading]);
 
-    const install_callback = (install: ModPack) => {
-        console.log("install",install.uuid);
+    const install_callback = async (install: ModPack) => {
+        try {
+            toast.info("Starting modpack install!");
+            await CreateModpack(install);
+            toast.success("Installed mod pack!");
+        } catch (error) {
+            toast.error("Failed to install modpack");
+            console.error(error);
+            if(error instanceof Error) Log(error.message);
+        }
     }
 
     if(isError) return (

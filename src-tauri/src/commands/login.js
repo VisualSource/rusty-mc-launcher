@@ -8,7 +8,7 @@ window.__RUN = () => {
             cmd: "auth_error",
             callback: 0,
             error: 1,
-            error: "No Internet"
+            msg: "No Internet"
         });
         return;
     }
@@ -46,7 +46,7 @@ window.__RUN = () => {
             cmd: "auth_error",
             callback: 0,
             error: 1,
-            error: params?.get("error_description") ?? "Unkown Error"
+            msg: params?.get("error_description") ?? "Unkown Error"
         });
         return;
     }
