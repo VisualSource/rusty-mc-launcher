@@ -9,6 +9,7 @@ use crate::json::{
         Account
     }
 };
+use log::debug;
 use serde_json::json;
 use uuid::Uuid;
 
@@ -32,6 +33,39 @@ pub fn ms_login_url(client_id: String, redirect_uri: String) -> String {
     ).to_string()
 }
 
+///
+///https://docs.microsoft.com/en-us/gaming/gdk/_content/gc/live/get-started/live-xbl-overview
+/// https://github.com/OpenXbox/xbox-webapi-python/blob/1a5aeb1b1ce94f38b5dae7f6b59938bc9ec112b2/xbox/webapi/api/provider/profile/__init__.py#L53
+async fn get_xbox_profile(xsts_token: String, xuid: String) -> LibResult<String> {
+    let client = match get_http_client().await {
+        Ok(value) => value,
+        Err(err) => return Err(err)
+    };
+
+    let body = [
+        ( "settings","Gamertag,ModernGamertag,GameDisplayPicRaw,UniqueModernGamertag")
+    ];
+
+    match client.get(format!("https://profile.xboxlive.com/users/xuid({})/profile/settings",xuid))
+    .query(&body).header("x-xbl-contract-version", "3").bearer_auth(xsts_token).send().await {
+        Ok(value) => {
+            debug!("{:#?}",value);
+
+            match value.text().await {
+                Ok(raw) => {
+                    debug!("{}",raw);
+                }
+                Err(err) => return Err(LauncherLibError::General(err.to_string()))
+            }
+
+            Ok(String::default())
+        }
+        Err(err) => {
+            Err(LauncherLibError::HTTP { msg: "".into(), source: err })
+        }
+    }
+}
+
 pub fn get_auth_code(url: String) -> Option<String> {
     let query = urlparse::urlparse(url);
     match query.get_parsed_query() {
@@ -49,7 +83,6 @@ pub fn get_auth_code(url: String) -> Option<String> {
         None => None
     }
 }
-
 async fn refresh_auth_token(client_id: String, redirect_uri: String, refresh_token: String) -> LibResult<AuthoriztionJson> {
     let client = match get_http_client().await {
         Ok(value) => value,
@@ -88,6 +121,7 @@ async fn get_authorization_token(client_id: String, redirect_uri: String, auth_c
         ("client_id", client_id.as_str()),
         ("redirect_uri",redirect_uri.as_str()),
         ("code",auth_code.as_str()),
+        ("scope","Xboxlive.signin Xboxlive.offline_access"),
         ("grant_type","authorization_code")
     ]);
 
@@ -233,7 +267,7 @@ pub async fn login_microsoft(client_id: String, redirect_uri: String, auth_code:
         }
     };
 
-    let account: MinecraftJson = match authenticate_with_minecraft(userhash, xsts.token).await {
+    let account: MinecraftJson = match authenticate_with_minecraft(userhash, xsts.token.clone()).await {
         Ok(value) => value,
         Err(err) => {
             return Err(err);
@@ -251,6 +285,12 @@ pub async fn login_microsoft(client_id: String, redirect_uri: String, auth_code:
         Ok(value) => value,
         Err(err) => return Err(err)
     };
+
+
+    match get_xbox_profile(xsts.token, xuid.clone()).await {
+        Ok(_value) => {}
+        Err(err) => return Err(err)
+    }
 
     Ok(Account {
         profile,
@@ -327,12 +367,12 @@ mod tests {
         info!("{}",url);
     }
     #[tokio::test]
-    async fn test_get_authorization_token() {
-        let (client_id,redirect_id) = shared();
+    async fn test_login_flow() {
+        let (client_id,redirect_uri) = shared();
 
-        match get_authorization_token(client_id,redirect_id,"".into()).await {
-            Ok(value) => {
-                debug!("{:#?}",value);
+        match login_microsoft(client_id, redirect_uri, "M.R3_BAY.8641f2bc-51d1-6d64-aa1f-add08f1e1d12".into()).await {
+            Ok(_value) => {
+                
             }
             Err(err) => {
                 error!("{}",err);
