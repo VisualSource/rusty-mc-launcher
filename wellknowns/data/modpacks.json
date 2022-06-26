@@ -1,16 +1,23 @@
 [
     {
-        "uuid": "d9139c4e-63bf-4b10-82a5-7005e2ff7763",
-        "update": "10/20/10",
-        "description": "In Valhelsia: Enhanced Vanilla, your abilities evolve through a system of skills and levels, adding new challenge to the early game and giving clear objectives to work towards as you play.",
+        "uuid": "3mXM_3C2rhjJBgpAxtWYX",
+        "update": "6/25/22",
+        "description": "A pack to replace OptiFine, and with better performance",
         "tags": ["Adventure & RPG","Explortaion","Magic","Vanilla+","Tech"],
-        "minecraft": ["1.18.2"],
+        "minecraft": ["1.19"],
         "loaders": ["fabric"],
-        "name": "Valhelsia: Enhanced Vanilla",
+        "name": "Vanilla+",
         "icon": "https://media.forgecdn.net/avatars/thumbnails/481/121/64/64/637780327883756539.png",
         "card": "",
         "banner": "",
-        "author": "ValhelsiaTeam",
-        "mods": []
+        "author": "VisualSource",
+        "mods": [
+            "3PIk6jr0docAbsUOVKSf0",
+            "5M59IvyD_1P3Y51am42YM",
+            "tEwWpOubfBBIzQ6vyq2lX",
+            "cAws6S_LZuiab3cN4SBYx",
+            "g7m8nXabxxZq1pL1Jw1QG",
+            "TDFgF_QqAKLSGA1cT6hfL"
+        ]
     }
 ]
