@@ -287,10 +287,10 @@ pub async fn login_microsoft(client_id: String, redirect_uri: String, auth_code:
     };
 
 
-    match get_xbox_profile(xsts.token, xuid.clone()).await {
+   /*  match get_xbox_profile(xsts.token, xuid.clone()).await {
         Ok(_value) => {}
         Err(err) => return Err(err)
-    }
+    }*/
 
     Ok(Account {
         profile,
