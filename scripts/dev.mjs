@@ -1,4 +1,4 @@
-import { spawn, exec } from "child_process";
+import { spawn } from "child_process";
 
 const Colors = {
     Reset: "\x1b[0m",

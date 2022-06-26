@@ -1,11 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 const useComponentDidMount = (cb: ()=> Promise<void>): void => {
     const didMount = useRef(false);
+    const callback = useCallback(cb,[]);
 
     useEffect(()=>{
         if(!didMount.current) {
-            cb();
+            callback();
             didMount.current = true;
         }
     },[]);
