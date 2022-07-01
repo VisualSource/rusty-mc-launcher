@@ -24,4 +24,4 @@ export const SawpModsFolders = (profile: string) => invoke<void>("sawp_mods_fold
 export const InstallMods = (profile: string, mods: DownloadMod[]) => invoke<void>("install_mods_list",{ profile, mods });
 export const RemoveModsFolder = (profile: string) => invoke<void>("remove_mods_folder",{ profile });
 export const UpdateModList = (profile: string, mods: DownloadMod[]) => invoke<void>("update_mods_list",{profile,mods});
-export const InstallRuntime = (version: Minecraft) => invoke<void>("install_runtime",{ minecraft_version: version });
+export const InstallRuntime = (version: Minecraft) => invoke<void>("install_runtime",{ minecraftVersion: version });

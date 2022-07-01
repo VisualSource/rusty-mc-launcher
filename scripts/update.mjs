@@ -33,19 +33,15 @@ async function main() {
         if(areyousure.toLowerCase().trim() !== "y") throw new Error("Aborting update creation");
 
         console.log("Reading Configs");
-        const cargo_config = await ReadTomlFile("./src-tauri/Cargo.toml");
         const tauri_config = await ReadJsonFile("./src-tauri/tauri.conf.json");
         const npm_config = await ReadJsonFile("./package.json");
 
-        const out = cargo_config.replace(/version = "\d*.\d*.\d*"/,`version = "${version}"`);
         tauri_config.package.version = version;
         npm_config.version = version;
 
         console.log("Writing Configs");
         await WriteJsonFile("./src-tauri/tauri.conf.json",tauri_config);
-        await WriteJsonFile("./package.json",npm_config);
-        await WriteTomlFile("./src-tauri/Cargo.toml",out);
-
+       
         const commnet_msg = await question(`Comment Message:\n`);
         console.log("Running Git Commands");
         const commit_out = await EXEC(`git commit -a -m "${commnet_msg}"`);

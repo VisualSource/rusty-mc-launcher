@@ -1,3 +1,4 @@
+import "./lib/logger";
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ToastContainer } from 'react-toastify'
@@ -10,7 +11,6 @@ import { UserProvider } from './components/account/Account';
 import reportWebVitals from './reportWebVitals';
 import "./styles/global.sass";
 import DB from './lib/db';
-
 
 const update_check = window.localStorage.getItem("update_check");
 
@@ -45,4 +45,4 @@ root.render(
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+reportWebVitals(console.debug);

@@ -135,13 +135,11 @@ export default class DownloadManger extends EventEmitter {
                     
                     await InstallMods(this.current.data.profile,this.current.data.mods);
                     
-
                     toast.info("Finished Downloading Mods");
                 } catch (error: any) {
                     console.error(error);
                     this.emit("error","Download failure");
                     toast.error("There was an error in download a mod");
-                    if(error instanceof Error) Log(error.message,"error");
                 }
                 break;
             }

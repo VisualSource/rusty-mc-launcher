@@ -98,6 +98,7 @@ pub async fn install_jvm_runtime(jvm_version: MinecraftJavaRuntime, minecraft_di
         Err(err) => return Err(err)
     };
 
+    callback(Event::Status("Fetch Manifest".into()));
     let src_download = match client.get(manifest.manifest.url.as_str()).send().await {
         Ok(value) => {
             match value.json::<JVMFiles>().await {
@@ -115,7 +116,7 @@ pub async fn install_jvm_runtime(jvm_version: MinecraftJavaRuntime, minecraft_di
     let root = minecraft_dir.join("runtime").join(jvm_version.to_string()).join(arch.clone()).join(jvm_version.to_string());
 
     let file_count = src_download.files.len();
-
+    callback(Event::Status("Download/Checking Files".into()));
     let files = futures::stream::iter( 
         src_download.files.into_iter().enumerate().map(|(idx,(key,value))|{
             let cur = root.join(key.clone());
