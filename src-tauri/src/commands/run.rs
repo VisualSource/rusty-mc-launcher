@@ -1,7 +1,6 @@
 use mc_laucher_lib_rs::client::ClientBuilder;
 use mc_laucher_lib_rs::json::authentication_microsoft::Account;
 use serde::Deserialize;
-use tokio::time::{sleep, Duration};
 
 #[derive(Deserialize)]
 pub struct RunMinecraft {

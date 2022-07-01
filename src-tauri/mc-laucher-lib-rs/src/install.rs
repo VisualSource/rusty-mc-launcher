@@ -11,7 +11,7 @@ use crate::json::{
 use std::env::consts;
 use std::path::PathBuf;
 use futures::StreamExt;
-use tokio::fs::{read_to_string, create_dir_all, remove_dir, remove_file, hard_link };
+use tokio::fs::{read_to_string, create_dir_all, remove_dir, remove_file };
 use log::{ error, info };
 use serde::Deserialize;
 
@@ -344,21 +344,13 @@ pub async fn swap_mods_folder(profile: String, game_dir: PathBuf) -> LibResult<(
         }
     }
 
-
-
-    if let Err(err) = hard_link(mod_dir, dir).await {
-        return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
-    }
-
     // can't create a symlink on windows without admin, this should work, needs testing
-  /*   #[cfg(windows)]
+    #[cfg(windows)]
     {
         use tokio::process::Command;
 
-    
-
         if let Err(err) = Command::new("powershell").args(
-            ["New-Item","-ItemType","Junction","-Path",mod_dir.to_str().expect("Failed to make str"),"-Target",dir.to_str().expect("Failed to make str")]
+            ["New-Item","-ItemType","Junction","-Path",mod_dir.to_str().expect("Failed to make str"),"-Target",dir.to_str().expect("Failed to make str"),"-WindowStyle","Hidden"]
         ).output().await {
             return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
         }
@@ -371,7 +363,7 @@ pub async fn swap_mods_folder(profile: String, game_dir: PathBuf) -> LibResult<(
         if let Err(err) = symlink_dir(src, dst).await {
             return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
         }
-    }*/
+    }
   
 
     Ok(())

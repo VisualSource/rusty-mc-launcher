@@ -17,7 +17,7 @@ tauri-build = { version = "1.0.0", features = [] }
 
 
 [dependencies]
-tokio = { version = "1.19.2", features = [ "test-util", "macros", "fs", "time" ] }
+tokio = { version = "1.19.2", features = [ "test-util", "macros", "fs" ] }
 log = "0.4.17"
 log4rs = { version = "1.1.1", features = ["background_rotation","rolling_file_appender","gzip"] }
 serde_json = "1.0.81"

@@ -7,6 +7,7 @@ import { useUser } from "../../components/account/Account";
 import LaunchGame from "../../lib/run";
 import css from "./view.module.sass";
 import type { Profile } from "../../types";
+import { toast } from "react-toastify";
 const parseTime = (time: string): string => {
     const formater = Intl.DateTimeFormat("en-us",{});
     const og = Date.parse(time);
@@ -60,6 +61,7 @@ export default function View(){
             await LaunchGame(data,user);
         } catch (error) {
             console.error(error);
+            toast.error("Failed to launch game");
         }
     }
 
