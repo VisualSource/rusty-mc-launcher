@@ -20,6 +20,7 @@ fn main() -> std::io::Result<()> {
   log4rs::init_raw_config(serde_yaml::from_str(include_str!("log4rs.yml")).unwrap()).unwrap();
 
   tauri::Builder::default()
+  .manage(run::GameState::default())
   .invoke_handler(tauri::generate_handler![
     news::news,
     minecraft::game_dir,
@@ -39,6 +40,7 @@ fn main() -> std::io::Result<()> {
     install::install_natives,
     install::install_mods_list,
     install::update_mods_list,
+    install::install_runtime,
     logger::log
     ])
     .run(tauri::generate_context!())

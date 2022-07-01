@@ -43,8 +43,6 @@ pub async fn get_http_client() -> LibResult<reqwest::Client> {
     }
 }
 
-
-
 /// Returns the default path to the .minecraft directory
 pub fn get_minecraft_directory() -> LibResult<PathBuf> {
     match consts::OS {
@@ -294,51 +292,6 @@ pub async fn download_file(url: String, output: PathBuf, callback: impl Fn(Event
         Err(err) => Err(LauncherLibError::HTTP { source: err, msg: "Failed to make http request".into() })
     }
 }
-
-/// Parse the mainclass of a jar from META-INF/MANIFEST.MF
-/*pub fn get_jar_mainclass(path: PathBuf) -> LibResult<String> {
-    use std::io::Read;
- 
-    match File::open(path.clone()) {
-        Ok(file) => {
-            if let Ok(mut value) = zip::ZipArchive::new(file) {
-                if let Ok(mut manifest) = value.by_name("META-INF/MANIFEST.MF") {
-                    let mut buffer = String::new();
-                    if let Err(err) = manifest.read_to_string(&mut buffer) {
-                        return Err(LauncherLibError::OS {
-                            source: err,
-                            msg: format!("Failed to get read file ({:?}) to string",path.clone())
-                        });
-                    }
-
-                    let remove_sep = buffer.replace(":"," ");
-
-                    let v: Vec<&str> = remove_sep.split_whitespace().collect();
-
-                    let mut main_index = 0;
-
-                    for i in 0..v.len() {
-                        if v[i] == "Main-Class" {
-                            main_index = i+1;
-                        }
-                    }
-                    
-                    if main_index < v.len() {
-                        return Ok(String::from(v[main_index]));
-                    }
-
-                    return Err(LauncherLibError::General(format!("Failed to get Main-Class from {:?}",path.clone())));
-                }
-            }
-            
-            Err(LauncherLibError::General(format!("Failed to get Main-Class from {:?}",path.clone())))
-        }
-        Err(error) => Err(LauncherLibError::OS {
-            source: error,
-            msg: "Failed to read file".into()
-        })
-    }
-}*/
 
 /// Parse a single rule from versions.json in .minecraft
 pub fn parse_single_rule(rule: &Rule, options: &GameOptions) -> bool {

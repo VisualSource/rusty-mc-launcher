@@ -9,7 +9,7 @@ use crate::json::{
         Account
     }
 };
-use log::debug;
+//use log::debug;
 use serde_json::json;
 use uuid::Uuid;
 
@@ -36,7 +36,7 @@ pub fn ms_login_url(client_id: String, redirect_uri: String) -> String {
 ///
 ///https://docs.microsoft.com/en-us/gaming/gdk/_content/gc/live/get-started/live-xbl-overview
 /// https://github.com/OpenXbox/xbox-webapi-python/blob/1a5aeb1b1ce94f38b5dae7f6b59938bc9ec112b2/xbox/webapi/api/provider/profile/__init__.py#L53
-async fn get_xbox_profile(xsts_token: String, xuid: String) -> LibResult<String> {
+/*async fn get_xbox_profile(xsts_token: String, xuid: String) -> LibResult<String> {
     let client = match get_http_client().await {
         Ok(value) => value,
         Err(err) => return Err(err)
@@ -65,6 +65,7 @@ async fn get_xbox_profile(xsts_token: String, xuid: String) -> LibResult<String>
         }
     }
 }
+*/
 
 pub fn get_auth_code(url: String) -> Option<String> {
     let query = urlparse::urlparse(url);
@@ -370,7 +371,7 @@ mod tests {
     async fn test_login_flow() {
         let (client_id,redirect_uri) = shared();
 
-        match login_microsoft(client_id, redirect_uri, "M.R3_BAY.8641f2bc-51d1-6d64-aa1f-add08f1e1d12".into()).await {
+        match login_microsoft(client_id, redirect_uri, "".into()).await {
             Ok(_value) => {
                 
             }

@@ -17,6 +17,8 @@ pub use install::swap_mods_folder;
 pub use install::install_mods;
 pub use install::update_mods;
 pub use install::Mod;
+pub use runtime::does_runtime_exist;
+pub use runtime::install_jvm_runtime;
 
 
 

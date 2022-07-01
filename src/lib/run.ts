@@ -27,6 +27,12 @@ export default async function LaunchGame(profile: Profile | undefined, user: Use
                 if(!res) toast.info("Need to wait for download queue to finish before launching the game.");
                 break;
             }
+            case "no_runtime": {
+                toast.info(`Installing Minecraft Runtime`);
+                const res = await dl.install({ type: "install_runtime", data: profile.lastVersionId });
+                if(!res) toast.info("Need to wait for download queue to finish before launching the game.");
+                break;
+            }
             case "no_natives": {
                 toast.info(`Installing Natives for ${profile.lastVersionId}`);
                 const res = await dl.install({ type: "natives_install", data: profile.lastVersionId });

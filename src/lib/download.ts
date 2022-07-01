@@ -2,10 +2,10 @@ import { listen } from '@tauri-apps/api/event';
 import EventEmitter from 'events';
 import { toast } from 'react-toastify';
 import { ParseID, StringHash } from './ids';
-import { InstallClient, InstallNatives, Log, InstallMods, UpdateModList } from './invoke';
+import { InstallClient, InstallNatives, Log, InstallMods, UpdateModList, InstallRuntime } from './invoke';
 import type { InstallManifest } from '../types';
 
-export type InstallType = "install_mods" | "update_mods" | "client" | "natives_install";
+export type InstallType = "install_mods" | "update_mods" | "client" | "natives_install" | "install_runtime";
 type DownloadRequest = { type: InstallType, data: any, id: number };
 
 
@@ -111,6 +111,21 @@ export default class DownloadManger extends EventEmitter {
                     this.emit("error","Download failure");
                     toast.error("Failed to download Minecraft!");
                }
+                break;
+            }
+            case "install_runtime": {
+                try {
+                    this.downloading = `Minecraft Runtime for ${this.current.data}`;
+                    this.emit("downloading",this.downloading);
+
+                    const data = ParseID(this.current.data);
+
+                    await InstallRuntime(data.minecraft);
+                } catch (error) {
+                    console.error(error);
+                    this.emit("error","Download failure");
+                    toast.error("Failed to download Minecraft runtime!");
+                }
                 break;
             }
             case "install_mods": {

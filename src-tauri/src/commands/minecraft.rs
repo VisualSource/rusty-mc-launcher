@@ -1,5 +1,12 @@
-use mc_laucher_lib_rs::utils::get_minecraft_directory;
-use mc_laucher_lib_rs::swap_mods_folder;
+use mc_laucher_lib_rs::{
+    utils::{
+        get_minecraft_directory,
+        read_manifest_inherit
+    },
+    swap_mods_folder,
+    does_runtime_exist
+};
+use log::error;
 use tokio::fs::remove_dir_all;
 
 
@@ -54,25 +61,55 @@ pub async fn check_version(version: String) -> Result<(bool,&'static str), Strin
 
     let root = mc_dir.join("versions").join(version.clone());
 
+    // check for version folder.
     if !root.is_dir() {
         return Ok((false,"no_root"));
     }
 
     let manifest = root.join(format!("{}.json",version));
 
+    //check for version manifest
     if !manifest.is_file() {
         return Ok((false,"no_manifest"));
     }
 
     let jar = root.join(format!("{}.jar",version));
 
+    // check for version jar file
     if !jar.is_file() {
         return Ok((false,"no_jar"));
     }
 
+    // check for natives folder.
     if !root.join("natives").is_dir() {
         return Ok((false,"no_natives"));
     }
+
+    // check for runtime
+    match read_manifest_inherit(manifest,&mc_dir).await {
+        Ok(value) => {
+            match value.java_version {
+                Some(version) => {
+                    match does_runtime_exist(version.component,mc_dir) {
+                        Ok(exits) => {
+                            if !exits {
+                                return Ok((false,"no_runtime"));
+                            }
+                        }
+                        Err(err) => {
+                            error!("{}",err);
+                            return Err(err.to_string());
+                        }
+                    }
+                },
+                None =>  return Ok((false,"no_runtime"))
+            }
+        }
+        Err(err) => {
+            error!("{}",err);
+            return Err(err.to_string());
+        }
+    };
 
     Ok((true,"ok"))
 }
