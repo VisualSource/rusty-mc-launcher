@@ -15,13 +15,6 @@ async function ReadJsonFile(path) {
     let content = await readFile(path, { encoding: "utf-8" });
     return JSON.parse(content);
 }
-async function ReadTomlFile(path) {
-    let content = await readFile(path, { encoding: "utf-8" });
-    return content;
-}
-async function WriteTomlFile(path,content) {
-    return writeFile(path,content,{ encoding: "utf-8" });
-}
 
 async function main() {
     try {
@@ -34,10 +27,8 @@ async function main() {
 
         console.log("Reading Configs");
         const tauri_config = await ReadJsonFile("./src-tauri/tauri.conf.json");
-        const npm_config = await ReadJsonFile("./package.json");
-
+      
         tauri_config.package.version = version;
-        npm_config.version = version;
 
         console.log("Writing Configs");
         await WriteJsonFile("./src-tauri/tauri.conf.json",tauri_config);

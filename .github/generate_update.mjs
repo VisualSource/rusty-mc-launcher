@@ -24,9 +24,9 @@ const tauri_update_file = (name,sig,url) => ({
  * @return {Promise<string>} 
  */
 const read_package_version = async () => {
-  const file = await readFile("package.json",{encoding:"utf-8"});
+  const file = await readFile("src-tauri/tauri.conf.json",{encoding:"utf-8"});
   const data = JSON.parse(file);
-  return data.version;
+  return data.package.version;
 }
 
 const read_signature = async (id) => {
