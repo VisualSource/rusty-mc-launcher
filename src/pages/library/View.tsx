@@ -1,6 +1,5 @@
 import { Button, Divider, Intent, Spinner } from "@blueprintjs/core";
 import { useQuery, useMutation, useQueryClient } from "react-query";
-import {dialog} from '@tauri-apps/api';
 import { useNavigate, useParams } from "react-router-dom";
 import DB from "../../lib/db";
 import { useUser } from "../../components/account/Account";
