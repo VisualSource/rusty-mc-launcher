@@ -329,17 +329,17 @@ pub async fn install_minecraft_version(version_id: String, mc_dir: PathBuf, call
 
 pub async fn swap_mods_folder(profile: String, game_dir: PathBuf) -> LibResult<()> {
 
-    let dir = game_dir.clone().join("system_mods").join(profile);
-    let mod_dir = game_dir.join("mods");
+    let system_mods_folder = game_dir.clone().join("system_mods").join(profile);
+    let mods_folder = game_dir.join("mods");
     
-    if !dir.is_dir() {
-        if let Err(err) = create_dir_all(dir.clone()).await {
+    if !system_mods_folder.is_dir() {
+        if let Err(err) = create_dir_all(system_mods_folder.clone()).await {
             return Err(LauncherLibError::OS { msg: "Failed to create system mods directory".into(), source: err });
         }
     }
 
-    if mod_dir.exists() {
-        if let Err(err) = remove_dir(mod_dir.clone()).await {
+    if mods_folder.exists() {
+        if let Err(err) = remove_dir(mods_folder.clone()).await {
             return Err(LauncherLibError::OS { msg: "Failed to remove mods link".into(), source: err });
         }
     }
@@ -350,7 +350,12 @@ pub async fn swap_mods_folder(profile: String, game_dir: PathBuf) -> LibResult<(
         use tokio::process::Command;
 
         if let Err(err) = Command::new("powershell").args(
-            ["New-Item","-ItemType","Junction","-Path",mod_dir.to_str().expect("Failed to make str"),"-Target",dir.to_str().expect("Failed to make str"),"-WindowStyle","Hidden"]
+            ["-WindowStyle","Hidden",
+            "New-Item","-ItemType",
+            "Junction",
+            "-Target", system_mods_folder.to_str().expect("Failed to make string"),
+            "-Path", mods_folder.to_str().expect("Failed to make string")
+            ]
         ).output().await {
             return Err(LauncherLibError::OS { msg: "Failed to create link".into(), source: err });
         }
