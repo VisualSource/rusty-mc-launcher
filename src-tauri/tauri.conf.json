@@ -1,22 +1,65 @@
 {
-  "$schema": "..\\node_modules/@tauri-apps/cli\\schema.json",
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
     "beforeBuildCommand": "npm run build",
-    "beforeDevCommand": "npm run start",
-    "devPath": "http://localhost:3000",
-    "distDir": "../build"
+    "beforeDevCommand": "npm run dev",
+    "devPath": "http://localhost:5173",
+    "distDir": "../dist"
   },
   "package": {
-    "productName": "Rusty Minecraft Launcher",
-    "version": "0.1.12"
+    "productName": "mcl",
+    "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "notification": {
+        "all": true
+      },
+      "http": {
+        "all": true,
+        "scope": [
+          "https://user.auth.xboxlive.com/user/authenticate",
+          "https://xsts.auth.xboxlive.com/xsts/authorize",
+          "https://api.minecraftservices.com/authentication/login_with_xbox",
+          "https://api.minecraftservices.com/minecraft/profile"
+        ]
+      },
+      "window": {
+        "all": false,
+        "center": false,
+        "close": true,
+        "create": false,
+        "hide": true,
+        "maximize": true,
+        "minimize": true,
+        "print": false,
+        "requestUserAttention": false,
+        "setAlwaysOnTop": false,
+        "setCursorGrab": false,
+        "setCursorIcon": false,
+        "setCursorPosition": false,
+        "setCursorVisible": false,
+        "setDecorations": false,
+        "setFocus": false,
+        "setFullscreen": false,
+        "setIcon": false,
+        "setIgnoreCursorEvents": false,
+        "setMaxSize": false,
+        "setMinSize": false,
+        "setPosition": false,
+        "setResizable": false,
+        "setSize": false,
+        "setSkipTaskbar": false,
+        "setTitle": false,
+        "show": true,
+        "startDragging": true,
+        "unmaximize": true,
+        "unminimize": true
+      }
     },
     "bundle": {
       "active": true,
-      "category": "Game",
+      "category": "DeveloperTool",
       "copyright": "",
       "deb": {
         "depends": []
@@ -29,8 +72,8 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "us.visualsource.rmcl",
-      "longDescription": "A Minecraft launcher and mod installer for forge, fabric and optifine mods.",
+      "identifier": "com.tauri.dev",
+      "longDescription": "",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
@@ -42,10 +85,6 @@
       "shortDescription": "",
       "targets": "all",
       "windows": {
-        "wix": {
-          "language": "en-US",
-          "license": "../LICENSE"
-        },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": ""
@@ -55,23 +94,17 @@
       "csp": null
     },
     "updater": {
-      "endpoints": [
-        "https://github.com/VisualSource/rusty-mc-launcher/releases/download/Updater/latest_version.json"
-      ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCRUI2NTY1NDBFQzIwRTEKUldUaElPeEFaV1hyeTFweE15UkJzb1kwMzcrY2NTWkRHR3RBZTdxUWNkQmVpazd3L2ErNXp5TlIK",
-      "active": true
+      "active": false
     },
     "windows": [
       {
-        "theme": "Dark",
         "fullscreen": false,
         "height": 600,
         "resizable": true,
         "title": "Minecraft Launcher",
         "width": 800,
-        "decorations": false,
-        "minWidth": 800,
-        "minHeight": 600
+        "decorations": false
       }
     ]
   }
