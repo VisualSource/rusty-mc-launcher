@@ -1,5 +1,7 @@
 mod errors;
+mod metadata;
 mod installer;
+mod manifest;
 
 use std::path::PathBuf;
 //https://github.com/tomsik68/mclauncher-api/wiki
@@ -25,6 +27,7 @@ impl Client {
 #[derive(Default)]
 pub struct ClientBuilder {
     game_directory: Option<PathBuf>,
+    version: String,
     token: String,
     uuid: String,
     xuid: String,
@@ -32,6 +35,7 @@ pub struct ClientBuilder {
     executable_path: Option<PathBuf>,
     jvm_args: Option<Vec<String>>,
     use_custom_resolution: bool,
+    is_demo: bool,
     resolution_width: Option<usize>,
     resolution_height: Option<usize>,
     server: Option<String>,
@@ -40,8 +44,8 @@ pub struct ClientBuilder {
     enable_logging_config: bool,
     disable_mulitplayer: bool,
     disable_chat: bool,
-    forge: bool,
-    fabric: bool
+    forge: Option<String>,
+    fabric: Option<String>
 }
 
 impl ClientBuilder {
@@ -49,9 +53,17 @@ impl ClientBuilder {
         Self::default()
     }
 
+    pub fn as_demo(mut self, value: bool) -> Self {
+        self.is_demo = value;
+        self
+    }
+
     pub fn set_version(mut self, version: String) -> Self {
-        self.fabric = false;
-        self.forge = false;
+        // Forge Version string => 1.18.2-forge-40.1.51
+        // Fabric Version string => fabric-loader-0.14.8-1.18.2
+        self.fabric = None;
+        self.forge = None;
+        self.version = version;
         self
     }
 
@@ -110,6 +122,9 @@ impl ClientBuilder {
     }
 
     pub fn build(self) -> Client {
+
+        // fabric / forge check
+
         Client {
             game_directory: PathBuf::new(),
             exec_cmd: String::new()
