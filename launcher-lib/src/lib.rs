@@ -2,8 +2,18 @@ mod errors;
 mod metadata;
 mod installer;
 mod manifest;
+mod runtime;
+mod observer;
+mod utils;
 
-use std::path::PathBuf;
+use std::{path::PathBuf, env::consts};
+use serde::{Deserialize,Serialize};
+use normalize_path::NormalizePath;
+
+use manifest::Manifest;
+use errors::LauncherLibError;
+
+pub use observer::Observer;
 //https://github.com/tomsik68/mclauncher-api/wiki
 
 // 1. Auth
@@ -12,20 +22,25 @@ use std::path::PathBuf;
 // 4. run
 
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Client {
-    game_directory: PathBuf,
-    exec_cmd: String
+    cmd: String,
+    args: String
 }
 
 impl Client {
-    pub fn run(self) {
-
-    }
+    pub async fn run(self) {}
 }
 
-#[derive(Default)]
+#[derive(Default,Serialize,Deserialize)]
 pub struct ClientBuilder {
+    launcher_name: Option<String>,
+    laucher_version: Option<String>,
+    classpath: String,
+    assets: Option<String>,
+    version_type: Option<String>,
+    console: bool,
+    classpath_separator: String,
     game_directory: Option<PathBuf>,
     version: String,
     token: String,
@@ -45,7 +60,8 @@ pub struct ClientBuilder {
     disable_mulitplayer: bool,
     disable_chat: bool,
     forge: Option<String>,
-    fabric: Option<String>
+    fabric: Option<String>,
+    client_id: Option<String>
 }
 
 impl ClientBuilder {
@@ -90,6 +106,11 @@ impl ClientBuilder {
         self
     }
 
+    pub fn use_console(mut self, value: bool) -> Self {
+        self.console = value;
+        self
+    }
+
     pub fn set_custom_resolution(mut self, width: usize, height: usize) -> Self {
         self.use_custom_resolution = true;
         self.resolution_height = Some(height);
@@ -104,7 +125,7 @@ impl ClientBuilder {
     }
 
     pub fn set_natives_directory(mut self, dir: PathBuf) -> Self {
-        self.natives_directory = Some(dir);
+        self.natives_directory = Some(dir.normalize());
         self
     }
 
@@ -121,14 +142,74 @@ impl ClientBuilder {
         self
     }
 
-    pub fn build(self) -> Client {
+    pub async fn build(mut self) -> Result<Client,LauncherLibError> {
+        self.classpath_separator = if consts::OS == "windows" { ";".to_string() } else { ":".to_string() }; 
+        let game_dir = if let Some(dir) = &self.game_directory {
+            dir
+        } else {
+            return Err(LauncherLibError::Generic("Game Directory is not set.".to_string()));
+        };
 
+        // exec_path + jvmArgs+ (client jvm args) + logging + mainClass + ?(flags)
         // fabric / forge check
 
-        Client {
-            game_directory: PathBuf::new(),
-            exec_cmd: String::new()
+        let path = game_dir.join(format!("versions/{0}/{0}.json", self.version));
+        let manifest = Manifest::read_manifest(&path).await?;
+
+        self.classpath = manifest.libs_as_string(&self.classpath_separator, &game_dir);
+
+        self.natives_directory = Some(game_dir.join(format!("versions/{}/natives",self.version)));
+  
+        let mut command: Vec<String> = vec![];
+
+        let exe_path = self.executable_path.as_ref().unwrap_or(&utils::jvm::get_exec(
+            &manifest.java_version.ok_or_else(||LauncherLibError::Generic("Failed to get java runtime".to_string()))?.component, 
+            &game_dir, 
+            self.console
+        )).to_str().ok_or_else(||LauncherLibError::Generic("Failed to get exe path".to_string()))?.to_string();
+      
+        let jvm_args = manifest.arguments.jvm_args_to_string(&self)?;
+        command.push(jvm_args);
+        
+        if let Some(args) = &self.jvm_args {
+            args.iter().for_each(|arg| command.push( arg.to_owned()));
+        } 
+
+        if self.enable_logging_config {
+            if let Some(logging) = manifest.logging {
+                let logging_file = logging.client.file.id.expect("Failed to get logging file id");
+
+                let logging_file = game_dir.join(format!("assets/log_configs/{}",logging_file)).normalize();
+                let logging_str = logging_file.to_str().expect("Failed to convert");
+                command.push(logging.client.argument.replace("${path}", logging_str));
+            }
         }
+
+        command.push(manifest.main_class);
+
+        if let Some(server) = self.server {
+            command.push("--server".to_string());
+            command.push(server);
+
+            if let Some(port) = self.port {
+                command.push("--port".to_string());
+                command.push(port.to_string());
+            }
+
+        }
+
+        if self.disable_mulitplayer {
+            command.push("--disableMultiplayer".to_string());
+        }
+
+        if self.disable_chat {
+            command.push("--disableChat".to_string());
+        }
+
+        Ok(Client {
+            cmd: exe_path,
+            args: command.join(" ")
+        })
     }
 }
 
@@ -136,6 +217,31 @@ impl ClientBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn init() {
+        let _ = env_logger::builder().filter_module("minecraft_launcher_lib", log::LevelFilter::Debug).is_test(true).try_init();
+    }  
+
+    #[tokio::test]
+    async fn test_client_builder(){
+        init();
+
+        let builder = ClientBuilder::new()
+        .set_game_directory(PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"))
+        .set_version("1.19.3".to_string())
+        .set_user("USERNAME".to_string(), "UUID".to_string(), "XUID".to_string(), "TOKEN".to_string());
+
+        match builder.build().await {
+            Ok(value) => {
+                println!("{:#?}",value);
+            }
+            Err(err) =>{
+                eprintln!("{}",err);
+            }
+        }
+
+
+    }
   
 }
 

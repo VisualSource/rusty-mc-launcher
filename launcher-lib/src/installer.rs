@@ -1,40 +1,64 @@
 use std::path::PathBuf;
 use std::env::consts;
-use log::{debug, info, error};
-use tokio::{fs, io};
-use futures::StreamExt;
-use sha1::{Digest,Sha1};
-use tokio::io::AsyncWriteExt;
-use std::borrow::BorrowMut;
 
-use crate::manifest::{Manifest, RuleCondition, asset_index::AssetIndex, jvm};
-use crate::errors::LauncherLibError;
+use tokio::io::AsyncWriteExt;
+use log::{ debug, info, error };
+use sha1::{Digest,Sha1};
+use futures::StreamExt;
+use tokio::{fs, io};
+
+use crate::manifest::{Manifest, RuleCondition, asset_index::AssetIndex };
 use crate::metadata::get_launcher_manifest;
+use crate::utils::download_file;
+use crate::runtime::Jvm;
+use crate::errors::LauncherLibError;
+use crate::observer::{Subject, Observer};
+
 
 //https://www.reddit.com/r/rust/comments/gi2pld/callback_functions_the_right_way/
 //https://github.com/lpxxn/rust-design-pattern/blob/master/behavioral/observer.rs
 //https://github.com/tomsik68/mclauncher-api/wiki/Libraries
 //https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master
 
-const JVM_LIST: &str = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"; 
-
-struct Installer { 
+pub struct Installer<'a, T: Observer> { 
+    observers: Vec<&'a T>,
     version: String,
     mc: String,
     game_dir: PathBuf
 }
 
-impl Installer {
-    pub fn new(version: String, game_dir: PathBuf) -> Self {
+impl<'a, T: Observer + PartialEq> Subject<'a,T> for Installer<'a,T> {
+    fn attach(&mut self, observer: &'a T) {
+        self.observers.push(observer);
+    }
+    fn detach(&mut self, observer: &'a T) {
+        if let Some(idx) = self.observers.iter().position(|x| *x == observer) {
+            self.observers.remove(idx);
+        }
+    }
+    fn notify_observers(&self, event: String, msg: String) {
+        for item in self.observers.iter() {
+            item.update(event.clone(),msg.clone());
+        }
+    }
+    fn inhert(&mut self, observers: Vec<&'a T>) {
+        self.observers.extend(observers);
+    }
+}
+
+
+impl <'a, T: Observer + PartialEq> Installer<'a, T>  {
+    pub fn new(version: String, game_dir: PathBuf) -> Installer<'a, T> {
         // parse version string
         Self {
+            observers: Vec::new(),
             mc: version.clone(),
             version,
             game_dir
         }
     }
     
-    async fn download_file(url: &String, dir: &PathBuf, sha1: &String) -> Result<(),LauncherLibError> {
+    pub async fn download_file(url: &String, dir: &PathBuf, sha1: &String) -> Result<String,LauncherLibError> {
 
         if let Some(p) = dir.parent() {
             if !p.exists() {
@@ -49,7 +73,7 @@ impl Installer {
 
         while let Some(mut chuck) = response.chunk().await? {
             hasher.update(&chuck);
-            file.write_all_buf(chuck.borrow_mut()).await?;
+            file.write_all_buf(&mut chuck).await?;
         }
 
         file.shutdown().await?;
@@ -61,126 +85,7 @@ impl Installer {
             return Err(LauncherLibError::Sha1Error);
         }
 
-        Ok(())
-    }
-
-    pub async fn install_jvm(version: String, game_dir: &PathBuf) -> Result<(),LauncherLibError> {
-        let manifest = reqwest::get(JVM_LIST).await?.json::<jvm::JvmManifest>().await?;
-
-        let native = match consts::OS {
-            "windows" => {
-                if consts::ARCH == "x86" {
-                    "windows-x86"
-                } else {
-                    "windows-x64"
-                }
-            }
-            "linux" => {
-                if consts::ARCH == "x86_64" {
-                    "linux-i386"
-                } else {
-                    "linux"
-                }
-            }
-            "macos" => {
-                if consts::ARCH == "arm" {
-                    "mac-os-arm64"
-                } else {
-                    "mac-os"
-                }
-            }
-            _ => return Err(LauncherLibError::Generic("Current Platfrom is unsupported".to_string()))
-        };
-
-        let jvms = manifest.get(native).ok_or_else(||LauncherLibError::Generic("Failed to get jvm runtime native.".to_string()))?;
-        let runtimes = jvms.get(&version).ok_or_else(||LauncherLibError::NotFound(format!("Jvm runtime ({}), could not be found",version)))?;
-        let runtime = runtimes.first().ok_or_else(||LauncherLibError::Generic("Failed to get jvm manifest".to_string()))?;
-
-        let jvm = reqwest::get(&runtime.manifest.url).await?.json::<jvm::JVMFiles>().await?;
-        
-        let base_path = game_dir.join(format!("runtime/{version}/{platform}/{version}",platform=native,version=runtime.version.name));
-
-        let files = futures::stream::iter(
-            jvm.files.iter().map(|(key,file)|{
-                let base = base_path.clone();
-                async move {
-                    let current_path = base.join(key);
-
-                    match file.file_type.as_str() {
-                        "file" => {
-                            let downloads = file.downloads.as_ref().ok_or_else(||LauncherLibError::Generic("Expected downloads".to_string()))?;
-
-                            //https://github.com/Majored/rs-async-zip/blob/main/examples/actix_multipart.rs
-                            if let Some(lzma) = &downloads.lzma {
-                                let mut response = reqwest::get(&lzma.url).await?;
-                                let mut archive = fs::File::create(&current_path).await?;
-    
-                                let mut writer = async_zip::write::ZipFileWriter::new(&mut archive);
-    
-                                let mut hasher = Sha1::new();   
-
-                                let file_name = current_path.file_name().expect("Failed to convert filename to str.").to_str().expect("Failed to get file name").to_string();
-
-                                let builder =  async_zip::ZipEntryBuilder::new(file_name, async_zip::Compression::Lzma);
-                                let mut entry_writer = writer.write_entry_stream(builder).await.unwrap();
-                        
-                                while let Some(mut chunk) = response.chunk().await? {
-                                    hasher.update(&chunk);
-                                    entry_writer.write_all_buf(&mut chunk).await?;
-                                }
-
-                                let result = hex::encode(hasher.finalize());
-                        
-                                entry_writer.close().await?;
-                                writer.close().await?;
-                                archive.shutdown().await?;
-
-                                if result != lzma.sha1 {
-                                    return Err(LauncherLibError::Sha1Error);
-                                }
-                            } else {
-                                Installer::download_file(&downloads.raw.url, &current_path, &downloads.raw.sha1).await?;
-                            }
-                        
-                            /*if file.executable {
-                                // make executable
-                                fs::set_permissions(current_path, )
-                            }*/
-                        }
-                        "directory" => {
-                            fs::create_dir_all(&current_path).await?;
-                        }
-                        "link" => {
-                            let target = file.target.as_ref().ok_or_else(||LauncherLibError::Generic("Expected Target".to_string()))?;
-
-                            fs::symlink_file(current_path, target).await?;
-                            // link target
-                        }
-                        _ => {}
-                    }
-
-                    Ok(())
-                }
-            })
-        ).buffered(50).collect::<Vec<Result<(),LauncherLibError>>>();
-
-        files.await.iter().for_each(|x|{
-            if let Err(err) = x {
-                error!("{}",err);
-            }
-        });
-
-        let version_file = game_dir.join(format!("runtime/{}/{}/.version",runtime.version.name,native));
-
-        if let Some(p) = version_file.parent() {
-            if !p.exists() {
-                fs::create_dir_all(&version_file).await?;
-            }
-        }
-
-        fs::write(&version_file,runtime.version.name.as_bytes()).await?;
-
-        Ok(())
+        Ok(result)
     }
 
     pub async fn install(self) -> Result<(),LauncherLibError> {
@@ -193,27 +98,19 @@ impl Installer {
         // download json
         if !version_json.is_file() {
             info!("Downloading version json");
-            Installer::download_file(&launcher_manifest.url, &version_json, &launcher_manifest.sha1).await?;
+            download_file(&launcher_manifest.url, &version_json, &launcher_manifest.sha1).await?;
         }
 
-        let manifest_raw = fs::read_to_string(&version_json).await?;
-        let mut manifest = serde_json::from_str::<Manifest>(&manifest_raw)?;
+        info!("Reading manifest");
 
-        // do inherit stuff here
-        if let Some(inherts) = &manifest.inherits_from {
-            // Load base manifest
-            let path = self.game_dir.join(format!("versions/{0}/{0}.json",inherts));
-            let manifest_raw = fs::read_to_string(&path).await?;
-            let base = serde_json::from_str::<Manifest>(&manifest_raw)?;
-
-            manifest = manifest.inherit(base);
-        }
+        let manifest = Manifest::read_manifest(&version_json).await?;
 
         //client JAR
         if !client_jar.is_file() {
+            info!("Download client jar");
             if let Some(downloads) = manifest.downloads {
                 debug!("{:#?}",downloads.client);
-                Installer::download_file(&downloads.client.url,&client_jar, &downloads.client.sha1).await?;
+                download_file(&downloads.client.url,&client_jar, &downloads.client.sha1).await?;
             }
         }
 
@@ -260,8 +157,9 @@ impl Installer {
                         let path = downloads.artifact.path.ok_or_else(||LauncherLibError::Generic("Failed to get download path".to_string()))?;
                     
                         let output_file = game_dir.join(format!("libraries/{}",path));
-                    
-                        Installer::download_file(&downloads.artifact.url, &output_file, &downloads.artifact.sha1).await?;
+                        
+                        info!("Downloading Library: {:?}",output_file);
+                        download_file(&downloads.artifact.url, &output_file, &downloads.artifact.sha1).await?;
 
                         if let Some(classifiers) = downloads.classifiers {
                             let natives_list = lib.natives.ok_or_else(||LauncherLibError::Generic("Failed to get natives strings".to_string()))?;
@@ -276,7 +174,7 @@ impl Installer {
                                     let path = file.path.as_ref().ok_or_else(||LauncherLibError::Generic("Failed to get download path".to_string()))?;
                                     let output_file = game_dir.join(format!("libraries/{}",path));
                               
-                                    Installer::download_file(&file.url, &output_file,&file.sha1).await?;
+                                    download_file(&file.url, &output_file,&file.sha1).await?;
 
                                     if let Some(extract) = lib.extract {
                                         let archive = fs::File::open(output_file).await?;
@@ -329,44 +227,53 @@ impl Installer {
             })
         ).buffer_unordered(50).collect::<Vec<Result<(),LauncherLibError>>>();
 
-        libs.await;
+        libs.await.iter().for_each(|x|{
+            if let Err(err) = x { error!("{}",err); }
+        });
 
         // downlload Asset Indexs
         if let Some(assets) = manifest.asset_index {
-            let root = self.game_dir.join("assets");
+            let root = self.game_dir.join("assets/objects");
 
-            let index_file = root.join(format!("indexes/{}.json", manifest.assets.expect("Should have assets")));
-            Installer::download_file(&assets.url, &index_file, &assets.sha1).await?;
+            let index_file = self.game_dir.join(format!("indexes/{}.json", manifest.assets.expect("Should have assets")));
+            download_file(&assets.url, &index_file, &assets.sha1).await?;
 
             let index_raw = fs::read_to_string(&index_file).await?;
             let asset_index = serde_json::from_str::<AssetIndex>(&index_raw)?;
 
             let asset_indexs = futures::stream::iter(
                 asset_index.objects.iter().map(| (key, asset) |{
-                    let item = root.clone();
+                    let item = root.join("objects").clone();
                     async move {
                         let hash_id = format!("{}/{}",asset.hash.get(0..2).expect("Should be able to get"),asset.hash);
                         let out = item.join(&hash_id);
                         debug!("Index {}",key);
-                        Installer::download_file(&format!("https://resources.download.minecraft.net/{}",hash_id), &out, &asset.hash).await?;
+                        download_file(&format!("https://resources.download.minecraft.net/{}",hash_id), &out, &asset.hash).await?;
 
                         Ok(())
                     }
                 })    
             ).buffer_unordered(50).collect::<Vec<Result<(),LauncherLibError>>>();
 
-            asset_indexs.await;
+            asset_indexs.await.iter().for_each(|x|{
+                if let Err(err) = x { error!("{}",err); }
+            });
         }
 
         // logging
 
-        let logging_id = manifest.logging.client.file.id.ok_or_else(||LauncherLibError::Generic("Failed to get logging config name.".to_string()))?;
-        let logging_config = self.game_dir.join(format!("assets/log_configs/{}",logging_id));
-        Installer::download_file(&manifest.logging.client.file.url, &logging_config, &manifest.logging.client.file.sha1).await?;
-        
+        info!("Fetching Logging Config");
+
+        if let Some(logging) = manifest.logging {
+            let logging_id = logging.client.file.id.ok_or_else(||LauncherLibError::Generic("Failed to get logging config name.".to_string()))?;
+            let logging_config = self.game_dir.join(format!("assets/log_configs/{}",logging_id));
+            download_file(&logging.client.file.url, &logging_config, &logging.client.file.sha1).await?;
+        }
         // java
         if let Some(java) = manifest.java_version {
-            Installer::install_jvm(java.component,&self.game_dir).await?;
+            let mut jvm = Jvm::<T>::new();
+            jvm.inhert(self.observers);
+            jvm.install_jvm(java.component,&self.game_dir).await?;
         }
 
        // debug!("{:#?}",manifest.arguments);
@@ -380,21 +287,9 @@ mod tests {
     use super::*;
 
     fn init() {
-        let _ = env_logger::builder().filter_level(log::LevelFilter::max()).is_test(true).try_init();
-    }
+        let _ = env_logger::builder().filter_module("minecraft_launcher_lib", log::LevelFilter::Debug).is_test(true).try_init();
+    }   
 
-    #[tokio::test]
-    async fn test_jvm_install() {
-        init();
-
-        let dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft");
-
-        if let Err(err) = Installer::install_jvm("java-runtime-gamma".to_string(),&dir).await {
-            eprintln!("{}",err);
-        }
-
-    }
-    
     #[tokio::test]
     async fn test_sha1(){
         init();
@@ -403,17 +298,31 @@ mod tests {
         let url = "https://piston-meta.mojang.com/v1/packages/368cca4902de6067b3eb5131bdb575612f6b96e3/2.json".to_string();
         let sha1 = "368cca4902de6067b3eb5131bdb575612f6b96e3".to_string();
 
-        if let Err(err) = Installer::download_file(&url, &dir, &sha1).await {
+        if let Err(err) = download_file(&url, &dir, &sha1).await {
             eprintln!("{}",err);
         }
 
+    }
+
+    #[derive(PartialEq)]
+    struct ConcreteObserver {
+        id: i32,
+    }
+    impl Observer for ConcreteObserver {
+        fn update(&self, event: String, msg: String) {
+            println!("Observer id:{} received event!", self.id);
+        }
     }
 
     #[tokio::test]
     async fn test_installer(){
         init();
 
-        let installer = Installer::new("1.19.3".to_string(), PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"));
+        let observer_a = ConcreteObserver { id: 1 };
+
+        let mut installer = Installer::new("1.19.3".to_string(), PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"));
+
+        installer.attach(&observer_a);
 
         if let Err(err) = installer.install().await {
             eprintln!("{:#?}",err);

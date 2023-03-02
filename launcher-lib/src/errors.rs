@@ -17,5 +17,7 @@ pub enum LauncherLibError {
     #[error("ZipError | {0}")]
     ZipError(#[from] async_zip::error::ZipError),
     #[error("Failed sha1 check")]
-    Sha1Error
+    Sha1Error,
+    #[error("{0}")]
+    TimeError(#[from] std::time::SystemTimeError)
 }

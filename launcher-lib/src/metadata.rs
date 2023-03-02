@@ -1,5 +1,4 @@
 use crate::errors::LauncherLibError;
-use futures::stream::iter;
 use serde::Deserialize;
 
 const LAUNCHER_META: &str = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
@@ -59,9 +58,7 @@ mod tests {
             return Ok(());
         }
 
-        assert!(false,"Failed to fetch.");
-
-        Err(())
+       panic!("Failed to get manifest");
     }
 }
 
