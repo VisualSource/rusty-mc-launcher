@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event';
 export default class DownloadManager {
     static INSTANCE: null | DownloadManager = null;
     static getInstance(): DownloadManager {
@@ -8,7 +9,9 @@ export default class DownloadManager {
         return DownloadManager.INSTANCE
     }
     constructor() {
-
         DownloadManager.INSTANCE = this;
+        listen("", (event) => {
+
+        });
     }
 }

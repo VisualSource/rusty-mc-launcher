@@ -11,9 +11,9 @@ use serde::{Deserialize,Serialize};
 use normalize_path::NormalizePath;
 
 use manifest::Manifest;
-use errors::LauncherLibError;
-
+pub use errors::LauncherLibError;
 pub use observer::Observer;
+
 //https://github.com/tomsik68/mclauncher-api/wiki
 
 // 1. Auth
@@ -32,7 +32,7 @@ impl Client {
     pub async fn run(self) {}
 }
 
-#[derive(Default,Serialize,Deserialize)]
+#[derive(Default,Serialize,Deserialize, Debug)]
 pub struct ClientBuilder {
     launcher_name: Option<String>,
     laucher_version: Option<String>,

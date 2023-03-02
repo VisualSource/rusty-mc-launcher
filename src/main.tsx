@@ -6,9 +6,13 @@ import { PublicClientApplication, EventType, type AuthenticationResult } from "@
 import DownloadManager from "@/lib/system/Download";
 import { DownloadProvider } from '@context/DownloadContext';
 import { MsalProvider } from "@azure/msal-react";
-import { msalConfig } from '@auth/config';
+import { msalConfig } from '@/lib/config/auth';
+import { initStorage } from './lib/config/storage';
 import router from '@/router';
-import './index.css';
+import './index.css'
+import localforage from 'localforage';
+
+initStorage();
 
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);
@@ -20,10 +24,20 @@ if (accounts.length > 0) {
 }
 
 msalInstance.addEventCallback((ev) => {
-  if (ev.eventType === EventType.LOGIN_SUCCESS && ev.payload) {
-    const payload = ev.payload as AuthenticationResult;
-    const account = payload.account;
-    msalInstance.setActiveAccount(account);
+  switch (ev.eventType) {
+    case EventType.LOGIN_SUCCESS: {
+      if (!ev.payload) return;
+      const payload = ev.payload as AuthenticationResult;
+      const account = payload.account;
+      msalInstance.setActiveAccount(account);
+
+      break;
+    }
+    case EventType.LOGOUT_SUCCESS: {
+      localforage.clear();
+    }
+    default:
+      break;
   }
 });
 
@@ -37,4 +51,4 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       </MsalProvider>
     </QueryClientProvider>
   </React.StrictMode>,
-)
+);

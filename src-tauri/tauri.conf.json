@@ -16,13 +16,19 @@
         "all": true
       },
       "http": {
-        "all": true,
+        "all": false,
+        "request": true,
         "scope": [
           "https://user.auth.xboxlive.com/user/authenticate",
           "https://xsts.auth.xboxlive.com/xsts/authorize",
           "https://api.minecraftservices.com/authentication/login_with_xbox",
           "https://api.minecraftservices.com/minecraft/profile"
         ]
+      },
+      "app": {
+        "all": false,
+        "hide": false,
+        "show": false
       },
       "window": {
         "all": false,
@@ -59,7 +65,7 @@
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
+      "category": "Utility",
       "copyright": "",
       "deb": {
         "depends": []
@@ -72,7 +78,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "us.visualsource.rmcl",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -81,7 +87,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": ["./log4rs.yml"],
       "shortDescription": "",
       "targets": "all",
       "windows": {
@@ -95,15 +101,21 @@
     },
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCRUI2NTY1NDBFQzIwRTEKUldUaElPeEFaV1hyeTFweE15UkJzb1kwMzcrY2NTWkRHR3RBZTdxUWNkQmVpazd3L2ErNXp5TlIK",
-      "active": false
+      "active": false,
+      "endpoints": [
+        "https://github.com/VisualSource/rusty-mc-launcher/master/latest.json"
+      ],
+      "dialog": true
     },
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 630,
         "resizable": true,
+        "minHeight": 630,
+        "minWidth": 1080,
         "title": "Minecraft Launcher",
-        "width": 800,
+        "width": 1080,
         "decorations": false
       }
     ]

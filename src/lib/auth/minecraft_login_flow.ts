@@ -1,6 +1,6 @@
 import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
 import type { IPublicClientApplication } from "@azure/msal-browser";
-import { xboxRequest } from '../../lib/auth/config';
+import { xboxRequest } from '../config/auth';
 
 interface XboxLiveAuthenticationResponse {
     Token: string;
@@ -78,6 +78,8 @@ const getMinecraft = async (instance: IPublicClientApplication) => {
     }
     );
 
+    const xuid = JSON.parse(atob(minecraft_resp.access_token.split(".")[1])) as { xuid: string };
+
     const { data: mcp } = await client.get<MinecraftProfileResponse>("https://api.minecraftservices.com/minecraft/profile", {
         headers: {
             "Authorization": `Bearer ${minecraft_resp.access_token}`
@@ -86,6 +88,7 @@ const getMinecraft = async (instance: IPublicClientApplication) => {
     })
 
     return {
+        xuid: xuid.xuid,
         fetched: new Date().toISOString(),
         profile: mcp,
         token: minecraft_resp

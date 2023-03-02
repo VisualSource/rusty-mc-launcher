@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { env } from 'node:process';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 

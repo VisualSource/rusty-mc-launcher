@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { DownloadManager } from '@system/Download';
+import type DownloadManager from '@system/Download';
 
 export const DownloadContext = createContext<DownloadManager | null>(null);
 

@@ -1,3 +1,2 @@
 /// <reference types="vite/client" />
-
-declare module "@tanstack/react-query-devtools";
+/// <reference types="@total-typescript/ts-reset"/>
