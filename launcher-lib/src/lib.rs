@@ -1,18 +1,21 @@
+/// Minecraft rust launcher library for launcher minecraft with/without mods
+/// https://ryanccn.dev/posts/inside-a-minecraft-launcher/
 mod errors;
-mod metadata;
-mod installer;
+pub mod installer;
 mod manifest;
+mod metadata;
+pub mod observer;
 mod runtime;
-mod observer;
 mod utils;
 
-use std::{path::PathBuf, env::consts};
-use serde::{Deserialize,Serialize};
+use log::debug;
 use normalize_path::NormalizePath;
+use serde::{Deserialize, Serialize};
+use std::{env::consts, path::PathBuf};
+use tokio::process::{Child, Command};
 
-use manifest::Manifest;
 pub use errors::LauncherLibError;
-pub use observer::Observer;
+use manifest::Manifest;
 
 //https://github.com/tomsik68/mclauncher-api/wiki
 
@@ -21,18 +24,61 @@ pub use observer::Observer;
 // 3. build exec cmd
 // 4. run
 
-
 #[derive(Default, Debug)]
 pub struct Client {
     cmd: String,
-    args: String
+    args: Vec<String>,
+    game_dir: PathBuf,
+    process: Option<Child>,
 }
 
 impl Client {
-    pub async fn run(self) {}
+    fn new(cmd: String, args: Vec<String>, game_dir: PathBuf) -> Self {
+        Self {
+            game_dir,
+            cmd,
+            args,
+            process: None,
+        }
+    }
+    pub fn is_running(self) -> Result<Option<std::process::ExitStatus>, LauncherLibError> {
+        if let Some(mut pid) = self.process {
+            return Ok(pid.try_wait()?);
+        }
+
+        Ok(None)
+    }
+
+    pub async fn stop(&mut self) -> Result<(), LauncherLibError> {
+        if let Some(pid) = self.process.as_mut() {
+            pid.wait().await?;
+        }
+
+        Ok(())
+    }
+    pub async fn run(mut self) -> Result<Self, LauncherLibError> {
+        if self.process.is_some() {
+            return Err(LauncherLibError::Generic(
+                "An instance of minecraft is already running".to_string(),
+            ));
+        }
+
+        log::info!("Starting Game");
+
+        debug!("{:#?}", self);
+
+        let pid = Command::new(&self.cmd)
+            .args(&self.args)
+            .current_dir(&self.game_dir)
+            .spawn()?;
+
+        self.process = Some(pid);
+
+        Ok(self)
+    }
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 pub struct ClientBuilder {
     launcher_name: Option<String>,
     laucher_version: Option<String>,
@@ -61,7 +107,7 @@ pub struct ClientBuilder {
     disable_chat: bool,
     forge: Option<String>,
     fabric: Option<String>,
-    client_id: Option<String>
+    client_id: Option<String>,
 }
 
 impl ClientBuilder {
@@ -142,106 +188,148 @@ impl ClientBuilder {
         self
     }
 
-    pub async fn build(mut self) -> Result<Client,LauncherLibError> {
-        self.classpath_separator = if consts::OS == "windows" { ";".to_string() } else { ":".to_string() }; 
+    pub async fn build(mut self) -> Result<Client, LauncherLibError> {
+        debug!("Get Classpath separator");
+        self.classpath_separator = if consts::OS == "windows" { ";" } else { ":" }.to_string();
+        debug!("Get Game dir");
         let game_dir = if let Some(dir) = &self.game_directory {
             dir
         } else {
-            return Err(LauncherLibError::Generic("Game Directory is not set.".to_string()));
+            return Err(LauncherLibError::Generic(
+                "Game Directory is not set.".to_string(),
+            ));
         };
 
-        // exec_path + jvmArgs+ (client jvm args) + logging + mainClass + ?(flags)
+        // exec_path + jvmArgs+ (client jvm args) + logging + mainClass + gameFlags + ?(extraFlags)
         // fabric / forge check
 
+        debug!("Get manifest");
         let path = game_dir.join(format!("versions/{0}/{0}.json", self.version));
-        let manifest = Manifest::read_manifest(&path).await?;
+        let manifest = Manifest::read_manifest(&path, true).await?;
 
-        self.classpath = manifest.libs_as_string(&self.classpath_separator, &game_dir);
+        self.assets = manifest.assets.clone();
 
-        self.natives_directory = Some(game_dir.join(format!("versions/{}/natives",self.version)));
-  
+        debug!("Get classpath");
+        self.classpath =
+            manifest.libs_as_string(&self.classpath_separator, &game_dir, &self.version)?;
+
+        debug!("Get natives directory");
+        self.natives_directory = Some(game_dir.join(format!("versions/{}/natives", self.version)));
+
+        debug!("Build command");
         let mut command: Vec<String> = vec![];
 
-        let exe_path = self.executable_path.as_ref().unwrap_or(&utils::jvm::get_exec(
-            &manifest.java_version.ok_or_else(||LauncherLibError::Generic("Failed to get java runtime".to_string()))?.component, 
-            &game_dir, 
-            self.console
-        )).to_str().ok_or_else(||LauncherLibError::Generic("Failed to get exe path".to_string()))?.to_string();
-      
-        let jvm_args = manifest.arguments.jvm_args_to_string(&self)?;
-        command.push(jvm_args);
-        
-        if let Some(args) = &self.jvm_args {
-            args.iter().for_each(|arg| command.push( arg.to_owned()));
-        } 
+        debug!("Command: Get exec");
+        let exe_path = self
+            .executable_path
+            .as_ref()
+            .unwrap_or(&utils::jvm::get_exec(
+                &manifest
+                    .java_version
+                    .ok_or_else(|| {
+                        LauncherLibError::Generic("Failed to get java runtime".to_string())
+                    })?
+                    .component,
+                &game_dir,
+                self.console,
+            ))
+            .to_str()
+            .ok_or_else(|| LauncherLibError::Generic("Failed to get exe path".to_string()))?
+            .to_string();
 
+        debug!("Command: Get jvm args");
+        let jvm_args = manifest.arguments.jvm_args(&self)?;
+        command.extend(jvm_args);
+
+        debug!("Command: Add user jvm args");
+        if let Some(args) = &self.jvm_args {
+            args.iter().for_each(|arg| command.push(arg.to_owned()));
+        }
+
+        debug!("Command: Enable Logging");
         if self.enable_logging_config {
             if let Some(logging) = manifest.logging {
-                let logging_file = logging.client.file.id.expect("Failed to get logging file id");
+                let logging_file = logging
+                    .client
+                    .file
+                    .id
+                    .expect("Failed to get logging file id");
 
-                let logging_file = game_dir.join(format!("assets/log_configs/{}",logging_file)).normalize();
+                let logging_file = game_dir
+                    .join(format!("assets/log_configs/{}", logging_file))
+                    .normalize();
                 let logging_str = logging_file.to_str().expect("Failed to convert");
                 command.push(logging.client.argument.replace("${path}", logging_str));
             }
         }
 
+        debug!("Command: Main class");
         command.push(manifest.main_class);
 
-        if let Some(server) = self.server {
+        debug!("Command: Server");
+        if let Some(server) = &self.server {
             command.push("--server".to_string());
-            command.push(server);
+            command.push(server.clone());
 
             if let Some(port) = self.port {
                 command.push("--port".to_string());
                 command.push(port.to_string());
             }
-
         }
 
+        debug!("Command: disableMultiplayer");
         if self.disable_mulitplayer {
             command.push("--disableMultiplayer".to_string());
         }
 
+        debug!("Command: disableChat");
         if self.disable_chat {
             command.push("--disableChat".to_string());
         }
 
-        Ok(Client {
-            cmd: exe_path,
-            args: command.join(" ")
-        })
+        debug!("Command: Game args");
+        let game_args = manifest.arguments.game_args(&self)?;
+        command.extend(game_args);
+
+        debug!("Command: Build complete");
+        Ok(Client::new(exe_path, command, game_dir.to_owned()))
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn init() {
-        let _ = env_logger::builder().filter_module("minecraft_launcher_lib", log::LevelFilter::Debug).is_test(true).try_init();
-    }  
+        let _ = env_logger::builder()
+            .filter_module("minecraft_launcher_lib", log::LevelFilter::Debug)
+            .is_test(true)
+            .try_init();
+    }
 
     #[tokio::test]
-    async fn test_client_builder(){
+    async fn test_client_builder() {
         init();
 
         let builder = ClientBuilder::new()
-        .set_game_directory(PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"))
-        .set_version("1.19.3".to_string())
-        .set_user("USERNAME".to_string(), "UUID".to_string(), "XUID".to_string(), "TOKEN".to_string());
+            .set_game_directory(PathBuf::from(
+                "C:\\Users\\Collin\\AppData\\Roaming\\.minecraft",
+            ))
+            .set_version("1.19.3".to_string())
+            .set_user(
+                "USERNAME".to_string(),
+                "UUID".to_string(),
+                "XUID".to_string(),
+                "TOKEN".to_string(),
+            );
 
         match builder.build().await {
             Ok(value) => {
-                println!("{:#?}",value);
+                println!("{:#?}", value);
             }
-            Err(err) =>{
-                eprintln!("{}",err);
+            Err(err) => {
+                eprintln!("{}", err);
             }
         }
-
-
     }
-  
 }
-

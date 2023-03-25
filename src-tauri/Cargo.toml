@@ -15,6 +15,7 @@ rust-version = "1.59"
 tauri-build = { version = "1.2.1", features = [] }
 
 [dependencies]
+tokio = { version = "1.26.0", features = ["sync"] }
 log = "0.4.17"
 log4rs = "1.2.0"
 thiserror = "1.0"

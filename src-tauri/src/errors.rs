@@ -6,7 +6,6 @@ pub enum Error {
   Tauri(#[from] tauri::Error),
   #[error(transparent)]
   Launcher(#[from] minecraft_launcher_lib::LauncherLibError)
-  
 }
 
 // we must manually implement serde::Serialize

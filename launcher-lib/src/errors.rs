@@ -19,5 +19,7 @@ pub enum LauncherLibError {
     #[error("Failed sha1 check")]
     Sha1Error,
     #[error("{0}")]
-    TimeError(#[from] std::time::SystemTimeError)
+    TimeError(#[from] std::time::SystemTimeError),
+    #[error("Failed to convert pathbuf to str")]
+    PathBufError
 }

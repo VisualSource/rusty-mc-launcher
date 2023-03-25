@@ -4,7 +4,7 @@ use std::env::consts;
 
 use serde::{Deserialize,Serialize, self };
 use normalize_path::NormalizePath;
-use log::info;
+use log::{info, debug};
 
 use crate::ClientBuilder;
 use crate::errors::LauncherLibError;
@@ -90,37 +90,50 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    pub async fn read_manifest(manifest_dir: &PathBuf) -> Result<Manifest,LauncherLibError> {
+    pub async fn read_manifest(manifest_dir: &PathBuf, do_inhert: bool) -> Result<Manifest,LauncherLibError> {
         let manifest_raw = tokio::fs::read_to_string(&manifest_dir).await?;
         let mut manifest = serde_json::from_str::<Manifest>(&manifest_raw)?;
 
-        if let Some(inherts) = &manifest.inherits_from {
-            info!("Inherting manifest");
-            let root_dir = manifest_dir.parent()
-                                              .ok_or_else(||LauncherLibError::Generic("Failed to get parent dir".into()))?.parent()
-                                              .ok_or_else(||LauncherLibError::Generic("Failed to get parent dir".into()))?;
+        if do_inhert {
+            if let Some(inherts) = &manifest.inherits_from {
+                info!("Inherting manifest");
+                let root_dir = manifest_dir.parent()
+                                                .ok_or_else(||LauncherLibError::Generic("Failed to get parent dir".into()))?.parent()
+                                                .ok_or_else(||LauncherLibError::Generic("Failed to get parent dir".into()))?;
 
-            if !root_dir.exists() {
-                return Err(LauncherLibError::NotFound("Failed to find parent manifest".to_string()));
+                if !root_dir.exists() {
+                    return Err(LauncherLibError::NotFound("Failed to find parent manifest".to_string()));
+                }
+
+                // Load base manifest
+                let path = root_dir.join(format!("{0}/{0}.json",inherts));
+
+                let raw = tokio::fs::read_to_string(&path).await?;
+                let base_manifest = serde_json::from_str::<Manifest>(&raw)?;
+
+                manifest = base_manifest.inherit(manifest);
             }
-
-            // Load base manifest
-            let path = root_dir.join(format!("{0}/{0}.json",inherts));
-
-            let raw = tokio::fs::read_to_string(&path).await?;
-            let base = serde_json::from_str::<Manifest>(&raw)?;
-
-            manifest = manifest.inherit(base);
         }
 
         Ok(manifest)
     }
 
-    pub fn inherit(self, manifest: Manifest) -> Manifest {
-        Manifest::default()
+    pub fn inherit(mut self, manifest: Manifest) -> Manifest {    
+        self.id = manifest.id;
+        self.release_time = manifest.release_time;
+        self.time = manifest.time;
+        self.type_field = manifest.type_field;
+        self.main_class = manifest.main_class;
+        self.inherits_from = manifest.inherits_from;
+
+        self.arguments.game.extend(manifest.arguments.game);
+        self.arguments.jvm.extend(manifest.arguments.jvm);
+        self.libraries.extend(manifest.libraries);
+
+        self
     }
 
-    pub fn libs_as_string(&self, seperator: &String, root: &PathBuf) -> String {
+    pub fn libs_as_string(&self, seperator: &String, root: &PathBuf, version: &String) -> Result<String,LauncherLibError> {
 
         let mut output: Vec<String> = vec![];
 
@@ -159,7 +172,7 @@ impl Manifest {
             if let Some(downloads) = &lib.downloads {
                 let path = downloads.artifact.path.as_ref().expect("Expect path var");
 
-                let lib_path = root.join("libraries").join(path).normalize().to_str().expect("Failed to convert to str").to_string();
+                let lib_path = root.join("libraries").join(path).normalize().to_str().ok_or(LauncherLibError::PathBufError)?.to_string();
 
                 output.push(lib_path);
 
@@ -175,7 +188,7 @@ impl Manifest {
                         if let Some(file) = classifiers.get(native_id) {
                             let path = file.path.as_ref().expect("Expect path var");
 
-                            let lib_path = root.join("libraries").normalize().join(path).to_str().expect("Failed to convert to str").to_string();
+                            let lib_path = root.join("libraries").normalize().join(path).to_str().ok_or(LauncherLibError::PathBufError)?.to_string();
 
                             output.push(lib_path);
 
@@ -183,11 +196,31 @@ impl Manifest {
                     }
                 }
 
+                continue;
             }
-            
+
+            let (org, name,libv) = match lib.name.splitn(3, ":").collect::<Vec<&str>>().get(0..=2) {
+                Some(value) => (value[0],value[1],value[2]),
+                None => return Err(LauncherLibError::Generic(format!("Failed to parse library {}",lib.name)))
+            };
+
+            //net.fabricmc:tiny-mappings-parser:0.3.0+build.17
+            // Path => net/fabricmc/tiny-mappings-parser/0.3.0+build.17/tiny-mappings-parser-0.3.0+build.17.jar
+            let path = format!(
+                    "{0}/{1}/{2}/{1}-{2}.jar",
+                    org.replace(".", "/"),
+                    name,
+                    libv
+                );
+            let lib_path =  root.join("libraries").join(path).normalize();
+            output.push(lib_path.to_str().ok_or(LauncherLibError::PathBufError)?.to_string());
         }
 
-        output.join(&seperator)
+        let client_jar = root.join(format!("versions/{0}/{0}.jar",version)).normalize();
+
+        output.push(client_jar.to_str().ok_or(LauncherLibError::PathBufError)?.to_string());
+
+        Ok(output.join(&seperator))
     }
 }
 
@@ -230,7 +263,7 @@ pub struct Arguments {
 impl Arguments {
     /// Python example
     /// https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib/_helper.py#L57
-    fn args_to_string(list: &Vec<Arg>,  settings: &ClientBuilder) -> Result<String, LauncherLibError> {
+    fn build_args(list: &Vec<Arg>,  settings: &ClientBuilder) -> Result<Vec<String>, LauncherLibError> {
         let mut output: Vec<String> = vec![];
 
         let re = regex::Regex::new(r"\$\{(?P<target>.+)\}")?;
@@ -238,6 +271,7 @@ impl Arguments {
         for arg in list {
             match arg {
                 Arg::Flag(value) => {
+                    debug!("Parse Flag: {}",value);
                     if let Some(cp) = re.captures(&value) {
                         let result = match &cp["target"] {
                             "launcher_name" => {
@@ -301,7 +335,7 @@ impl Arguments {
                             }
                             "clientid" => {
                                 let id = settings.client_id.as_ref()
-                                .ok_or_else(||LauncherLibError::Generic("Failed to get library directory!".to_string()))?;
+                                .ok_or_else(||LauncherLibError::Generic("Failed to get client id".to_string()))?;
                                 value.replace("${clientid}", id)
                             }
                             "classpath" => settings.classpath.to_owned(),
@@ -324,7 +358,7 @@ impl Arguments {
                     }
                 }
                 Arg::Rule { rules, value } => {
-
+                    debug!("Parse Rule");
                     let inact = rules.iter().map(| condition |{
                         match condition {
                             RuleCondition::Features { action, features } => {
@@ -371,14 +405,14 @@ impl Arguments {
                 }
             }
         }
-        Ok(output.join(" "))
+        Ok(output)
     }
 
-    pub fn game_args_to_string(&self, settings: &ClientBuilder) -> Result<String, LauncherLibError> {
-        Arguments::args_to_string(&self.game, settings)
+    pub fn game_args(&self, settings: &ClientBuilder) -> Result<Vec<String>, LauncherLibError> {
+        Arguments::build_args(&self.game, settings)
     }
-    pub fn jvm_args_to_string(&self, settings: &ClientBuilder) -> Result<String, LauncherLibError>{
-        Arguments::args_to_string(&self.jvm, settings)
+    pub fn jvm_args(&self, settings: &ClientBuilder) -> Result<Vec<String>, LauncherLibError>{
+        Arguments::build_args(&self.jvm, settings)
     }
 }
 
@@ -458,14 +492,23 @@ mod tests {
         let _ = env_logger::builder().filter_level(log::LevelFilter::max()).is_test(true).try_init();
     }
 
+    #[tokio::test]
+    async fn test_manifest_inhert(){
+        init();
+        let manifest_dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft\\versions\\fabric-loader-0.14.18-1.19.4\\fabric-loader-0.14.18-1.19.4.json");
+        let manifest = Manifest::read_manifest(&manifest_dir,false).await.unwrap();
+
+        debug!("{:#?}",manifest);
+    }   
+
     #[tokio::test] 
     async fn test_libs_to_string(){
         init();
 
         let manifest_dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft\\versions\\1.19.3\\1.19.3.json");
-        let manifest = Manifest::read_manifest(&manifest_dir).await.unwrap();
+        let manifest = Manifest::read_manifest(&manifest_dir,false).await.unwrap();
 
-        let result = manifest.libs_as_string(&";".to_string(),&PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"));
+        let result = manifest.libs_as_string(&";".to_string(),&PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"),&"1.19.3".to_string()).unwrap();
 
         info!("{}",result);
     }
@@ -494,19 +537,19 @@ mod tests {
 
         let builder = ClientBuilder::new().as_demo(true).set_game_directory(PathBuf::from("C:/"));
         
-        let result_with_demo = arguments.game_args_to_string(&builder).unwrap();
+        let result_with_demo = arguments.game_args(&builder).unwrap();
 
-        info!("With Demo: {}",result_with_demo);
+        info!("With Demo: {:#?}",result_with_demo);
 
-        assert_eq!(result_with_demo,"--gameDir C:/ --demo".to_string());
+        assert_eq!(result_with_demo.join(" "),"--gameDir C:/ --demo".to_string());
 
         let builder_no_demo = builder.as_demo(false);
 
-        let result_without_demo = arguments.game_args_to_string(&builder_no_demo).unwrap();
+        let result_without_demo = arguments.game_args(&builder_no_demo).unwrap();
 
-        info!("Without Demo: {}",result_without_demo);
+        info!("Without Demo: {:#?}",result_without_demo);
 
-        assert_eq!(result_without_demo,"--gameDir C:/".to_string());
+        assert_eq!(result_without_demo.join(" "),"--gameDir C:/".to_string());
     }
     #[test]
     fn test_arg_jvm(){
@@ -546,10 +589,10 @@ mod tests {
 
         let builder = ClientBuilder::default().set_natives_directory(PathBuf::from("C:/"));
 
-        let result = arguments.jvm_args_to_string(&builder).unwrap();
+        let result = arguments.jvm_args(&builder).unwrap();
 
-        info!("{}",result);
+        info!("{:#?}",result);
 
-        assert_eq!(result,"-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Dos.name=Windows 10 -Dos.version=10.0 -Djava.library.path=C:\\".to_string());
+        assert_eq!(result.join(" "),"-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Dos.name=Windows 10 -Dos.version=10.0 -Djava.library.path=C:\\".to_string());
     }
 }
