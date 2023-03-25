@@ -21,6 +21,7 @@ log4rs = "1.2.0"
 thiserror = "1.0"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
+tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "dev" }
 tauri = { version = "1.2.4", features = ["http-request", "notification-all", "window-close", "window-hide", "window-maximize", "window-minimize", "window-show", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
 minecraft-launcher-lib = { path = "../launcher-lib"  }
 

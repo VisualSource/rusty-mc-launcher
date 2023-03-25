@@ -1,4 +1,5 @@
 import React from 'react';
+import localforage from 'localforage';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,8 +10,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from '@/lib/config/auth';
 import { initStorage } from './lib/config/storage';
 import router from '@/router';
-import './index.css'
-import localforage from 'localforage';
+import './index.css';
 
 initStorage();
 

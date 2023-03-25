@@ -87,7 +87,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["./log4rs.yml"],
+      "resources": ["./log4rs.yml", "./cli/*"],
       "shortDescription": "",
       "targets": "all",
       "windows": {

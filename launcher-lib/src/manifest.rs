@@ -133,7 +133,7 @@ impl Manifest {
         self
     }
 
-    pub fn libs_as_string(&self, seperator: &String, root: &PathBuf, version: &String) -> Result<String,LauncherLibError> {
+    pub fn libs_as_string(&self, seperator: &Option<String>, root: &PathBuf, version: &String) -> Result<String,LauncherLibError> {
 
         let mut output: Vec<String> = vec![];
 
@@ -220,7 +220,12 @@ impl Manifest {
 
         output.push(client_jar.to_str().ok_or(LauncherLibError::PathBufError)?.to_string());
 
-        Ok(output.join(&seperator))
+        let class_sperator = if let Some(sep) = seperator { sep } else {
+            if consts::OS == "windows" { ";" } else { ":" }
+        };
+
+
+        Ok(output.join(&class_sperator))
     }
 }
 
@@ -338,7 +343,7 @@ impl Arguments {
                                 .ok_or_else(||LauncherLibError::Generic("Failed to get client id".to_string()))?;
                                 value.replace("${clientid}", id)
                             }
-                            "classpath" => settings.classpath.to_owned(),
+                            "classpath" => settings.classpath.to_owned().ok_or(LauncherLibError::Generic("classpath was not set".to_string()))?,
                             "auth_player_name" => settings.username.to_owned(),
                             "version_name" => settings.version.to_owned(),
                             "auth_uuid" => settings.uuid.to_owned(),
@@ -347,7 +352,7 @@ impl Arguments {
                             "user_properties" => "{}".to_string(),
                             "auth_session" => settings.token.to_owned(),
                             "auth_xuid" => settings.xuid.to_owned(),
-                            "classpath_separator" => settings.classpath_separator.to_owned(),
+                            "classpath_separator" => settings.classpath_separator.to_owned().unwrap_or_else(|| if consts::OS == "windows" { ";" } else { ":" }.to_string()),
 
                             _ => value.to_owned()
                         };
@@ -508,7 +513,7 @@ mod tests {
         let manifest_dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft\\versions\\1.19.3\\1.19.3.json");
         let manifest = Manifest::read_manifest(&manifest_dir,false).await.unwrap();
 
-        let result = manifest.libs_as_string(&";".to_string(),&PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"),&"1.19.3".to_string()).unwrap();
+        let result = manifest.libs_as_string(&Some(";".to_string()),&PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"),&"1.19.3".to_string()).unwrap();
 
         info!("{}",result);
     }

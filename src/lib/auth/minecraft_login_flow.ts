@@ -89,7 +89,7 @@ const getMinecraft = async (instance: IPublicClientApplication) => {
 
     return {
         xuid: xuid.xuid,
-        fetched: new Date().toISOString(),
+        fetched: new Date(),
         profile: mcp,
         token: minecraft_resp
     }

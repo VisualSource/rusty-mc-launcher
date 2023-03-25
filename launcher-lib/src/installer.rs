@@ -8,12 +8,13 @@ use tokio::{fs, io};
 
 use crate::errors::LauncherLibError;
 use crate::manifest::asset_index::AssetIndex;
-use crate::manifest::{Library, Manifest, RuleCondition, File};
+use crate::manifest::{File, Library, Manifest, RuleCondition};
 use crate::metadata::get_launcher_manifest;
 use crate::observer::{Observer, Subject};
 use crate::runtime::Jvm;
 use crate::utils::download_file;
 use crate::utils::fabric;
+use crate::ClientBuilder;
 
 //https://www.reddit.com/r/rust/comments/gi2pld/callback_functions_the_right_way/
 //https://github.com/lpxxn/rust-design-pattern/blob/master/behavioral/observer.rs
@@ -55,7 +56,7 @@ impl<'a, T: Observer + PartialEq> Subject<'a, T> for Installer<'a, T> {
 }
 
 impl<'a, T: Observer + PartialEq> Installer<'a, T> {
-    pub fn new(version: String, game_dir: PathBuf) -> Installer<'a, T> {
+    pub fn new(version: String, game_dir: Option<PathBuf>) -> Installer<'a, T> {
         let forge = regex::Regex::new(r"(?P<mc>\d+.\d+.\d+)-forge-(?P<loader>\d+.\d+.\d+)")
             .expect("Failed to make regex");
         let fabric =
@@ -83,7 +84,8 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
             loader,
             version,
             loader_version,
-            game_dir,
+            game_dir: game_dir
+                .unwrap_or(ClientBuilder::get_minecraft_dir().expect("Failed to get game dir.")),
         }
     }
 
@@ -380,8 +382,13 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                         "Failed to get java runtime".to_string(),
                     ))?
                     .component;
-                fabric::run_fabric_installer(&self.mc, &self.loader_version, &self.game_dir, runtime)
-                    .await?;
+                fabric::run_fabric_installer(
+                    &self.mc,
+                    &self.loader_version,
+                    &self.game_dir,
+                    runtime,
+                )
+                .await?;
 
                 let version_root = self
                     .game_dir
@@ -391,9 +398,13 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                 info!("Download client jar");
                 if let Some(downloads) = manifest.downloads {
                     debug!("{:#?}", downloads.client);
-                    download_file(&downloads.client.url,&mod_jar,Some(&downloads.client.sha1)).await?;
+                    download_file(
+                        &downloads.client.url,
+                        &mod_jar,
+                        Some(&downloads.client.sha1),
+                    )
+                    .await?;
                 }
-                
             }
             Loader::Forge => {
                 info!("Install Forge");
@@ -445,10 +456,7 @@ mod tests {
 
         let observer_a = ConcreteObserver { id: 1 };
 
-        let mut installer = Installer::new(
-            "fabric-loader-0.14.18-1.19.4".to_string(),
-            PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft"),
-        );
+        let mut installer = Installer::new("fabric-loader-0.14.18-1.19.4".to_string(), None);
 
         installer.attach(&observer_a);
 

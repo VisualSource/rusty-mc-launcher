@@ -24,12 +24,12 @@ interface Profile {
     "preferredLanguage": null | string
 }
 
-interface ProfileFull extends Profile {
+export interface ProfileFull extends Profile {
     photo: string;
     minecraft: MC | null;
 }
 
-const getPhoto = async (account: AccountInfo, client: Client) => {
+const getMSAPhoto = async (account: AccountInfo, client: Client) => {
     const id = `${account.nativeAccountId ?? account.homeAccountId}-photo`;
     const data = await localforage.getItem<Blob | null>(id);
 
@@ -46,7 +46,7 @@ const getPhoto = async (account: AccountInfo, client: Client) => {
     return `https://api.dicebear.com/5.x/initials/svg?seed=${account.username}`
 }
 
-const getProfile = async (account: AccountInfo, client: Client) => {
+const getMSAProfile = async (account: AccountInfo, client: Client) => {
     const id = `${account.nativeAccountId ?? account.homeAccountId}-profile`;
     const data = await localforage.getItem<Profile | null>(id);
 
@@ -61,16 +61,22 @@ const getProfile = async (account: AccountInfo, client: Client) => {
     return data;
 }
 
-const loadMinecraft = async (account: AccountInfo, instance: IPublicClientApplication) => {
+const loadMinecraftProfile = async (account: AccountInfo | null, instance: IPublicClientApplication) => {
+    if (!account) throw new Error("No user account selected to fetch minecraft profile.");
     const id = `${account.nativeAccountId ?? account.homeAccountId}-minecraft`;
     const data = await localforage.getItem<MC | null>(id);
-
-    if (!data) {
+    const fetchProfile = async () => {
         const profile = await getMinecraft(instance);
-
         localforage.setItem(id, profile);
-
         return profile;
+    }
+
+    if (!data) return fetchProfile();
+
+    const token = JSON.parse(atob(data.token.access_token.split(".")[1])) as { exp: number; };
+
+    if (new Date(token.exp * 1000) >= new Date()) {
+        return fetchProfile();
     }
 
     return data;
@@ -95,9 +101,9 @@ const useUser = () => {
         const client = Client.initWithMiddleware({ authProvider });
 
         const [profile, photo, minecraft] = await Promise.allSettled([
-            getProfile(account, client),
-            getPhoto(account, client),
-            loadMinecraft(account, instance)
+            getMSAProfile(account, client),
+            getMSAPhoto(account, client),
+            loadMinecraftProfile(account, instance)
         ]);
 
         let user = profile.status === "fulfilled" ? profile.value : {};
@@ -108,6 +114,7 @@ const useUser = () => {
     }, { enabled: !!account, refetchInterval: false, refetchIntervalInBackground: false });
 
     return {
+        minecraft: () => loadMinecraftProfile(account, instance),
         user: data,
         isLoading,
         isError,

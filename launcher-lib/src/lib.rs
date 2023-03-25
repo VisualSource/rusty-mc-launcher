@@ -82,11 +82,11 @@ impl Client {
 pub struct ClientBuilder {
     launcher_name: Option<String>,
     laucher_version: Option<String>,
-    classpath: String,
+    classpath: Option<String>,
     assets: Option<String>,
     version_type: Option<String>,
     console: bool,
-    classpath_separator: String,
+    classpath_separator: Option<String>,
     game_directory: Option<PathBuf>,
     version: String,
     token: String,
@@ -113,6 +113,40 @@ pub struct ClientBuilder {
 impl ClientBuilder {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn get_minecraft_dir() -> Result<PathBuf, LauncherLibError> {
+        match consts::OS {
+            "windows" => {
+                let appdata = std::env::var("APPDATA")?;
+                Ok(PathBuf::from(appdata).join(".minecraft"))
+            }
+            _ => {
+                return Err(LauncherLibError::Generic(
+                    "Game Directory is not set.".to_string(),
+                ));
+            }
+        }
+    }
+
+    pub async fn check_install(
+        version: String,
+        game_dir: Option<PathBuf>,
+    ) -> Result<bool, LauncherLibError> {
+        let root = if let Some(dir) = game_dir {
+            dir
+        } else {
+            ClientBuilder::get_minecraft_dir()?
+        };
+        let version_root = root.join(format!("versions/{}", version.clone()));
+        let client_jar = version_root
+            .join(format!("{}.jar", version.clone()))
+            .normalize();
+        let client_json = version_root
+            .join(format!("{}.json", version.clone()))
+            .normalize();
+
+        Ok(client_jar.is_file() && client_json.is_file())
     }
 
     pub fn as_demo(mut self, value: bool) -> Self {
@@ -190,14 +224,21 @@ impl ClientBuilder {
 
     pub async fn build(mut self) -> Result<Client, LauncherLibError> {
         debug!("Get Classpath separator");
-        self.classpath_separator = if consts::OS == "windows" { ";" } else { ":" }.to_string();
+
         debug!("Get Game dir");
-        let game_dir = if let Some(dir) = &self.game_directory {
-            dir
+
+        let game_dir = if self.game_directory.is_some() {
+            self.game_directory
+                .to_owned()
+                .ok_or(LauncherLibError::NotFound(
+                    "No Game Directory was set".to_string(),
+                ))?
         } else {
-            return Err(LauncherLibError::Generic(
-                "Game Directory is not set.".to_string(),
-            ));
+            let dir = ClientBuilder::get_minecraft_dir()?;
+
+            self.game_directory = Some(dir.clone());
+
+            dir
         };
 
         // exec_path + jvmArgs+ (client jvm args) + logging + mainClass + gameFlags + ?(extraFlags)
@@ -208,10 +249,11 @@ impl ClientBuilder {
         let manifest = Manifest::read_manifest(&path, true).await?;
 
         self.assets = manifest.assets.clone();
+        self.version_type = Some(manifest.type_field.clone());
 
         debug!("Get classpath");
         self.classpath =
-            manifest.libs_as_string(&self.classpath_separator, &game_dir, &self.version)?;
+            Some(manifest.libs_as_string(&self.classpath_separator, &game_dir, &self.version)?);
 
         debug!("Get natives directory");
         self.natives_directory = Some(game_dir.join(format!("versions/{}/natives", self.version)));

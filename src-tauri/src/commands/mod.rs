@@ -6,7 +6,6 @@ use minecraft_launcher_lib::observer::{Observer, Subject};
 use minecraft_launcher_lib::ClientBuilder;
 use std::path::PathBuf;
 use tauri::Window;
-
 #[derive(PartialEq)]
 struct DownloadObserver {
     id: i32,
@@ -21,9 +20,14 @@ impl Observer for DownloadObserver {
 }
 
 #[tauri::command]
+pub async fn check_install(version: String, game_dir: Option<PathBuf>) -> Result<bool, Error> {
+    Ok(ClientBuilder::check_install(version, game_dir).await?)
+}
+
+#[tauri::command]
 pub async fn install(
     version: String,
-    game_dir: PathBuf,
+    game_dir: Option<PathBuf>,
     window: tauri::Window,
 ) -> Result<(), Error> {
     debug!("Install {} to {:#?}", version, game_dir);

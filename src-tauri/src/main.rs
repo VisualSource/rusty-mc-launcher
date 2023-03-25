@@ -5,7 +5,6 @@
 mod commands;
 mod errors;
 mod state;
-
 use log4rs;
 
 fn main() {
@@ -16,7 +15,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::play,
             commands::stop,
-            commands::install
+            commands::install,
+            commands::check_install
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
