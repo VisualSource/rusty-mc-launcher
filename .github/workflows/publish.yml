@@ -29,7 +29,8 @@ jobs:
         env:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID  }}
+          PUBLIC_VITE_CLIENT_ID: ${{ secrets.PUBLIC_VITE_CLIENT_ID  }}
+          PUBLIC_VITE_AUTHORITY: ${{ secrets.PUBLIC_VITE_AUTHORITY  }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
