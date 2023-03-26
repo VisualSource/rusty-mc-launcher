@@ -1,7 +1,33 @@
 import { invoke } from '@tauri-apps/api';
-import { listen, emit, once } from '@tauri-apps/api/event';
 import type { LaunchConfig } from './MinecraftProfile';
 import Notification from './Notification';
+
+export class PortGenerator {
+    static INSTANCE: PortGenerator | null;
+    static getInstance(): PortGenerator {
+        if (!PortGenerator.INSTANCE) {
+            PortGenerator.INSTANCE = new PortGenerator();
+        }
+        return PortGenerator.INSTANCE;
+    }
+    public port: number = 3000;
+    constructor() { }
+    setPort() {
+        this.port = [3000, 4000, 5000].at(Math.floor((Math.random() * 100) % 3)) ?? 3000;
+        return this.port;
+    }
+}
+
+export const startAuthServer = async () => {
+    try {
+        const generator = PortGenerator.getInstance();
+        await invoke("start_server", { port: generator.port, origin: window.location.origin });
+        return generator.port;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
 
 export const install = async (version: string, game_dir?: string) => {
     try {

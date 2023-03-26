@@ -24,7 +24,6 @@
     "react-hook-form": "^7.43.2",
     "react-icons": "^4.7.1",
     "react-router-dom": "^6.8.1",
-    "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log",
     "zod": "^3.20.6",
     "zod-validation-error": "^0.3.2"
   },

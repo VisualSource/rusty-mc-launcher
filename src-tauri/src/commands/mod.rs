@@ -6,6 +6,34 @@ use minecraft_launcher_lib::observer::{Observer, Subject};
 use minecraft_launcher_lib::ClientBuilder;
 use std::path::PathBuf;
 use tauri::Window;
+use tauri_plugin_oauth::{start_with_config, OauthConfig};
+
+#[tauri::command]
+pub async fn start_server(window: Window, port: u16, origin: String) -> Result<u16, Error> {
+    let config = OauthConfig {
+        ports: Some(vec![port]),
+        response: None,
+    };
+
+    let path = format!("http://localhost:{}/", port);
+
+    start_with_config(config, move |url| {
+        if url.starts_with(&path) {
+            let _ = window.emit(
+                "redirect_uri",
+                format!(
+                    r#"{{ "status":"ok", "data": "{}" }}"#,
+                    url.replace(&path, "")
+                ),
+            );
+            return;
+        }
+
+        let _ = window.emit("redirect_uri", r#"{"status":"error","data":""}"#);
+    })
+    .map_err(|err| Error::Auth(err.to_string()))
+}
+
 #[derive(PartialEq)]
 struct DownloadObserver {
     id: i32,

@@ -4,8 +4,8 @@ export const msalConfig = {
     auth: {
         clientId: import.meta.env.PUBLIC_VITE_CLIENT_ID,
         authority: `https://login.microsoftonline.com/consumers/`,
-        redirectUri: "/",
-        postLogoutRedirectUri: "/",
+        redirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
+        postLogoutRedirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
     },
     cache: {
         cacheLocation: "localStorage",

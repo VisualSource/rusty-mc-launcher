@@ -28,7 +28,7 @@ const Home: React.FC = () => {
                                 >Loading...</span
                                 >
                             </div>
-                            <span>Loading...</span>
+                            <span className="mt-4">Loading...</span>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center">
@@ -97,7 +97,7 @@ const Home: React.FC = () => {
                 </div>
             </AuthenticatedTemplate>
             <UnauthenticatedTemplate>
-                <div className="h-full flex flex-col justify-center">Please login to A Microsoft account</div>
+                <div className="h-full flex flex-col justify-center items-center">Please login to A Microsoft account to play</div>
             </UnauthenticatedTemplate>
         </div>
     );

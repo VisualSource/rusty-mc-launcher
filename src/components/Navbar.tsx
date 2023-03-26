@@ -5,9 +5,18 @@ import { Menu, Transition } from '@headlessui/react'
 import { loginRequest } from '../lib/config/auth';
 import useUser from '../lib/hooks/useUser';
 import { Link, NavLink } from 'react-router-dom';
+import { PortGenerator } from '@/lib/system/commands';
+
 
 const Navbar = () => {
     const { user, instance, isLoading } = useUser();
+
+    const login = async () => {
+        const port = PortGenerator.getInstance().setPort();
+        console.log("Request Port", port);
+        await instance.loginPopup({ ...loginRequest, redirectUri: `http://localhost:${port}` });
+    }
+
     return (
         <div data-tauri-drag-region>
             <div data-tauri-drag-region className="bg-gray-900 flex justify-end gap-2">
@@ -66,7 +75,7 @@ const Navbar = () => {
                                     </>)}
                                 </AuthenticatedTemplate>
                                 <UnauthenticatedTemplate>
-                                    <button onClick={() => instance.loginPopup(loginRequest)} className="flex items-center gap-2 shadow py-1 px-2.5 bg-gray-700 hover:bg-gray-600 rounded" >
+                                    <button onClick={login} className="flex items-center gap-2 shadow py-1 px-2.5 bg-gray-700 hover:bg-gray-600 rounded" >
                                         <HiLogin />
                                         <span>Login</span>
                                     </button>

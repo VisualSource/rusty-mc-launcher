@@ -10,6 +10,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from '@/lib/config/auth';
 import { initStorage } from './lib/config/storage';
 import router from '@/router';
+import "@auth/override";
 import './index.css';
 
 initStorage();
@@ -22,6 +23,7 @@ const accounts = msalInstance.getAllAccounts();
 if (accounts.length > 0) {
   msalInstance.setActiveAccount(accounts[0]);
 }
+
 
 msalInstance.addEventCallback((ev) => {
   switch (ev.eventType) {
