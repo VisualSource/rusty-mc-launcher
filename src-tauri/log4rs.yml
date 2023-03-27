@@ -6,3 +6,6 @@ root:
   level: debug
   appenders:
     - stdout
+loggers:
+  attohttpc:
+    level: error

@@ -2,24 +2,45 @@ import { useIsAuthenticated } from "@azure/msal-react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from 'react-hook-form';
 import { Fragment, useEffect, useState } from 'react';
-import { useMinecraftProfiles, type MinecraftProfile } from "@/lib/system/MinecraftProfile";
+import { useProfiles } from "@/lib/hooks/useProfiles";
+import type { MinecraftProfile } from "@/lib/models/profiles";
 import { useQuery } from "@tanstack/react-query";
-import { Combobox, Transition } from "@headlessui/react";
-import { HiCheck, HiChevronUp } from "react-icons/hi";
+import { Combobox, Listbox, Transition } from "@headlessui/react";
+import { HiCheck, HiChevronDown, HiChevronUp, HiSelector } from "react-icons/hi";
+
+const versions = [
+    { name: "Vanilla", id: "vanilla" },
+    { name: "Fabric", id: "fabric" }
+];
 
 type VersionManifestV2 = { latest: { release: string; snapshot: string; }; versions: { id: string; type: string; releaseTime: string; }[] };
 const cutoff_date = new Date("2020-06-23T16:20:52+00:00");
 
 const ProfileCreate: React.FC = () => {
-    const { data, isLoading, error } = useQuery(["version_manifest_v2"], async () => {
-        const version = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").then(value => value.json() as Promise<VersionManifestV2>);
+    const [verison, setVersion] = useState(versions[0]);
+    const { data, isLoading, error } = useQuery([verison.id], async (ctx) => {
+        const id = ctx.queryKey[0];
 
-        return {
-            latest: version.latest,
-            versions: [
-                { id: "latest-release", type: "latest-release", releaseTime: "" },
-                { id: "latest-snapshot", type: "latest-snapshot", releaseTime: "" },
-            ].concat(version.versions.filter(value => new Date(value.releaseTime) >= cutoff_date))
+        switch (id) {
+            case "vanilla": {
+                const version = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").then(value => value.json() as Promise<VersionManifestV2>);
+                return {
+                    latest: version.latest,
+                    versions: [
+                        { id: "latest-release", type: "latest-release", releaseTime: "" },
+                        { id: "latest-snapshot", type: "latest-snapshot", releaseTime: "" },
+                    ].concat(version.versions.filter(value => new Date(value.releaseTime) >= cutoff_date))
+                }
+            }
+            case "fabric": { }
+
+            default:
+                return {
+                    latest: {}, versions: [
+                        { id: "latest-release", type: "latest-release", releaseTime: "" },
+                        { id: "latest-snapshot", type: "latest-snapshot", releaseTime: "" },
+                    ]
+                };
         }
     });
     const { register, handleSubmit, control, setValue } = useForm<MinecraftProfile>({
@@ -37,7 +58,7 @@ const ProfileCreate: React.FC = () => {
             resolution: undefined,
         }
     });
-    const { mutate } = useMinecraftProfiles();
+    const { mutate } = useProfiles();
     const navigate = useNavigate();
     const isAuthenticated = useIsAuthenticated();
     const [query, setQuery] = useState('');
@@ -49,7 +70,7 @@ const ProfileCreate: React.FC = () => {
             type: "create",
             data: {
                 ...state,
-                created: new Date().toISOString()
+                created: new Date()
             }
         });
         navigate("/", { replace: true });
@@ -79,6 +100,59 @@ const ProfileCreate: React.FC = () => {
                     <input required placeholder="name" className="mt-1 w-full rounded-md border-gray-200 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm" id="name" type="text" {...register("name", { required: "A name is required" })} />
                 </div>
                 <div className="mt-4">
+                    <label htmlFor="modded" className="block text-xs font-medium text-gray-700 dark:text-gray-200">
+                        Minecraft Type
+                    </label>
+                    <Listbox value={verison} onChange={setVersion}>
+                        <div className="relative mt-1">
+                            <Listbox.Button className="relative w-full cursor-default rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+                                <span className="block truncate">{verison.name}</span>
+                                <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                    <HiSelector
+                                        className="h-5 w-5 text-gray-400"
+                                        aria-hidden="true"
+                                    />
+                                </span>
+                            </Listbox.Button>
+                            <Transition
+                                as={Fragment}
+                                leave="transition ease-in duration-100"
+                                leaveFrom="opacity-100"
+                                leaveTo="opacity-0"
+                            >
+                                <Listbox.Options className="absolute mt-1 z-50 max-h-60 w-full overflow-auto rounded-md border-gray-700 bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                    {versions.map((person, personIdx) => (
+                                        <Listbox.Option
+                                            key={personIdx}
+                                            className={({ active }) =>
+                                                `relative cursor-default select-none py-2 pl-10 pr-4 text-white ${active ? 'bg-blue-600' : ''
+                                                }`
+                                            }
+                                            value={person}
+                                        >
+                                            {({ selected }) => (
+                                                <>
+                                                    <span
+                                                        className={`block truncate ${selected ? 'font-medium' : 'font-normal'
+                                                            }`}
+                                                    >
+                                                        {person.name}
+                                                    </span>
+                                                    {selected ? (
+                                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white">
+                                                            <HiCheck className="h-5 w-5" aria-hidden="true" />
+                                                        </span>
+                                                    ) : null}
+                                                </>
+                                            )}
+                                        </Listbox.Option>
+                                    ))}
+                                </Listbox.Options>
+                            </Transition>
+                        </div>
+                    </Listbox>
+                </div>
+                <div className="mt-4">
                     <label htmlFor="name" className="block text-xs font-medium text-gray-700 dark:text-gray-200">
                         Minecraft Vesion*
                     </label>
@@ -89,7 +163,7 @@ const ProfileCreate: React.FC = () => {
                                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
                                     <Combobox.Input className="w-full border-gray-700 bg-gray-800 py-2 pl-3 pr-10 text-sm leading-5 text-white focus:ring-0 sm:text-sm" displayValue={(version: any) => version.id} onChange={(ev) => setQuery(ev.target.value)} />
                                     <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-                                        <HiChevronUp className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                        <HiSelector className="h-5 w-5 text-gray-400" aria-hidden="true" />
                                     </Combobox.Button>
                                 </div>
                                 <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0" afterLeave={() => setQuery('')}>

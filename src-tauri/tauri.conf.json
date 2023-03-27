@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "mcl",
+    "productName": "Rusty Minecraft Launcher",
     "version": "0.2.2"
   },
   "tauri": {
@@ -79,7 +79,7 @@
         "icons/icon.ico"
       ],
       "identifier": "us.visualsource.rmcl",
-      "longDescription": "",
+      "longDescription": "A Minecraft launcher and mod installer.",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",

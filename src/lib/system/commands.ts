@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api';
-import type { LaunchConfig } from './MinecraftProfile';
+import type { LaunchConfig } from './launch_config';
 import Notification from './Notification';
 
 export class PortGenerator {

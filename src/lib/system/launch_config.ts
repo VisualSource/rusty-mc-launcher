@@ -1,9 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import localforage from "localforage";
 import type { ProfileFull } from "@hook/useUser";
+import { MinecraftProfile } from "@lib/models/profiles";
 
 type PathBuf = string;
-
 export interface LaunchConfig {
     launcher_name?: string,
     laucher_version?: string,
@@ -35,92 +34,7 @@ export interface LaunchConfig {
     client_id?: string,
 }
 
-export interface MinecraftProfile {
-    id: string;
-    console: boolean;
-    is_demo: boolean;
-    disable_mulitplayer: boolean,
-    disable_chat: boolean,
-    name: string;
-    created: string;
-    lastUsed: string;
-    icon: string;
-    lastVersionId: string;
-    gameDir?: string;
-    javaDir?: string;
-    javaArgs?: string[];
-    logConfig?: string;
-    logConfigIsXML?: boolean;
-    resolution?: {
-        height: number;
-        width: number;
-    }
-}
-
 type LastestVersions = { latest: { release: string; snapshot: string; } };
-type ProfileSet = Set<MinecraftProfile>;
-
-const KEY = "minecraft-profiles";
-const ACTIVE_KEY = "active-profile";
-
-export const useMinecraftProfiles = () => {
-    const queryClient = useQueryClient()
-    const { data, isError, isLoading, error } = useQuery([KEY], async () => {
-        const profiles = await localforage.getItem<ProfileSet>(KEY);
-        return profiles ?? new Set();
-    });
-    const mutation = useMutation<ProfileSet, Error, { type: "delete" | "patch" | "create", data: MinecraftProfile }, {}>(async ev => {
-        const profiles = (await localforage.getItem<ProfileSet>(KEY)) ?? new Set();
-        switch (ev.type) {
-            case "create": {
-                profiles.add(ev.data);
-                return localforage.setItem(KEY, profiles);
-            }
-            case "delete": {
-                profiles.delete(ev.data);
-                return localforage.setItem(KEY, profiles);
-            }
-            case "patch": {
-                const og = Object.values(profiles).find(value => value.id === ev.data.id);
-                if (!og) throw new Error("Failed to find profile!");
-                profiles.delete(og);
-                profiles.add(ev.data);
-                return localforage.setItem(KEY, profiles);
-            }
-            default:
-                throw new Error("Bad method request");
-        }
-    },
-        {
-            onSuccess: async data => {
-                await queryClient.cancelQueries([KEY]);
-                queryClient.setQueryData([KEY], data);
-            }
-        }
-    );
-    const selected = useQuery([ACTIVE_KEY], async () => {
-        const selected = await localforage.getItem<MinecraftProfile>(ACTIVE_KEY);
-        return selected;
-    });
-    const mutateSelected = useMutation<MinecraftProfile | null, Error, MinecraftProfile | null>(async ev => {
-        return localforage.setItem<MinecraftProfile | null>(ACTIVE_KEY, ev);
-    }, {
-        onSuccess: async data => {
-            await queryClient.cancelQueries([ACTIVE_KEY]);
-            queryClient.setQueryData([ACTIVE_KEY], data);
-        }
-    });
-
-    return {
-        selected,
-        mutateSelected,
-        mutate: mutation,
-        profiles: data,
-        isError,
-        isLoading,
-        error
-    };
-}
 
 const fetchLastet = async () => {
     const request = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").then(value => value.json()) as LastestVersions;

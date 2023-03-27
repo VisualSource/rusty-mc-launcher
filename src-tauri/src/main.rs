@@ -11,6 +11,7 @@ fn main() {
     log4rs::init_file("log4rs.yml", Default::default()).expect("Failed to boot logger");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_sqlite::init())
         .manage(state::TauriState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             commands::play,
