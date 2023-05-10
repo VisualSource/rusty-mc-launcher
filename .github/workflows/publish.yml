@@ -27,12 +27,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
+            ~/src-tauri/.cargo/bin/
+            ~/src-tauri/.cargo/registry/index/
+            ~/src-tauri/.cargo/registry/cache/
+            ~/src-tauri/.cargo/git/db/
             src-tauri/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/src-tauri/Cargo.lock') }}
 
       - name: install frontend dependencies
         run: npm install

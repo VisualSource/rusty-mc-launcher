@@ -1,4 +1,5 @@
-import { writeBinaryFile, exists, BaseDirectory } from '@tauri-apps/api/fs';
+import { writeBinaryFile, createDir, exists, BaseDirectory } from '@tauri-apps/api/fs';
+import { appDataDir, resolve } from '@tauri-apps/api/path';
 import SQLite from 'tauri-plugin-sqlite-api';
 import logger from '@system/logger';
 
@@ -45,7 +46,7 @@ type SchemaDelete<P> = {
 
 export type InferSchema<P> = P extends Schema<infer S> ? SchemaType<S> : never;
 
-const DATABASE_FILE = "./database.db";
+const DATABASE_FILE = "database.db";
 
 const enum Nullable {
     Default,
@@ -150,20 +151,10 @@ class DBError extends Error {
         super(msg, { cause: "DB_ORM_ERROR" })
     }
 }
-
-
 export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "null", unknown>>> {
     private init: boolean = false;
-    constructor(private name: string, private table: T) {
-        exists(DATABASE_FILE).then(async (exist) => {
-            logger.info(`Checking database file. Status: %s`, exist ? "Exists" : "Does not Exist");
-            if (!exist) {
-                logger.info(`Creating database file "${DATABASE_FILE}"`);
-                await writeBinaryFile(DATABASE_FILE, new Uint8Array([]));
-            }
-
-        }).catch(e => logger.error(e));
-    }
+    private filepath: string | null = null;
+    constructor(private name: string, private table: T) { }
     public parse(value: unknown): SchemaType<T> {
         if (typeof value !== "object" || !value) throw new Error("Failed to parse value");
 
@@ -176,7 +167,30 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
         return output as SchemaType<T>;
     }
     private async prepare() {
-        const db = await SQLite.open(DATABASE_FILE);
+        if (!this.filepath) {
+            try {
+                const dir = await appDataDir();
+                const file = await resolve(dir, DATABASE_FILE);
+
+                logger.info(`Fetching database file. Path: ${file}`);
+
+                const doesExist = await exists(DATABASE_FILE, { dir: BaseDirectory.AppData });
+                logger.info(`Checking for database file. Exists: ${doesExist}`);
+                if (!doesExist) {
+                    await createDir(dir);
+                    logger.info(`Writing database file.`);
+                    await writeBinaryFile(DATABASE_FILE, new Uint8Array([]), { dir: BaseDirectory.AppData });
+                }
+
+                this.filepath = file;
+            } catch (error) {
+                logger.error(error);
+                throw new DBError("Failed to get database file.");
+            }
+        }
+
+        const db = await SQLite.open(this.filepath);
+
         if (!this.init) {
             this.init = true;
             await this.createTable(db);
@@ -186,7 +200,9 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
     public async createTable(db: SQLite) {
         const fields = Object.entries(this.table).map(([key, type]) => `${key} ${type.toSQL()}`).join(", ");
         const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}) ;`;
-        logger.debug("TABLE CREATE:", query);
+
+        logger.debug(query);
+
         return db.execute(query);
     }
     private parseWhere(where: WhereStatment<T>, startIndex: number = 0) {
@@ -244,7 +260,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
                 limit ? `LIMIT ${limit}` : ""
             ].filter(e => Boolean(e)).join(" ").trim() + ";";
 
-            logger.debug("FIND:", query);
+            logger.debug(`FIND: ${query}`);
 
             const result = await db.select<unknown[]>(query, params);
             if (!result) return null;
@@ -270,7 +286,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
 
             const query = `INSERT INTO ${this.name} (${cols.join(", ")}) VALUES (${values.join(", ")});`;
 
-            logger.debug("INSERT:", query);
+            logger.debug(query);
 
             const exec = await db.execute(query, params);
 
@@ -332,6 +348,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             ].filter(e => Boolean(e)).join(" ").trim() + ";";
 
             logger.debug(deleteQuery);
+
             const result = await db.execute(deleteQuery, params);
             return result;
         } catch (error) {

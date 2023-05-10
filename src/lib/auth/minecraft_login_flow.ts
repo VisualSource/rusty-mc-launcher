@@ -1,6 +1,7 @@
 import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
 import type { IPublicClientApplication } from "@azure/msal-browser";
 import { xboxRequest } from '../config/auth';
+import getToken from "./getToken";
 
 interface XboxLiveAuthenticationResponse {
     Token: string;
@@ -35,8 +36,11 @@ interface MinecraftProfileResponse {
     profileActions: {}
 }
 
+
+
 const getMinecraft = async (instance: IPublicClientApplication) => {
-    const token = await instance.acquireTokenSilent(xboxRequest);
+    const token = await getToken(instance, xboxRequest);
+
     const client = await getClient();
 
     const { data: xbox_resp } = await client.post<XboxLiveAuthenticationResponse>("https://user.auth.xboxlive.com/user/authenticate",

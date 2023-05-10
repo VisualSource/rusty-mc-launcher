@@ -8,12 +8,9 @@ import DownloadManager from "@/lib/system/Download";
 import { DownloadProvider } from '@context/DownloadContext';
 import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from '@/lib/config/auth';
-import { initStorage } from './lib/config/storage';
 import router from '@/router';
-import "@auth/override";
+import "@/lib/auth/msal_browser_override";
 import './index.css';
-
-initStorage();
 
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);
