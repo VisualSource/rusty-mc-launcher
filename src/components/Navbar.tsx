@@ -6,6 +6,7 @@ import { loginRequest } from '../lib/config/auth';
 import useUser from '../lib/hooks/useUser';
 import { Link, NavLink } from 'react-router-dom';
 import { PortGenerator } from '@/lib/system/commands';
+import logger from '@/lib/system/logger';
 
 
 const Navbar = () => {
@@ -13,12 +14,12 @@ const Navbar = () => {
 
     const login = async () => {
         const port = PortGenerator.getInstance().setPort();
-        console.log("Request Port", port);
+        logger.debug("Auth Port", port);
         await instance.loginPopup({ ...loginRequest, redirectUri: `http://localhost:${port}` });
     }
 
     return (
-        <div data-tauri-drag-region>
+        <div data-tauri-drag-region className="z-50">
             <div data-tauri-drag-region className="bg-gray-900 flex justify-end gap-2">
                 <button onClick={() => appWindow.minimize()} className="py-1">
                     <HiMinus />
@@ -41,16 +42,16 @@ const Navbar = () => {
                                 <AuthenticatedTemplate>
                                     <Menu as="div" className="relative inline-block text-left">
                                         <Menu.Button className="block shrink-0 rounded-lg bg-black bg-opacity-20 p-2.5 text-white shadow-sm hover:text-gray-50 relative">
-                                            <span className="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-red-600 px-1 py-1">
-                                            </span>
+                                            {/*<span className="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-red-600 px-1 py-1">
+                                            </span>*/}
                                             <span className="sr-only">Notifications</span>
                                             <HiOutlineBell className="h-5 w-5" />
                                         </Menu.Button>
                                         <Transition enter="transition duration-100 ease-out" enterFrom="transform scale-95 opacity-0" enterTo="transform scale-100 opacity-100" leave="transition duration-75 ease-out" leaveFrom="transform scale-100 opacity-100" leaveTo="transform scale-95 opacity-0">
                                             <Menu.Items className="absolute right-0 top-0 shadow-lg origin-top-right flex flex-col bg-gray-900 w-56 divide-y divide-gray-700">
                                                 <Menu.Item as="div">
-                                                    <div className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200'>
-                                                        <span className="text-sm font-medium">Notification</span>
+                                                    <div className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-200'>
+                                                        <span className="text-sm font-medium">No Notifications</span>
                                                     </div>
                                                 </Menu.Item>
                                             </Menu.Items>
