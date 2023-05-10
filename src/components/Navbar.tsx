@@ -88,22 +88,31 @@ const Navbar = () => {
                                     <Transition enter="transition duration-100 ease-out" enterFrom="transform scale-95 opacity-0" enterTo="transform scale-100 opacity-100" leave="transition duration-75 ease-out" leaveFrom="transform scale-100 opacity-100" leaveTo="transform scale-95 opacity-0">
                                         <Menu.Items className="absolute right-0 top-3 shadow-lg origin-top-right flex flex-col bg-gray-900 w-56 divide-y divide-gray-700">
                                             <Menu.Item as="div">
-                                                <button className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200' onClick={() => instance.logoutPopup()}>
-                                                    <HiLogout className="h-5 w-5 opacity-75" />
-                                                    <span className="text-sm font-medium">Signout</span>
-                                                </button>
+                                                {({ close }) => (
+                                                    <button className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200' onClick={() => {
+                                                        close();
+                                                        instance.logoutPopup();
+                                                    }}>
+                                                        <HiLogout className="h-5 w-5 opacity-75" />
+                                                        <span className="text-sm font-medium">Signout</span>
+                                                    </button>
+                                                )}
                                             </Menu.Item>
                                             <Menu.Item as="div">
-                                                <button className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200'>
-                                                    <HiSelector className="h-5 w-5 opacity-75" />
-                                                    <span className="text-sm font-medium">Select Account</span>
-                                                </button>
+                                                {({ close }) => (
+                                                    <button className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200' onClick={close}>
+                                                        <HiSelector className="h-5 w-5 opacity-75" />
+                                                        <span className="text-sm font-medium">Select Account</span>
+                                                    </button>
+                                                )}
                                             </Menu.Item>
                                             <Menu.Item as="div">
-                                                <Link to="/settings" className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200'>
-                                                    <HiOutlineCog className="h-5 w-5 opacity-75" />
-                                                    <span className="text-sm font-medium">Settings</span>
-                                                </Link>
+                                                {({ close }) => (
+                                                    <Link onClick={close} to="/settings" className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200'>
+                                                        <HiOutlineCog className="h-5 w-5 opacity-75" />
+                                                        <span className="text-sm font-medium">Settings</span>
+                                                    </Link>
+                                                )}
                                             </Menu.Item>
                                         </Menu.Items>
                                     </Transition>
