@@ -1,3 +1,4 @@
+import { writeBinaryFile, exists, BaseDirectory } from '@tauri-apps/api/fs';
 import SQLite from 'tauri-plugin-sqlite-api';
 import logger from '@system/logger';
 
@@ -43,6 +44,8 @@ type SchemaDelete<P> = {
 
 
 export type InferSchema<P> = P extends Schema<infer S> ? SchemaType<S> : never;
+
+const DATABASE_FILE = "./database.db";
 
 const enum Nullable {
     Default,
@@ -151,7 +154,16 @@ class DBError extends Error {
 
 export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "null", unknown>>> {
     private init: boolean = false;
-    constructor(private name: string, private table: T) { }
+    constructor(private name: string, private table: T) {
+        exists(DATABASE_FILE).then(async (exist) => {
+            logger.info(`Checking database file. Status: %s`, exist ? "Exists" : "Does not Exist");
+            if (!exist) {
+                logger.info(`Creating database file "${DATABASE_FILE}"`);
+                await writeBinaryFile(DATABASE_FILE, new Uint8Array([]));
+            }
+
+        }).catch(e => logger.error(e));
+    }
     public parse(value: unknown): SchemaType<T> {
         if (typeof value !== "object" || !value) throw new Error("Failed to parse value");
 
@@ -164,7 +176,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
         return output as SchemaType<T>;
     }
     private async prepare() {
-        const db = await SQLite.open("./database.db");
+        const db = await SQLite.open(DATABASE_FILE);
         if (!this.init) {
             this.init = true;
             await this.createTable(db);

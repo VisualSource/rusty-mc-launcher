@@ -12,6 +12,11 @@
   },
   "tauri": {
     "allowlist": {
+      "fs": {
+        "exists": true,
+        "writeFile": true,
+        "scope": ["./database.db"]
+      },
       "notification": {
         "all": true
       },

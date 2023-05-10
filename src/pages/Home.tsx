@@ -1,14 +1,15 @@
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
-import { Listbox, Transition } from '@headlessui/react'
-import { Fragment } from 'react';
-import useUser from "@/lib/hooks/useUser";
-import { useNavigate } from "react-router-dom";
-import { check_install, install, play } from "@/lib/system/commands";
-import { asLaunchConfig } from "@/lib/system/launch_config";
+import { Listbox, Transition } from '@headlessui/react';
 import { HiCheck, HiChevronDown } from "react-icons/hi";
-import useNotification from "@/lib/hooks/useNotification";
-import { useProfiles } from "@/lib/hooks/useProfiles";
-import { useSelectedProfile } from "@/lib/hooks/useSelectedProfile";
+import { useNavigate } from "react-router-dom";
+import { Fragment } from 'react';
+
+import { check_install, install, play } from "@system/commands";
+import { useSelectedProfile } from "@hook/useSelectedProfile";
+import { asLaunchConfig } from "@system/launch_config";
+import useNotification from "@hook/useNotification";
+import { useProfiles } from "@hook/useProfiles";
+import useUser from "@hook/useUser";
 
 const Home: React.FC = () => {
     const { notify } = useNotification();

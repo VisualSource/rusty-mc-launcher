@@ -15,6 +15,8 @@ log.log = console.log.bind(console);
 
 info("Loaded Logger");
 
+debug_log.enabled = import.meta.env.DEV;
+
 const logger = {
     error,
     log,

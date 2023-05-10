@@ -1,11 +1,20 @@
-import LibraryCard from "@/components/LibraryCard";
-import Spinner from "@/components/Spinner";
-import { useProfiles } from "@/lib/hooks/useProfiles";
+import { useIsAuthenticated } from "@azure/msal-react";
 import { HiSearch } from "react-icons/hi";
 import { Link } from "react-router-dom";
+import Unauthenticated from "@/components/Unauthenticated";
+import { useProfiles } from "@/lib/hooks/useProfiles";
+import LibraryCard from "@/components/LibraryCard";
+import Spinner from "@/components/Spinner";
 
 const Library = () => {
+    const isAuthenticated = useIsAuthenticated();
     const { profiles, isLoading, isError, error } = useProfiles();
+
+    if (!isAuthenticated) {
+        return (
+            <Unauthenticated />
+        );
+    }
 
     return (
         <div className="flex flex-1 overflow-y-hidden flex-col">
@@ -33,11 +42,11 @@ const Library = () => {
                         <Spinner />
                     </div>
                 ) : null}
-                {!profiles?.length ? (
+                {profiles ? !profiles?.length ? (
                     <div> No Profiles </div>
                 ) : (profiles ?? []).map((profile, i) => (
                     <LibraryCard key={i} profile={profile} />
-                ))}
+                )) : null}
             </div>
         </div>
     );

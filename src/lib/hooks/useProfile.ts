@@ -32,11 +32,11 @@ export const useProfile = (id?: string) => {
         const profile = await profiles.find({
             where: [{ id }]
         });
-        logger.debug(profile);
+        logger.debug("Profile", profile);
         if (!profile || !profile[0]) throw new Error("Failed to get minecraft profile");
 
         return profile.at(0);
-    }, { enabled: !id });
+    }, { enabled: !!id });
 
     const mutate = useMutation(handleMutate, {
         async onSuccess(data, varablies) {
@@ -51,7 +51,6 @@ export const useProfile = (id?: string) => {
             })
         }
     });
-
 
     return {
         mutate,

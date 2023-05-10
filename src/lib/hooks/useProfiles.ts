@@ -8,12 +8,12 @@ const KEY = "minecraft-profiles";
 
 const fetchProfiles = async () => {
     const data = await profiles.find({});
+    logger.debug("Fetch profiles", data);
     if (!data) throw new Error("Failed to get minecraft profiles");
     return data;
 }
 
 const mutateProfile = async (ev: RequestType) => {
-
     switch (ev.type) {
         case "create": {
             const result = await profiles.create({ data: ev.data });
@@ -42,7 +42,6 @@ export const useProfiles = () => {
     const queryClient = useQueryClient();
     const { data, isError, isLoading, error } = useQuery([KEY], fetchProfiles);
     const mutate = useMutation(mutateProfile, {
-
         async onSuccess(data, varablies) {
             await queryClient.cancelQueries([KEY]);
             queryClient.setQueryData<MinecraftProfile[]>([KEY], (old) => {
