@@ -1,13 +1,12 @@
-import { appWindow } from '@tauri-apps/api/window';
-import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 import { HiX, HiMinus, HiChevronDown, HiLogout, HiOutlineBell, HiSelector, HiLogin, HiOutlineCog } from 'react-icons/hi';
-import { Menu, Transition } from '@headlessui/react'
-import { loginRequest } from '../lib/config/auth';
-import useUser from '../lib/hooks/useUser';
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
+import { Menu, Transition } from '@headlessui/react';
+import { appWindow } from '@tauri-apps/api/window';
 import { Link, NavLink } from 'react-router-dom';
-import { PortGenerator } from '@/lib/system/commands';
-import logger from '@/lib/system/logger';
-
+import { loginRequest } from '../lib/config/auth';
+import { PortGenerator } from '@system/commands';
+import useUser from '@hook/useUser';
+import logger from '@system/logger';
 
 const Navbar = () => {
     const { user, instance, isLoading } = useUser();
