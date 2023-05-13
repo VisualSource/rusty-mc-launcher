@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api';
 import type { LaunchConfig } from './launch_config';
 import Notification from './Notification';
+import logger from './logger';
 
 export class PortGenerator {
     static INSTANCE: PortGenerator | null;
@@ -24,7 +25,7 @@ export const startAuthServer = async () => {
         await invoke("start_server", { port: generator.port, origin: window.location.origin });
         return generator.port;
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         return null;
     }
 }
@@ -34,7 +35,7 @@ export const install = async (version: string, game_dir?: string) => {
         await invoke("install", { gameDir: game_dir, version });
     } catch (error) {
         Notification.getInstance().notify((error as Error)?.message ?? "Failed to install");
-        console.error(error);
+        logger.error(error);
     }
 }
 
@@ -43,7 +44,7 @@ export const check_install = async (version: string, game_dir?: string) => {
         const result = await invoke("check_install", { version, gameDir: game_dir });
         return result;
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         return false;
     }
 }
@@ -52,7 +53,7 @@ export const play = async (settings: LaunchConfig) => {
     try {
         await invoke("play", { settings });
     } catch (error) {
-        console.error(error);
+        logger.error(error);
     }
 }
 

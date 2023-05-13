@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .prose :where(h1, h2, h3, h4)[dir="auto"]:has(> a) {
+    @apply flex items-center gap-2;
+  }
+  .prose :where(h1, h2, h3, h4)[dir="auto"] > a.anchor > svg {
+    fill: var(--tw-prose-headings);
+    @apply h-5 w-5;
+  }
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

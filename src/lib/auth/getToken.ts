@@ -6,7 +6,7 @@ const getToken = async (instance: IPublicClientApplication, request: SilentReque
     return instance.acquireTokenSilent(request).catch(async () => {
         const port = PortGenerator.getInstance().setPort();
         logger.debug(`Login port: (${port})`);
-        await instance.acquireTokenPopup({ ...request, redirectUri: `http://localhost:${port}` });
+        return instance.acquireTokenPopup({ ...request, redirectUri: `http://localhost:${port}` });
     })
 }
 

@@ -34,6 +34,7 @@ const Navbar = () => {
                             <NavLink to="" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Home</NavLink>
                             <NavLink to="/library" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Library</NavLink>
                             <NavLink to="/downloads" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Downloads</NavLink>
+                            <NavLink to="/mods" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Mods</NavLink>
                         </div>
 
                         <div data-tauri-drag-region className="flex flex-1 items-center justify-between gap-4 sm:justify-end">

@@ -5,11 +5,14 @@ import {
 } from "react-router-dom";
 import App from "@component/App";
 import Home from "@page/Home";
-import DownloadsPage from "./pages/Downloads";
-import Library from "./pages/Library";
-import Settings from "./pages/Settings";
+
 import ProfileCreate from "./pages/ProfileCreate";
+import DownloadsPage from "./pages/Downloads";
 import ProfilePage from "./pages/ProfilePage";
+import Settings from "./pages/Settings";
+import Library from "./pages/Library";
+import ModPage from "./pages/ModPage";
+import Mods from "./pages/Mods";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -19,7 +22,9 @@ const router = createBrowserRouter(
       <Route path="/library" element={<Library />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile/create" element={<ProfileCreate />} />
-      <Route path="profile/:id" element={<ProfilePage />} />
+      <Route path="/profile/:id" element={<ProfilePage />} />
+      <Route path="/mods" element={<Mods />} />
+      <Route path="/mod/:uuid" element={<ModPage />} />
     </Route>
   )
 );

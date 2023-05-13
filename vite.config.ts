@@ -14,6 +14,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      'node-fetch': 'isomorphic-fetch',
       "@": resolve(__dirname, "./src"),
       "@context": resolve(__dirname, "./src/lib/context"),
       "@system": resolve(__dirname, "./src/lib/system/"),

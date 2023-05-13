@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const LibraryCard = ({ profile }: { profile: MinecraftProfile }) => {
     return (
         <article
-            className="flex bg-white transition hover:shadow-xl dark:bg-gray-800 dark:shadow-gray-800/25"
+            className="flex transition hover:shadow-xl bg-gray-800 shadow-gray-800/25"
         >
             <div className="rotate-180 p-2 [writing-mode:_vertical-lr]">
                 <time
@@ -27,7 +27,7 @@ const LibraryCard = ({ profile }: { profile: MinecraftProfile }) => {
 
             <div className="flex flex-1 flex-col justify-between">
                 <div
-                    className="border-l border-gray-900/10 p-4 dark:border-white/10 sm:!border-l-transparent sm:p-6"
+                    className="border-l p-4 border-white/10 sm:!border-l-transparent sm:p-6"
                 >
                     <span>
                         <h3 className="font-bold uppercase text-gray-900 dark:text-white">
