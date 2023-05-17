@@ -44,7 +44,7 @@ const Library = () => {
                 ) : null}
                 {profiles ? !profiles?.length ? (
                     <div className="flex flex-col flex-grow justify-center items-center">No Profiles </div>
-                ) : (profiles ?? []).map((profile, i) => (
+                ) : profiles.map((profile, i) => (
                     <LibraryCard key={i} profile={profile} />
                 )) : null}
             </div>

@@ -76,10 +76,10 @@ const Home: React.FC = () => {
                                                         </span>
                                                     </Listbox.Option>
                                                 ) : (profiles ?? []).map(value => (
-                                                    <Listbox.Option key={value.id} className={({ active }) =>
+                                                    <Listbox.Option value={value} key={value.id} className={({ active }) =>
                                                         `text-white relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-600' : ''
                                                         }`
-                                                    } value={value}>
+                                                    }>
                                                         {({ selected }) => (
                                                             <>
                                                                 <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{value.name}</span>
