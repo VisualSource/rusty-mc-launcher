@@ -39,6 +39,14 @@
         "hide": false,
         "show": false
       },
+      "dialog": {
+        "all": false,
+        "ask": false,
+        "confirm": true,
+        "message": false,
+        "open": false,
+        "save": false
+      },
       "window": {
         "all": false,
         "center": false,

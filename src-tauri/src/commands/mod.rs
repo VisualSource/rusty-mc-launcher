@@ -1,15 +1,14 @@
 use crate::errors::Error;
 use crate::state::TauriState;
-use log::{debug, error};
+use log::{debug, error, info};
 use minecraft_launcher_lib::installer::Installer;
-use minecraft_launcher_lib::observer::{Observer, Subject};
-use minecraft_launcher_lib::ClientBuilder;
+use minecraft_launcher_lib::{ChannelMessage, ClientBuilder};
 use std::path::PathBuf;
 use tauri::Window;
 use tauri_plugin_oauth::{start_with_config, OauthConfig};
 
 #[tauri::command]
-pub async fn start_server(window: Window, port: u16, origin: String) -> Result<u16, Error> {
+pub async fn start_server(window: Window, port: u16, _origin: String) -> Result<u16, Error> {
     let config = OauthConfig {
         ports: Some(vec![port]),
         response: None,
@@ -34,19 +33,6 @@ pub async fn start_server(window: Window, port: u16, origin: String) -> Result<u
     .map_err(|err| Error::Auth(err.to_string()))
 }
 
-#[derive(PartialEq)]
-struct DownloadObserver {
-    id: i32,
-    window: tauri::Window,
-}
-impl Observer for DownloadObserver {
-    fn update(&self, event: String, msg: String) {
-        if let Err(err) = self.window.emit(event.as_str(), msg) {
-            error!("Failed to notify window: {}", err);
-        }
-    }
-}
-
 #[tauri::command]
 pub async fn check_install(version: String, game_dir: Option<PathBuf>) -> Result<bool, Error> {
     Ok(ClientBuilder::check_install(version, game_dir).await?)
@@ -59,11 +45,29 @@ pub async fn install(
     window: tauri::Window,
 ) -> Result<(), Error> {
     debug!("Install {} to {:#?}", version, game_dir);
-    let obs = DownloadObserver { id: 1, window };
-    let mut installer = Installer::<DownloadObserver>::new(version, game_dir);
-    installer.attach(&obs);
-    installer.install().await?;
-    Ok(())
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(32);
+    let txm = tx.clone();
+
+    let manager = tokio::spawn(async move {
+        while let Some(msg) = rx.recv().await {
+            info!("{}: {}", &msg.event, &msg.value);
+            if let Err(err) = window.emit(format!("mcl::i::{}", &msg.event).as_str(), &msg.value) {
+                error!("Failed to notify window: {}", err);
+            }
+        }
+    });
+
+    let handler = Installer::new(version, game_dir, tx);
+    let result = handler.install().await;
+
+    if let Err(err) = txm.send(ChannelMessage::new("complete", "ok")).await {
+        error!("{}", err);
+    }
+
+    manager.abort();
+
+    result.map_err(|err| Error::from(err))
 }
 
 #[tauri::command]

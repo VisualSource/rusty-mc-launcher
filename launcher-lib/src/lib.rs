@@ -4,7 +4,6 @@ mod errors;
 pub mod installer;
 mod manifest;
 mod metadata;
-pub mod observer;
 mod runtime;
 mod utils;
 
@@ -16,6 +15,7 @@ use tokio::process::{Child, Command};
 
 pub use errors::LauncherLibError;
 use manifest::Manifest;
+pub use utils::ChannelMessage;
 
 //https://github.com/tomsik68/mclauncher-api/wiki
 
@@ -223,8 +223,6 @@ impl ClientBuilder {
     }
 
     pub async fn build(mut self) -> Result<Client, LauncherLibError> {
-        debug!("Get Classpath separator");
-
         debug!("Get Game dir");
 
         let game_dir = if self.game_directory.is_some() {

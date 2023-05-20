@@ -484,7 +484,7 @@ pub struct File {
     pub id: Option<String>,
     pub total_size: Option<usize>,
     pub sha1: String,
-    pub size: i64,
+    pub size: i32,
     pub url: String,
 }
 

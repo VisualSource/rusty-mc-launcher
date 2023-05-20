@@ -1,7 +1,19 @@
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import { HiTrash } from "react-icons/hi";
+import { confirm } from '@tauri-apps/api/dialog';
 import { Link } from "react-router-dom";
 
+import type { MinecraftProfile } from "@lib/models/profiles";
+import { asLaunchConfig } from "@system/launch_config";
+import { useProfiles } from "@hook/useProfiles";
+import useDownload from "@hook/useDownload";
+import { play } from "@system/commands";
+import useUser from "@hook/useUser";
+
+
 const LibraryCard = ({ profile }: { profile: MinecraftProfile }) => {
+    const { mutate } = useProfiles();
+    const { isLoading, user } = useUser();
+    const download = useDownload();
     return (
         <article
             className="flex transition hover:shadow-xl bg-gray-800 shadow-gray-800/25"
@@ -59,11 +71,21 @@ const LibraryCard = ({ profile }: { profile: MinecraftProfile }) => {
                 </div>
 
                 <div className="sm:flex sm:items-end sm:justify-end">
-                    <Link to={`/profile/${profile.id}`} className="block bg-yellow-400 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-yellow-500">
+                    <button title={`Play ${profile.name}`} className="block bg-green-400 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-green-500" onClick={async () => {
+                        const config = await asLaunchConfig(user, profile);
+                        await download.install(config.version, config.game_directory);
+                        await play(config);
+                    }}>
+                        Play
+                    </button>
+                    <Link title={`Edit ${profile.name}`} to={`/profile/${profile.id}`} className="block bg-yellow-400 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-yellow-500">
                         Edit
                     </Link>
-                    <button className="block bg-green-400 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-green-500">
-                        Play
+                    <button title={`Delete ${profile.name}`} disabled={isLoading} className="block bg-red-400 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-red-500" onClick={async () => {
+                        const canDelete = await confirm(`Are you sure you want to delete profile (${profile.name})`);
+                        if (canDelete) mutate.mutate({ type: "delete", data: profile });
+                    }}>
+                        <HiTrash className="h-4 w-4 text-gray-900" />
                     </button>
                 </div>
             </div>

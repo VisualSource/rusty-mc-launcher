@@ -1,15 +1,42 @@
 use std::env::consts;
 use std::path::PathBuf;
 
+use log::error;
 use normalize_path::NormalizePath;
 use sha1::{Digest, Sha1};
 use tokio::fs::{create_dir_all, remove_file, File};
 use tokio::io::AsyncWriteExt;
+use tokio::sync::mpsc;
 
 use crate::errors::LauncherLibError;
 
+pub struct ChannelMessage {
+    pub event: String,
+    pub value: String,
+}
+
+impl ChannelMessage {
+    pub fn new(event: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            event: event.into(),
+            value: value.into(),
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! emit {
+    ($channel:expr,$event:expr,$msg:expr) => {
+        if let Err(err) = $channel.send(ChannelMessage::new($event, $msg)).await {
+            error!("Failed to send message: {}", err);
+        }
+    };
+}
+pub use emit;
+
 pub mod fabric {
     use super::*;
+    use crate::utils::emit;
     use serde::Deserialize;
     use std::env::temp_dir;
     use std::process::Stdio;
@@ -19,8 +46,6 @@ pub mod fabric {
     #[derive(Deserialize)]
     struct InstallerDownload {
         pub url: String,
-        maven: String,
-        version: String,
         pub stable: bool,
     }
     #[derive(Deserialize)]
@@ -29,11 +54,18 @@ pub mod fabric {
     }
 
     pub async fn run_fabric_installer(
+        channel: mpsc::Sender<ChannelMessage>,
         mc: &String,
         loader_version: &String,
         game_dir: &PathBuf,
         runtime: String,
     ) -> Result<(), LauncherLibError> {
+        emit!(
+            channel,
+            "start",
+            "{ \"key\":\"modloader\", \"msg\": \"Installing Fabric\" }"
+        );
+
         let temp = temp_dir().join("fabricInstaller.jar").normalize();
         let content = reqwest::get(FABRIC_VERSIONS)
             .await?
@@ -49,7 +81,19 @@ pub mod fabric {
                     "Failed to find statle fabric installer".to_string(),
                 ))?;
 
+        emit!(
+            channel,
+            "fetch",
+            "{ \"msg\": \"Fabric Jar\", \"ammount\": 1, \"size\": 0 }"
+        );
+
         download_file(&download.url, &temp, None).await?;
+
+        emit!(
+            channel,
+            "download",
+            "{ \"size\": 0, \"file\": \"Fabric Jar\" }"
+        );
 
         let exec = jvm::get_exec(&runtime, game_dir, true);
 
@@ -75,6 +119,12 @@ pub mod fabric {
             .await?;
 
         remove_file(&temp).await?;
+
+        emit!(
+            channel,
+            "end",
+            "{ \"key\":\"modloader\", msg: \"Fabric Installed.\" }"
+        );
 
         Ok(())
     }

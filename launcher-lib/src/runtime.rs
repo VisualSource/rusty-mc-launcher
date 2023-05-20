@@ -1,44 +1,23 @@
-use crate::errors::LauncherLibError;
-use crate::manifest::jvm;
-use crate::observer::{Observer, Subject};
-use crate::utils;
 use async_compression::tokio::write::LzmaDecoder;
 use futures::StreamExt;
-use log::{debug, error};
+use log::{debug, error, warn};
 use sha1::{Digest, Sha1};
 use std::path::PathBuf;
-use tokio::{fs, io::AsyncWriteExt};
+use tokio::{fs, io::AsyncWriteExt, sync::mpsc::Sender};
+
+use crate::errors::LauncherLibError;
+use crate::manifest::jvm;
+use crate::utils::{self, ChannelMessage};
 
 const JVM_LIST: &str = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
 
-pub struct Jvm<'a, T: Observer> {
-    observers: Vec<&'a T>,
+pub struct Jvm {
+    channel: Sender<ChannelMessage>,
 }
 
-impl<'a, T: Observer + PartialEq> Subject<'a, T> for Jvm<'a, T> {
-    fn attach(&mut self, observer: &'a T) {
-        self.observers.push(observer);
-    }
-    fn detach(&mut self, observer: &'a T) {
-        if let Some(idx) = self.observers.iter().position(|x| *x == observer) {
-            self.observers.remove(idx);
-        }
-    }
-    fn notify_observers(&self, event: String, msg: String) {
-        for item in self.observers.iter() {
-            item.update(event.clone(), msg.clone());
-        }
-    }
-    fn inhert(&mut self, observers: &Vec<&'a T>) {
-        self.observers.extend(observers);
-    }
-}
-
-impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
-    pub fn new() -> Jvm<'a, T> {
-        Self {
-            observers: Vec::new(),
-        }
+impl Jvm {
+    pub fn new(sender: Sender<ChannelMessage>) -> Self {
+        Self { channel: sender }
     }
 
     pub async fn install_jvm(
@@ -46,6 +25,16 @@ impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
         version: String,
         game_dir: &PathBuf,
     ) -> Result<(), LauncherLibError> {
+        //ChannelMessage::new("end", "{{ \"key\":\"jvm\" }}")
+        utils::emit!(
+            self.channel,
+            "start",
+            format!(
+                "{{ \"key\":\"jvm\", \"msg\": \"Installing JVM ({})\" }}",
+                version
+            )
+        );
+
         let manifest = reqwest::get(JVM_LIST)
             .await?
             .json::<jvm::JvmManifest>()
@@ -64,18 +53,52 @@ impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
             .first()
             .ok_or_else(|| LauncherLibError::Generic("Failed to get jvm manifest".to_string()))?;
 
+        utils::emit!(
+            self.channel,
+            "fetch",
+            format!(
+                "{{ \"msg\": \"JVM Runtime Manifest\", \"ammount\": 1, \"size\": {} }}",
+                runtime.manifest.size
+            )
+        );
+
         let jvm = reqwest::get(&runtime.manifest.url)
             .await?
             .json::<jvm::JVMFiles>()
             .await?;
         let content_path = base_path.join(&version);
 
+        let mut files_len: i32 = 0;
+        let mut download_size: i32 = 0;
+
+        // get combined download size and files exclude dirs
+        for (_, file) in &jvm.files {
+            if let Some(download) = &file.downloads {
+                if let Some(lzma) = &download.lzma {
+                    download_size += lzma.size
+                } else {
+                    download_size += download.raw.size;
+                }
+
+                files_len += 1;
+            }
+        }
+
+        utils::emit!(
+            self.channel,
+            "fetch",
+            format!(
+                "{{ \"msg\": \"JVM Runtime files\", \"ammount\": {}, \"size\": {} }}",
+                files_len, download_size
+            )
+        );
+
         /* */
         let files = futures::stream::iter(jvm.files.into_iter().map(|(key, file)| {
             let base = content_path.clone();
+            let tx = self.channel.clone();
             async move {
                 let current_path = base.join(&key);
-
                 match file.file_type.as_str() {
                     "file" => {
                         let downloads = file.downloads.as_ref().ok_or_else(|| {
@@ -126,6 +149,12 @@ impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
                                 .duration_since(std::time::UNIX_EPOCH)?
                                 .as_nanos();
 
+                            utils::emit!(
+                                tx,
+                                "download",
+                                format!("{{ \"size\": {}, \"file\": {} }}", lzma.size, key)
+                            );
+
                             return Ok(format!("{} /#// {} {}\n", key, result, created));
                         } else {
                             debug!("JVM FILE RAW: {}", key);
@@ -140,6 +169,15 @@ impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
                                 .created()?
                                 .duration_since(std::time::UNIX_EPOCH)?
                                 .as_nanos();
+
+                            utils::emit!(
+                                tx,
+                                "download",
+                                format!(
+                                    "{{ \"size\": {}, \"file\": {} }}",
+                                    downloads.raw.size, key
+                                )
+                            );
 
                             return Ok(format!("{} /#// {} {}\n", key, hash, created));
                         }
@@ -158,6 +196,7 @@ impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
                             LauncherLibError::Generic("Expected Target".to_string())
                         })?;
                         debug!("JVM SYMLINK: {target}");
+                        warn!("Did not create syslink: {target}");
                         // fs::symlink_file(current_path, target).await?;
                     }
                     _ => {}
@@ -168,6 +207,12 @@ impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
         }))
         .buffered(50)
         .collect::<Vec<Result<String, LauncherLibError>>>();
+
+        utils::emit!(
+            self.channel,
+            "start",
+            "{{ \"key\":\"jvm\", \"msg\": \"Vaildating\" }}"
+        );
 
         let sha1_contents = files
             .await
@@ -200,6 +245,12 @@ impl<'a, T: Observer + PartialEq> Jvm<'a, T> {
 
         fs::write(version_file, &runtime.version.name).await?;
 
+        utils::emit!(
+            self.channel,
+            "end",
+            "{ \"key\":\"jvm\", msg: \"JVM installed.\" }"
+        );
+
         Ok(())
     }
 }
@@ -215,22 +266,12 @@ mod tests {
             .try_init();
     }
 
-    #[derive(PartialEq)]
-    struct ConcreteObserver {
-        id: i32,
-    }
-    impl Observer for ConcreteObserver {
-        fn update(&self, event: String, msg: String) {
-            println!("Observer id:{} received event! | {event} | {msg} ", self.id);
-        }
-    }
-
-    #[tokio::test]
+    /*#[tokio::test]
     async fn test_jvm_install() {
         init();
 
         let dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft");
-        let observer_a = ConcreteObserver { id: 1 };
+
 
         let mut jvm = Jvm::new();
 
@@ -242,5 +283,5 @@ mod tests {
         {
             eprintln!("{}", err);
         }
-    }
+    }*/
 }

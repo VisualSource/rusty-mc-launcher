@@ -4,15 +4,17 @@ import { HiCheck, HiChevronDown } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { Fragment } from 'react';
 
-import { check_install, install, play } from "@system/commands";
+import { play } from "@system/commands";
 import { useSelectedProfile } from "@hook/useSelectedProfile";
 import { asLaunchConfig } from "@system/launch_config";
 import useNotification from "@hook/useNotification";
 import { useProfiles } from "@hook/useProfiles";
 import useUser from "@hook/useUser";
+import useDownload from "@/lib/hooks/useDownload";
+import Notification from "@/lib/system/Notification";
 
 const Home: React.FC = () => {
-    const { notify } = useNotification();
+    const download = useDownload();
     const navigate = useNavigate();
     const { isLoading, user } = useUser();
     const { selected, mutate } = useSelectedProfile();
@@ -41,14 +43,10 @@ const Home: React.FC = () => {
                                     if ((profiles?.length ?? 0) > 0) {
                                         const config = await asLaunchConfig(user, selected);
 
-                                        const isInstalled = await check_install(config.version, config.game_directory);
-
-                                        if (!isInstalled) {
-                                            await install(config.version, config.game_directory);
-                                        }
+                                        await download.install(config.version, config.game_directory);
 
                                         await play(config);
-                                        notify("Started Minecraft");
+                                        Notification.getInstance().notify("Started Minecraft");
                                         // play
                                         return;
                                     }

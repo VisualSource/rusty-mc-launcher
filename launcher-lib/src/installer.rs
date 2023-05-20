@@ -1,19 +1,20 @@
 use std::env::consts;
 use std::path::PathBuf;
 
+use async_zip::tokio::read::seek::ZipFileReader;
 use futures::StreamExt;
 use log::{debug, error, info};
 use normalize_path::NormalizePath;
-use tokio::{fs, io};
+use tokio::{fs, sync::mpsc};
+use tokio_util::compat::TokioAsyncWriteCompatExt;
 
 use crate::errors::LauncherLibError;
 use crate::manifest::asset_index::AssetIndex;
-use crate::manifest::{File, Library, Manifest, RuleCondition};
+use crate::manifest::{Manifest, RuleCondition};
 use crate::metadata::get_launcher_manifest;
-use crate::observer::{Observer, Subject};
 use crate::runtime::Jvm;
-use crate::utils::download_file;
 use crate::utils::fabric;
+use crate::utils::{self, download_file, ChannelMessage};
 use crate::ClientBuilder;
 
 //https://www.reddit.com/r/rust/comments/gi2pld/callback_functions_the_right_way/
@@ -27,8 +28,8 @@ enum Loader {
     Vanilla,
 }
 
-pub struct Installer<'a, T: Observer> {
-    observers: Vec<&'a T>,
+pub struct Installer {
+    channel: mpsc::Sender<ChannelMessage>,
     loader_version: String,
     version: String,
     loader: Loader,
@@ -36,27 +37,16 @@ pub struct Installer<'a, T: Observer> {
     game_dir: PathBuf,
 }
 
-impl<'a, T: Observer + PartialEq> Subject<'a, T> for Installer<'a, T> {
-    fn attach(&mut self, observer: &'a T) {
-        self.observers.push(observer);
-    }
-    fn detach(&mut self, observer: &'a T) {
-        if let Some(idx) = self.observers.iter().position(|x| *x == observer) {
-            self.observers.remove(idx);
-        }
-    }
-    fn notify_observers(&self, event: String, msg: String) {
-        for item in self.observers.iter() {
-            item.update(event.clone(), msg.clone());
-        }
-    }
-    fn inhert(&mut self, observers: &Vec<&'a T>) {
-        self.observers.extend(observers);
-    }
-}
-
-impl<'a, T: Observer + PartialEq> Installer<'a, T> {
-    pub fn new(version: String, game_dir: Option<PathBuf>) -> Installer<'a, T> {
+impl Installer {
+    ///
+    /// Events: client, download, fetch, start, end
+    ///
+    pub fn new(
+        version: String,
+        game_dir: Option<PathBuf>,
+        // https://tokio.rs/tokio/tutorial/channels
+        channel: mpsc::Sender<ChannelMessage>,
+    ) -> Self {
         let forge = regex::Regex::new(r"(?P<mc>\d+.\d+.\d+)-forge-(?P<loader>\d+.\d+.\d+)")
             .expect("Failed to make regex");
         let fabric =
@@ -79,7 +69,7 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
         };
 
         Self {
-            observers: Vec::new(),
+            channel,
             mc,
             loader,
             version,
@@ -90,6 +80,15 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
     }
 
     pub async fn install(self) -> Result<(), LauncherLibError> {
+        utils::emit!(
+            self.channel,
+            "start",
+            format!(
+                "{{ \"key\":\"client\", \"msg\": \"Installing Minecraft Client ({})\" }}",
+                self.version
+            )
+        );
+
         let launcher_manifest = get_launcher_manifest(Some(self.mc.clone())).await?;
         // .minecraft/versions/VERSION/VERSION.json
         let version_root = self
@@ -100,6 +99,11 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
 
         // download json
         if !version_json.is_file() {
+            utils::emit!(
+                self.channel,
+                "fetch",
+                "{ \"msg\": \"JVM Runtime Manifest\", \"ammount\": 1, \"size\": 0}"
+            );
             info!("Downloading version json");
             download_file(
                 &launcher_manifest.url,
@@ -116,6 +120,14 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
         if !client_jar.is_file() {
             info!("Download client jar");
             if let Some(downloads) = &manifest.downloads {
+                utils::emit!(
+                    self.channel,
+                    "fetch",
+                    format!(
+                        "{{ \"msg\": \"Client Jar\", \"ammount\": 1, \"size\": {} }}",
+                        downloads.client.size
+                    )
+                );
                 debug!("{:#?}", downloads.client);
                 download_file(
                     &downloads.client.url,
@@ -123,14 +135,54 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                     Some(&downloads.client.sha1),
                 )
                 .await?;
+
+                utils::emit!(
+                    self.channel,
+                    "download",
+                    format!(
+                        "{{ \"size\": {}, \"file\": \"client.jar\" }}",
+                        downloads.client.size
+                    )
+                );
             }
         }
+
+        let mut files_len: i32 = 0;
+        let mut download_size: i32 = 0;
+
+        for file in &manifest.libraries {
+            if let Some(download) = &file.downloads {
+                download_size += download.artifact.size;
+                if let Some(class) = &download.classifiers {
+                    let os = if class.contains_key("osx") && consts::OS == "macos" {
+                        "osx"
+                    } else {
+                        consts::OS
+                    };
+                    if let Some(data) = class.get(os) {
+                        download_size += data.size;
+                    }
+                    files_len += 1;
+                }
+            }
+            files_len += 1;
+        }
+
+        utils::emit!(
+            self.channel,
+            "fetch",
+            format!(
+                "{{ \"msg\": \"Installing Libraries\", \"ammount\": {}, \"size\": {} }}",
+                files_len, download_size
+            )
+        );
 
         // libraries
         //https://patshaughnessy.net/2020/1/20/downloading-100000-files-using-async-rust
         let installed_libs = futures::stream::iter(manifest.libraries.into_iter().map(|lib| {
             let game_dir = self.game_dir.clone();
             let id = manifest.id.clone();
+            let tx = self.channel.clone();
             async move {
                 if let Some(rule) = &lib.rules {
                     let allowed = rule
@@ -181,6 +233,15 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                     )
                     .await?;
 
+                    utils::emit!(
+                        tx,
+                        "download",
+                        format!(
+                            "{{ \"size\": {}, \"file\": {} }}",
+                            downloads.artifact.size, lib.name
+                        )
+                    );
+
                     if let Some(classifiers) = &downloads.classifiers {
                         let natives_list = lib.natives.as_ref().ok_or_else(|| {
                             LauncherLibError::Generic("Failed to get natives strings".to_string())
@@ -202,10 +263,18 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
 
                                 download_file(&file.url, &output_file, Some(&file.sha1)).await?;
 
+                                utils::emit!(
+                                    tx,
+                                    "download",
+                                    format!(
+                                        "{{ \"size\": {}, \"file\": {} }}",
+                                        file.size, file.url
+                                    )
+                                );
+
                                 if let Some(extract) = &lib.extract {
                                     let archive = fs::File::open(output_file).await?;
-                                    let mut reader =
-                                        async_zip::read::seek::ZipFileReader::new(archive).await?;
+                                    let mut reader = ZipFileReader::with_tokio(archive).await?;
 
                                     let outdir = game_dir.join(format!("versions/{}/natives", id));
 
@@ -216,8 +285,9 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                                     for index in 0..reader.file().entries().len() {
                                         let entry =
                                             &reader.file().entries().get(index).unwrap().entry();
-                                        let path = entry
-                                            .filename()
+                                        let filename = entry.filename().clone().into_string()?;
+
+                                        let path = filename
                                             .replace("\\", "/")
                                             .split("/")
                                             .map(sanitize_filename::sanitize)
@@ -232,9 +302,10 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                                             continue;
                                         }
 
-                                        let entry_is_dir = entry.filename().ends_with('/');
+                                        let entry_is_dir = filename.ends_with('/');
                                         let full_output = game_dir.join(path);
-                                        let mut entry_reader = reader.entry(index).await?;
+                                        let mut entry_reader =
+                                            reader.reader_without_entry(index).await?;
 
                                         if entry_is_dir {
                                             if !full_output.exists() {
@@ -248,8 +319,16 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                                                 fs::create_dir_all(parent).await?;
                                             }
 
-                                            let mut writer = fs::File::create(&full_output).await?;
-                                            io::copy(&mut entry_reader, &mut writer).await?;
+                                            let writer = fs::OpenOptions::new()
+                                                .write(true)
+                                                .create_new(true)
+                                                .open(&full_output)
+                                                .await?;
+                                            futures::io::copy(
+                                                &mut entry_reader,
+                                                &mut writer.compat_write(),
+                                            )
+                                            .await?;
                                         }
                                     }
                                 }
@@ -284,6 +363,12 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                     let output_dir = game_dir.join(path).normalize();
 
                     download_file(&url, &output_dir, None).await?;
+
+                    utils::emit!(
+                        tx,
+                        "download",
+                        format!("{{ \"size\": {}, \"file\": {} }}", 0, name)
+                    );
                 }
 
                 Err(LauncherLibError::NotFound(
@@ -308,15 +393,38 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                 "assets/indexes/{}.json",
                 manifest.assets.expect("Should have assets")
             ));
+            utils::emit!(
+                self.channel,
+                "fetch",
+                "{ \"msg\": \"Download asset index manifest\", \"ammount\": 1, \"size\": 0 }"
+            );
+
             download_file(&assets.url, &index_file, Some(&assets.sha1)).await?;
 
             let index_raw = fs::read_to_string(&index_file).await?;
             let asset_index = serde_json::from_str::<AssetIndex>(&index_raw)?;
 
+            let mut files_len: i32 = 0;
+            let mut download_size: i32 = 0;
+
+            for (_, index) in &asset_index.objects {
+                download_size += index.size as i32;
+                files_len += 1;
+            }
+
+            utils::emit!(
+                self.channel,
+                "fetch",
+                format!(
+                    "{{ \"msg\": \"Installing Indexs\", \"ammount\": {}, \"size\": {} }}",
+                    files_len, download_size
+                )
+            );
+
             let indexs =
                 futures::stream::iter(asset_index.objects.into_iter().map(|(key, asset)| {
                     let item = root.clone();
-
+                    let tx = self.channel.clone();
                     async move {
                         let hash_id = format!(
                             "{}/{}",
@@ -331,7 +439,11 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                             Some(&asset.hash),
                         )
                         .await?;
-
+                        utils::emit!(
+                            tx,
+                            "download",
+                            format!("{{ \"size\": {}, \"file\": {} }}", assets.size, key)
+                        );
                         Ok(())
                     }
                 }))
@@ -360,12 +472,16 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                 Some(&logging.client.file.sha1),
             )
             .await?;
+            utils::emit!(
+                self.channel,
+                "fetch",
+                "{ \"msg\": \"Download logging config\", \"ammount\": 1, \"size\": 0 }"
+            );
         }
 
         // java
         if let Some(java) = &manifest.java_version {
-            let mut jvm = Jvm::<T>::new();
-            jvm.inhert(&self.observers);
+            let jvm = Jvm::new(self.channel.clone());
             jvm.install_jvm(java.component.clone(), &self.game_dir)
                 .await?;
         }
@@ -383,6 +499,7 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
                     ))?
                     .component;
                 fabric::run_fabric_installer(
+                    self.channel.clone(),
                     &self.mc,
                     &self.loader_version,
                     &self.game_dir,
@@ -412,6 +529,13 @@ impl<'a, T: Observer + PartialEq> Installer<'a, T> {
             _ => {}
         }
 
+        utils::emit!(
+            self.channel,
+            "end",
+            "{ \"key\":\"client\", msg: \"Minecraft Installed\" }"
+        );
+
+        utils::emit!(self.channel, "done", "ok");
         Ok(())
     }
 }
@@ -440,28 +564,26 @@ mod tests {
         }
     }
 
-    #[derive(PartialEq)]
-    struct ConcreteObserver {
-        id: i32,
-    }
-    impl Observer for ConcreteObserver {
-        fn update(&self, event: String, msg: String) {
-            println!("Observer id:{} received event!", self.id);
-        }
-    }
-
     #[tokio::test]
     async fn test_installer() {
         init();
 
-        let observer_a = ConcreteObserver { id: 1 };
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(32);
 
-        let mut installer = Installer::new("fabric-loader-0.14.18-1.19.4".to_string(), None);
+        let mannager = tokio::spawn(async move {
+            while let Some(cmd) = rx.recv().await {
+                info!("{}: {}", cmd.event, cmd.value);
+            }
+        });
 
-        installer.attach(&observer_a);
+        let installer = Installer::new("fabric-loader-0.14.18-1.19.4".to_string(), None, tx);
 
         if let Err(err) = installer.install().await {
             eprintln!("{:#?}", err);
         }
+
+        if let Err(err) = mannager.await {
+            error!("{}", err);
+        };
     }
 }

@@ -41,7 +41,7 @@ export const install = async (version: string, game_dir?: string) => {
 
 export const check_install = async (version: string, game_dir?: string) => {
     try {
-        const result = await invoke("check_install", { version, gameDir: game_dir });
+        const result = await invoke<boolean>("check_install", { version, gameDir: game_dir });
         return result;
     } catch (error) {
         logger.error(error);
