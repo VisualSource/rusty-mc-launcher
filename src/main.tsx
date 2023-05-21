@@ -1,18 +1,21 @@
-import React from 'react';
-import localforage from 'localforage';
-import ReactDOM from 'react-dom/client';
-import { RouterProvider } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PublicClientApplication, EventType, type AuthenticationResult } from "@azure/msal-browser";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
+import ReactDOM from 'react-dom/client';
+import localforage from 'localforage';
+import React from 'react';
+
+import NotificationProvider from './lib/context/NotificationContext';
 import { DownloadProvider } from '@context/DownloadContext';
 import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from '@/lib/config/auth';
-import router from '@/router';
 import "@/lib/auth/msal_browser_override";
-import './index.css';
-import Notification from '@system/Notification';
+import router from '@/router';
 
-const notify = new Notification();
+import 'react-toastify/dist/ReactToastify.css';
+import './index.css';
+
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);
 
@@ -42,9 +45,12 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <MsalProvider instance={msalInstance}>
-        <DownloadProvider>
-          <RouterProvider router={router} />
-        </DownloadProvider>
+        <NotificationProvider>
+          <DownloadProvider>
+            <RouterProvider router={router} />
+            <ToastContainer position="bottom-right" theme="dark" />
+          </DownloadProvider>
+        </NotificationProvider>
       </MsalProvider>
     </QueryClientProvider>
   </React.StrictMode>,

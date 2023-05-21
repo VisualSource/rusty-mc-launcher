@@ -11,7 +11,7 @@ const Footer = () => {
             <Link to="downloads" className="flex flex-col items-center">
                 {queueCurrent ? (
                     <>
-                        <strong className="hover:text-gray-100 text-gray-200 text-sm">Installing {queueCurrent.type}</strong>
+                        <strong className="hover:text-gray-100 text-gray-200 text-sm">Installing {queueCurrent.type} - {queueCurrent.msg}</strong>
                         <span className="text-sm">{size(queueCurrent?.size_current)} of {size(queueCurrent.size)}</span>
                     </>
                 ) : (

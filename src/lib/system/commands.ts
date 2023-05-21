@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api';
 import type { LaunchConfig } from './launch_config';
-import Notification from './Notification';
 import logger from './logger';
 
 export class PortGenerator {
@@ -34,7 +33,6 @@ export const install = async (version: string, game_dir?: string) => {
     try {
         await invoke("install", { gameDir: game_dir, version });
     } catch (error) {
-        Notification.getInstance().notify((error as Error)?.message ?? "Failed to install");
         logger.error(error);
     }
 }

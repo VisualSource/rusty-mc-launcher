@@ -7,17 +7,18 @@ import { Fragment } from 'react';
 import { play } from "@system/commands";
 import { useSelectedProfile } from "@hook/useSelectedProfile";
 import { asLaunchConfig } from "@system/launch_config";
-import useNotification from "@hook/useNotification";
+
 import { useProfiles } from "@hook/useProfiles";
 import useUser from "@hook/useUser";
-import useDownload from "@/lib/hooks/useDownload";
-import Notification from "@/lib/system/Notification";
+import useDownload from "@hook/useDownload";
+import useNotification from "@hook/useNotifications";
 
 const Home: React.FC = () => {
     const download = useDownload();
     const navigate = useNavigate();
     const { isLoading, user } = useUser();
     const { selected, mutate } = useSelectedProfile();
+    const notification = useNotification();
     const { profiles, isLoading: loadingProfiles } = useProfiles();
 
     return (
@@ -46,7 +47,11 @@ const Home: React.FC = () => {
                                         await download.install(config.version, config.game_directory);
 
                                         await play(config);
-                                        Notification.getInstance().notify("Started Minecraft");
+
+                                        notification.toast.success({
+                                            type: "success",
+                                            title: "Started Minecraft!"
+                                        });
                                         // play
                                         return;
                                     }

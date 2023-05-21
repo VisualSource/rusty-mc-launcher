@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use log::error;
 use normalize_path::NormalizePath;
+use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use tokio::fs::{create_dir_all, remove_file, File};
 use tokio::io::AsyncWriteExt;
@@ -10,6 +11,7 @@ use tokio::sync::mpsc;
 
 use crate::errors::LauncherLibError;
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChannelMessage {
     pub event: String,
     pub value: String,
@@ -24,11 +26,14 @@ impl ChannelMessage {
     }
 }
 
+/*if let Err(err) = $channel.send(ChannelMessage::new($event, $msg)).await {
+    error!("Failed to send message: {}", err);
+}*/
 #[macro_export]
 macro_rules! emit {
     ($channel:expr,$event:expr,$msg:expr) => {
         if let Err(err) = $channel.send(ChannelMessage::new($event, $msg)).await {
-            error!("Failed to send message: {}", err);
+            error!("{}", err);
         }
     };
 }

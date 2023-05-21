@@ -45,14 +45,15 @@ pub async fn install(
     window: tauri::Window,
 ) -> Result<(), Error> {
     debug!("Install {} to {:#?}", version, game_dir);
-
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(32);
-    let txm = tx.clone();
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
 
     let manager = tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
-            info!("{}: {}", &msg.event, &msg.value);
-            if let Err(err) = window.emit(format!("mcl::i::{}", &msg.event).as_str(), &msg.value) {
+            debug!("{:#?}", msg);
+            if msg.event == "complete" {
+                rx.close();
+            }
+            if let Err(err) = window.emit("mcl::installer", msg) {
                 error!("Failed to notify window: {}", err);
             }
         }
@@ -61,11 +62,9 @@ pub async fn install(
     let handler = Installer::new(version, game_dir, tx);
     let result = handler.install().await;
 
-    if let Err(err) = txm.send(ChannelMessage::new("complete", "ok")).await {
-        error!("{}", err);
-    }
-
-    manager.abort();
+    if let Err(err) = manager.await {
+        error!("Failed to exit event manager: {}", err);
+    };
 
     result.map_err(|err| Error::from(err))
 }

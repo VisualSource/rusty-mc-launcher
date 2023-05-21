@@ -59,7 +59,7 @@ pub mod asset_index {
     #[derive(Default,Debug, Clone, Serialize, Deserialize)]
     pub struct AssetIndexItem {
         pub hash: String,
-        pub size: usize
+        pub size: i32
     }
     #[derive(Default,Debug, Clone, Serialize, Deserialize)]
     pub struct AssetIndex {
@@ -482,7 +482,7 @@ pub struct LoggingClient {
 pub struct File {
     pub path: Option<String>,
     pub id: Option<String>,
-    pub total_size: Option<usize>,
+    pub total_size: Option<i32>,
     pub sha1: String,
     pub size: i32,
     pub url: String,

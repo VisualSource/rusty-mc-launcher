@@ -153,6 +153,7 @@ impl Installer {
         for file in &manifest.libraries {
             if let Some(download) = &file.downloads {
                 download_size += download.artifact.size;
+
                 if let Some(class) = &download.classifiers {
                     let os = if class.contains_key("osx") && consts::OS == "macos" {
                         "osx"
@@ -237,7 +238,7 @@ impl Installer {
                         tx,
                         "download",
                         format!(
-                            "{{ \"size\": {}, \"file\": {} }}",
+                            "{{ \"size\": {}, \"file\": \"{}\" }}",
                             downloads.artifact.size, lib.name
                         )
                     );
@@ -267,7 +268,7 @@ impl Installer {
                                     tx,
                                     "download",
                                     format!(
-                                        "{{ \"size\": {}, \"file\": {} }}",
+                                        "{{ \"size\": {}, \"file\": \"{}\" }}",
                                         file.size, file.url
                                     )
                                 );
@@ -367,7 +368,7 @@ impl Installer {
                     utils::emit!(
                         tx,
                         "download",
-                        format!("{{ \"size\": {}, \"file\": {} }}", 0, name)
+                        format!("{{ \"size\": {}, \"file\": \"{}\" }}", 0, name)
                     );
                 }
 
@@ -396,7 +397,7 @@ impl Installer {
             utils::emit!(
                 self.channel,
                 "fetch",
-                "{ \"msg\": \"Download asset index manifest\", \"ammount\": 1, \"size\": 0 }"
+                format!("{{ \"msg\": \"Download asset index manifest\", \"ammount\": 1, \"size\": {} }}", assets.size)
             );
 
             download_file(&assets.url, &index_file, Some(&assets.sha1)).await?;
@@ -405,11 +406,12 @@ impl Installer {
             let asset_index = serde_json::from_str::<AssetIndex>(&index_raw)?;
 
             let mut files_len: i32 = 0;
+            if let Ok(len) = TryInto::<i32>::try_into(asset_index.objects.len()) {
+                files_len = len;
+            }
             let mut download_size: i32 = 0;
-
-            for (_, index) in &asset_index.objects {
-                download_size += index.size as i32;
-                files_len += 1;
+            if let Some(size) = assets.total_size {
+                download_size = size;
             }
 
             utils::emit!(
@@ -442,7 +444,7 @@ impl Installer {
                         utils::emit!(
                             tx,
                             "download",
-                            format!("{{ \"size\": {}, \"file\": {} }}", assets.size, key)
+                            format!("{{ \"size\": {}, \"file\": \"{}\" }}", asset.size, key)
                         );
                         Ok(())
                     }
@@ -466,16 +468,30 @@ impl Installer {
             let logging_config = self
                 .game_dir
                 .join(format!("assets/log_configs/{}", logging_id));
+
+            utils::emit!(
+                self.channel,
+                "fetch",
+                format!(
+                    "{{ \"msg\": \"Download logging config\", \"ammount\": 1, \"size\": {} }}",
+                    logging.client.file.size
+                )
+            );
+
             download_file(
                 &logging.client.file.url,
                 &logging_config,
                 Some(&logging.client.file.sha1),
             )
             .await?;
+
             utils::emit!(
                 self.channel,
-                "fetch",
-                "{ \"msg\": \"Download logging config\", \"ammount\": 1, \"size\": 0 }"
+                "download",
+                format!(
+                    "{{ \"size\": {}, \"file\": \"client-1.12.xml\" }}",
+                    logging.client.file.size
+                )
             );
         }
 
@@ -532,10 +548,10 @@ impl Installer {
         utils::emit!(
             self.channel,
             "end",
-            "{ \"key\":\"client\", msg: \"Minecraft Installed\" }"
+            "{ \"key\":\"client\", \"msg\": \"Minecraft Installed\" }"
         );
 
-        utils::emit!(self.channel, "done", "ok");
+        utils::emit!(self.channel, "complete", "{ \"status\":\"ok\" }");
         Ok(())
     }
 }

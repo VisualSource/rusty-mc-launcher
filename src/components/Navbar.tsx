@@ -3,13 +3,21 @@ import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-reac
 import { Menu, Transition } from '@headlessui/react';
 import { appWindow } from '@tauri-apps/api/window';
 import { Link, NavLink } from 'react-router-dom';
+import useNotification from '@hook/useNotifications';
 import { loginRequest } from '../lib/config/auth';
 import { PortGenerator } from '@system/commands';
 import useUser from '@hook/useUser';
 import logger from '@system/logger';
 
+const COLOR = {
+    "success": "border-l-green-600",
+    "error": "border-l-red-600",
+    "warn": "border-l-yellow-600"
+}
+
 const Navbar = () => {
     const { user, instance, isLoading } = useUser();
+    const notification = useNotification();
 
     const login = async () => {
         const port = PortGenerator.getInstance().setPort();
@@ -42,18 +50,29 @@ const Navbar = () => {
                                 <AuthenticatedTemplate>
                                     <Menu as="div" className="relative inline-block text-left">
                                         <Menu.Button className="block shrink-0 rounded-lg bg-black bg-opacity-20 p-2.5 text-white shadow-sm hover:text-gray-50 relative">
-                                            {/*<span className="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-red-600 px-1 py-1">
-                                            </span>*/}
+                                            {notification.history.length ? (
+                                                <span className="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-red-600 px-1 py-1" />
+                                            ) : null}
                                             <span className="sr-only">Notifications</span>
                                             <HiOutlineBell className="h-5 w-5" />
                                         </Menu.Button>
                                         <Transition enter="transition duration-100 ease-out" enterFrom="transform scale-95 opacity-0" enterTo="transform scale-100 opacity-100" leave="transition duration-75 ease-out" leaveFrom="transform scale-100 opacity-100" leaveTo="transform scale-95 opacity-0">
                                             <Menu.Items className="absolute right-0 top-0 shadow-lg origin-top-right flex flex-col bg-gray-900 w-56 divide-y divide-gray-700">
-                                                <Menu.Item as="div">
-                                                    <div className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-200'>
-                                                        <span className="text-sm font-medium">No Notifications</span>
-                                                    </div>
-                                                </Menu.Item>
+                                                {notification.history.length ? (
+                                                    notification.history.map((item, key) => (
+                                                        <Menu.Item as="div" key={key}>
+                                                            <div className={`w-full flex items-center gap-2 border-l-[3px] ${COLOR[item.type]} border-transparent px-4 py-3 text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-200`}>
+                                                                <span className="text-sm font-medium">{item.title}</span>
+                                                            </div>
+                                                        </Menu.Item>
+                                                    ))
+                                                ) : (
+                                                    <Menu.Item as="div">
+                                                        <div className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-200'>
+                                                            <span className="text-sm font-medium">No Notifications</span>
+                                                        </div>
+                                                    </Menu.Item>
+                                                )}
                                             </Menu.Items>
                                         </Transition>
                                     </Menu>

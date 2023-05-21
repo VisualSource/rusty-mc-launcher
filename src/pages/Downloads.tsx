@@ -10,11 +10,15 @@ const DownloadsPage = () => {
         <div className="h-full divide-y">
             <div className="h-20 bg-gradient-to-r from-slate-500 to-slate-800">
                 {queueCurrent ? (
-                    <div className="flex flex-col flex-wrap">
-                        <div>{queueCurrent?.msg}</div>
-                        <div>{size(queueCurrent?.size_current)} of {size(queueCurrent?.size)}</div>
-                        <div>{queueCurrent?.ammount_current} of {queueCurrent?.ammount}</div>
-                        <div>{queueCurrent?.download?.file}: {size(queueCurrent.download?.size ?? 0)}</div>
+                    <div className="flex justify-between">
+                        <div>
+                            <div>{queueCurrent?.download?.file}: {size(queueCurrent.download?.size ?? 0)}</div>
+                        </div>
+                        <div>
+                            <div>{queueCurrent?.msg}</div>
+                            <div>{size(queueCurrent?.size_current)} of {size(queueCurrent?.size)}</div>
+                            <div>{queueCurrent?.ammount_current} of {queueCurrent?.ammount}</div>
+                        </div>
                     </div>
                 ) : null}
             </div>

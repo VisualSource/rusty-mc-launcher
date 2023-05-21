@@ -152,7 +152,7 @@ impl Jvm {
                             utils::emit!(
                                 tx,
                                 "download",
-                                format!("{{ \"size\": {}, \"file\": {} }}", lzma.size, key)
+                                format!("{{ \"size\": {}, \"file\": \"{}\" }}", lzma.size, key)
                             );
 
                             return Ok(format!("{} /#// {} {}\n", key, result, created));
@@ -174,7 +174,7 @@ impl Jvm {
                                 tx,
                                 "download",
                                 format!(
-                                    "{{ \"size\": {}, \"file\": {} }}",
+                                    "{{ \"size\": {}, \"file\": \"{}\" }}",
                                     downloads.raw.size, key
                                 )
                             );
@@ -211,7 +211,7 @@ impl Jvm {
         utils::emit!(
             self.channel,
             "start",
-            "{{ \"key\":\"jvm\", \"msg\": \"Vaildating\" }}"
+            "{ \"key\":\"jvm\", \"msg\": \"Vaildating\" }"
         );
 
         let sha1_contents = files
@@ -248,7 +248,7 @@ impl Jvm {
         utils::emit!(
             self.channel,
             "end",
-            "{ \"key\":\"jvm\", msg: \"JVM installed.\" }"
+            "{ \"key\":\"jvm\", \"msg\": \"JVM installed.\" }"
         );
 
         Ok(())
