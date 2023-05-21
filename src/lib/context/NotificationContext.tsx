@@ -59,7 +59,7 @@ const NotificationProvider: React.FC<React.PropsWithChildren> = ({ children }) =
                         const request = await requestPermission();
                         permission = request === "granted";
                     }
-                    ok(allowed)
+                    ok(permission);
                 });
 
                 if (openToast) {
@@ -103,7 +103,7 @@ const NotificationProvider: React.FC<React.PropsWithChildren> = ({ children }) =
                     }
                 }
 
-                if (allowed) sendNotification({ ...msg, icon: "./logo.svg" });
+                if (allowed) sendNotification({ ...msg, icon: "/icons/icon.png" });
             },
         }}>
             {children}
