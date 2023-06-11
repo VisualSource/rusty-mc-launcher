@@ -8,6 +8,7 @@ use normalize_path::NormalizePath;
 use tokio::{fs, sync::mpsc};
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 
+use crate::client::ClientBuilder;
 use crate::errors::LauncherLibError;
 use crate::manifest::asset_index::AssetIndex;
 use crate::manifest::{Manifest, RuleCondition};
@@ -15,13 +16,13 @@ use crate::metadata::get_launcher_manifest;
 use crate::runtime::Jvm;
 use crate::utils::fabric;
 use crate::utils::{self, download_file, ChannelMessage};
-use crate::ClientBuilder;
 
 //https://www.reddit.com/r/rust/comments/gi2pld/callback_functions_the_right_way/
 //https://github.com/lpxxn/rust-design-pattern/blob/master/behavioral/observer.rs
 //https://github.com/tomsik68/mclauncher-api/wiki/Libraries
 //https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master
 
+#[derive(Debug)]
 enum Loader {
     Fabric,
     Forge,
@@ -47,10 +48,10 @@ impl Installer {
         // https://tokio.rs/tokio/tutorial/channels
         channel: mpsc::Sender<ChannelMessage>,
     ) -> Self {
-        let forge = regex::Regex::new(r"(?P<mc>\d+.\d+.\d+)-forge-(?P<loader>\d+.\d+.\d+)")
+        let forge = regex::Regex::new(r"(?P<mc>\d+.\d+(.\d+)?(.+))-forge-(?P<loader>\d+.\d+.\d+)")
             .expect("Failed to make regex");
         let fabric =
-            regex::Regex::new(r"fabric-loader-(?P<loader>\d+.\d+.\d+)-(?P<mc>\d+.\d+.\d+)")
+            regex::Regex::new(r"fabric-loader-(?P<loader>\d+.\d+.\d+)-(?P<mc>\d+.\d+(.\d+)?(.+))")
                 .expect("Failed to create regex");
         let (mc, loader, loader_version) = if let Some(caps) = fabric.captures(&version) {
             (
@@ -67,6 +68,11 @@ impl Installer {
         } else {
             (version.clone(), Loader::Vanilla, "".to_string())
         };
+
+        debug!(
+            "Install {:#?} {:#?} {:#?} {:#?}",
+            mc, loader, loader_version, version
+        );
 
         Self {
             channel,
@@ -90,7 +96,7 @@ impl Installer {
         );
 
         let launcher_manifest = get_launcher_manifest(Some(self.mc.clone())).await?;
-        // .minecraft/versions/VERSION/VERSION.json
+        // .minecraft/versions/(VERSION)/(VERSION).json
         let version_root = self
             .game_dir
             .join(format!("versions/{id}", id = launcher_manifest.id));

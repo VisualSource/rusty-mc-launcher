@@ -1,9 +1,11 @@
 import localforage from "localforage";
 import type { ProfileFull } from "@hook/useUser";
 import { MinecraftProfile } from "@lib/models/profiles";
+import { getLoaderType } from "@/utils/versionUtils";
 
 type PathBuf = string;
 export interface LaunchConfig {
+    profile_id?: string;
     launcher_name?: string,
     laucher_version?: string,
     classpath?: string,
@@ -60,7 +62,10 @@ export const asLaunchConfig = async (user: ProfileFull | undefined, profile: Min
         }
     }
 
+    const { type, loader } = getLoaderType(lastVersionId);
+
     const data: LaunchConfig = {
+        profile_id: profile.id,
         console: profile.console,
         version: lastVersionId,
         token: user.minecraft.token.access_token,
@@ -74,6 +79,14 @@ export const asLaunchConfig = async (user: ProfileFull | undefined, profile: Min
         disable_mulitplayer: profile.disable_mulitplayer,
         disable_chat: profile.disable_chat,
     };
+
+    if (type === "fabric") {
+        data.fabric = loader;
+    }
+
+    if (type === "forge") {
+        data.forge === loader;
+    }
 
     if (profile?.resolution) {
         data["resolution_height"] = profile.resolution.height;

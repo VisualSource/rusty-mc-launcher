@@ -4,14 +4,16 @@ import SQLite from 'tauri-plugin-sqlite-api';
 import logger from '@system/logger';
 
 type DB_Type = "NULL" | "INTEGER" | "REAL" | "TEXT" | "BLOB";
-type DB_Type_Extend = "NULL" | "INTEGER" | "REAL" | "TEXT" | "BLOB" | "DATE" | "JSON" | "BOOLEAN";
+type DB_Type_Extend = "NULL" | "INTEGER" | "REAL" | "TEXT" | "BLOB" | "DATE" | "JSON" | "BOOLEAN" | "ENUM";
 type DefaultType<T extends DB_Type_Extend, J = unknown> =
-    T extends "DATE" ? "CURRENT_TIMESTAMP" | "CURRENT_DATE" | "CURRENT_TIME" : never
+    | T extends "ENUM" ? J : never
+    | T extends "DATE" ? "CURRENT_TIMESTAMP" | "CURRENT_DATE" | "CURRENT_TIME" : never
     | T extends "JSON" ? J : never
     | T extends "BOOLEAN" ? "TRUE" | "FALSE" : never;
 
 type InferType<T> = T extends Type<infer R, infer N, infer J> ?
     (R extends "JSON" ? J : never)
+    | (R extends "ENUM" ? J : never)
     | (R extends "NULL" ? null : never)
     | (R extends "INTEGER" ? number : never)
     | (R extends "REAL" ? number : never)
@@ -61,6 +63,7 @@ export class Type<TDB extends DB_Type_Extend, TNull extends "non_null" | "null" 
     static Text = () => new Type("TEXT", "TEXT");
     static Blob = () => new Type("BLOB", "BLOB");
     static Date = () => new Type("TEXT", "DATE");
+    static Enum = <D extends string>() => new Type<"ENUM", "non_null", D>("TEXT", "ENUM");
     static Json = <D = unknown>() => new Type<"JSON", "non_null", D>("TEXT", "JSON");
     private is_nullable: Nullable;
     private is_primary_key: boolean;
@@ -138,6 +141,7 @@ export class Type<TDB extends DB_Type_Extend, TNull extends "non_null" | "null" 
             case "INTEGER":
             case "REAL":
             case "BLOB":
+            case "ENUM":
             case "TEXT":
                 return value as InferType<Type<TDB, TNull, TJson>>;
             default:
@@ -357,6 +361,11 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
         } finally {
             await db.close();
         }
+    }
+    public async findOne(props: Omit<SchemaFind<T>, "limit">): Promise<SchemaType<T> | null> {
+        const item = await this.find({ ...props, limit: 1 });
+        if (!item) return null;
+        return item.at(0) ?? null;
     }
 }
 

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api';
 import type { LaunchConfig } from './launch_config';
 import logger from './logger';
+import { FileDownload } from '../api/modrinth';
 
 export class PortGenerator {
     static INSTANCE: PortGenerator | null;
@@ -29,6 +30,10 @@ export const startAuthServer = async () => {
     }
 }
 
+export const installMods = async (id: string, files: FileDownload[], game_dir?: string) => {
+    await invoke("install_mods", { id, gameDir: game_dir, files });
+}
+
 export const install = async (version: string, game_dir?: string) => {
     try {
         await invoke("install", { gameDir: game_dir, version });
@@ -47,13 +52,7 @@ export const check_install = async (version: string, game_dir?: string) => {
     }
 }
 
-export const play = async (settings: LaunchConfig) => {
-    try {
-        await invoke("play", { settings });
-    } catch (error) {
-        logger.error(error);
-    }
-}
+export const play = async (settings: LaunchConfig) => invoke("play", { settings });
 
 export const stop = async () => {
     await invoke("stop");

@@ -1,8 +1,8 @@
 use crate::errors::Error;
 use crate::state::TauriState;
-use log::{debug, error, info};
+use log::{debug, error};
 use minecraft_launcher_lib::installer::Installer;
-use minecraft_launcher_lib::{ChannelMessage, ClientBuilder};
+use minecraft_launcher_lib::{install_mod_list, ChannelMessage, ClientBuilder, FileDownload};
 use std::path::PathBuf;
 use tauri::Window;
 use tauri_plugin_oauth::{start_with_config, OauthConfig};
@@ -45,7 +45,7 @@ pub async fn install(
     window: tauri::Window,
 ) -> Result<(), Error> {
     debug!("Install {} to {:#?}", version, game_dir);
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(32);
 
     let manager = tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
@@ -53,7 +53,7 @@ pub async fn install(
             if msg.event == "complete" {
                 rx.close();
             }
-            if let Err(err) = window.emit("mcl::installer", msg) {
+            if let Err(err) = window.emit("mcl::download", msg) {
                 error!("Failed to notify window: {}", err);
             }
         }
@@ -67,6 +67,38 @@ pub async fn install(
     };
 
     result.map_err(|err| Error::from(err))
+}
+
+#[tauri::command]
+pub async fn install_mods(
+    id: String,
+    files: Vec<FileDownload>,
+    game_dir: Option<PathBuf>,
+    window: tauri::Window,
+) -> Result<(), Error> {
+    debug!("Install profile mods folder {} to {:#?}", id, game_dir);
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(32);
+
+    let manager = tokio::spawn(async move {
+        while let Some(msg) = rx.recv().await {
+            debug!("{:#?}", msg);
+            if msg.event == "complete" {
+                rx.close();
+            }
+            if let Err(err) = window.emit("mcl::download", msg) {
+                error!("Failed to notify window: {}", err);
+            }
+        }
+    });
+
+    let handler = install_mod_list(id, files, game_dir, tx).await;
+
+    if let Err(err) = manager.await {
+        error!("Failed to exit event manager: {}", err);
+    };
+
+    handler.map_err(|err| Error::from(err))
 }
 
 #[tauri::command]

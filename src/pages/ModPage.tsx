@@ -4,27 +4,36 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Octokit } from "@octokit/rest";
 import Spinner from "@/components/Spinner";
 
+import profiles from "@lib/models/profiles";
 import { mods } from "@/data/mods";
 import IconLinks from "@/components/ModCardIcon";
+import modrinth from "@/lib/api/modrinth";
+import logger from "@/lib/system/logger";
+import { selectProfileFromDialog } from "@/lib/selectProfile";
+import { getLoaderType } from "@/utils/versionUtils";
+import useDownload from "@/lib/hooks/useDownload";
+import useNotification from "@/lib/hooks/useNotifications";
 
 const ModPage: React.FC = () => {
     const navigate = useNavigate();
     const { uuid } = useParams();
+    const { installMods } = useDownload();
+    const notification = useNotification();
     const { data, isError, isLoading, error } = useQuery([uuid, "mod"], async () => {
         if (!uuid) throw new Error("Invaild uuid");
 
         const mod = mods[uuid];
         if (!mod) throw new Error("Failed to find mod");
 
-        if (mod.provider.type === "github") {
+        if (mod.markdownProvider.type === "github") {
             const octokit = new Octokit();
             const repo = await octokit.rest.repos.get({
-                owner: mod.provider.owner,
-                repo: mod.provider.repo,
+                owner: mod.markdownProvider.owner,
+                repo: mod.markdownProvider.repo,
             });
             const readme = await octokit.rest.repos.getReadme({
-                owner: mod.provider.owner,
-                repo: mod.provider.repo,
+                owner: mod.markdownProvider.owner,
+                repo: mod.markdownProvider.repo,
                 mediaType: {
                     format: "html"
                 },
@@ -32,25 +41,60 @@ const ModPage: React.FC = () => {
             });
             //https://github.com/IrisShaders/Iris/raw/1.19.4/docs/banner.png
             //https://github.com/CaffeineMC/lithium-fabric/raw/develop/src/main/resources/assets/lithium/icon.png
+
+
+            const replaceImage = {
+                root: mod.markdownProvider.imageRoot,
+                base: `https://github.com/${mod.markdownProvider.owner}/${mod.markdownProvider.repo}/raw/${repo.data.default_branch}/${mod.markdownProvider.imageRoot}`
+            }
+
             return {
+                modData: mod,
                 name: mod.name,
-                content: (readme.data as never as string),
-                type: mod.provider.type,
+                content: mod.markdownProvider.updateLinks ? (readme.data as never as string).replaceAll(replaceImage.root, replaceImage.base) : (readme.data as never as string),
+                type: mod.markdownProvider.type,
                 links: mod.links,
-                replaceImage: {
-                    root: mod.provider.imageRoot,
-                    base: `https://github.com/${mod.provider.owner}/${mod.provider.repo}/raw/${repo.data.default_branch}/${mod.provider.imageRoot}`
-                }
             }
         }
 
         return {
+            modData: mod,
             name: mod.name,
             links: mod.links,
             content: "",
-            type: mod.provider.type
+            type: mod.markdownProvider.type
         }
     }, { enabled: !!uuid });
+
+    const installMod = async () => {
+        try {
+            const profile = await selectProfileFromDialog({ loader: data?.modData.supports.map((e) => e.toLowerCase()) });
+            if (!profile) return;
+
+            if (data?.modData?.download.type === "modrinth") {
+
+                const selectedProfile = await profiles.findOne({ where: [{ id: profile }] });
+
+                if (!selectedProfile) throw new Error("Failed to find profile");
+
+                const loader = getLoaderType(selectedProfile.lastVersionId);
+
+                if (loader.type === "vanilla") return;
+
+                const files = await modrinth.GetVersionFiles(data?.modData?.download.id, loader.type, loader.game);
+
+                notification.toast.success({
+                    title: "Mod Download",
+                    type: "success",
+                    body: "Staring Mods download"
+                })
+
+                installMods(selectedProfile.id, files, selectedProfile.lastVersionId, selectedProfile.gameDir ?? undefined);
+            }
+        } catch (error) {
+            logger.error(error);
+        }
+    }
 
     return (
         <main className="flex flex-col h-full overflow-hidden">
@@ -69,9 +113,9 @@ const ModPage: React.FC = () => {
                         </div>
                         <div className="relative">
                             <div className="inline-flex items-center overflow-hidden bg-green-500">
-                                <a href="#" className="border-e border-green-700 px-4 py-2 text-sm/none text-white hover:bg-green-600">
+                                <button onClick={installMod} className="border-e border-green-700 px-4 py-2 text-sm/none text-white hover:bg-green-600">
                                     Install
-                                </a>
+                                </button>
                                 <button className="h-full p-2 text-gray-600 hover:bg-green-600">
                                     <span className="sr-only">Menu</span>
                                     <HiChevronDown className="h-4 w-4 text-white" />
@@ -79,8 +123,7 @@ const ModPage: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    {data.type === "github" ? (<article dangerouslySetInnerHTML={{ __html: data.content.replaceAll(data.replaceImage.root, data.replaceImage.base) }} className="prose max-w-4xl prose-invert"></article>) : null}
-
+                    {data.type === "github" ? (<article dangerouslySetInnerHTML={{ __html: data.content }} className="prose max-w-4xl prose-invert"></article>) : null}
                 </div>
             ) : null}
         </main>

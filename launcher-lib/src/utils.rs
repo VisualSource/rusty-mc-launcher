@@ -39,6 +39,23 @@ macro_rules! emit {
 }
 pub use emit;
 
+pub mod mods {
+    use super::*;
+    #[derive(Debug, Deserialize, Serialize, Clone)]
+    pub struct File {
+        pub hash: String,
+        pub url: String,
+        pub size: i32,
+    }
+    #[derive(Debug, Deserialize, Serialize, Clone)]
+    pub struct FileDownload {
+        pub id: String,
+        pub name: String,
+        pub version: String,
+        pub download: File,
+    }
+}
+
 pub mod fabric {
     use super::*;
     use crate::utils::emit;

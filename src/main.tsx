@@ -15,6 +15,7 @@ import router from '@/router';
 
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
+import ProfileSelector from "./components/dialogs/ProfileSelector";
 
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);
@@ -48,6 +49,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <NotificationProvider>
           <DownloadProvider>
             <RouterProvider router={router} />
+            <ProfileSelector />
             <ToastContainer position="bottom-right" theme="dark" />
           </DownloadProvider>
         </NotificationProvider>

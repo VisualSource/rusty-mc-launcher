@@ -30,6 +30,7 @@
     "react-router-dom": "^6.11.2",
     "react-toastify": "^9.1.3",
     "tauri-plugin-sqlite-api": "github:lzdyes/tauri-plugin-sqlite#v0.1.1",
+    "use-debounce": "^9.0.4",
     "zod": "^3.21.4",
     "zod-validation-error": "^1.3.0"
   },

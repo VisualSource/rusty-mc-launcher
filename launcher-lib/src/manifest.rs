@@ -6,7 +6,7 @@ use serde::{Deserialize,Serialize, self };
 use normalize_path::NormalizePath;
 use log::{info, debug};
 
-use crate::ClientBuilder;
+use crate::client::ClientBuilder;
 use crate::errors::LauncherLibError;
 
 pub mod jvm {

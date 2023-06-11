@@ -1,12 +1,12 @@
+import { FaGithub, FaDiscord, FaGlobe, FaPatreon, FaTwitter, FaInfoCircle } from 'react-icons/fa';
 import type { IconTypes } from '@/data/mods';
-import { FaGithub, FaDiscord, FaFire, FaGlobe, FaPatreon, FaTwitter } from 'react-icons/fa';
 
 type Props = { links: { type: IconTypes, href: string; }[] }
 
 const icons = {
     "github": { title: "Github", icon: FaGithub },
     "discord": { title: "Discord", icon: FaDiscord },
-    "curseforge": { title: "CurseForge", icon: FaFire },
+    "modrinth": { title: "Modrinth", icon: FaInfoCircle },
     "website": { title: "Website", icon: FaGlobe },
     "patreon": { title: "Patreon", icon: FaPatreon },
     "twitter": { title: "Twitter", icon: FaTwitter }

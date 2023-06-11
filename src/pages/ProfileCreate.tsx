@@ -6,7 +6,7 @@ import { useProfiles } from "@/lib/hooks/useProfiles";
 import type { MinecraftProfile } from "@/lib/models/profiles";
 import { useQuery } from "@tanstack/react-query";
 import { Combobox, Listbox, Transition } from "@headlessui/react";
-import { HiCheck, HiChevronDown, HiChevronUp, HiSelector } from "react-icons/hi";
+import { HiCheck, HiSelector } from "react-icons/hi";
 
 const versions = [
     { name: "Vanilla", id: "vanilla" },
@@ -18,7 +18,7 @@ const cutoff_date = new Date("2020-06-23T16:20:52+00:00");
 
 const ProfileCreate: React.FC = () => {
     const [verison, setVersion] = useState(versions[0]);
-    const { data, isLoading, error } = useQuery([verison.id], async (ctx) => {
+    const { data, isLoading } = useQuery([verison.id], async (ctx) => {
         const id = ctx.queryKey[0];
 
         switch (id) {
@@ -32,8 +32,31 @@ const ProfileCreate: React.FC = () => {
                     ].concat(version.versions.filter(value => new Date(value.releaseTime) >= cutoff_date))
                 }
             }
-            case "fabric": { }
+            case "fabric": {
+                const [versions, loaders] = await Promise.all([
+                    fetch("https://meta.fabricmc.net/v2/versions/game").then(value => value.json() as Promise<{ version: string; stable: boolean }[]>),
+                    fetch("https://meta.fabricmc.net/v2/versions/loader").then(value => value.json() as Promise<{ separator: string; build: string; maven: string; version: string; stable: boolean }[]>)
+                ]);
 
+                const loader = loaders.find(value => value.stable);
+
+                const data = versions.map(value => ({
+                    id: `fabric-loader-${loader?.version}-${value.version}`,
+                    type: value.stable ? "release" : "snapshot",
+                    releaseTime: ""
+                }));
+
+                const latest_stable = data.find(value => value.type === "release");
+                const latest_snapshot = data.find(value => value.type === "snapshot");
+
+                return {
+                    latest: {
+                        release: latest_stable,
+                        snapshot: latest_snapshot
+                    },
+                    versions: data
+                }
+            }
             default:
                 return {
                     latest: {}, versions: [
@@ -43,7 +66,7 @@ const ProfileCreate: React.FC = () => {
                 };
         }
     });
-    const { register, handleSubmit, control, setValue } = useForm<MinecraftProfile>({
+    const { register, handleSubmit, control } = useForm<MinecraftProfile>({
         defaultValues: {
             console: true,
             is_demo: false,

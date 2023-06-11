@@ -18,6 +18,7 @@ const profiles = new Schema("profile", {
     logConfigIsXML: Type.Boolean().default("TRUE"),
     resolution: Type.Json<{ width: number; height: number; }>().nullable(),
     active: Type.Boolean().default("FALSE"),
+    mods: Type.Json<{ id: string; version: string; }[]>().nullable().default([]),
 });
 
 export type MinecraftProfile = InferSchema<typeof profiles>;

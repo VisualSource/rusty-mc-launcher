@@ -9,7 +9,6 @@ pub enum Error {
     #[error("{0}")]
     Auth(String),
 }
-
 // we must manually implement serde::Serialize
 impl serde::Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

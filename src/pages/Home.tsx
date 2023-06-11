@@ -12,6 +12,7 @@ import { useProfiles } from "@hook/useProfiles";
 import useUser from "@hook/useUser";
 import useDownload from "@hook/useDownload";
 import useNotification from "@hook/useNotifications";
+import logger from "@/lib/system/logger";
 
 const Home: React.FC = () => {
     const download = useDownload();
@@ -42,16 +43,25 @@ const Home: React.FC = () => {
                             <div className="flex flex-col max-w-md w-full">
                                 <button onClick={async () => {
                                     if ((profiles?.length ?? 0) > 0) {
-                                        const config = await asLaunchConfig(user, selected);
+                                        try {
+                                            const config = await asLaunchConfig(user, selected);
 
-                                        await download.install(config.version, config.game_directory);
+                                            await download.install(config.version, config.game_directory);
 
-                                        await play(config);
+                                            await play(config);
 
-                                        notification.toast.success({
-                                            type: "success",
-                                            title: "Started Minecraft!"
-                                        });
+                                            notification.toast.success({
+                                                type: "success",
+                                                title: "Started Minecraft!"
+                                            });
+                                        } catch (error) {
+                                            logger.error(error);
+                                            notification.toast.alert({
+                                                type: "error",
+                                                title: "Failed to start Minecraft",
+                                                body: (error as Error)?.message ?? "Unkown Error"
+                                            })
+                                        }
                                         // play
                                         return;
                                     }
