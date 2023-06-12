@@ -83,11 +83,30 @@ const ModPage: React.FC = () => {
 
                 const files = await modrinth.GetVersionFiles(data?.modData?.download.id, loader.type, loader.game);
 
+                const modIds = (selectedProfile.mods ?? []).map(item => item.id);
+
+                const vaildMods = files.filter(item => !modIds.includes(item.id))
+
+                if (!vaildMods.length) {
+                    notification.toast.success({
+                        title: "Mod Already Installed",
+                        type: "success"
+                    })
+                    return;
+                }
+
                 notification.toast.success({
                     title: "Mod Download",
                     type: "success",
                     body: "Staring Mods download"
-                })
+                });
+
+                await profiles.update({
+                    where: [{ id: selectedProfile.id }],
+                    data: {
+                        mods: (selectedProfile.mods ?? []).concat(files.map(value => ({ name: value.name, id: value.id, version: value.version })))
+                    }
+                });
 
                 installMods(selectedProfile.id, files, selectedProfile.lastVersionId, selectedProfile.gameDir ?? undefined);
             }

@@ -157,8 +157,10 @@ class DBError extends Error {
 }
 export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "null", unknown>>> {
     private init: boolean = false;
+    private updated: boolean = false;
     private filepath: string | null = null;
     constructor(private name: string, private table: T) { }
+
     public parse(value: unknown): SchemaType<T> {
         if (typeof value !== "object" || !value) throw new Error("Failed to parse value");
 
@@ -185,7 +187,6 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
                     logger.info(`Writing database file.`);
                     await writeBinaryFile(DATABASE_FILE, new Uint8Array([]), { dir: BaseDirectory.AppData });
                 }
-
                 this.filepath = file;
             } catch (error) {
                 logger.error(error);
@@ -198,6 +199,32 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
         if (!this.init) {
             this.init = true;
             await this.createTable(db);
+        } else {
+            if (!this.updated) {
+                const currentColumns = await db.select(`PRAGMA table_info(${this.name})`) as { cid: number; name: string; }[];
+
+                logger.debug("ListedColumns", currentColumns);
+
+                const missingColumns = Object.keys(this.table).filter(value => currentColumns.findIndex(item => item.name === value) === -1);
+
+                logger.debug("Missing Columns", missingColumns);
+
+                for (const col of missingColumns) {
+
+                    const addOrRemove = !!this.table[col];
+
+                    const query = addOrRemove ? `ALTER TABLE ${this.name} ADD COLUMN ${col} ${this.table[col].toSQL()}` : `ALTER TABLE ${this.name} DROP COLUMN ${col}`;
+                    logger.debug(query);
+                    const ok = await db.execute(query);
+                    if (ok) {
+                        logger.info(`${addOrRemove ? "Added" : "Droped"} column ${col}`);
+                    } else {
+                        logger.info(`Failed to update column (${col})`)
+                    }
+                }
+
+                this.updated = true;
+            }
         }
         return db;
     }
@@ -319,7 +346,6 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
                 params = [...params, ...result.params];
                 whereBy = result.query;
             }
-
             const query = [
                 "UPDATE",
                 this.name,
@@ -327,13 +353,14 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
                 values.join(", "),
                 whereBy
             ].filter(e => Boolean(e)).join(" ").trim() + ";";
-
             logger.debug(query);
+            logger.debug(params)
 
             const result = await db.execute(query, params);
             return result;
         } catch (error) {
             if (error instanceof DBError) throw error;
+            logger.error(error);
             throw new DBError((error as Error)?.message ?? "Unkown Error");
         } finally {
             await db.close();
