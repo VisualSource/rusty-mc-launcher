@@ -1,7 +1,7 @@
 {
   "name": "mcl",
   "private": true,
-  "version": "0.2.6",
+  "version": "0.2.8",
   "type": "module",
   "scripts": {
     "tauri": "tauri",
