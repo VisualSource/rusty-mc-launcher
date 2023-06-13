@@ -27,7 +27,18 @@ const DownloadsPage = () => {
                     <SectionDivider text="Up Next" count={queueNext.length}>
                         <div className="text-sm text-neutral-400">Auto-updates enabled</div>
                     </SectionDivider>
-                    <div className="ml-4 text-neutral-400 text-sm tracking-tight">There are no downloads in the queue.</div>
+                    {queueNext.length ? (
+                        <ul>
+                            {queueNext.map((value, i) => (
+                                <li key={i}>
+                                    {value.type}
+                                    {value.ammount}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <div className="ml-4 text-neutral-400 text-sm tracking-tight">There are no downloads in the queue.</div>
+                    )}
                 </div>
 
 

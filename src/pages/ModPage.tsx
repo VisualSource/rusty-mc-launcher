@@ -4,21 +4,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Octokit } from "@octokit/rest";
 import Spinner from "@/components/Spinner";
 
-import profiles from "@lib/models/profiles";
 import { mods } from "@/data/mods";
 import IconLinks from "@/components/ModCardIcon";
-import modrinth from "@/lib/api/modrinth";
 import logger from "@/lib/system/logger";
 import { selectProfileFromDialog } from "@/lib/selectProfile";
-import { getLoaderType } from "@/utils/versionUtils";
 import useDownload from "@/lib/hooks/useDownload";
-import useNotification from "@/lib/hooks/useNotifications";
 
 const ModPage: React.FC = () => {
     const navigate = useNavigate();
     const { uuid } = useParams();
     const { installMods } = useDownload();
-    const notification = useNotification();
     const { data, isError, isLoading, error } = useQuery([uuid, "mod"], async () => {
         if (!uuid) throw new Error("Invaild uuid");
 
@@ -69,47 +64,10 @@ const ModPage: React.FC = () => {
     const installMod = async () => {
         try {
             const profile = await selectProfileFromDialog({ loader: data?.modData.supports.map((e) => e.toLowerCase()) });
-            if (!profile) return;
+            if (!profile || !data || data.modData.download.type !== "modrinth") return;
 
-            if (data?.modData?.download.type === "modrinth") {
+            installMods(profile, data?.modData?.download.type, [data.modData.download.id]);
 
-                const selectedProfile = await profiles.findOne({ where: [{ id: profile }] });
-
-                if (!selectedProfile) throw new Error("Failed to find profile");
-
-                const loader = getLoaderType(selectedProfile.lastVersionId);
-
-                if (loader.type === "vanilla") return;
-
-                const files = await modrinth.GetVersionFiles(data?.modData?.download.id, loader.type, loader.game);
-
-                const modIds = (selectedProfile.mods ?? []).map(item => item.id);
-
-                const vaildMods = files.filter(item => !modIds.includes(item.id))
-
-                if (!vaildMods.length) {
-                    notification.toast.success({
-                        title: "Mod Already Installed",
-                        type: "success"
-                    })
-                    return;
-                }
-
-                notification.toast.success({
-                    title: "Mod Download",
-                    type: "success",
-                    body: "Staring Mods download"
-                });
-
-                await profiles.update({
-                    where: [{ id: selectedProfile.id }],
-                    data: {
-                        mods: (selectedProfile.mods ?? []).concat(files.map(value => ({ name: value.name, id: value.id, version: value.version })))
-                    }
-                });
-
-                installMods(selectedProfile.id, files, selectedProfile.lastVersionId, selectedProfile.gameDir ?? undefined);
-            }
         } catch (error) {
             logger.error(error);
         }

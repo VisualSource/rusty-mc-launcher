@@ -1,4 +1,4 @@
-export const getLoaderType = (lastVersionId: string): { loader?: string, type: "fabric" | "forge" | "vanilla", game: string } => {
+export const getLoaderType = (lastVersionId: string, parseLastest: boolean = false): { loader?: string, type: "fabric" | "forge" | "vanilla", game: string } => {
 
     const fabricResults = lastVersionId.match(/fabric-loader-(?<loader>\d+.\d+.\d+)-(?<game>\d+.\d+(.\d+)?(.+))/)
     if (fabricResults) {

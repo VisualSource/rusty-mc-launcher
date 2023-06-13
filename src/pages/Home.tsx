@@ -46,14 +46,17 @@ const Home: React.FC = () => {
                                         try {
                                             const config = await asLaunchConfig(user, selected);
 
+                                            document.addEventListener("mcl::install_ready", async (ev) => {
+                                                if ((ev as CustomEvent<{ vaild: boolean }>).detail.vaild) {
+                                                    await play(config);
+                                                    notification.toast.success({
+                                                        type: "success",
+                                                        title: "Started Minecraft!"
+                                                    });
+                                                }
+                                            }, { once: true });
+
                                             await download.install(config.version, config.game_directory);
-
-                                            await play(config);
-
-                                            notification.toast.success({
-                                                type: "success",
-                                                title: "Started Minecraft!"
-                                            });
                                         } catch (error) {
                                             logger.error(error);
                                             notification.toast.alert({

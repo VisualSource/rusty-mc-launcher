@@ -3,9 +3,10 @@ import profiles, { type MinecraftProfile } from "@lib/models/profiles";
 import { useNavigate } from "react-router-dom";
 import logger from "../system/logger";
 
-type RequestType = { type: "delete" | "patch", data: MinecraftProfile };
+type RequestType = { type: "patch", data: Partial<MinecraftProfile> };
+type RequestDelete = { type: "delete", data: { id: string; } }
 
-const handleMutate = async (ev: RequestType) => {
+const handleMutate = async (ev: RequestType | RequestDelete) => {
 
     if (ev.type === "patch") {
         await profiles.update({
@@ -46,9 +47,7 @@ export const useProfile = (id?: string) => {
             }
 
             await queryClient.cancelQueries([id, "profile"]);
-            queryClient.setQueryData<MinecraftProfile>([id, "profile"], (old) => {
-                return data;
-            })
+            queryClient.setQueryData<MinecraftProfile>([id, "profile"], (old) => data as MinecraftProfile);
         }
     });
 

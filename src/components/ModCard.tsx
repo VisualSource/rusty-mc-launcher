@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { IconTypes } from '@/data/mods';
 import IconLinks from './ModCardIcon';
 
@@ -15,8 +15,9 @@ type Props = {
 }
 
 const ModCard: React.FC<Props> = ({ id, name, description, img, links, supports = [] }) => {
+    const navigate = useNavigate();
     return (
-        <Link to={`/mod/${id}`} className="flex transition hover:shadow-xl bg-gray-800 shadow-gray-800/25">
+        <div onClick={() => navigate(`/mod/${id}`)} className="flex transition hover:shadow-xl bg-gray-800 shadow-gray-800/25 cursor-pointer">
             <div className="p-2 flex flex-col gap-2 text-lg">
                 <IconLinks links={links} />
             </div>
@@ -37,7 +38,7 @@ const ModCard: React.FC<Props> = ({ id, name, description, img, links, supports 
                     <button className="block bg-yellow-300 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-yellow-400">Install</button>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }
 

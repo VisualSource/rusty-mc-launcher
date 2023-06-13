@@ -2,7 +2,6 @@ use crate::utils;
 use log::{debug, warn};
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
-use std::os::windows::fs::symlink_dir;
 use std::{env::consts, path::PathBuf};
 use tokio::fs;
 use tokio::process::{Child, Command};

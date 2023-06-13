@@ -1,12 +1,12 @@
 use std::env::consts;
 use std::path::PathBuf;
 
-use log::error;
+use log::{error, info};
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use tokio::fs::{create_dir_all, remove_file, File};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::mpsc;
 
 use crate::errors::LauncherLibError;
@@ -145,7 +145,7 @@ pub mod fabric {
         emit!(
             channel,
             "end",
-            "{ \"key\":\"modloader\", msg: \"Fabric Installed.\" }"
+            "{ \"key\":\"modloader\", \"msg\": \"Fabric Installed.\" }"
         );
 
         Ok(())
@@ -218,6 +218,26 @@ pub async fn download_file(
     if let Some(p) = dir.parent() {
         if !p.exists() {
             create_dir_all(&p).await?;
+        }
+    }
+
+    if dir.exists() && dir.is_file() && sha1.is_some() {
+        let mut hasher = Sha1::new();
+        let mut file = File::open(&dir).await?;
+        let mut buffer = Vec::new();
+
+        file.read_to_end(&mut buffer).await?;
+        hasher.update(&buffer);
+
+        file.shutdown().await?;
+
+        let result = hex::encode(hasher.finalize());
+
+        if let Some(sha) = sha1 {
+            if &result == sha {
+                info!("SHA1 CHECKED FILE. {:#?}", dir);
+                return Ok(result);
+            }
         }
     }
 
