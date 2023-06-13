@@ -85,7 +85,7 @@ export const asLaunchConfig = async (user: ProfileFull | undefined, profile: Min
     }
 
     if (type === "forge") {
-        data.forge === loader;
+        data.forge = loader;
     }
 
     if (profile?.resolution) {
