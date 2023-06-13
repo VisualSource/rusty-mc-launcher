@@ -75,7 +75,7 @@ const ModPage: React.FC = () => {
 
     return (
         <main className="flex flex-col h-full overflow-hidden">
-            {isError ? (JSON.stringify(error)) : null}
+            {isError ? (<span>Failed to load mods</span>) : null}
             {isLoading ? (
                 <div className="h-full w-full flex flex-col items-center justify-center">
                     <Spinner />

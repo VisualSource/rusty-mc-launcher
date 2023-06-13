@@ -4,7 +4,7 @@ import useFormatSize from "@hook/useFormatSize";
 
 const DownloadsPage = () => {
     const size = useFormatSize();
-    const { queueCurrent, queueCompleted, queueNext, clearCompleted } = useDownload();
+    const { queueCurrent, queueErrored, queueCompleted, queueNext, clearCompleted } = useDownload();
 
     return (
         <div className="h-full divide-y">
@@ -49,14 +49,30 @@ const DownloadsPage = () => {
                         </SectionDivider>
                         <ul>
                             {queueCompleted.map((value, i) => (
-                                <li key={i}>
-                                    {value.type}
-                                    {value.ammount}
+                                <li key={i} className="p-2">
+                                    <div>{value.type === "mods" ? "Mod" : "Client"}</div>
                                 </li>
                             ))}
                         </ul>
                     </div>
                 ) : null}
+
+
+                {queueErrored.length ? (
+                    <div>
+                        <SectionDivider text="Completed" count={queueErrored.length}>
+                            <button onClick={() => clearCompleted()} className="inline-block rounded border border-indigo-600 bg-indigo-600 px-6 py-2 text-sm font-medium text-white focus:outline-none focus:ring active:text-indigo-500">Clear All</button>
+                        </SectionDivider>
+                        <ul>
+                            {queueErrored.map((value, i) => (
+                                <li key={i} className="p-2">
+                                    <div>{value.type === "mods" ? "Mod" : "Client"}</div>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : null}
+
             </div>
 
         </div>

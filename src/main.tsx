@@ -16,6 +16,7 @@ import router from '@/router';
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import ProfileSelector from "./components/dialogs/ProfileSelector";
+import ModListInstall from "./components/dialogs/ModListInstall";
 
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);

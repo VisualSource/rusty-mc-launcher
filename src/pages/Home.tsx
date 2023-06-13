@@ -1,6 +1,6 @@
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 import { Listbox, Transition } from '@headlessui/react';
-import { HiCheck, HiChevronDown } from "react-icons/hi";
+import { HiCheck, HiChevronDown, HiSelector } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { Fragment } from 'react';
 
@@ -13,12 +13,13 @@ import useUser from "@hook/useUser";
 import useDownload from "@hook/useDownload";
 import useNotification from "@hook/useNotifications";
 import logger from "@/lib/system/logger";
+import SelectBox from "@/components/SelectBox";
 
 const Home: React.FC = () => {
     const download = useDownload();
     const navigate = useNavigate();
     const { isLoading, user } = useUser();
-    const { selected, mutate } = useSelectedProfile();
+    const { selected: selectedProfile, mutate, isLoading: profileLoading } = useSelectedProfile();
     const notification = useNotification();
     const { profiles, isLoading: loadingProfiles } = useProfiles();
 
@@ -26,7 +27,7 @@ const Home: React.FC = () => {
         <div className="h-full">
             <AuthenticatedTemplate>
                 <div className="h-full flex flex-col justify-center">
-                    {(isLoading || loadingProfiles) ? (
+                    {(isLoading || profileLoading || loadingProfiles) ? (
                         <div className="flex justify-center items-center flex-col">
                             <div
                                 className="inline-block h-12 w-12 animate-pulse duration-[1s] rounded-full bg-current align-[-0.125em] opacity-0 bg-gray-100"
@@ -44,7 +45,7 @@ const Home: React.FC = () => {
                                 <button onClick={async () => {
                                     if ((profiles?.length ?? 0) > 0) {
                                         try {
-                                            const config = await asLaunchConfig(user, selected);
+                                            const config = await asLaunchConfig(user, selectedProfile);
 
                                             document.addEventListener("mcl::install_ready", async (ev) => {
                                                 if ((ev as CustomEvent<{ vaild: boolean }>).detail.vaild) {
@@ -72,46 +73,15 @@ const Home: React.FC = () => {
                                 }} type="button" className="inline-block rounded bg-indigo-600 px-8 py-3 text-sm font-medium text-white transition hover:scale-110 hover:shadow-xl focus:outline-none focus:ring active:bg-indigo-500">
                                     {(profiles?.length ?? 0) > 0 ? "Play" : "Create Profile"}
                                 </button>
-                                <Listbox value={selected} onChange={async (ev) => {
-                                    if (!ev) return;
-                                    mutate.mutate({ type: "set", data: ev.id });
-                                }}>
-                                    <div className="relative mt-2">
-                                        <Listbox.Button className="relative border-gray-700 w-full cursor-default rounded-lg bg-gray-800 py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
-                                            <span className="block truncate text-white">{selected?.name ?? "Select Profile"}</span>
-                                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                <HiChevronDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                                            </span>
-                                        </Listbox.Button>
-                                        <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                                            <Listbox.Options className="bg-gray-800 absolute mt-1 max-h-60 w-full overflow-auto rounded-md py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                                {(profiles?.length ?? 0) <= 0 ? (
-                                                    <Listbox.Option className="relative cursor-default select-none py-2 pl-10 pr-4 text-white" disabled value={{}}>
-                                                        <span className="block truncate font-normal">
-                                                            No Profiles
-                                                        </span>
-                                                    </Listbox.Option>
-                                                ) : (profiles ?? []).map(value => (
-                                                    <Listbox.Option value={value} key={value.id} className={({ active }) =>
-                                                        `text-white relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-600' : ''
-                                                        }`
-                                                    }>
-                                                        {({ selected }) => (
-                                                            <>
-                                                                <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{value.name}</span>
-                                                                {selected ? (
-                                                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white">
-                                                                        <HiCheck className="h-5 w-5" aria-hidden="true" />
-                                                                    </span>
-                                                                ) : null}
-                                                            </>
-                                                        )}
-                                                    </Listbox.Option>
-                                                ))}
-                                            </Listbox.Options>
-                                        </Transition>
-                                    </div>
-                                </Listbox>
+                                <div className="mt-2">
+                                    <SelectBox
+                                        values={profiles!}
+                                        value={selectedProfile ?? profiles?.at(0)}
+                                        onChange={(ev) => mutate.mutate({ type: "set", data: ev as string })}
+                                        idKey="id"
+                                        nameKey="name"
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}

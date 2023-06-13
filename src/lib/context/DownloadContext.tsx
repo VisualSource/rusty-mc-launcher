@@ -58,6 +58,7 @@ type DownloadClient = {
     queueCurrent: QueueItem | undefined;
     queueNext: QueueItem[];
     queueCompleted: QueueItem[],
+    queueErrored: QueueItem[],
     clearCompleted: () => void,
     install: (version: string, game_dir?: string, forceDownload?: boolean) => Promise<void>,
     installMods: (profileId: string, type: "github" | "modrinth", modIds: string[]) => Promise<void>
@@ -99,6 +100,8 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
             const metadata = job.detail.result[0] as QueueItem;
 
             setCurrentItem(undefined);
+
+            queues.completed.queue.enqueue(metadata);
 
             notification.notify({
                 type: "success",
@@ -177,8 +180,9 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
         <DownloadContext.Provider value={{
             queueCurrent: currentItem,
             queueCompleted,
+            queueErrored,
             queueNext,
-            clearCompleted() { },
+            clearCompleted() { queues.completed.queue.clear() },
             async install(version, game_dir, forceDownload) {
                 try {
                     const isInstalled = await check_install(version, game_dir);

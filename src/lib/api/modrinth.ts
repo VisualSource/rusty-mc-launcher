@@ -1,8 +1,11 @@
+import { getVersion } from '@tauri-apps/api/app';
 type Version = {
     id: string;
     name: string;
     project_id: string;
     version_number: string;
+    game_versions: string[];
+    loaders: string[];
     files: {
         primary: boolean;
         hashes: {
@@ -29,12 +32,22 @@ export type FileDownload = {
 }
 
 const modrinth = {
+    GetUserAgent: async () => {
+        const version = await getVersion();
+        return `VisualSource/rusty-mc-launcher/${version} collin_blosser@yahoo.com`
+    },
     GetVersionFiles: async (id: string, loader?: string, game?: string): Promise<FileDownload[]> => {
         const params = new URLSearchParams();
         if (loader) params.set("loaders", `["${loader}"]`);
         if (game) params.set("game_versions", `["${game}"]`);
 
-        const response = await fetch(`https://api.modrinth.com/v2/project/${id}/version?${params.toString()}`);
+        const userAgent = await modrinth.GetUserAgent();
+
+        const response = await fetch(`https://api.modrinth.com/v2/project/${id}/version?${params.toString()}`, {
+            headers: {
+                "User-Agent": userAgent
+            }
+        });
 
         if (!response.ok) throw new Error("Failed to fetch mod data", { cause: "FAILED_TO_REQUEST_DATA" });
 
@@ -66,6 +79,26 @@ const modrinth = {
         }));
 
         return [...files, ...deps.flat(2).filter(Boolean)];
+    },
+    GetProjectData: async (id: string) => {
+        const userAgent = await modrinth.GetUserAgent();
+
+        const response = await fetch(`https://api.modrinth.com/v2/project/${id}`, {
+            headers: {
+                "User-Agent": userAgent
+            }
+        });
+        if (!response.ok) throw new Error("Failed to fetch mod data", { cause: "FAILED_TO_REQUEST_DATA" });
+        const content = await response.json() as {
+            game_versions: string[];
+            loaders: string[]
+        }
+
+        return {
+            id,
+            game_versions: content.game_versions,
+            loaders: content.loaders
+        }
     }
 }
 
