@@ -24,6 +24,13 @@
       "path": {
         "all": true
       },
+      "shell": {
+        "all": false,
+        "execute": false,
+        "open": true,
+        "scope": [],
+        "sidecar": false
+      },
       "http": {
         "all": false,
         "request": true,

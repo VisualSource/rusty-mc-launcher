@@ -1,7 +1,8 @@
 use crate::utils;
-use log::{debug, warn};
+use log::{debug, error, warn};
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
+use std::os::windows;
 use std::{env::consts, path::PathBuf};
 use tokio::fs;
 use tokio::process::{Child, Command};
@@ -331,21 +332,34 @@ impl ClientBuilder {
                 let mods_folder = game_dir.join("mods");
 
                 if !mcl_mods_folder.exists() {
-                    fs::create_dir_all(mcl_mods_folder.clone()).await?;
+                    debug!("Mods: creating mods folder for profile");
+                    fs::create_dir_all(&mcl_mods_folder).await?;
+                }
+
+                if mods_folder.exists() && mods_folder.is_symlink() {
+                    debug!("Mods: Droping symlink folder.");
+                    fs::remove_dir(&mods_folder).await?;
                 }
 
                 if consts::OS == "windows" {
-                    tokio::process::Command::new("cmd")
-                        .arg("/C")
-                        .arg("mklink")
-                        .arg("/J")
-                        .arg(mods_folder)
-                        .arg(mcl_mods_folder)
-                        .output()
-                        .await?;
+                    // windows 10 does not allow creation of symlinks without admin privileges
+                    // to we have a we can use junctions to get around that for now,
+                    // but windows 11 should allow for this, so try creating a sym link the
+                    // right way then fallback to junctions.
+                    // @see https://stackoverflow.com/questions/64991523/why-are-administrator-privileges-required-to-create-a-symlink-on-windows
+                    if let Err(err) = windows::fs::symlink_dir(&mcl_mods_folder, &mods_folder) {
+                        error!("Symlink Error: {}", err.to_string());
+                        warn!("Unable to create symlink thought method, using fallback.");
 
-                    //std::fs::hard_link(mcl_mods_folder, mods_folder)?;
-                    //symlink_dir(mcl_mods_folder, mods_folder)?;
+                        tokio::process::Command::new("cmd")
+                            .arg("/C")
+                            .arg("mklink")
+                            .arg("/J")
+                            .arg(mods_folder)
+                            .arg(mcl_mods_folder)
+                            .output()
+                            .await?;
+                    }
                 } else {
                     warn!("Did not create sys link");
                 }

@@ -82,7 +82,7 @@ const LibraryCard = ({ profile }: { profile: MinecraftProfile }) => {
                         Edit
                     </Link>
                     <button title={`Delete ${profile.name}`} disabled={isLoading} className="block bg-red-400 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-red-500" onClick={async () => {
-                        const canDelete = await confirm(`Are you sure you want to delete profile (${profile.name})`);
+                        const canDelete = await confirm(`Are you sure you want to delete profile (${profile.name}). If this is a modded profile all mods on this profile will be deleted as well.`);
                         if (canDelete) mutate.mutate({ type: "delete", data: profile });
                     }}>
                         <HiTrash className="h-4 w-4 text-gray-900" />

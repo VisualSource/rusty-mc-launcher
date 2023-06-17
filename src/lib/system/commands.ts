@@ -54,6 +54,6 @@ export const check_install = async (version: string, game_dir?: string) => {
 
 export const play = async (settings: LaunchConfig) => invoke("play", { settings });
 
-export const stop = async () => {
-    await invoke("stop");
-}
+export const stop = async () => invoke("stop");
+
+export const deleteProfile = async (id: string) => { };

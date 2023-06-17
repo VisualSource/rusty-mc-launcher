@@ -2,6 +2,7 @@ import SelectBox from "@/components/SelectBox";
 import Spinner from "@/components/Spinner";
 import useMinecraftVersions, { LoaderType } from "@/lib/hooks/useMinecraftVersion";
 import type { MinecraftProfile } from "@/lib/models/profiles";
+import profiles from "@/lib/models/profiles";
 import { getLoaderType } from "@/utils/versionUtils";
 import { useProfile } from "@lib/hooks/useProfile";
 import { useState } from "react";
@@ -11,26 +12,26 @@ import { useParams } from "react-router-dom";
 
 const ProfilePage: React.FC = () => {
     const { id } = useParams();
-    const { profile, isError, isLoading: profileLoading, mutate } = useProfile(id);
-    const [loaderType, setLoaderType] = useState<LoaderType>(getLoaderType(profile?.lastVersionId ?? "").type ?? "vanilla");
-    const { data: minecraftVersions, isLoading: minecraftVersionsLoading, } = useMinecraftVersions(loaderType);
+    const { mutate } = useProfile(id, false);
+    //const [loaderType, setLoaderType] = useState<LoaderType>(getLoaderType(profile?.lastVersionId ?? "").type ?? "vanilla");
+    //const { data: minecraftVersions, isLoading: minecraftVersionsLoading, } = useMinecraftVersions(loaderType);
 
-    const { handleSubmit, register, formState: { isLoading } } = useForm<MinecraftProfile>({
-        defaultValues: () => {
-            return new Promise((ok) => {
-                let inter: NodeJS.Timer;
-                inter = setInterval(() => {
-                    if (!profileLoading) {
-                        clearInterval(inter)
-                        ok(profile as MinecraftProfile);
-                    }
-                }, 1000);
+    const { handleSubmit, register, watch, formState: { isLoading } } = useForm<MinecraftProfile>({
+        defaultValues: async () => {
+            const profile = await profiles.findOne({
+                where: [{ id }]
             });
+
+            if (!profile) throw new Error("Failed to load profile");
+
+            return profile;
         }
     });
 
+    const mods = watch("mods");
+
     const onSubmit = async (state: MinecraftProfile) => {
-        mutate.mutateAsync({ type: "patch", data: state })
+        //mutate.mutateAsync({ type: "patch", data: state })
     }
 
     return (
@@ -40,9 +41,7 @@ const ProfilePage: React.FC = () => {
                     <Spinner />
                     <span className="mt-2">Loading Profile</span>
                 </div>
-            ) : null}
-            {isError ? (<div>Failed to load profile!</div>) : null}
-            {profile ? (
+            ) : (
                 <form className="px-4 relative flex-1 flex flex-col h-full" onSubmit={handleSubmit(onSubmit)}>
                     <h1 className="font-bold text-2xl my-4">General Settings</h1>
                     <div className="mt-b">
@@ -62,7 +61,7 @@ const ProfilePage: React.FC = () => {
                     <details>
                         <summary className="font-bold text-2xl my-4">Mods</summary>
                         <ul>
-                            {(profile.mods ?? []).map((mod, i) => (
+                            {(mods ?? []).map((mod, i) => (
                                 <li key={i} className="flex overflow-hidden py-4 gap-2 items-center">
                                     <div className="w-full">
                                         <h4 className="font-bold">{mod.name}</h4>
@@ -78,7 +77,7 @@ const ProfilePage: React.FC = () => {
                         </button>
                     </div>
                 </form>
-            ) : null}
+            )}
         </main>
     );
 }

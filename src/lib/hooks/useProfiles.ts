@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import profiles, { type MinecraftProfile } from "@lib/models/profiles";
 import logger from "@system/logger";
+import { deleteProfile } from "../system/commands";
 
 type RequestType = { type: "delete" | "patch" | "create", data: MinecraftProfile };
 
@@ -44,25 +45,34 @@ export const useProfiles = () => {
     const mutate = useMutation(mutateProfile, {
         async onSuccess(data, varablies) {
             await queryClient.cancelQueries([KEY]);
-            queryClient.setQueryData<MinecraftProfile[]>([KEY], (old) => {
-                switch (varablies.type) {
-                    case "create": {
+            if (!data) return;
+            switch (varablies.type) {
+                case "create": {
+                    queryClient.setQueryData<MinecraftProfile[]>([KEY], (old) => {
                         if (!data || !old) return old;
                         return [data, ...old];
-                    }
-                    case "delete": {
+                    });
+                    break;
+                }
+                case "delete": {
+                    await deleteProfile(data.id);
+                    queryClient.setQueryData<MinecraftProfile[]>([KEY], (old) => {
                         if (!old) return old;
                         return old.filter(value => value.id !== varablies.data.id);
-                    }
-                    case "patch": {
-                        if (!data || !old) return old;
+                    });
+                    break;
+                }
+                case "patch": {
+                    queryClient.setQueryData<MinecraftProfile[]>([KEY], (old) => {
+                        if (!old) return old;
                         const og = old.filter(value => value.id !== varablies.data.id);
                         return [data, ...og];
-                    }
-                    default:
-                        return old;
+                    });
+                    break;
                 }
-            });
+                default:
+                    break;
+            }
         }
     });
 

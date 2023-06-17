@@ -198,7 +198,11 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
 
         if (!this.init) {
             this.init = true;
-            await this.createTable(db);
+            const fields = Object.entries(this.table).map(([key, type]) => `${key} ${type.toSQL()}`).join(", ");
+            const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}) ;`;
+            logger.debug(query);
+            await db.execute(query);
+
         } else {
             if (!this.updated) {
                 const currentColumns = await db.select(`PRAGMA table_info(${this.name})`) as { cid: number; name: string; }[];
@@ -227,14 +231,6 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             }
         }
         return db;
-    }
-    public async createTable(db: SQLite) {
-        const fields = Object.entries(this.table).map(([key, type]) => `${key} ${type.toSQL()}`).join(", ");
-        const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}) ;`;
-
-        logger.debug(query);
-
-        return db.execute(query);
     }
     private parseWhere(where: WhereStatment<T>, startIndex: number = 0) {
         const { values, query } = where.reduce((acc, curr, index) => {
@@ -298,7 +294,9 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             return result.map(value => this.parse(value));
         } catch (error) {
             if (error instanceof DBError) throw error;
-            throw new DBError((error as Error)?.message ?? "Unkown Error");
+            const dbError = new DBError((error as Error)?.message ?? "Unkown Error");
+            dbError.stack = (error as Error).stack;
+            throw dbError;
         } finally {
             await db.close();
         }

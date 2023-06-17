@@ -25,19 +25,19 @@ const handleMutate = async (ev: RequestType | RequestDelete) => {
 
 }
 
-export const useProfile = (id?: string) => {
+export const useProfile = (id?: string, load: boolean = true) => {
     const navigate = useNavigate()
     const queryClient = useQueryClient();
     const { data, isError, isLoading, error } = useQuery([id, "profile"], async () => {
         logger.info(`Loading Profile ${id}`);
-        const profile = await profiles.find({
+        const profile = await profiles.findOne({
             where: [{ id }]
         });
         logger.debug("Profile", profile);
-        if (!profile || !profile[0]) throw new Error("Failed to get minecraft profile");
+        if (!profile) throw new Error("Failed to get minecraft profile");
 
-        return profile.at(0);
-    }, { enabled: !!id });
+        return profile;
+    }, { enabled: !!id && load });
 
     const mutate = useMutation(handleMutate, {
         async onSuccess(data, varablies) {

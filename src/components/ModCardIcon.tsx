@@ -19,7 +19,7 @@ const IconLinks: React.FC<Props> = ({ links }) => {
             {links.map((link, i) => {
                 const Icon = icons[link.type].icon;
                 return (
-                    <a className="hover:text-gray-50 shadow" rel="noopener noreferrer nofollow" title={icons[link.type].title} key={i} href={link.href} target="_blank">
+                    <a className="hover:text-gray-50 shadow" title={icons[link.type].title} key={i} href={link.href} target="_blank">
                         <Icon />
                     </a>
                 )

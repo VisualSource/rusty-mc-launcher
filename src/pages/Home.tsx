@@ -1,19 +1,25 @@
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
-import { Listbox, Transition } from '@headlessui/react';
-import { HiCheck, HiChevronDown, HiSelector } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
-import { Fragment } from 'react';
 
-import { play } from "@system/commands";
 import { useSelectedProfile } from "@hook/useSelectedProfile";
+import type { MinecraftProfile } from "@/lib/models/profiles";
 import { asLaunchConfig } from "@system/launch_config";
-
-import { useProfiles } from "@hook/useProfiles";
-import useUser from "@hook/useUser";
-import useDownload from "@hook/useDownload";
 import useNotification from "@hook/useNotifications";
-import logger from "@/lib/system/logger";
+import { useProfiles } from "@hook/useProfiles";
 import SelectBox from "@/components/SelectBox";
+import useDownload from "@hook/useDownload";
+import logger from "@/lib/system/logger";
+import { play } from "@system/commands";
+import useUser from "@hook/useUser";
+
+const SelectProfileItem: React.FC<{ selected: boolean, value: MinecraftProfile }> = ({ selected, value }) => {
+    return (
+        <div className={`flex gap-2 items-center truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+            <img className="h-6 w-6 rounded-full aspect-square shadow" src={value.icon ?? "/images/Vanilla.webp"} alt="profile icon" />
+            <span>{value.name}</span>
+        </div>
+    );
+}
 
 const Home: React.FC = () => {
     const download = useDownload();
@@ -80,6 +86,7 @@ const Home: React.FC = () => {
                                         onChange={(ev) => mutate.mutate({ type: "set", data: ev as string })}
                                         idKey="id"
                                         nameKey="name"
+                                        CustomElement={SelectProfileItem}
                                     />
                                 </div>
                             </div>
