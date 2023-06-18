@@ -1,7 +1,7 @@
 {
   "name": "mcl",
   "private": true,
-  "version": "0.2.9",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "tauri": "tauri",
@@ -31,6 +31,8 @@
     "react-markdown": "^8.0.7",
     "react-router-dom": "^6.13.0",
     "react-toastify": "^9.1.3",
+    "remark-gfm": "^3.0.1",
+    "semver": "^7.5.2",
     "tauri-plugin-sqlite-api": "github:lzdyes/tauri-plugin-sqlite#v0.1.1",
     "use-debounce": "^9.0.4",
     "zod": "^3.21.4",
@@ -47,6 +49,7 @@
     "@types/node": "^20.3.1",
     "@types/react": "^18.2.12",
     "@types/react-dom": "^18.2.5",
+    "@types/semver": "^7.5.0",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",

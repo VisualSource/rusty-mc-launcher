@@ -16,7 +16,7 @@ const ProfilePage: React.FC = () => {
     //const [loaderType, setLoaderType] = useState<LoaderType>(getLoaderType(profile?.lastVersionId ?? "").type ?? "vanilla");
     //const { data: minecraftVersions, isLoading: minecraftVersionsLoading, } = useMinecraftVersions(loaderType);
 
-    const { handleSubmit, register, watch, formState: { isLoading } } = useForm<MinecraftProfile>({
+    const { handleSubmit, register, watch, formState: { defaultValues, isLoading } } = useForm<MinecraftProfile>({
         defaultValues: async () => {
             const profile = await profiles.findOne({
                 where: [{ id }]
@@ -31,7 +31,7 @@ const ProfilePage: React.FC = () => {
     const mods = watch("mods");
 
     const onSubmit = async (state: MinecraftProfile) => {
-        //mutate.mutateAsync({ type: "patch", data: state })
+        await mutate.mutateAsync({ type: "patch", data: state })
     }
 
     return (
@@ -59,7 +59,12 @@ const ProfilePage: React.FC = () => {
                     </div>
 
                     <details>
-                        <summary className="font-bold text-2xl my-4">Mods</summary>
+                        <summary className="flex justify-between">
+                            <span className="font-bold text-2xl my-4">Mods</span>
+                            <button onClick={() => {
+                                mutate.mutate({ type: "patch", data: { mods: [] } });
+                            }}>Vaildate</button>
+                        </summary>
                         <ul>
                             {(mods ?? []).map((mod, i) => (
                                 <li key={i} className="flex overflow-hidden py-4 gap-2 items-center">
@@ -71,6 +76,16 @@ const ProfilePage: React.FC = () => {
                             ))}
                         </ul>
                     </details>
+
+                    <details className="font-bold text-2xl my-4">
+                        <summary>JSON</summary>
+                        <pre>
+                            <code>
+                                {JSON.stringify(defaultValues, undefined, 2)}
+                            </code>
+                        </pre>
+                    </details>
+
                     <div className="absolute bottom-4 right-4">
                         <button type="submit" title="Save" className="z-30 shadow-2xl text-2xl h-12 w-12 rounded-full hover:bg-green-400 bg-green-500 flex items-center justify-center">
                             <HiSave />

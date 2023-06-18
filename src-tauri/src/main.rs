@@ -19,7 +19,8 @@ fn main() {
             commands::install,
             commands::check_install,
             commands::start_server,
-            commands::install_mods
+            commands::install_mods,
+            commands::install_pack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

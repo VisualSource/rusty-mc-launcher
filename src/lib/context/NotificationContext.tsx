@@ -65,7 +65,7 @@ const NotificationProvider: React.FC<React.PropsWithChildren> = ({ children }) =
                 if (openToast) {
                     switch (msg.type) {
                         case "success": {
-                            toast.success(msg.title, {
+                            toast.success(msg.body, {
                                 position: "bottom-right",
                                 autoClose: TOAST_TIMEOUT,
                                 hideProgressBar: false,
@@ -77,7 +77,7 @@ const NotificationProvider: React.FC<React.PropsWithChildren> = ({ children }) =
                             break;
                         }
                         case "error": {
-                            toast.error(msg.title, {
+                            toast.error(msg.body, {
                                 position: "bottom-right",
                                 autoClose: TOAST_TIMEOUT,
                                 hideProgressBar: false,
@@ -89,7 +89,7 @@ const NotificationProvider: React.FC<React.PropsWithChildren> = ({ children }) =
                             break;
                         }
                         case "warn": {
-                            toast.warn(msg.title, {
+                            toast.warn(msg.body, {
                                 position: "bottom-right",
                                 autoClose: TOAST_TIMEOUT,
                                 hideProgressBar: false,

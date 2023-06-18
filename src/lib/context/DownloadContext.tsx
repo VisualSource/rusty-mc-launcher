@@ -1,9 +1,9 @@
-import { type UnlistenFn, listen, type EventCallback } from '@tauri-apps/api/event';
+import { type UnlistenFn, listen } from '@tauri-apps/api/event';
 import Queue, { QueueEvent, type QueueWorker } from 'queue';
-import { createContext, useEffect, useState, useSyncExternalStore } from 'react';
-import update from 'immutability-helper';
+import { createContext, useEffect, useState, } from 'react';
 
-import { check_install, install, installMods } from '@system/commands';
+
+import { check_install, install, installMods, installPack } from '@system/commands';
 
 import modrinth, { FileDownload } from '../api/modrinth';
 import { getLoaderType } from '@/utils/versionUtils';
@@ -12,7 +12,6 @@ import profiles from '../models/profiles';
 import logger from '@system/logger';
 import { queueFactory } from '@/utils/queue';
 import useExternalQueue from '../hooks/useExternalQueue';
-import { wait } from '@/utils/timer';
 
 type ModsMetadata = {
     type: "mods",
@@ -26,16 +25,24 @@ type ClientMetadata = {
     version: string;
 };
 
+type PackMetadata = {
+    type: "pack",
+    game_dir?: string | undefined,
+    file: FileDownload,
+    requiredMods: boolean,
+    packType: "resource" | "shader"
+}
+
 type QueueItem = {
     ammount: number;
     ammount_current: number;
     size: number;
     size_current: number;
-    type: "client" | "mods";
+    type: "client" | "mods" | "pack";
     msg: string;
     download: DownloadEvent | null;
     key: `${string}-${string}-${string}-${string}-${string}`;
-    metadata: ModsMetadata | ClientMetadata
+    metadata: ModsMetadata | ClientMetadata | PackMetadata
 }
 
 type FetchEvent = {
@@ -61,7 +68,8 @@ type DownloadClient = {
     queueErrored: QueueItem[],
     clearCompleted: () => void,
     install: (version: string, game_dir?: string, forceDownload?: boolean) => Promise<void>,
-    installMods: (profileId: string, type: "github" | "modrinth", modIds: string[]) => Promise<void>
+    installMods: (profileId: string, modIds: string[]) => Promise<void>,
+    installPack: (packId: string, type: "resource" | "shader") => Promise<void>
 }
 
 class QueueError extends Error {
@@ -103,10 +111,12 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
             queues.completed.queue.enqueue(metadata);
 
+            const message = metadata.type === "client" ? "Minecraft has been installed." : metadata.type === "pack" ? "Minecraft pack has been installed." : "Minecraft mods have been downloaded."
+
             notification.notify({
                 type: "success",
                 title: "Minecraft Launcher",
-                body: metadata.type === "client" ? "Minecraft has been installed." : "Minecraft mods have been downloaded."
+                body: message
             }, true).catch(e => logger.error(e));
         }
         const errorHandler = (job: QueueEvent<"error", { error: QueueError; job: QueueWorker; }>) => {
@@ -183,6 +193,56 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
             queueErrored,
             queueNext,
             clearCompleted() { queues.completed.queue.clear() },
+            async installPack(packId, type) {
+                try {
+                    const file = await modrinth.GetPackFile(packId);
+                    const id = crypto.randomUUID();
+
+                    queues.next.queue.enqueue({
+                        ammount: 1,
+                        ammount_current: 0,
+                        download: null,
+                        key: id,
+                        msg: `Install ${type} pack`,
+                        size: file.download.size,
+                        size_current: 0,
+                        type: "pack",
+                        metadata: {
+                            type: "pack",
+                            file,
+                            packType: type,
+                            requiredMods: false
+                        }
+                    });
+
+                    install_queue.push(async (cb) => {
+                        if (!cb) throw new Error("Callback handler not avaliable", { cause: "NO_CALLBACK_HANDLER" });
+
+                        const data = queues.next.queue.dequeueItem(id);
+
+                        try {
+                            if (!data) throw new Error("Failed to get queue data", { cause: "MISSING_QUEUE_METADATA" });
+                            if (data.metadata.type !== "pack") throw new Error("Unable to process, non pack metadata");
+
+                            setCurrentItem(data);
+
+                            await installPack(data.metadata.file, data.metadata.packType.replace(/^\w/, c => c.toUpperCase()) as "Resource" | "Shader", data.metadata.game_dir);
+
+                            cb(undefined, data);
+                        } catch (error) {
+                            logger.error(error);
+                            cb(new QueueError(error as Error, data));
+                        }
+                    });
+
+                } catch (error) {
+                    logger.error(error);
+                    notification.toast.alert({
+                        title: (error as Error)?.message ?? `Failed to download ${type} pack.`,
+                        type: "error",
+                    });
+                }
+            },
             async install(version, game_dir, forceDownload) {
                 try {
                     const isInstalled = await check_install(version, game_dir);
@@ -241,7 +301,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                     document.dispatchEvent(new CustomEvent("mcl::install_ready", { detail: { vaild: false } }));
                 }
             },
-            async installMods(profileId, type, modIds) {
+            async installMods(profileId, modIds) {
                 try {
                     const selectedProfile = await profiles.findOne({ where: [{ id: profileId }] });
                     if (!selectedProfile) throw new Error("Failed to find profile", { cause: "FAILED_FIND_PROFILE" });
@@ -249,15 +309,13 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                     const loader = getLoaderType(selectedProfile.lastVersionId);
                     if (loader.type === "vanilla") throw new Error("Unable to install mod on given profile.", { cause: "NONMODDED_PROFILE" });
 
-                    if (type === "github") throw new Error("Unable to process Github providers at this time", { cause: "GITHUB_DOWNLOAD_PROVIDER" });
-
-                    const modList = await Promise.all(modIds.map((mod) => modrinth.GetVersionFiles(mod, loader.loader, loader.game)));
+                    const modList = await Promise.all(modIds.map((mod) => modrinth.GetVersionFiles(mod, loader.type, loader.game)));
 
                     const files = modList.flat(2);
-                    // remove dups
-                    const ids = new Set([...files.map(value => value.id), ...(selectedProfile.mods ?? []).map(value => value.id)]);
 
-                    const newlyAddedMods = files.filter(item => !ids.has(item.id));
+                    const installedModsIds = (selectedProfile.mods ?? []).map(value => value.id);
+
+                    const newlyAddedMods = files.filter(item => !installedModsIds.includes(item.id));
 
                     // there are not new mods to download!
                     if (!newlyAddedMods.length) {
@@ -315,7 +373,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                     notification.toast.alert({
                         title: (error as Error)?.message ?? "Failed to download mods.",
                         type: "error",
-                        body: "Failed to install mods"
+                        body: (error as Error)?.message ?? "Failed to download mods."
                     });
                 }
             },

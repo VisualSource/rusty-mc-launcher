@@ -6,6 +6,7 @@ pub mod installer;
 mod manifest;
 mod metadata;
 mod mods;
+pub mod packs;
 mod runtime;
 mod utils;
 

@@ -1,6 +1,7 @@
 import { FaExclamation } from "react-icons/fa";
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useDebounce } from 'use-debounce';
+import semver from 'semver';
 
 import { useProfiles } from "@/lib/hooks/useProfiles";
 import Spinner from "../Spinner";
@@ -9,17 +10,34 @@ import { getLoaderType } from "@/utils/versionUtils";
 const ProfileSelector = () => {
     const [query, setQuery] = useState<string>("");
     const [value] = useDebounce(query, 500);
-    const [config, setConfig] = useState<{ game?: string | undefined, loader?: string[] | undefined }>({});
+    const [config, setConfig] = useState<{ games?: string[] | undefined, loaders?: string[] | undefined }>({});
     const { profiles, isLoading, isError } = useProfiles();
     const ref = useRef<HTMLDialogElement>(null);
 
     const data = useMemo(() => {
-        const loaders = config.loader;
+        const loaders = config.loaders;
         if (!profiles || !loaders) return profiles;
 
         return profiles.filter((item) => {
             const { type, game } = getLoaderType(item.lastVersionId);
-            return loaders.includes(type);
+
+            const version = semver.coerce(game);
+
+            let gameAllowed = true;
+
+            if (config.games) {
+                gameAllowed = config.games.some(value => {
+                    if (!version) return false;
+                    return semver.satisfies(version, value);
+                });
+            }
+
+            let loaderAllowed = true;
+            if (config.loaders) {
+                loaderAllowed = loaders.includes(type);
+            }
+
+            return gameAllowed && loaderAllowed;
         });
     }, [profiles, config]);
 
@@ -27,20 +45,20 @@ const ProfileSelector = () => {
 
     useEffect(() => {
         const handle = (ev: Event) => {
-            setConfig((ev as CustomEvent<{ game?: string; loader?: string[] }>).detail ?? {});
+            setConfig((ev as CustomEvent<{ games?: string[]; loaders?: string[] }>).detail ?? {});
             ref.current?.showModal()
         }
 
-        document.addEventListener("profile_select", handle);
+        document.addEventListener("mcl::open::profile-select", handle);
 
         if (ref.current) {
             ref.current.addEventListener("close", (ev) => {
-                document.dispatchEvent(new CustomEvent("profile_selected", { detail: ref.current?.returnValue }));
+                document.dispatchEvent(new CustomEvent("mcl::done::profile-select", { detail: ref.current?.returnValue }));
             });
         }
 
         return () => {
-            document.removeEventListener("profile_select", handle);
+            document.removeEventListener("mcl::open::profile-select", handle);
         }
     }, []);
 

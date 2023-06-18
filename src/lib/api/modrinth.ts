@@ -1,5 +1,6 @@
-import { parseMutationArgs } from '@tanstack/react-query';
+import semver from 'semver';
 import { getVersion } from '@tauri-apps/api/app';
+
 type Version = {
     id: string;
     name: string;
@@ -12,10 +13,13 @@ type Version = {
         hashes: {
             sha1: string;
         }
+        filename: string;
         url: string;
         size: number;
+        file_type: "required-resource-pack" | "optional-resource-pack" | null
     }[],
     dependencies: {
+        version_id: string;
         project_id: string;
         dependency_type: "required"
     }[]
@@ -122,16 +126,17 @@ type ModrinthApiSearchResponse = {
 
 const modrinth = {
     Search: async ({ query, offset = 0, facets = [], index = "relevance" }: ModrinthSearchProps) => {
-        const params = new URLSearchParams();
 
-        if (query) params.set(query, encodeURIComponent(query));
-        if (offset) params.set("offset", offset.toString());
-        if (facets.length > 0) params.set("facets", JSON.stringify(facets));
-        params.set("index", index);
+        const urlParams: string[] = [];
+
+        if (query) urlParams.push(`query=${query}`);
+        if (offset) urlParams.push(`offset=${offset.toString()}`);
+        if (facets.length > 0) urlParams.push(`facets=${JSON.stringify(facets)}`);
+        urlParams.push(`index=${index}`);
 
         const userAgent = await modrinth.GetUserAgent();
 
-        const response = await fetch(`https://api.modrinth.com/v2/search?${params.toString()}`, {
+        const response = await fetch(`https://api.modrinth.com/v2/search?${urlParams.join("&")}`, {
             headers: {
                 "User-Agent": userAgent
             }
@@ -148,26 +153,57 @@ const modrinth = {
         const version = await getVersion();
         return `VisualSource/rusty-mc-launcher/${version} collin_blosser@yahoo.com`
     },
-    GetVersionFiles: async (id: string, loader?: string, game?: string): Promise<FileDownload[]> => {
-        const params = new URLSearchParams();
-        if (loader) params.set("loaders", `["${loader}"]`);
-        if (game) params.set("game_versions", `["${game}"]`);
+    GetPackFile: async (packId: string): Promise<FileDownload> => {
 
-        const userAgent = await modrinth.GetUserAgent();
+        const response = await fetch(`https://api.modrinth.com/v2/project/${packId}/version`);
+        if (!response.ok) throw new Error("Failed to fetch mod data", { cause: "FAILED_TO_REQUEST_DATA" });
 
-        const response = await fetch(`https://api.modrinth.com/v2/project/${id}/version?${params.toString()}`, {
-            headers: {
-                "User-Agent": userAgent
-            }
-        });
+        const content = await response.json() as Version[];
+
+        const version = content.at(0);
+
+        if (!version) throw new Error("Failed to find version for wanted version", { cause: "NO_VAILD_VERSIONS" });
+
+        const primaryFile = version.files.find(value => value.primary);
+
+        if (!primaryFile) throw new Error("Failed to find version primary version", { cause: "NO_PRIMARY_VERSION" });
+
+        const file: FileDownload = {
+            download: {
+                hash: primaryFile.hashes.sha1,
+                size: primaryFile.size,
+                url: primaryFile.url
+            },
+            id: version.id,
+            name: primaryFile.filename,
+            version: version.version_number
+        }
+
+        return file;
+    },
+    GetVersionFiles: async (id: string, loader: string, game: string, fromVersion?: boolean): Promise<FileDownload[]> => {
+        if (!id) throw new Error("Invald mod id");
+
+        const wantedVersion = semver.coerce(game);
+        if (!wantedVersion) throw new Error("Failed to parse game version.");
+
+        const response = await fetch(fromVersion ? `https://api.modrinth.com/v2/version/${id}` : `https://api.modrinth.com/v2/project/${id}/version?loaders=["${loader}"]&game_versions=["${game}"]`);
 
         if (!response.ok) throw new Error("Failed to fetch mod data", { cause: "FAILED_TO_REQUEST_DATA" });
 
         const content = await response.json() as Version[];
 
-        const first = content.at(0);
+        const first = Array.isArray(content) ? content.find(version => {
+            const allowdVersions = version.game_versions.some(game_version => {
+                const paredVersion = semver.coerce(game_version);
+                if (!paredVersion) return false;
+                return paredVersion.compare(wantedVersion) === 0;
+            });
 
-        if (!first) throw new Error("No version avaliabe for this wanted version.", { cause: "NO_VAILD_VERSIONS" })
+            return allowdVersions && version.loaders.includes(loader);
+        }) : content as Version;
+
+        if (!first) throw new Error("Failed to find version for wanted version", { cause: "NO_VAILD_VERSIONS" })
 
         const file = first?.files.find(value => value.primary);
 
@@ -187,7 +223,7 @@ const modrinth = {
         ];
 
         const deps = await Promise.all(first.dependencies.map(async (item) => {
-            return modrinth.GetVersionFiles(item.project_id, loader, game);
+            return modrinth.GetVersionFiles(item.project_id ?? item.version_id, loader, game, item.project_id == null);
         }));
 
         return [...files, ...deps.flat(2).filter(Boolean)];
