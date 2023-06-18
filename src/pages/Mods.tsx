@@ -5,21 +5,21 @@ import { mods, modsList } from "@/data/mods";
 import { Listbox, Transition } from "@headlessui/react";
 import { HiCheck, HiSelector } from "react-icons/hi";
 import ModListCard from "@/components/ModListCard";
+import { useQuery } from "@tanstack/react-query";
+import modrinth from "@/lib/api/modrinth";
+import Spinner from "@/components/Spinner";
 
 const options = ["mods"] as const;
 
 const Mods: React.FC = () => {
     const [type, setType] = useState(options[0]);
     const [search, setSearch] = useState<string>("");
+    const [offset, setOffset] = useState(0);
     const [query] = useDebounce(search, 500);
-
-    const values = useMemo(() => {
-        if (type === "mods") {
-            return Object.values(mods).filter(item => query?.length ? item.name.toLowerCase().includes(query?.toLowerCase()) : true);
-        }
-        return Object.values(modsList).filter(item => query?.length ? item.name.toLowerCase().includes(query?.toLowerCase()) : true);
-
-    }, [query, type]);
+    const { data, isLoading, isError } = useQuery(["projects", query, offset], async (args) => {
+        const request = await modrinth.Search({ query: args.queryKey.at(1) as string | undefined, offset: args.queryKey.at(2) as number });
+        return request;
+    });
 
     return (
         <main className="h-full px-4 overflow-y-scroll">
@@ -74,11 +74,20 @@ const Mods: React.FC = () => {
                 </Listbox>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-4 mt-14">
-                {values.length ? values.map((mod, i) => (
-                    mod.type === "mod" ? <ModCard {...mod} key={i} /> : <ModListCard {...mod} key={i} />
+                {isError ? (
+                    <div className="h-full w-full flex flex-1 justify-center items-center">There was an error.</div>
+                ) : isLoading ? (
+                    <div className="h-full flex flex-1 justify-center items-center col-span-full row-span-full">
+                        <Spinner />
+                    </div>
+                ) : data?.hits.length ? data.hits.map((mod, i) => (
+                    mod.project_type === "mod" ? <ModCard {...mod} key={i} /> : <ModListCard {...mod} key={i} />
                 )) : (
-                    <div className="h-full w-full flex flex-1 justify-center items-center">No mods where found</div>
+                    <div className="h-full w-full flex flex-1 justify-center items-center">No projects where found</div>
                 )}
+            </div>
+            <div className="flex mb-4">
+                <button disabled={isError || isLoading} onClick={() => setOffset((current) => current + 10)}>Next</button>
             </div>
         </main>
     );

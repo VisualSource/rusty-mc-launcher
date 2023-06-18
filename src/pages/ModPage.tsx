@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { HiChevronDown } from "react-icons/hi";
 import { useParams, useNavigate } from "react-router-dom";
-import { Octokit } from "@octokit/rest";
 import Spinner from "@/components/Spinner";
 
+import ReactMarkdown from "react-markdown";
 import { mods } from "@/data/mods";
 import IconLinks from "@/components/ModCardIcon";
 import logger from "@/lib/system/logger";
 import { selectProfileFromDialog } from "@/lib/selectProfile";
 import useDownload from "@/lib/hooks/useDownload";
+import modrinth from "@/lib/api/modrinth";
 
 const ModPage: React.FC = () => {
     const navigate = useNavigate();
@@ -16,57 +17,16 @@ const ModPage: React.FC = () => {
     const { installMods } = useDownload();
     const { data, isError, isLoading, error } = useQuery([uuid, "mod"], async () => {
         if (!uuid) throw new Error("Invaild uuid");
-
-        const mod = mods[uuid];
-        if (!mod) throw new Error("Failed to find mod");
-
-        if (mod.markdownProvider.type === "github") {
-            const octokit = new Octokit();
-            const repo = await octokit.rest.repos.get({
-                owner: mod.markdownProvider.owner,
-                repo: mod.markdownProvider.repo,
-            });
-            const readme = await octokit.rest.repos.getReadme({
-                owner: mod.markdownProvider.owner,
-                repo: mod.markdownProvider.repo,
-                mediaType: {
-                    format: "html"
-                },
-                //baseUrl: `https://github.com/${mod.provider.owner}/${mod.provider.repo}/raw/${repo.data.default_branch}`
-            });
-            //https://github.com/IrisShaders/Iris/raw/1.19.4/docs/banner.png
-            //https://github.com/CaffeineMC/lithium-fabric/raw/develop/src/main/resources/assets/lithium/icon.png
-
-
-            const replaceImage = {
-                root: mod.markdownProvider.imageRoot,
-                base: `https://github.com/${mod.markdownProvider.owner}/${mod.markdownProvider.repo}/raw/${repo.data.default_branch}/${mod.markdownProvider.imageRoot}`
-            }
-
-            return {
-                modData: mod,
-                name: mod.name,
-                content: mod.markdownProvider.updateLinks ? (readme.data as never as string).replaceAll(replaceImage.root, replaceImage.base) : (readme.data as never as string),
-                type: mod.markdownProvider.type,
-                links: mod.links,
-            }
-        }
-
-        return {
-            modData: mod,
-            name: mod.name,
-            links: mod.links,
-            content: "",
-            type: mod.markdownProvider.type
-        }
+        const project = await modrinth.GetProjectData(uuid);
+        return project;
     }, { enabled: !!uuid });
 
     const installMod = async () => {
         try {
-            const profile = await selectProfileFromDialog({ loader: data?.modData.supports.map((e) => e.toLowerCase()) });
-            if (!profile || !data || data.modData.download.type !== "modrinth") return;
+            //const profile = await selectProfileFromDialog({ loader: data?.modData.supports.map((e) => e.toLowerCase()) });
+            //  if (!profile || !data || data.modData.download.type !== "modrinth") return;
 
-            installMods(profile, data?.modData?.download.type, [data.modData.download.id]);
+            // installMods(profile, data?.modData?.download.type, [data.modData.download.id]);
 
         } catch (error) {
             logger.error(error);
@@ -76,7 +36,7 @@ const ModPage: React.FC = () => {
     return (
         <main className="flex flex-col h-full overflow-hidden">
             {isError ? (<span>Failed to load mods</span>) : null}
-            {isLoading ? (
+            {isLoading && !isError ? (
                 <div className="h-full w-full flex flex-col items-center justify-center">
                     <Spinner />
                 </div>
@@ -86,7 +46,13 @@ const ModPage: React.FC = () => {
                     <div className="flex w-full justify-between px-4 pt-2 items-center">
                         <div className="flex gap-3 items-center">
                             <button className="block bg-yellow-300 px-5 py-2 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-yellow-400" onClick={() => navigate("/mods")}>Back</button>
-                            <IconLinks links={data.links} />
+                            <IconLinks links={[
+                                { type: "discord", href: data.discord_url },
+                                { type: "issues", href: data.issues_url },
+                                { type: "source", href: data.source_url },
+                                { type: "wiki", href: data.wiki_url },
+                                ...data.donation_urls.map(value => ({ type: value.platform, href: value.url })) as any[]
+                            ]} />
                         </div>
                         <div className="relative">
                             <div className="inline-flex items-center overflow-hidden bg-green-500">
@@ -100,7 +66,22 @@ const ModPage: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    {data.type === "github" ? (<article dangerouslySetInnerHTML={{ __html: data.content }} className="prose max-w-4xl prose-invert"></article>) : null}
+                    <div className="w-full px-8 mb-4">
+                        <h1 className="text-4xl font-bold my-4">{data.title}</h1>
+                        <h6 className="tracking-tight font-medium mb-2">Mod Loaders</h6>
+                        <div className="flex gap-2 mb-2">
+                            {data.loaders.map(loader => (<span className="whitespace-nowrap rounded-full bg-green-100 px-2.5 py-0.5 text-xs text-green-700" key={loader}>{loader}</span>))}
+                        </div>
+                        <h6 className="tracking-tight font-medium mb-2">Minecraft</h6>
+                        <div className="flex gap-2 overflow-hidden">
+                            {data.game_versions.toReversed().map(loader => (<span className="whitespace-nowrap rounded-full bg-blue-100 px-2.5 py-0.5 text-xs text-blue-700" key={loader}>{loader}</span>))}
+                        </div>
+                    </div>
+                    <article className="prose max-w-4xl prose-invert mb-4">
+                        <ReactMarkdown>
+                            {data.body}
+                        </ReactMarkdown>
+                    </article>
                 </div>
             ) : null}
         </main>

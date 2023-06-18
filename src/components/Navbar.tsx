@@ -39,10 +39,10 @@ const Navbar = () => {
                 <div data-tauri-drag-region className="mx-auto max-w-screen-xl px-4 py-2 sm:px-6 lg:px-8">
                     <div data-tauri-drag-region className="flex items-center sm:justify-between sm:gap-2">
                         <div className='flex gap-2 uppercase'>
-                            <NavLink to="" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Home</NavLink>
-                            <NavLink to="/library" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Library</NavLink>
-                            <NavLink to="/downloads" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Downloads</NavLink>
-                            <NavLink to="/mods" className={({ isActive }) => isActive ? "text-blue-300" : undefined}>Mods</NavLink>
+                            <NavLink to="" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Home</NavLink>
+                            <NavLink to="/library" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Library</NavLink>
+                            <NavLink to="/downloads" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Downloads</NavLink>
+                            <NavLink to="/mods" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Mods</NavLink>
                         </div>
 
                         <div data-tauri-drag-region className="flex flex-1 items-center justify-between gap-4 sm:justify-end">

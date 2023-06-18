@@ -6,6 +6,8 @@ import ReactDOM from 'react-dom/client';
 import localforage from 'localforage';
 import React from 'react';
 
+import "./utils/to-reversed";
+
 import NotificationProvider from './lib/context/NotificationContext';
 import { DownloadProvider } from '@context/DownloadContext';
 import { MsalProvider } from "@azure/msal-react";
