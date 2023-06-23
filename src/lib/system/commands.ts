@@ -1,7 +1,8 @@
 import { invoke } from '@tauri-apps/api';
+import type { FileDownload } from '../api/modrinth';
 import type { LaunchConfig } from './launch_config';
 import logger from './logger';
-import { FileDownload } from '../api/modrinth';
+
 
 export class PortGenerator {
     static INSTANCE: PortGenerator | null;
@@ -11,10 +12,10 @@ export class PortGenerator {
         }
         return PortGenerator.INSTANCE;
     }
-    public port: number = 3000;
+    public port: number = 3123;
     constructor() { }
     setPort() {
-        this.port = [3000, 4000, 5000].at(Math.floor((Math.random() * 100) % 3)) ?? 3000;
+        this.port = [3123, 4124, 5434].at(Math.floor((Math.random() * 100) % 3)) ?? 3123;
         return this.port;
     }
 }

@@ -2,10 +2,11 @@ import { HiX, HiMinus, HiChevronDown, HiLogout, HiOutlineBell, HiSelector, HiLog
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 import { Menu, Transition } from '@headlessui/react';
 import { appWindow } from '@tauri-apps/api/window';
+import { UnlistenFn, once } from '@tauri-apps/api/event';
 import { Link, NavLink } from 'react-router-dom';
 import useNotification from '@hook/useNotifications';
 import { loginRequest } from '../lib/config/auth';
-import { PortGenerator } from '@system/commands';
+import { PortGenerator, startAuthServer } from '@system/commands';
 import useUser from '@hook/useUser';
 import logger from '@system/logger';
 
@@ -23,6 +24,20 @@ const Navbar = () => {
         const port = PortGenerator.getInstance().setPort();
         logger.debug("Auth Port", port);
         await instance.loginPopup({ ...loginRequest, redirectUri: `http://localhost:${port}` });
+    }
+
+    const logout = async () => {
+        const port = PortGenerator.getInstance().setPort();
+        logger.debug("Auth Port", port);
+
+        try {
+            await instance.logoutPopup({
+                postLogoutRedirectUri: `http://localhost:${port}`,
+            });
+        } catch (error) {
+            logger.error(error);
+            notification.toast.alert({ title: "Failed to logout", type: "error" });
+        }
     }
 
     return (
@@ -110,7 +125,7 @@ const Navbar = () => {
                                                 {({ close }) => (
                                                     <button className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200' onClick={() => {
                                                         close();
-                                                        instance.logoutPopup();
+                                                        logout();
                                                     }}>
                                                         <HiLogout className="h-5 w-5 opacity-75" />
                                                         <span className="text-sm font-medium">Signout</span>

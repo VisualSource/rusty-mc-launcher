@@ -24,7 +24,7 @@ const SelectProfileItem: React.FC<{ selected: boolean, value: MinecraftProfile }
 const Home: React.FC = () => {
     const download = useDownload();
     const navigate = useNavigate();
-    const { isLoading, user } = useUser();
+    const { isLoading, minecraft } = useUser();
     const { selected: selectedProfile, mutate, isLoading: profileLoading } = useSelectedProfile();
     const notification = useNotification();
     const { profiles, isLoading: loadingProfiles } = useProfiles();
@@ -51,7 +51,8 @@ const Home: React.FC = () => {
                                 <button onClick={async () => {
                                     if ((profiles?.length ?? 0) > 0) {
                                         try {
-                                            const config = await asLaunchConfig(user, selectedProfile);
+                                            const minecraftData = await minecraft(true);
+                                            const config = await asLaunchConfig(minecraftData, selectedProfile);
 
                                             document.addEventListener("mcl::install_ready", async (ev) => {
                                                 if ((ev as CustomEvent<{ vaild: boolean }>).detail.vaild) {

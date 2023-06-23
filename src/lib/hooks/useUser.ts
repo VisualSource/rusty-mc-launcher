@@ -6,8 +6,9 @@ import { useQuery } from '@tanstack/react-query';
 import localforage from "localforage";
 
 import getMinecraft from '../auth/minecraft_login_flow';
+import logger from "@system/logger";
 
-type MC = Awaited<ReturnType<typeof getMinecraft>>;
+export type MC = Awaited<ReturnType<typeof getMinecraft>>;
 
 interface Profile {
     "@odata.context": string,
@@ -61,17 +62,18 @@ const getMSAProfile = async (account: AccountInfo, client: Client) => {
     return data;
 }
 
-const loadMinecraftProfile = async (account: AccountInfo | null, instance: IPublicClientApplication) => {
+const loadMinecraftProfile = async (account: AccountInfo | null, instance: IPublicClientApplication, freshFetch: boolean = false) => {
     if (!account) throw new Error("No user account selected to fetch minecraft profile.");
     const id = `${account.nativeAccountId ?? account.homeAccountId}-minecraft`;
     const data = await localforage.getItem<MC | null>(id);
     const fetchProfile = async () => {
+        logger.log("Refresh minecraft token");
         const profile = await getMinecraft(instance);
         localforage.setItem(id, profile);
         return profile;
     }
 
-    if (!data) return fetchProfile();
+    if (!data || freshFetch) return fetchProfile();
 
     const token = JSON.parse(atob(data.token.access_token.split(".")[1])) as { exp: number; };
 
@@ -81,7 +83,6 @@ const loadMinecraftProfile = async (account: AccountInfo | null, instance: IPubl
 
     return data;
 }
-
 
 
 //https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib
@@ -114,7 +115,7 @@ const useUser = () => {
     }, { enabled: !!account, refetchInterval: false, refetchIntervalInBackground: false });
 
     return {
-        minecraft: () => loadMinecraftProfile(account, instance),
+        minecraft: (fresh: boolean = false) => loadMinecraftProfile(account, instance, fresh),
         user: data,
         isLoading,
         isError,

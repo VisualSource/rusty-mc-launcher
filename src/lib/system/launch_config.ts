@@ -1,7 +1,7 @@
 import localforage from "localforage";
-import type { ProfileFull } from "@hook/useUser";
 import { MinecraftProfile } from "@lib/models/profiles";
 import { getLoaderType } from "@/utils/versionUtils";
+import { MC } from "@hook/useUser";
 
 type PathBuf = string;
 export interface LaunchConfig {
@@ -46,8 +46,8 @@ const fetchLastet = async () => {
     return localforage.setItem<LastestVersions["latest"] & { exp: Date }>("latest-release", { ...request.latest, exp });
 };
 
-export const asLaunchConfig = async (user: ProfileFull | undefined, profile: MinecraftProfile | null | undefined): Promise<LaunchConfig> => {
-    if (!user || !user?.minecraft || !profile) throw new Error("Missing user profile");
+export const asLaunchConfig = async (user: MC | undefined, profile: MinecraftProfile | null | undefined): Promise<LaunchConfig> => {
+    if (!user || !profile) throw new Error("Missing user profile");
 
     let lastVersionId = profile.lastVersionId;
 
@@ -68,10 +68,10 @@ export const asLaunchConfig = async (user: ProfileFull | undefined, profile: Min
         profile_id: profile.id,
         console: profile.console,
         version: lastVersionId,
-        token: user.minecraft.token.access_token,
-        uuid: user.minecraft.profile.id,
-        xuid: user.minecraft.xuid,
-        username: user.minecraft.profile.name,
+        token: user.token.access_token,
+        uuid: user.profile.id,
+        xuid: user.xuid,
+        username: user.profile.name,
         client_id: import.meta.env.PUBLIC_VITE_CLIENT_ID,
         use_custom_resolution: !!profile?.resolution,
         is_demo: false,

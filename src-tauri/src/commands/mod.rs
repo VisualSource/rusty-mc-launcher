@@ -19,7 +19,9 @@ pub async fn start_server(window: Window, port: u16, _origin: String) -> Result<
     let path = format!("http://localhost:{}/", port);
 
     start_with_config(config, move |url| {
+        debug!("{}", url);
         if url.starts_with(&path) {
+            debug!("Start with port");
             let _ = window.emit(
                 "redirect_uri",
                 format!(

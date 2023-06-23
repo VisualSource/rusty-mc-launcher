@@ -1,6 +1,6 @@
 import { once, type UnlistenFn } from '@tauri-apps/api/event';
 import { internals, BrowserAuthError, UrlString, StringUtils } from "@azure/msal-browser";
-import { startAuthServer } from "../system/commands";
+import { PortGenerator, startAuthServer } from "../system/commands";
 
 // override
 internals.PopupClient.prototype.monitorPopupForHash = async function (this: internals.PopupClient, popupWindow: Window): Promise<string> {
@@ -92,5 +92,32 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (this: inte
                 reject(BrowserAuthError.createMonitorPopupTimeoutError());
             }
         }, this.config.system.pollIntervalMilliseconds);
+    });
+}
+
+internals.PopupClient.prototype.waitForLogoutPopup = async function (this: internals.PopupClient, popupWindow: Window): Promise<void> {
+    return new Promise<number>(async (resolve) => {
+        let subscription: UnlistenFn | undefined;
+
+        const port = await startAuthServer();
+        if (!port) throw new Error("No port set.");
+
+        const intervalId = setInterval(() => {
+            if (popupWindow.closed) {
+                this.logger.error("PopupHandler.waitForLogoutPopup - window closed");
+                this.cleanPopup();
+                clearInterval(intervalId);
+                if (subscription) subscription();
+                resolve(port);
+            }
+        }, this.config.system.pollIntervalMilliseconds);
+        subscription = await once("redirect_uri", (ev) => {
+            this.logger.verbose("PopupHandler.waitForLogoutPopup - popup window is on same origin as caller, closing.");
+            clearInterval(intervalId);
+            this.cleanPopup(popupWindow);
+            resolve(port);
+        });
+    }).then((port) => {
+        try { fetch(`http://127.0.0.1:${port}/exit`) } catch (e) { }
     });
 }
