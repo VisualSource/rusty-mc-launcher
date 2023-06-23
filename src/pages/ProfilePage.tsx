@@ -1,18 +1,17 @@
-import SelectBox from "@/components/SelectBox";
-import Spinner from "@/components/Spinner";
-import useMinecraftVersions, { LoaderType } from "@/lib/hooks/useMinecraftVersion";
-import type { MinecraftProfile } from "@/lib/models/profiles";
-import profiles from "@/lib/models/profiles";
-import { getLoaderType } from "@/utils/versionUtils";
-import { useProfile } from "@lib/hooks/useProfile";
-import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { HiSave } from "react-icons/hi";
-import { useParams } from "react-router-dom";
+
+import type { MinecraftProfile } from "@lib/models/profiles";
+import useNotification from "@hook/useNotifications";
+import { useProfile } from "@hook/useProfile";
+import profiles from "@/lib/models/profiles";
+import Spinner from "@/components/Spinner";
 
 const ProfilePage: React.FC = () => {
     const { id } = useParams();
     const { mutate } = useProfile(id, false);
+    const notify = useNotification();
     //const [loaderType, setLoaderType] = useState<LoaderType>(getLoaderType(profile?.lastVersionId ?? "").type ?? "vanilla");
     //const { data: minecraftVersions, isLoading: minecraftVersionsLoading, } = useMinecraftVersions(loaderType);
 
@@ -31,7 +30,8 @@ const ProfilePage: React.FC = () => {
     const mods = watch("mods");
 
     const onSubmit = async (state: MinecraftProfile) => {
-        await mutate.mutateAsync({ type: "patch", data: state })
+        await mutate.mutateAsync({ type: "patch", data: state });
+        notify.toast.success({ title: "Updated Profile", type: "success" });
     }
 
     return (

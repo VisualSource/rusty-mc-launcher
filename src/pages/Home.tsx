@@ -11,6 +11,7 @@ import useDownload from "@hook/useDownload";
 import logger from "@/lib/system/logger";
 import { play } from "@system/commands";
 import useUser from "@hook/useUser";
+import useIsGameRunning from "@hook/useIsGameRunning";
 
 const SelectProfileItem: React.FC<{ selected: boolean, value: MinecraftProfile }> = ({ selected, value }) => {
     return (
@@ -22,6 +23,7 @@ const SelectProfileItem: React.FC<{ selected: boolean, value: MinecraftProfile }
 }
 
 const Home: React.FC = () => {
+    const { state } = useIsGameRunning();
     const download = useDownload();
     const navigate = useNavigate();
     const { isLoading, minecraft } = useUser();
@@ -48,7 +50,7 @@ const Home: React.FC = () => {
                     ) : (
                         <div className="flex flex-col items-center">
                             <div className="flex flex-col max-w-md w-full">
-                                <button onClick={async () => {
+                                <button disabled={state} onClick={async () => {
                                     if ((profiles?.length ?? 0) > 0) {
                                         try {
                                             const minecraftData = await minecraft(true);
@@ -77,8 +79,8 @@ const Home: React.FC = () => {
                                         return;
                                     }
                                     navigate("/profile/create");
-                                }} type="button" className="inline-block rounded bg-indigo-600 px-8 py-3 text-sm font-medium text-white transition hover:scale-110 hover:shadow-xl focus:outline-none focus:ring active:bg-indigo-500">
-                                    {(profiles?.length ?? 0) > 0 ? "Play" : "Create Profile"}
+                                }} type="button" className="disabled:bg-indigo-900 disabled:cursor-not-allowed inline-block rounded bg-indigo-600 px-8 py-3 text-sm font-medium text-white transition hover:scale-110 hover:shadow-xl focus:outline-none focus:ring active:bg-indigo-500">
+                                    {state ? "Running..." : (profiles?.length ?? 0) > 0 ? "Play" : "Create Profile"}
                                 </button>
                                 <div className="mt-2">
                                     <SelectBox

@@ -4,15 +4,18 @@ import { Link } from "react-router-dom";
 
 import type { MinecraftProfile } from "@lib/models/profiles";
 import { asLaunchConfig } from "@system/launch_config";
+import useNotification from "@hook/useNotifications";
 import { useProfiles } from "@hook/useProfiles";
 import useDownload from "@hook/useDownload";
 import { play } from "@system/commands";
 import useUser from "@hook/useUser";
 
 
+
 const LibraryCard = ({ profile }: { profile: MinecraftProfile }) => {
     const { mutate } = useProfiles();
-    const { isLoading, user } = useUser();
+    const { isLoading, minecraft } = useUser();
+    const notify = useNotification();
     const download = useDownload();
     return (
         <article
@@ -72,9 +75,19 @@ const LibraryCard = ({ profile }: { profile: MinecraftProfile }) => {
 
                 <div className="sm:flex sm:items-end sm:justify-end">
                     <button title={`Play ${profile.name}`} className="block bg-green-400 px-5 py-3 text-center text-xs font-bold uppercase text-gray-900 transition hover:bg-green-500" onClick={async () => {
-                        const config = await asLaunchConfig(user, profile);
+                        const game = await minecraft(true);
+                        const config = await asLaunchConfig(game, profile);
+                        document.addEventListener("mcl::install_ready", async (ev) => {
+                            if ((ev as CustomEvent<{ vaild: boolean }>).detail.vaild) {
+                                await play(config);
+                                notify.toast.success({
+                                    type: "success",
+                                    title: "Started Minecraft!"
+                                });
+                            }
+                        }, { once: true });
+
                         await download.install(config.version, config.game_directory);
-                        await play(config);
                     }}>
                         Play
                     </button>

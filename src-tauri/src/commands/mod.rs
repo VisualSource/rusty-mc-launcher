@@ -147,6 +147,15 @@ pub async fn stop(state: tauri::State<'_, TauriState>) -> Result<(), Error> {
 }
 
 #[tauri::command]
+pub async fn is_game_running(state: tauri::State<'_, TauriState>) -> Result<bool, Error> {
+    let mut nt = state.0.lock().await;
+
+    let status = nt.is_running()?;
+
+    Ok(status)
+}
+
+#[tauri::command]
 pub async fn play(
     settings: ClientBuilder,
     _window: Window,

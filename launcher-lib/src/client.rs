@@ -33,12 +33,17 @@ impl Client {
             process: None,
         }
     }
-    pub fn is_running(self) -> Result<Option<std::process::ExitStatus>, LauncherLibError> {
-        if let Some(mut pid) = self.process {
-            return Ok(pid.try_wait()?);
+    pub fn is_running(&mut self) -> Result<bool, LauncherLibError> {
+        if let Some(pid) = self.process.as_mut() {
+            let status = pid.try_wait()?;
+
+            return match status {
+                Some(_) => Ok(false),
+                None => Ok(true),
+            };
         }
 
-        Ok(None)
+        Ok(false)
     }
 
     pub async fn stop(&mut self) -> Result<(), LauncherLibError> {
