@@ -24,6 +24,7 @@
       "@system/*": ["lib/system/*"],
       "@component/*": ["components/*"],
       "@lib/*": ["lib/*"],
+      "@polyfill/*": ["lib/polyfill/*"],
       "@hook/*": ["lib/hooks/*"],
       "@auth/*": ["lib/auth/*"],
       "@page/*": ["pages/*"],

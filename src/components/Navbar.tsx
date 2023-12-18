@@ -1,162 +1,147 @@
-import { HiX, HiMinus, HiChevronDown, HiLogout, HiOutlineBell, HiSelector, HiLogin, HiOutlineCog } from 'react-icons/hi';
+import { useNotificationCenter } from "react-toastify/addons/use-notification-center";
+import { Minus, X, Maximize, Minimize, Hexagon, User2, Bell } from 'lucide-react';
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
-import { Menu, Transition } from '@headlessui/react';
-import { appWindow } from '@tauri-apps/api/window';
-import { UnlistenFn, once } from '@tauri-apps/api/event';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { appWindow } from "@tauri-apps/api/window";
+import { exit } from '@tauri-apps/api/process';
 import { Link, NavLink } from 'react-router-dom';
-import useNotification from '@hook/useNotifications';
-import { loginRequest } from '../lib/config/auth';
-import { PortGenerator, startAuthServer } from '@system/commands';
-import useUser from '@hook/useUser';
-import logger from '@system/logger';
 
-const COLOR = {
-    "success": "border-l-green-600",
-    "error": "border-l-red-600",
-    "warn": "border-l-yellow-600"
-}
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from "@component/ui/navigation-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { TypographyH4 } from './ui/typography';
+import { Separator } from './ui/separator';
+import { Button } from './ui/button';
+import useUser from '@hook/useUser';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
-    const { user, instance, isLoading } = useUser();
-    const notification = useNotification();
-
-    const login = async () => {
-        const port = PortGenerator.getInstance().setPort();
-        logger.debug("Auth Port", port);
-        await instance.loginPopup({ ...loginRequest, redirectUri: `http://localhost:${port}` });
-    }
-
-    const logout = async () => {
-        const port = PortGenerator.getInstance().setPort();
-        logger.debug("Auth Port", port);
-
-        try {
-            await instance.logoutPopup({
-                postLogoutRedirectUri: `http://localhost:${port}`,
-            });
-        } catch (error) {
-            logger.error(error);
-            notification.toast.alert({ title: "Failed to logout", type: "error" });
-        }
-    }
+    const { data: isMaximized } = useQuery({ queryKey: ["isMaximized"], queryFn: () => appWindow.isMaximized(), networkMode: "offlineFirst" });
+    const { user, instance, isLoading, logout, login } = useUser();
+    const queryClient = useQueryClient();
 
     return (
-        <div data-tauri-drag-region className="z-50">
-            <div data-tauri-drag-region className="bg-gray-900 flex justify-end gap-2">
-                <button onClick={() => appWindow.minimize()} className="py-1">
-                    <HiMinus />
-                </button>
-                <button onClick={() => appWindow.close()} className="bg-red-700 hover:bg-red-600 p-1">
-                    <HiX />
-                </button>
-            </div>
-            <header data-tauri-drag-region aria-label="Page Header" className="bg-gray-800 shadow">
-                <div data-tauri-drag-region className="mx-auto max-w-screen-xl px-4 py-2 sm:px-6 lg:px-8">
-                    <div data-tauri-drag-region className="flex items-center sm:justify-between sm:gap-2">
-                        <div className='flex gap-2 uppercase'>
-                            <NavLink to="" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Home</NavLink>
-                            <NavLink to="/library" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Library</NavLink>
-                            <NavLink to="/downloads" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Downloads</NavLink>
-                            <NavLink to="/mods" className={({ isActive }) => isActive ? "text-blue-300 border-b-2 border-blue-300" : undefined}>Mods</NavLink>
-                        </div>
-
-                        <div data-tauri-drag-region className="flex flex-1 items-center justify-between gap-4 sm:justify-end">
-                            <div data-tauri-drag-region className="flex gap-4" >
-                                <AuthenticatedTemplate>
-                                    <Menu as="div" className="relative inline-block text-left">
-                                        <Menu.Button className="block shrink-0 rounded-lg bg-black bg-opacity-20 p-2.5 text-white shadow-sm hover:text-gray-50 relative">
-                                            {notification.history.length ? (
-                                                <span className="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-red-600 px-1 py-1" />
-                                            ) : null}
-                                            <span className="sr-only">Notifications</span>
-                                            <HiOutlineBell className="h-5 w-5" />
-                                        </Menu.Button>
-                                        <Transition enter="transition duration-100 ease-out" enterFrom="transform scale-95 opacity-0" enterTo="transform scale-100 opacity-100" leave="transition duration-75 ease-out" leaveFrom="transform scale-100 opacity-100" leaveTo="transform scale-95 opacity-0">
-                                            <Menu.Items className="absolute right-0 top-0 shadow-lg origin-top-right flex flex-col bg-gray-900 w-56 divide-y divide-gray-700">
-                                                {notification.history.length ? (
-                                                    notification.history.map((item, key) => (
-                                                        <Menu.Item as="div" key={key}>
-                                                            <div className={`w-full flex items-center gap-2 border-l-[3px] ${COLOR[item.type]} border-transparent px-4 py-3 text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-200`}>
-                                                                <span className="text-sm font-medium">{item.title}</span>
-                                                            </div>
-                                                        </Menu.Item>
-                                                    ))
-                                                ) : (
-                                                    <Menu.Item as="div">
-                                                        <div className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-200'>
-                                                            <span className="text-sm font-medium">No Notifications</span>
-                                                        </div>
-                                                    </Menu.Item>
-                                                )}
-                                            </Menu.Items>
-                                        </Transition>
-                                    </Menu>
-                                </AuthenticatedTemplate>
-                            </div>
-
-                            <div className="group flex shrink-0 items-center rounded-lg transition">
-                                <span className="sr-only">Menu</span>
-                                <AuthenticatedTemplate>
-                                    {!isLoading ? (<>
-                                        <img src={user?.photo} alt="Man" className="h-10 w-10 rounded-full object-cover" />
-
-                                        <p className="ml-2 hidden text-left text-xs sm:block text-white">
-                                            <strong className="block font-medium">{user?.minecraft?.profile.name}</strong>
-                                            <span className="text-ellipsis whitespace-nowrap overflow-hidden w-14">{user?.userPrincipalName}</span>
-                                        </p>
-                                    </>) : (<>
-                                        <span>Loading...</span>
-                                    </>)}
-                                </AuthenticatedTemplate>
-                                <UnauthenticatedTemplate>
-                                    <button onClick={login} className="flex items-center gap-2 shadow py-1 px-2.5 bg-gray-700 hover:bg-gray-600 rounded" >
-                                        <HiLogin />
-                                        <span>Login</span>
-                                    </button>
-                                </UnauthenticatedTemplate>
-
-                                <Menu as="div" className="relative inline-block text-left">
-                                    <Menu.Button className="ml-4 hidden h-5 w-5 text-gray-500 transition group-hover:text-gray-700 sm:block">
-                                        <HiChevronDown className="h-5 w-5 text-gray-500 transition group-hover:text-gray-700 sm:block" />
-                                    </Menu.Button>
-                                    <Transition enter="transition duration-100 ease-out" enterFrom="transform scale-95 opacity-0" enterTo="transform scale-100 opacity-100" leave="transition duration-75 ease-out" leaveFrom="transform scale-100 opacity-100" leaveTo="transform scale-95 opacity-0">
-                                        <Menu.Items className="absolute right-0 top-3 shadow-lg origin-top-right flex flex-col bg-gray-900 w-56 divide-y divide-gray-700">
-                                            <Menu.Item as="div">
-                                                {({ close }) => (
-                                                    <button className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200' onClick={() => {
-                                                        close();
-                                                        logout();
-                                                    }}>
-                                                        <HiLogout className="h-5 w-5 opacity-75" />
-                                                        <span className="text-sm font-medium">Signout</span>
-                                                    </button>
-                                                )}
-                                            </Menu.Item>
-                                            <Menu.Item as="div">
-                                                {({ close }) => (
-                                                    <button className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200' onClick={close}>
-                                                        <HiSelector className="h-5 w-5 opacity-75" />
-                                                        <span className="text-sm font-medium">Select Account</span>
-                                                    </button>
-                                                )}
-                                            </Menu.Item>
-                                            <Menu.Item as="div">
-                                                {({ close }) => (
-                                                    <Link onClick={close} to="/settings" className='w-full flex items-center gap-2 border-l-[3px] border-transparent px-4 py-3 text-gray-500 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200'>
-                                                        <HiOutlineCog className="h-5 w-5 opacity-75" />
-                                                        <span className="text-sm font-medium">Settings</span>
-                                                    </Link>
-                                                )}
-                                            </Menu.Item>
-                                        </Menu.Items>
-                                    </Transition>
-                                </Menu>
-                            </div>
-                        </div>
+        <TooltipProvider>
+            <header data-tauri-drag-region className="z-50 bg-zinc-950 text-zinc-400 shadow-md">
+                <section data-tauri-drag-region className="flex justify-between">
+                    <div className='flex'>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button size="sm" variant="ghost" className="rounded-none">
+                                    <Hexagon className="pr-2" />
+                                    MCL
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => logout()}>
+                                    Sign Out...
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link to="settings">
+                                        Settings
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => exit()}>
+                                    Exit
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button size="sm" variant="ghost" className="rounded-none">View</Button>
                     </div>
-                </div>
-            </header>
-        </div>
+                    <div className='flex'>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <div className="flex justify-center items-center">
+                                    <Button size="sm" className="mr-2 h-7 w-12" variant="secondary">
+                                        <Bell className="h-5 w-5" />
+                                    </Button>
+                                </div>
+                            </PopoverTrigger>
+                            <PopoverContent align="end" sideOffset={4} className="w-80">
+                                <div className='flex justify-between'>
+                                    <TypographyH4>Notifications</TypographyH4>
+                                    <Button variant="secondary" size="sm" onClick={() => { }}>View All</Button>
+                                </div>
+                                <ul>
+
+                                </ul>
+                            </PopoverContent>
+                        </Popover>
+                        <Tooltip>
+                            <DropdownMenu>
+                                <TooltipTrigger asChild>
+                                    <div>
+                                        <div className='flex pr-2'>
+                                            <Avatar className="rounded-none h-8">
+                                                <AvatarImage className="h-full" src={user?.photo} />
+                                                <AvatarFallback className="rounded-none">
+                                                    <User2 />
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <AuthenticatedTemplate>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button size="sm" className="rounded-none line-clamp-1">
+                                                        {user?.displayName ?? "Username"}
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                            </AuthenticatedTemplate>
+                                            <UnauthenticatedTemplate>
+                                                <Button onClick={() => login()} size="sm" className="rounded-none">
+                                                    Login
+                                                </Button>
+                                            </UnauthenticatedTemplate>
+                                        </div>
+                                        <AuthenticatedTemplate>
+                                            <DropdownMenuContent>
+
+                                            </DropdownMenuContent>
+                                        </AuthenticatedTemplate>
+                                    </div>
+                                </TooltipTrigger>
+                            </DropdownMenu>
+                            <TooltipContent>
+                                <p>Mannage Account</p>
+                            </TooltipContent>
+                        </Tooltip>
+                        <Button variant="ghost" size="sm" className="rounded-none" onClick={() => appWindow.minimize()}>
+                            <Minus />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="rounded-none" onClick={() => appWindow.toggleMaximize().then(() => queryClient.invalidateQueries({ queryKey: ["isMaximized"] }))}>
+                            {isMaximized ? (<Minimize />) : (<Maximize />)}
+                        </Button>
+                        <Button variant="ghost" size="sm" className="rounded-none hover:bg-red-500/90 dark:hover:bg-red-900/90" onClick={() => appWindow.close()}>
+                            <X />
+                        </Button>
+                    </div>
+                </section>
+                <section data-tauri-drag-region aria-label="Page Header" className="p-2 flex items-center text-zinc-100">
+                    <NavigationMenu>
+                        <NavigationMenuList>
+                            <NavigationMenuItem>
+                                <NavigationMenuTrigger showIcon={false} className="rounded-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent data-[active]:bg-transparent dark:data-[active]:bg-transparent data-[state=open]:bg-transparent dark:data-[state=open]:bg-transparent">
+                                    <NavLink to="" className={({ isActive }) => cn({ "text-blue-300 border-b-2 border-blue-300": isActive })}>LIBRARY</NavLink>
+                                </NavigationMenuTrigger>
+                                <NavigationMenuContent>
+                                    <Button className='w-full rounded-none' variant="ghost">Home</Button>
+                                    <Button className='w-full rounded-none' variant="ghost">Collections</Button>
+                                    <Separator />
+                                    <Button className='w-full rounded-none' variant="ghost">Downloads</Button>
+                                </NavigationMenuContent>
+                            </NavigationMenuItem>
+                            <NavigationMenuItem>
+                                <NavigationMenuTrigger showIcon={false} className="rounded-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent data-[active]:bg-transparent dark:data-[active]:bg-transparent data-[state=open]:bg-transparent dark:data-[state=open]:bg-transparent">
+                                    <NavLink to="workshop" className={({ isActive }) => cn({ "text-blue-300 border-b-2 border-blue-300": isActive })}>COMMUNITY</NavLink>
+                                </NavigationMenuTrigger>
+                            </NavigationMenuItem>
+                        </NavigationMenuList>
+                    </NavigationMenu>
+                </section>
+            </header >
+        </TooltipProvider>
     );
 }
 

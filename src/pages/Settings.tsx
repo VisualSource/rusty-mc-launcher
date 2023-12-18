@@ -2,12 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { getName, getTauriVersion, getVersion } from '@tauri-apps/api/app';
 
 const Settings = () => {
-    const { data } = useQuery(["app-data"], async () => {
-        const [name, tauri, version] = await Promise.all([getName(), getTauriVersion(), getVersion()]);
-        return {
-            name,
-            tauri,
-            version
+    const { data } = useQuery({
+        queryKey: ["app-data"], queryFn: async () => {
+            const [name, tauri, version] = await Promise.all([getName(), getTauriVersion(), getVersion()]);
+            return {
+                name,
+                tauri,
+                version
+            }
         }
     });
 

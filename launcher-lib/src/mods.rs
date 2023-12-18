@@ -1,6 +1,6 @@
 use crate::client::ClientBuilder;
 use crate::utils::{self, download_file, ChannelMessage};
-use crate::{utils::mods::FileDownload, LauncherLibError};
+use crate::{errors::LauncherLibError, utils::mods::FileDownload};
 use futures::StreamExt;
 use log::{error, info};
 use normalize_path::{self, NormalizePath};

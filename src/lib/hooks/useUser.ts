@@ -4,9 +4,12 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import { useMsal, useAccount } from "@azure/msal-react";
 import { useQuery } from '@tanstack/react-query';
 import localforage from "localforage";
+import { useCallback } from "react";
 
-import getMinecraft from '../auth/minecraft_login_flow';
+import getMinecraft from '@auth/minecraft_login_flow';
 import logger from "@system/logger";
+import { PortGenerator } from "../system/commands";
+import { loginRequest } from "../config/auth";
 
 export type MC = Awaited<ReturnType<typeof getMinecraft>>;
 
@@ -84,37 +87,63 @@ const loadMinecraftProfile = async (account: AccountInfo | null, instance: IPubl
     return data;
 }
 
-
 //https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib
 //https://azuread.github.io/microsoft-authentication-library-for-js/ref/modules/_azure_msal_browser.html#authorizationcoderequest
 const useUser = () => {
     const account = useAccount();
     const { instance } = useMsal();
-    const { data, isError, isLoading, error } = useQuery<ProfileFull>(["user", account?.nativeAccountId], async () => {
-        if (!account) throw new Error("No active account! Verify a user has been signed in and setActiveAccount has been called.");
+    const { data, isError, isLoading, error } = useQuery({
+        enabled: !!account,
+        refetchInterval: false,
+        refetchIntervalInBackground: false,
+        queryKey: ["user", account?.nativeAccountId],
+        queryFn: async () => {
+            const options: AuthCodeMSALBrowserAuthenticationProviderOptions = {
+                account: account as AccountInfo, // the AccountInfo instance to acquire the token for.
+                interactionType: InteractionType.Silent, // msal-browser InteractionType
+                scopes: ["user.read"] // example of the scopes to be passed
+            };
 
-        const options: AuthCodeMSALBrowserAuthenticationProviderOptions = {
-            account, // the AccountInfo instance to acquire the token for.
-            interactionType: InteractionType.Silent, // msal-browser InteractionType
-            scopes: ["user.read"] // example of the scopes to be passed
-        };
-        const authProvider = new AuthCodeMSALBrowserAuthenticationProvider(instance as PublicClientApplication, options);
-        const client = Client.initWithMiddleware({ authProvider });
+            const authProvider = new AuthCodeMSALBrowserAuthenticationProvider(instance as PublicClientApplication, options);
+            const client = Client.initWithMiddleware({ authProvider });
 
-        const [profile, photo, minecraft] = await Promise.allSettled([
-            getMSAProfile(account, client),
-            getMSAPhoto(account, client),
-            loadMinecraftProfile(account, instance)
-        ]);
+            const [profile, photo, minecraft] = await Promise.allSettled([
+                getMSAProfile((account as AccountInfo), client),
+                getMSAPhoto((account as AccountInfo), client),
+                loadMinecraftProfile(account, instance)
+            ]);
 
-        let user = profile.status === "fulfilled" ? profile.value : {};
-        user.photo = photo.status === "fulfilled" ? photo.value : "";
-        user.minecraft = minecraft.status === "fulfilled" ? minecraft.value : null;
 
-        return user;
-    }, { enabled: !!account, refetchInterval: false, refetchIntervalInBackground: false });
+            const user: ProfileFull = profile.status === "fulfilled" ? profile.value : {};
+            user.photo = photo.status === "fulfilled" ? photo.value : "";
+            user.minecraft = minecraft.status === "fulfilled" ? minecraft.value : null;
+
+            return user;
+        }
+    });
+
+    const login = useCallback(async () => {
+        const port = PortGenerator.getInstance().setPort();
+        logger.debug("Auth Port", port);
+        await instance.loginPopup({ ...loginRequest, redirectUri: `http://localhost:${port}` });
+    }, [instance]);
+
+    const logout = useCallback(async () => {
+        const port = PortGenerator.getInstance().setPort();
+        logger.debug("Auth Port", port);
+
+        try {
+            await instance.logoutPopup({
+                postLogoutRedirectUri: `http://localhost:${port}`,
+            });
+        } catch (error) {
+            logger.error(error);
+        }
+    }, [instance])
 
     return {
+        logout,
+        login,
         minecraft: (fresh: boolean = false) => loadMinecraftProfile(account, instance, fresh),
         user: data,
         isLoading,

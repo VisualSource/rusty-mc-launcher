@@ -1,14 +1,14 @@
 import { once, type UnlistenFn } from '@tauri-apps/api/event';
 import { internals, BrowserAuthError, UrlString, StringUtils } from "@azure/msal-browser";
-import { PortGenerator, startAuthServer } from "../system/commands";
+import { startAuthServer } from "../system/commands";
 
 // override
 internals.PopupClient.prototype.monitorPopupForHash = async function (this: internals.PopupClient, popupWindow: Window): Promise<string> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise<string>(async (resolve, reject) => {
 
         const port = await startAuthServer();
         if (!port) {
-            reject(BrowserAuthError.createPopupWindowError("Failed to start callback server"));
+            return reject(BrowserAuthError.createPopupWindowError("Failed to start callback server"));
         }
 
         /*
@@ -17,7 +17,7 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (this: inte
         */
         const maxTicks = this.config.system.windowHashTimeout / this.config.system.pollIntervalMilliseconds;
         let ticks = 0;
-        let intervalId: NodeJS.Timer | undefined;
+        let intervalId: NodeJS.Timeout | undefined;
         let callback: UnlistenFn | undefined;
 
         const cleanup = () => {
@@ -32,7 +32,6 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (this: inte
             if (payload.status === "ok") {
                 this.logger.verbose("PopupHandler.monitorPopupForHash - found hash in url");
                 cleanup();
-                this.cleanPopup(popupWindow);
 
                 const hash = payload.data;
 
@@ -46,8 +45,6 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (this: inte
                 }
                 return;
             }
-
-            this.cleanPopup(popupWindow);
             cleanup();
             reject(BrowserAuthError.createEmptyNavigationUriError());
         });
@@ -92,6 +89,8 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (this: inte
                 reject(BrowserAuthError.createMonitorPopupTimeoutError());
             }
         }, this.config.system.pollIntervalMilliseconds);
+    }).finally(() => {
+        this.cleanPopup(popupWindow);
     });
 }
 
@@ -105,7 +104,6 @@ internals.PopupClient.prototype.waitForLogoutPopup = async function (this: inter
         const intervalId = setInterval(() => {
             if (popupWindow.closed) {
                 this.logger.error("PopupHandler.waitForLogoutPopup - window closed");
-                this.cleanPopup();
                 clearInterval(intervalId);
                 if (subscription) subscription();
                 resolve(port);
@@ -114,10 +112,11 @@ internals.PopupClient.prototype.waitForLogoutPopup = async function (this: inter
         subscription = await once("redirect_uri", (ev) => {
             this.logger.verbose("PopupHandler.waitForLogoutPopup - popup window is on same origin as caller, closing.");
             clearInterval(intervalId);
-            this.cleanPopup(popupWindow);
             resolve(port);
         });
     }).then((port) => {
         try { fetch(`http://127.0.0.1:${port}/exit`) } catch (e) { }
+    }).finally(() => {
+        this.cleanPopup(popupWindow);
     });
 }

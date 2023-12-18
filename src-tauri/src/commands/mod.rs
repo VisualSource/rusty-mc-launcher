@@ -3,7 +3,7 @@ use crate::state::TauriState;
 use log::{debug, error};
 use minecraft_launcher_lib::installer::Installer;
 use minecraft_launcher_lib::{
-    install_mod_list, packs, ChannelMessage, ClientBuilder, FileDownload,
+    client::ClientBuilder, install_mod_list, packs, ChannelMessage, FileDownload,
 };
 use std::path::PathBuf;
 use tauri::Window;

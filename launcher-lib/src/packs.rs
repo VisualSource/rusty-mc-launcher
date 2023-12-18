@@ -1,5 +1,5 @@
 use crate::utils::{self, download_file, ChannelMessage};
-use crate::{ClientBuilder, FileDownload, LauncherLibError};
+use crate::{client::ClientBuilder, errors::LauncherLibError, FileDownload};
 use log::error;
 use normalize_path::{self, NormalizePath};
 use std::path::PathBuf;
@@ -17,8 +17,11 @@ pub async fn install_pack(
     game_dir: Option<PathBuf>,
     channel: mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherLibError> {
-    let root_dir =
-        game_dir.unwrap_or(ClientBuilder::get_minecraft_dir().expect("Failed to get game dir."));
+    let root_dir = if let Some(root) = game_dir {
+        root
+    } else {
+        ClientBuilder::get_minecraft_dir()?
+    };
 
     let outdir = match pack_type {
         PackType::Resource => root_dir.join("resourcepacks").normalize(),

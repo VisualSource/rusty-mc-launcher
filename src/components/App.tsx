@@ -4,11 +4,13 @@ import Navbar from "./Navbar";
 
 function App() {
   return (
-    <>
+    <div className="flex flex-col h-full">
       <Navbar />
-      <Outlet />
+      <main className="flex flex-col flex-1 bg-zinc-900 overflow-hidden">
+        <Outlet />
+      </main>
       <Footer />
-    </>
+    </div>
   )
 }
 
