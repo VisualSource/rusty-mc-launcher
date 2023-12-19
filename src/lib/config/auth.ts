@@ -1,4 +1,5 @@
-import type { Configuration, PopupRequest, SilentRequest } from '@azure/msal-browser';
+import { LogLevel, type Configuration, type PopupRequest, type SilentRequest } from '@azure/msal-browser';
+import logger from '../system/logger';
 
 export const msalConfig = {
     auth: {
@@ -6,6 +7,31 @@ export const msalConfig = {
         authority: `https://login.microsoftonline.com/consumers/`,
         redirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
         postLogoutRedirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
+    },
+    system: {
+        loggerOptions: {
+            loggerCallback: (level, message, containsPii) => {
+                switch (level) {
+                    case LogLevel.Error:
+                        logger.error(message);
+                        break;
+                    case LogLevel.Info:
+                        logger.info(message);
+                        break;
+                    case LogLevel.Warning:
+                        logger.warn(message);
+                        break;
+                    case LogLevel.Verbose:
+                    case LogLevel.Trace:
+                        logger.debug(message);
+                        break;
+                    default:
+                        logger.log(message);
+                        break;
+                }
+            },
+            logLevel: import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error
+        }
     },
     cache: {
         cacheLocation: "localStorage",

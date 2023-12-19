@@ -62,6 +62,5 @@ export const play = async (settings: LaunchConfig) => invoke("play", { settings 
 
 export const stop = async () => invoke("stop");
 
-export const deleteProfile = async (id: string) => { };
 
 export const isGameRunning = () => invoke<boolean>("is_game_running");

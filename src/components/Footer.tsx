@@ -5,8 +5,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TypographyMuted } from "./ui/typography";
@@ -14,7 +12,7 @@ import { Button } from "./ui/button";
 
 const Footer = () => {
     return (
-        <footer className="flex h-16 bg-zinc-950 shadow text-zinc-400">
+        <footer className="flex h-16 bg-zinc-950 shadow text-zinc-400 row-span-1">
             <div className="h-full flex justify-start items-center shrink w-full">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -24,11 +22,12 @@ const Footer = () => {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuItem>Add Profile</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link to="/create">Create Profile</Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Import Profile</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-
             </div>
 
             <div className="h-full flex items-center justify-center flex-1 w-full">

@@ -87,6 +87,8 @@ const loadMinecraftProfile = async (account: AccountInfo | null, instance: IPubl
     return data;
 }
 
+export type LoadedProfile = Awaited<ReturnType<typeof loadMinecraftProfile>>
+
 //https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib
 //https://azuread.github.io/microsoft-authentication-library-for-js/ref/modules/_azure_msal_browser.html#authorizationcoderequest
 const useUser = () => {

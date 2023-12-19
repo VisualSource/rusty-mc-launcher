@@ -18,18 +18,19 @@ import useUser from '@hook/useUser';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
+    const { notifications, markAllAsRead } = useNotificationCenter();
     const { data: isMaximized } = useQuery({ queryKey: ["isMaximized"], queryFn: () => appWindow.isMaximized(), networkMode: "offlineFirst" });
-    const { user, instance, isLoading, logout, login } = useUser();
+    const { user, isLoading, logout, login } = useUser();
     const queryClient = useQueryClient();
 
     return (
         <TooltipProvider>
-            <header data-tauri-drag-region className="z-50 bg-zinc-950 text-zinc-400 shadow-md">
+            <header data-tauri-drag-region className="z-50 bg-zinc-950 text-zinc-400 shadow-md row-span-1">
                 <section data-tauri-drag-region className="flex justify-between">
                     <div className='flex'>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button size="sm" variant="ghost" className="rounded-none">
+                                <Button size="sm" variant="ghost" className="rounded-none h-full">
                                     <Hexagon className="pr-2" />
                                     MCL
                                 </Button>
@@ -50,13 +51,13 @@ const Navbar = () => {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button size="sm" variant="ghost" className="rounded-none">View</Button>
+                        <Button size="sm" variant="ghost" className="rounded-none h-full">View</Button>
                     </div>
                     <div className='flex'>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <div className="flex justify-center items-center">
-                                    <Button size="sm" className="mr-2 h-7 w-12" variant="secondary">
+                                <div className="flex justify-center items-center pr-2">
+                                    <Button size="icon" variant="secondary">
                                         <Bell className="h-5 w-5" />
                                     </Button>
                                 </div>
@@ -64,10 +65,14 @@ const Navbar = () => {
                             <PopoverContent align="end" sideOffset={4} className="w-80">
                                 <div className='flex justify-between'>
                                     <TypographyH4>Notifications</TypographyH4>
-                                    <Button variant="secondary" size="sm" onClick={() => { }}>View All</Button>
+                                    <Button variant="secondary" size="sm" onClick={() => markAllAsRead()}>View All</Button>
                                 </div>
                                 <ul>
-
+                                    {notifications.map(value => (
+                                        <li key={value.id}>
+                                            {value.type}{value.read}{value.theme}{value.status}
+                                        </li>
+                                    ))}
                                 </ul>
                             </PopoverContent>
                         </Popover>
@@ -76,7 +81,7 @@ const Navbar = () => {
                                 <TooltipTrigger asChild>
                                     <div>
                                         <div className='flex pr-2'>
-                                            <Avatar className="rounded-none h-8">
+                                            <Avatar className="rounded-none h-9">
                                                 <AvatarImage className="h-full" src={user?.photo} />
                                                 <AvatarFallback className="rounded-none">
                                                     <User2 />
@@ -84,20 +89,22 @@ const Navbar = () => {
                                             </Avatar>
                                             <AuthenticatedTemplate>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="sm" className="rounded-none line-clamp-1">
+                                                    <Button size="sm" className="rounded-none line-clamp-1 h-9">
                                                         {user?.displayName ?? "Username"}
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                             </AuthenticatedTemplate>
                                             <UnauthenticatedTemplate>
-                                                <Button onClick={() => login()} size="sm" className="rounded-none">
-                                                    Login
+                                                <Button disabled={isLoading} onClick={() => login()} size="sm" className="rounded-none">
+                                                    {isLoading ? "Login" : "Loading..."}
                                                 </Button>
                                             </UnauthenticatedTemplate>
                                         </div>
                                         <AuthenticatedTemplate>
                                             <DropdownMenuContent>
-
+                                                <DropdownMenuItem>
+                                                    Signout
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </AuthenticatedTemplate>
                                     </div>
@@ -107,13 +114,13 @@ const Navbar = () => {
                                 <p>Mannage Account</p>
                             </TooltipContent>
                         </Tooltip>
-                        <Button variant="ghost" size="sm" className="rounded-none" onClick={() => appWindow.minimize()}>
+                        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => appWindow.minimize()}>
                             <Minus />
                         </Button>
-                        <Button variant="ghost" size="sm" className="rounded-none" onClick={() => appWindow.toggleMaximize().then(() => queryClient.invalidateQueries({ queryKey: ["isMaximized"] }))}>
+                        <Button variant="ghost" size="icon" className="rounded-none" onClick={() => appWindow.toggleMaximize().then(() => queryClient.invalidateQueries({ queryKey: ["isMaximized"] }))}>
                             {isMaximized ? (<Minimize />) : (<Maximize />)}
                         </Button>
-                        <Button variant="ghost" size="sm" className="rounded-none hover:bg-red-500/90 dark:hover:bg-red-900/90" onClick={() => appWindow.close()}>
+                        <Button variant="ghost" size="icon" className="rounded-none hover:bg-red-500/90 dark:hover:bg-red-900/90" onClick={() => appWindow.close()}>
                             <X />
                         </Button>
                     </div>

@@ -21,7 +21,8 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (this: inte
         let callback: UnlistenFn | undefined;
 
         const cleanup = () => {
-            try { fetch(`http://127.0.0.1:${port}/exit`); } catch (e) { }// clean up server
+            // close auth server
+            fetch(`http://127.0.0.1:${port}/exit`).catch(e => { });
             clearInterval(intervalId);
             if (callback) callback();
         }

@@ -12,13 +12,21 @@ declare module "@tauri-apps/api/event" {
 }
 
 declare module "@tauri-apps/api/window" {
-    export { appWindow } from "@tauri-apps/api/types/window";
+    export * from "@tauri-apps/api/types/window";
 }
 
 declare module "@tauri-apps/api/process" {
-    export { exit, relaunch } from "@tauri-apps/api/types/process";
+    export * from "@tauri-apps/api/types/process";
 }
 
 declare module "@tauri-apps/api/app" {
-    export { getName, getTauriVersion, getVersion } from "@tauri-apps/api/types/app";
+    export * from "@tauri-apps/api/types/app";
+}
+
+declare module "@tauri-apps/api/path" {
+    export * from "@tauri-apps/api/types/path";
+}
+
+declare module "@tauri-apps/api/fs" {
+    export * from "@tauri-apps/api/types/fs";
 }

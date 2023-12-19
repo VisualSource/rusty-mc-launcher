@@ -7,6 +7,7 @@ type DB_Type = "NULL" | "INTEGER" | "REAL" | "TEXT" | "BLOB";
 type DB_Type_Extend = "NULL" | "INTEGER" | "REAL" | "TEXT" | "BLOB" | "DATE" | "JSON" | "BOOLEAN" | "ENUM";
 type DefaultType<T extends DB_Type_Extend, J = unknown> =
     | T extends "ENUM" ? J : never
+    | T extends "INTEGER" ? J : never
     | T extends "DATE" ? "CURRENT_TIMESTAMP" | "CURRENT_DATE" | "CURRENT_TIME" : never
     | T extends "JSON" ? J : never
     | T extends "BOOLEAN" ? "TRUE" | "FALSE" : never;
@@ -32,6 +33,7 @@ type WhereStatment<P> = [PartialScheam<P>, ...Array<{
     OR?: PartialScheam<P>
 }>]
 type SchemaFind<P> = {
+    distinct?: boolean
     where?: WhereStatment<P>,
     select?: Partial<Record<keyof P, true>>,
     order?: Partial<Record<keyof P, "ASC" | "DESC">>,
@@ -68,11 +70,14 @@ export class Type<TDB extends DB_Type_Extend, TNull extends "non_null" | "null" 
     private is_nullable: Nullable;
     private is_primary_key: boolean;
     private default_value: string;
+    private autoincrement: boolean;
     constructor(private dbType: DB_Type, private convertType: TDB, opt?: {
         is_nullable?: Nullable,
         is_primary_key?: boolean
         default_value?: string
+        autoincrement?: boolean
     }) {
+        this.autoincrement = opt?.autoincrement ?? false;
         this.is_nullable = opt?.is_nullable ?? Nullable.Default;
         this.is_primary_key = opt?.is_primary_key ?? false;
         this.default_value = opt?.default_value ?? "";
@@ -91,6 +96,12 @@ export class Type<TDB extends DB_Type_Extend, TNull extends "non_null" | "null" 
             is_primary_key: this.is_primary_key
         });
     }
+
+    public auto_increment(): this {
+        if (this.dbType !== "INTEGER") throw new DBError("Can not have autoincrement on non integer type");
+        this.autoincrement = true;
+        return this;
+    }
     public primary_key(): this {
         this.is_primary_key = true;
         return this;
@@ -99,6 +110,10 @@ export class Type<TDB extends DB_Type_Extend, TNull extends "non_null" | "null" 
         let sql: string[] = [this.dbType];
         if (this.is_primary_key) {
             sql.push("PRIMARY KEY");
+        }
+
+        if (this.autoincrement) {
+            sql.push("AUTOINCREMENT")
         }
 
         if (this.is_nullable !== Nullable.Default) {
@@ -113,12 +128,18 @@ export class Type<TDB extends DB_Type_Extend, TNull extends "non_null" | "null" 
         return sql.join(" ");
     }
     public default(value: DefaultType<TDB, TJson>): this {
-        if (this.convertType === "JSON") {
-            this.default_value = JSON.stringify(value);
-            return this;
+        switch (this.convertType) {
+            case "INTEGER":
+                this.default_value = (value as number).toString();
+                break;
+            case "JSON":
+                this.default_value = JSON.stringify(value);
+                break;
+            default:
+                this.default_value = `'${value}'` as string;
+                break;
         }
 
-        this.default_value = value as string;
         return this;
     }
     public convert(value: any): any {
@@ -149,7 +170,6 @@ export class Type<TDB extends DB_Type_Extend, TNull extends "non_null" | "null" 
         }
     }
 }
-
 class DBError extends Error {
     constructor(msg: string) {
         super(msg, { cause: "DB_ORM_ERROR" })
@@ -159,7 +179,10 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
     private init: boolean = false;
     private updated: boolean = false;
     private filepath: string | null = null;
-    constructor(private name: string, private table: T) { }
+    constructor(private name: string, private table: T, private opts: {
+        forign?: Record<string, { table: string; column: string }>,
+        runAfterCreate?: string;
+    } = {}) { }
 
     public parse(value: unknown): SchemaType<T> {
         if (typeof value !== "object" || !value) throw new Error("Failed to parse value");
@@ -194,14 +217,28 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             }
         }
 
-        const db = await SQLite.open(this.filepath);
+        const db = await SQLite.open(this.filepath as string);
 
         if (!this.init) {
             this.init = true;
             const fields = Object.entries(this.table).map(([key, type]) => `${key} ${type.toSQL()}`).join(", ");
-            const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}) ;`;
+
+            let foreignKeys;
+            if (this.opts?.forign) {
+                logger.info(`TABLE ${this.table} HAS FOREIGN KEYS ENABLING.`);
+                const result = await db.select("PRAGMA foreign_keys = ON;");
+                logger.info(`FOREIGN KEYS ${result}`);
+
+                foreignKeys = Object.entries(this.opts?.forign).map(([key, value]) => `FOREIGN KEY(${key}) REFERENCES ${value.table}(${value.column})`).join(",");
+            }
+
+            const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}${foreignKeys ? "," + foreignKeys : ""}) ;`;
             logger.debug(query);
             await db.execute(query);
+
+            if (this.opts?.runAfterCreate) {
+                await db.execute(this.opts.runAfterCreate);
+            }
 
         } else {
             if (!this.updated) {
@@ -256,7 +293,25 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             query: query.join(" ")
         }
     }
-    public async find({ where, select, order, limit }: SchemaFind<T>): Promise<Array<SchemaType<T>> | null> {
+
+    public async execute<D>(sql: string) {
+        const db = await this.prepare();
+        try {
+            const result = await db.select<D[]>(sql);
+            if (!result) return null;
+
+            return result;
+        } catch (error) {
+            if (error instanceof DBError) throw error;
+            const dbError = new DBError((error as Error)?.message ?? "Unknown Error");
+            dbError.stack = (error as Error).stack;
+            throw dbError;
+        } finally {
+            db.close();
+        }
+    }
+
+    public async find({ where, select, order, limit, distinct }: SchemaFind<T>): Promise<Array<SchemaType<T>> | null> {
         const db = await this.prepare();
 
         try {
@@ -279,6 +334,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
 
             const query = [
                 "SELECT",
+                distinct ? "DISTINCT" : undefined,
                 select ? Object.keys(select).join(", ") : "*",
                 "FROM",
                 this.name,
@@ -294,7 +350,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             return result.map(value => this.parse(value));
         } catch (error) {
             if (error instanceof DBError) throw error;
-            const dbError = new DBError((error as Error)?.message ?? "Unkown Error");
+            const dbError = new DBError((error as Error)?.message ?? "Unknown Error");
             dbError.stack = (error as Error).stack;
             throw dbError;
         } finally {
@@ -313,7 +369,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
 
             }, { params: [] as unknown[], values: [] as string[], cols: [] as string[] });
 
-            const query = `INSERT INTO ${this.name} (${cols.join(", ")}) VALUES (${values.join(", ")});`;
+            const query = `${this.opts.forign ? "PRAGMA foreign_keys = ON;" : ""}INSERT INTO ${this.name} (${cols.join(", ")}) VALUES (${values.join(", ")});`;
 
             logger.debug(query);
 
@@ -345,6 +401,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
                 whereBy = result.query;
             }
             const query = [
+                this.opts.forign ? "PRAGMA foreign_keys = ON;" : undefined,
                 "UPDATE",
                 this.name,
                 "SET",

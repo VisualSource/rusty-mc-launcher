@@ -54,9 +54,6 @@ const ModrinthContent: React.FC = () => {
                             {data.categories.map((value, i) => (<Badge key={i}>{value}</Badge>))}
                         </div>
                     </div>
-
-
-
                     <div>
                         <div className="flex"><Users2 className="pr-2" /> {data.followers}</div>
                         <div className="flex"><Download className="pr-2" />{data.downloads} </div>

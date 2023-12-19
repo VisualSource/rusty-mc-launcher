@@ -4,11 +4,16 @@
 
 @layer components {
   #root {
-    @apply h-screen
+    @apply h-screen;
+  }
+
+  .main-layout {
+    grid-template-rows: 88px calc(100vh - 64px - 88px) 64px;
   }
 }
 
-html,body {
+html,
+body {
   height: 100vh;
   margin: 0;
 }

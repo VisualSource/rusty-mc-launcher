@@ -4,9 +4,9 @@ import Navbar from "./Navbar";
 
 function App() {
   return (
-    <div className="flex flex-col h-full">
+    <div className="grid main-layout h-full">
       <Navbar />
-      <main className="flex flex-col flex-1 bg-zinc-900 overflow-hidden">
+      <main className="flex flex-col bg-zinc-900 row-span-1">
         <Outlet />
       </main>
       <Footer />

@@ -9,3 +9,5 @@ root:
 loggers:
   attohttpc:
     level: error
+  tao:
+    level: error

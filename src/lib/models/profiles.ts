@@ -1,4 +1,5 @@
 import { Schema, Type, type InferSchema } from "../db/sqlite";
+import { type LoaderType } from "../hooks/useMinecraftVersion";
 
 const profiles = new Schema("profile", {
     id: Type.Text().primary_key(),
@@ -18,6 +19,7 @@ const profiles = new Schema("profile", {
     logConfigIsXML: Type.Boolean().default("TRUE"),
     resolution: Type.Json<{ width: number; height: number; }>().nullable(),
     active: Type.Boolean().default("FALSE"),
+    loader: Type.Enum<LoaderType>().default("vanilla").non_nullable(),
     mods: Type.Json<{ id: string; version: string; name: string; }[]>().nullable(),
 });
 

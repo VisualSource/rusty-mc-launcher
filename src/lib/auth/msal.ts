@@ -1,7 +1,7 @@
 import { PublicClientApplication, EventType, type AuthenticationResult } from "@azure/msal-browser";
 import localforage from 'localforage';
 
-//import "@lib/auth/msal_browser_override";
+import "@lib/auth/msal_browser_override";
 import { msalConfig } from '@lib/config/auth';
 
 export const masl = new PublicClientApplication(msalConfig);

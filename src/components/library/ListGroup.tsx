@@ -1,10 +1,15 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import useCategoryGroup from "@/lib/hooks/useCategoryGroup";
 import { TypographyMuted } from "../ui/typography";
+import ListGroupItem from "./ListGroupItem";
 
-const ListGroup: React.FC<React.PropsWithChildren<{ name: string, count: number, defaultOpen?: boolean }>> = ({ children, defaultOpen = false, name, count = 0 }) => {
+
+const ListGroup: React.FC<React.PropsWithChildren<{ id: number; name: string, count: number, defaultOpen?: boolean }>> = ({ id, children, defaultOpen = false, name, count = 0 }) => {
     const [open, setOpen] = useState(defaultOpen);
+    const category = useCategoryGroup(id);
+
     return (
         <li>
             <Collapsible open={open} onOpenChange={(ev) => setOpen(ev)} className="w-full">
@@ -17,7 +22,9 @@ const ListGroup: React.FC<React.PropsWithChildren<{ name: string, count: number,
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                     <ul>
-                        {children}
+                        {category.map(value => (
+                            <ListGroupItem uuid={value.id} key={value.id} icon={value.icon ?? ""} name={value.name} />
+                        ))}
                     </ul>
                 </CollapsibleContent>
             </Collapsible>
