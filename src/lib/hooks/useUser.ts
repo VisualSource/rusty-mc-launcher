@@ -77,10 +77,8 @@ const loadMinecraftProfile = async (account: AccountInfo | null, instance: IPubl
     }
 
     if (!data || freshFetch) return fetchProfile();
-
     const token = JSON.parse(atob(data.token.access_token.split(".")[1])) as { exp: number; };
-
-    if (new Date(token.exp * 1000) >= new Date()) {
+    if (token.exp < ((new Date() as never as number) / 1000)) {
         return fetchProfile();
     }
 

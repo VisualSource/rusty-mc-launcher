@@ -133,7 +133,9 @@ const Navbar = () => {
                                     <NavLink to="" className={({ isActive }) => cn({ "text-blue-300 border-b-2 border-blue-300": isActive })}>LIBRARY</NavLink>
                                 </NavigationMenuTrigger>
                                 <NavigationMenuContent>
-                                    <Button className='w-full rounded-none' variant="ghost">Home</Button>
+                                    <Button asChild className='w-full rounded-none' variant="ghost">
+                                        <Link to="/">Home</Link>
+                                    </Button>
                                     <Button className='w-full rounded-none' variant="ghost">Collections</Button>
                                     <Separator />
                                     <Button className='w-full rounded-none' variant="ghost">Downloads</Button>

@@ -2,38 +2,39 @@ import { type UnlistenFn, listen } from '@tauri-apps/api/event';
 import Queue, { QueueEvent, type QueueWorker } from 'queue';
 import { createContext, useEffect, useState, } from 'react';
 
-
 import { check_install, install, installMods, installPack } from '@system/commands';
-
+import { selectProfile } from '@/components/dialog/ProfileSelection';
+import { selectVersion } from '@/components/dialog/SelectVersion';
+import useExternalQueue from '../hooks/useExternalQueue';
 import modrinth, { FileDownload } from '../api/modrinth';
 import { getLoaderType } from '@/utils/versionUtils';
-import useNotification from '@hook/useNotifications';
+import { queueFactory } from '@/utils/queue';
 import profiles from '../models/profiles';
 import logger from '@system/logger';
-import { queueFactory } from '@/utils/queue';
-import useExternalQueue from '../hooks/useExternalQueue';
+import { toast } from 'react-toastify';
 
-type ModsMetadata = {
+export type ModsMetadata = {
     type: "mods",
     mods: FileDownload[],
     profile: string;
     game_dir: string | null
 };
-type ClientMetadata = {
+export type ClientMetadata = {
     type: "client",
     game_dir: string | undefined,
     version: string;
 };
 
-type PackMetadata = {
+export type PackMetadata = {
     type: "pack",
+    name: string;
     game_dir?: string | undefined,
     file: FileDownload,
     requiredMods: boolean,
     packType: "resource" | "shader"
 }
 
-type QueueItem = {
+export type QueueItem = {
     ammount: number;
     ammount_current: number;
     size: number;
@@ -67,6 +68,7 @@ type DownloadClient = {
     queueCompleted: QueueItem[],
     queueErrored: QueueItem[],
     clearCompleted: () => void,
+    clearErrored: () => void,
     install: (version: string, game_dir?: string, forceDownload?: boolean) => Promise<void>,
     installMods: (profileId: string, modIds: string[]) => Promise<void>,
     installPack: (packId: string, type: "resource" | "shader") => Promise<void>
@@ -100,7 +102,6 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
     const queueErrored = useExternalQueue<QueueItem>(queues.errored);
     const queueNext = useExternalQueue<QueueItem>(queues.next);
     const [currentItem, setCurrentItem] = useState<QueueItem | undefined>();
-    const notification = useNotification();
 
     useEffect(() => {
         const successHandler = (job: QueueEvent<"success", { result: unknown[]; }>) => {
@@ -113,11 +114,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
             const message = metadata.type === "client" ? "Minecraft has been installed." : metadata.type === "pack" ? "Minecraft pack has been installed." : "Minecraft mods have been downloaded."
 
-            notification.notify({
-                type: "success",
-                title: "Minecraft Launcher",
-                body: message
-            }, true).catch(e => logger.error(e));
+            toast.success(message);
         }
         const errorHandler = (job: QueueEvent<"error", { error: QueueError; job: QueueWorker; }>) => {
             const error = job.detail.error;
@@ -192,6 +189,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
             queueCompleted,
             queueErrored,
             queueNext,
+            clearErrored() { queues.errored.queue.clear() },
             clearCompleted() { queues.completed.queue.clear() },
             async installPack(packId, type) {
                 try {
@@ -209,6 +207,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                         type: "pack",
                         metadata: {
                             type: "pack",
+                            name: file.name,
                             file,
                             packType: type,
                             requiredMods: false
@@ -237,9 +236,10 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
                 } catch (error) {
                     logger.error(error);
-                    notification.toast.alert({
-                        title: (error as Error)?.message ?? `Failed to download ${type} pack.`,
-                        type: "error",
+                    toast.error((error as Error)?.message ?? `Failed to download ${type} pack.`, {
+                        data: {
+                            time: new Date()
+                        }
                     });
                 }
             },
@@ -293,10 +293,11 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                     });
                 } catch (error) {
                     logger.error(error);
-                    notification.toast.alert({
-                        title: (error as Error)?.message ?? "Failed to install client",
-                        type: "error",
-                        body: "Failed to install client"
+                    toast.error<{ title: string; }>((error as Error)?.message ?? "Failed to install client", {
+                        data: {
+                            body: "Failed to install client",
+                            time: new Date()
+                        }
                     });
                     document.dispatchEvent(new CustomEvent("mcl::install_ready", { detail: { vaild: false } }));
                 }
@@ -319,9 +320,10 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
                     // there are not new mods to download!
                     if (!newlyAddedMods.length) {
-                        notification.toast.success({
-                            title: "Mods already installed on profile.",
-                            type: "success"
+                        toast.success("Mods already installed on profile.", {
+                            data: {
+                                time: new Date()
+                            }
                         })
                         return;
                     }
@@ -370,10 +372,10 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                     });
                 } catch (error) {
                     logger.error(error);
-                    notification.toast.alert({
-                        title: (error as Error)?.message ?? "Failed to download mods.",
-                        type: "error",
-                        body: (error as Error)?.message ?? "Failed to download mods."
+                    toast.error((error as Error)?.message ?? "Failed to download mods.", {
+                        data: {
+                            time: new Date()
+                        }
                     });
                 }
             },

@@ -1,10 +1,13 @@
 import { Outlet } from "react-router-dom";
-import { Grid2X2 } from "lucide-react";
+import { AlertTriangle, Grid2X2 } from "lucide-react";
 import { Suspense } from "react";
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SidebarList from "@/components/library/SidebarList";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/Spinner";
+import { TypographyH4 } from "@/components/ui/typography";
 
 const Library: React.FC = () => {
 
@@ -17,13 +20,20 @@ const Library: React.FC = () => {
                         <Grid2X2 />
                     </Button>
                 </div>
-                <ul className="pt-2 text-white">
-                    <ErrorBoundary fallback={<li>Error...</li>}>
-                        <Suspense fallback={<li>Loading...</li>}>
-                            <SidebarList />
-                        </Suspense>
-                    </ErrorBoundary>
-                </ul>
+                <ScrollArea>
+                    <ul className="pt-2 text-white">
+                        <ErrorBoundary fallback={
+                            <li className="w-full flex flex-col items-center justify-center p-4">
+                                <AlertTriangle className="h-16 w-16" />
+                                <TypographyH4>Failed to load profiles!</TypographyH4>
+                            </li>
+                        }>
+                            <Suspense fallback={<li className="w-full flex justify-center p-4"><Spinner /> </li>}>
+                                <SidebarList />
+                            </Suspense>
+                        </ErrorBoundary>
+                    </ul>
+                </ScrollArea>
             </section>
             <section className="flex flex-col row-span-full h-full col-span-9 xl:col-span-10 bg-blue-900/10">
                 <Outlet />

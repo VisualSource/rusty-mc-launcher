@@ -1,4 +1,4 @@
-import { Download, PlusSquare } from "lucide-react";
+import { Download, FileDiff, Monitor, PackagePlus, PlusSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import {
@@ -9,8 +9,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TypographyMuted } from "./ui/typography";
 import { Button } from "./ui/button";
+import useDownload from "@/lib/hooks/useDownload";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Progress } from "./ui/progress";
 
 const Footer = () => {
+    const { queueCurrent } = useDownload();
     return (
         <footer className="flex h-16 bg-zinc-950 shadow text-zinc-400 row-span-1">
             <div className="h-full flex justify-start items-center shrink w-full">
@@ -33,8 +37,33 @@ const Footer = () => {
             <div className="h-full flex items-center justify-center flex-1 w-full">
                 <Button variant="ghost" className="hover:bg-transparent dark:hover:bg-transparent" asChild>
                     <Link to="downloads">
-                        <Download className="pr-2" />
-                        <TypographyMuted>Manage Downloads</TypographyMuted>
+                        {queueCurrent ? (
+                            <div className="flex gap-3 items-end">
+                                <Avatar className="rounded-none">
+                                    <AvatarFallback className="rounded-lg">
+                                        {queueCurrent.type === "client" ? <Monitor /> : queueCurrent.type === "mods" ? <PackagePlus /> : <FileDiff />}
+                                    </AvatarFallback>
+                                    <AvatarImage />
+                                </Avatar>
+                                <div className="w-96">
+
+                                    <div className="w-full flex justify-between">
+                                        <TypographyMuted asChild className="line-clamp-1">
+                                            <span>{queueCurrent.msg}</span>
+                                        </TypographyMuted>
+                                        <TypographyMuted asChild>
+                                            <span>{100 * (queueCurrent.ammount_current / 100)}%</span>
+                                        </TypographyMuted>
+                                    </div>
+                                    <Progress value={100 * (queueCurrent.ammount_current / 100)} />
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <Download className="pr-2" />
+                                <TypographyMuted>Manage Downloads</TypographyMuted>
+                            </>
+                        )}
                     </Link >
                 </Button>
             </div>

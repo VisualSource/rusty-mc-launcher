@@ -52,6 +52,57 @@ export type InferSchema<P> = P extends Schema<infer S> ? SchemaType<S> : never;
 
 const DATABASE_FILE = "database.db";
 
+export class DbGlobal {
+    static INSTANCE: DbGlobal | null = null;
+    static Get(): Promise<DbGlobal> {
+        return new Promise((ok) => {
+            if (DbGlobal.INSTANCE === null) {
+                DbGlobal.INSTANCE = new DbGlobal();
+                DbGlobal.INSTANCE.init().then(() => {
+                    ok(DbGlobal.INSTANCE as DbGlobal);
+                });
+            } else {
+                ok(DbGlobal.INSTANCE)
+            }
+        });
+
+    }
+    private path: string | undefined;
+
+    private _db: SQLite | undefined;
+
+    public get db(): SQLite {
+        if (this._db === undefined) throw new DBError("Not Database was setup");
+        return this._db;
+    }
+
+    public async init() {
+        logger.debug("INIT CONNECTION");
+        if (!this.path) {
+            try {
+                const dir = await appDataDir();
+                const file = await resolve(dir, DATABASE_FILE);
+
+                logger.debug(`Fetching database file. Path: ${file}`);
+
+                const doesExist = await exists(DATABASE_FILE, { dir: BaseDirectory.AppData });
+                logger.debug(`Checking for database file. Exists: ${doesExist}`);
+                if (!doesExist) {
+                    await createDir(dir);
+                    logger.debug(`Writing database file.`);
+                    await writeBinaryFile(DATABASE_FILE, new Uint8Array([]), { dir: BaseDirectory.AppData });
+                }
+                this.path = file;
+            } catch (error) {
+                logger.error(error);
+                throw new DBError("Failed to get database file.");
+            }
+        }
+        this._db = await SQLite.open(this.path);
+        logger.debug("READY");
+    }
+}
+
 const enum Nullable {
     Default,
     Nullable,
@@ -178,8 +229,7 @@ class DBError extends Error {
 export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "null", unknown>>> {
     private init: boolean = false;
     private updated: boolean = false;
-    private filepath: string | null = null;
-    constructor(private name: string, private table: T, private opts: {
+    constructor(public name: string, private table: T, private opts: {
         forign?: Record<string, { table: string; column: string }>,
         runAfterCreate?: string;
     } = {}) { }
@@ -195,29 +245,9 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
 
         return output as SchemaType<T>;
     }
-    private async prepare() {
-        if (!this.filepath) {
-            try {
-                const dir = await appDataDir();
-                const file = await resolve(dir, DATABASE_FILE);
-
-                logger.info(`Fetching database file. Path: ${file}`);
-
-                const doesExist = await exists(DATABASE_FILE, { dir: BaseDirectory.AppData });
-                logger.info(`Checking for database file. Exists: ${doesExist}`);
-                if (!doesExist) {
-                    await createDir(dir);
-                    logger.info(`Writing database file.`);
-                    await writeBinaryFile(DATABASE_FILE, new Uint8Array([]), { dir: BaseDirectory.AppData });
-                }
-                this.filepath = file;
-            } catch (error) {
-                logger.error(error);
-                throw new DBError("Failed to get database file.");
-            }
-        }
-
-        const db = await SQLite.open(this.filepath as string);
+    public async prepare() {
+        const global = await DbGlobal.Get();
+        const db = global.db;
 
         if (!this.init) {
             this.init = true;
@@ -225,21 +255,17 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
 
             let foreignKeys;
             if (this.opts?.forign) {
-                logger.info(`TABLE ${this.table} HAS FOREIGN KEYS ENABLING.`);
-                const result = await db.select("PRAGMA foreign_keys = ON;");
-                logger.info(`FOREIGN KEYS ${result}`);
-
                 foreignKeys = Object.entries(this.opts?.forign).map(([key, value]) => `FOREIGN KEY(${key}) REFERENCES ${value.table}(${value.column})`).join(",");
             }
 
-            const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}${foreignKeys ? "," + foreignKeys : ""}) ;`;
+            const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}${foreignKeys ? "," + foreignKeys : ""});`;
             logger.debug(query);
             await db.execute(query);
-
             if (this.opts?.runAfterCreate) {
-                await db.execute(this.opts.runAfterCreate);
+                try {
+                    await db.execute(this.opts.runAfterCreate);
+                } catch (error) { }
             }
-
         } else {
             if (!this.updated) {
                 const currentColumns = await db.select(`PRAGMA table_info(${this.name})`) as { cid: number; name: string; }[];
@@ -286,7 +312,7 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             acc.query.push(`${key} = $${index + 1 + startIndex}`);
             acc.values.push(value);
             return acc;
-        }, { values: [] as any[], query: ["WHERE"] });
+        }, { values: [] as unknown[], query: ["WHERE"] });
 
         return {
             params: values,
@@ -294,20 +320,19 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
         }
     }
 
-    public async execute<D>(sql: string) {
+    public async execute<D>(sql: string, values?: unknown[]) {
         const db = await this.prepare();
         try {
-            const result = await db.select<D[]>(sql);
+            const result = await db.select<D[]>(sql.replace("%table%", this.name), values);
             if (!result) return null;
 
             return result;
         } catch (error) {
+            logger.error(error);
             if (error instanceof DBError) throw error;
             const dbError = new DBError((error as Error)?.message ?? "Unknown Error");
             dbError.stack = (error as Error).stack;
             throw dbError;
-        } finally {
-            db.close();
         }
     }
 
@@ -353,8 +378,6 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             const dbError = new DBError((error as Error)?.message ?? "Unknown Error");
             dbError.stack = (error as Error).stack;
             throw dbError;
-        } finally {
-            await db.close();
         }
     }
     public async create({ data }: { data: SchemaType<T> }): Promise<boolean> {
@@ -380,8 +403,6 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             if (error instanceof DBError) throw error;
 
             throw new DBError((error as Error)?.message ?? "Unkown Error");
-        } finally {
-            await db.close();
         }
     }
     public async update({ data, where }: ScheamUpdate<T>): Promise<boolean> {
@@ -417,8 +438,6 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
             if (error instanceof DBError) throw error;
             logger.error(error);
             throw new DBError((error as Error)?.message ?? "Unkown Error");
-        } finally {
-            await db.close();
         }
     }
     public async delete({ where }: SchemaDelete<T>): Promise<boolean> {
@@ -440,8 +459,6 @@ export class Schema<T extends Record<string, Type<DB_Type_Extend, "non_null" | "
         } catch (error) {
             if (error instanceof DBError) throw error;
             throw new DBError((error as Error)?.message ?? "Unkown Error");
-        } finally {
-            await db.close();
         }
     }
     public async findOne(props: Omit<SchemaFind<T>, "limit">): Promise<SchemaType<T> | null> {

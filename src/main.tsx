@@ -3,7 +3,7 @@ import { RouterProvider } from "react-router-dom";
 import { MsalProvider } from "@azure/msal-react";
 import { ToastContainer } from 'react-toastify';
 import ReactDOM from 'react-dom/client';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
@@ -11,24 +11,34 @@ import './index.css';
 import "./lib/polyfill/to-reversed";
 import { masl } from "@auth/msal";
 
-import NotificationProvider from '@lib/context/NotificationContext';
+import SelectVersionDialog from "@component/dialog/SelectVersion";
+import SelectProfile from "@component/dialog/ProfileSelection";
 import { DownloadProvider } from '@context/DownloadContext';
 
 import router from '@/router';
+import { ErrorBoundary } from "react-error-boundary";
+import { init } from "./lib/db/initDb";
 
 const queryClient = new QueryClient();
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <MsalProvider instance={masl}>
-        <NotificationProvider>
+init().then(() => {
+  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <MsalProvider instance={masl}>
           <DownloadProvider>
             <RouterProvider router={router} />
             <ToastContainer position="bottom-right" theme="dark" />
+            <SelectVersionDialog />
+            <ErrorBoundary fallback={<></>}>
+              <Suspense fallback={<></>}>
+                <SelectProfile />
+              </Suspense>
+            </ErrorBoundary>
           </DownloadProvider>
-        </NotificationProvider>
-      </MsalProvider>
-    </QueryClientProvider>
-  </React.StrictMode>,
-);
+        </MsalProvider>
+      </QueryClientProvider>
+    </React.StrictMode>,
+  );
+});
+

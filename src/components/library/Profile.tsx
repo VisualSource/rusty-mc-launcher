@@ -1,5 +1,5 @@
 import { Link, useLoaderData } from "react-router-dom";
-import { Settings, Star } from "lucide-react";
+import { Settings, Stars } from "lucide-react";
 
 import { TypographyH1, TypographyH4 } from "../ui/typography";
 import { MinecraftProfile } from "@/lib/models/profiles";
@@ -8,10 +8,13 @@ import { Button } from "../ui/button";
 
 import useIsGameRunning from "@/lib/hooks/useIsGameRunning";
 import useRunGame from "@/lib/hooks/useRunGame";
+import useCategoryMutation from "@/lib/hooks/useCategoryMutation";
+import { cn } from "@/lib/utils";
 
 const Profile: React.FC = () => {
     const { state: isRunning, isLoading } = useIsGameRunning();
     const data = useLoaderData() as MinecraftProfile;
+    const mutate = useCategoryMutation();
     const { run } = useRunGame();
 
     return (
@@ -20,7 +23,7 @@ const Profile: React.FC = () => {
                 <TypographyH1>{data.name}</TypographyH1>
                 <div className="flex p-4 absolute bottom-0 w-full justify-between bg-zinc-900/60">
                     <div className="flex items-center gap-4">
-                        <Button disabled={isRunning || isLoading} onClick={() => run(data)} size="lg">Play</Button>
+                        <Button className={cn({ "bg-orange-500 hover:bg-orange-500/90 dark:bg-orange-900 dark:text-zinc-50 dark:hover:bg-orange-900/90": isRunning })} disabled={isRunning || isLoading} onClick={() => run(data)} size="lg">{isLoading ? "Loading..." : isRunning ? "Running" : "Play"}</Button>
 
                         <div>
                             <TypographyH4>LAST PLAYED</TypographyH4>
@@ -34,8 +37,10 @@ const Profile: React.FC = () => {
                                 <Settings />
                             </Link>
                         </Button>
-                        <Button size="icon">
-                            <Star />
+                        <Button onClick={() => {
+                            mutate.mutate({ type: "create", profile: data.id, group: 1 });
+                        }} size="icon">
+                            <Stars />
                         </Button>
                     </div>
                 </div>

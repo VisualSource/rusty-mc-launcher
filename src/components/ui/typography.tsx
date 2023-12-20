@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Slot } from "@radix-ui/react-slot";
 
 export function TypographyH1({ children, className }: React.PropsWithChildren<{ className?: string }>) {
     return (
@@ -81,8 +82,9 @@ export function TypographySmall({ children, className }: React.PropsWithChildren
     )
 }
 
-export function TypographyMuted({ children, className }: React.PropsWithChildren<{ className?: string }>) {
+export function TypographyMuted({ asChild = false, children, className }: React.PropsWithChildren<{ asChild?: boolean, className?: string }>) {
+    const Comp = asChild ? Slot : 'div';
     return (
-        <p className={cn("text-sm text-muted-foreground", className)}>{children}</p>
+        <Comp className={cn("text-sm text-zinc-500", className)}>{children}</Comp>
     )
 }

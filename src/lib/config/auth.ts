@@ -30,7 +30,7 @@ export const msalConfig = {
                         break;
                 }
             },
-            logLevel: import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error
+            logLevel: LogLevel.Error
         }
     },
     cache: {

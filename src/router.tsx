@@ -22,7 +22,7 @@ import loadModrinthPage from "./loaders/modrinth";
 import loadProfile from "./loaders/profile";
 import librarydata from "./loaders/librarydata";
 import updateProfile from "./actions/updateProfile";
-
+import Download from "./pages/Download";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -37,7 +37,7 @@ const router = createBrowserRouter(
 
       <Route path="/settings" element={<Settings />} />
 
-      <Route path="/downloads" element={<></>} />
+      <Route path="/downloads" element={<Download />} />
       <Route path="/workshop" element={<Workshop />}>
         <Route errorElement={<ModrinthBoundaryError />} loader={modrinthSearch} index element={<WorkshopIndex />} />
         <Route errorElement={<ModrinthBoundaryError />} path=":uuid" loader={loadModrinthPage} element={<ModrinthPage />} />

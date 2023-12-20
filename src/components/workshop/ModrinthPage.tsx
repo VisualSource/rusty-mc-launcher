@@ -1,17 +1,18 @@
+import { Await, Link, To, useAsyncValue, useLoaderData } from "react-router-dom";
+import { Bug, Code, Download, Globe, Plus, Users2 } from "lucide-react";
+import { DiscordLogoIcon } from "@radix-ui/react-icons";
+import { Suspense, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Suspense, useState } from "react";
-import { Await, Link, useAsyncValue, useLoaderData } from "react-router-dom";
-import { ModrinthProjectExtended } from "@/lib/api/modrinth";
 
+import type { ModrinthProjectExtended } from "@/lib/api/modrinth";
+import useInstallContent from "@/lib/hooks/useInstallContent";
 import { TypographyH1, TypographyH4 } from "../ui/typography";
 import { ScrollArea } from "../ui/scroll-area";
-import { Bug, Code, Download, Globe, Plus, Users2 } from "lucide-react";
+import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { DiscordLogoIcon } from "@radix-ui/react-icons";
-import { Separator } from "../ui/separator";
 import { cn } from "@/lib/utils";
 
 type DeferredRouteData = {
@@ -32,18 +33,17 @@ const ModrinthPage: React.FC = () => {
     );
 }
 
-
-
 const ModrinthContent: React.FC = () => {
+    const data = useAsyncValue() as ModrinthProjectExtended;
     const [image, setImage] = useState(0);
 
-    const data = useAsyncValue() as ModrinthProjectExtended;
+    const installContent = useInstallContent();
 
     return (
         <ScrollArea>
             <div className="p-3">
                 <Button asChild>
-                    <Link to="/workshop">Back</Link>
+                    <Link to={-1 as To}>Back</Link>
                 </Button>
             </div>
             <div className="flex flex-col text-zinc-50 container">
@@ -61,7 +61,7 @@ const ModrinthContent: React.FC = () => {
                 </div>
 
                 <section className="p-2 bg-blue-900/20 shadow-2xl rounded-md">
-                    {data.gallery ? (
+                    {data.gallery?.length ? (
                         <>
                             <div className="h-96">
                                 {data.gallery[image] ? (
@@ -80,12 +80,12 @@ const ModrinthContent: React.FC = () => {
                         </>
                     ) : null}
                     <div className="flex flex-wrap p-4 gap-2">
-                        {data.source_url ? (<a href={data.source_url} className="flex"><Code className="pr-2" /> <span className="underline text-blue-600">Source</span> </a>) : null}
-                        {data.issues_url ? (<a href={data.issues_url} className="flex"> <Bug className="pr-2" /> <span className="underline text-blue-600">Issues</span> </a>) : null}
-                        {data.wiki_url ? (<a href={data.wiki_url} className="flex"> <Globe className="pr-2" /> <span className="underline text-blue-600">Wiki</span></a>) : null}
-                        {data.discord_url ? (<a href={data.discord_url} className="flex items-center"><DiscordLogoIcon /> <span className="underline pl-2 text-blue-600">Discord</span></a>) : null}
+                        {data.source_url ? (<a target="_blank" href={data.source_url} className="flex"><Code className="pr-2" /> <span className="underline text-blue-600">Source</span> </a>) : null}
+                        {data.issues_url ? (<a target="_blank" href={data.issues_url} className="flex"> <Bug className="pr-2" /> <span className="underline text-blue-600">Issues</span> </a>) : null}
+                        {data.wiki_url ? (<a target="_blank" href={data.wiki_url} className="flex"> <Globe className="pr-2" /> <span className="underline text-blue-600">Wiki</span></a>) : null}
+                        {data.discord_url ? (<a target="_blank" href={data.discord_url} className="flex items-center"><DiscordLogoIcon /> <span className="underline pl-2 text-blue-600">Discord</span></a>) : null}
                         {data.donation_urls ? (data.donation_urls.map((value) => (
-                            <a href={value.url} target="blank" key={value.id} className="flex"><span className="underline text-blue-600">{value.platform}</span> </a>
+                            <a href={value.url} target="_blank" key={value.id} className="flex"><span className="underline text-blue-600">{value.platform}</span> </a>
                         ))) : null}
                     </div>
                 </section>
@@ -95,7 +95,7 @@ const ModrinthContent: React.FC = () => {
                         <section className="p-4 flex justify-between bg-blue-900/20 shadow-2xl rounded-md">
                             <TypographyH4>{data.title}</TypographyH4>
 
-                            <Button><Plus /> Install</Button>
+                            <Button onClick={() => installContent(data.slug, data.project_type, { minecraft_versions: data?.game_versions, modloaders: data?.loaders })}><Plus /> Install</Button>
                         </section>
                         <article className="prose max-w-none prose-invert mb-4">
                             <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>

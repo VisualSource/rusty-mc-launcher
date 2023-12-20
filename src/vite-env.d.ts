@@ -8,7 +8,7 @@ interface Array<T> {
 
 
 declare module "@tauri-apps/api/event" {
-    export { Event, EventCallback, EventName, once, UnlistenFn } from "@tauri-apps/api/types/event";
+    export * from "@tauri-apps/api/types/event";
 }
 
 declare module "@tauri-apps/api/window" {

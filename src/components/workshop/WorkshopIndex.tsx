@@ -1,7 +1,6 @@
 import { Await, Link, useAsyncValue, useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
 import { Suspense, useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
-import { Plus } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -116,8 +115,6 @@ const DisplayResults: React.FC = () => {
                                         {project.versions.toReversed().slice(0, 8).map((value, i) => (<Badge key={i}>{value}</Badge>))}
                                         {project.versions.length > 8 ? (<Badge>{(project.versions.length - 8)} More Versions</Badge>) : null}
                                     </div>
-
-                                    <Button onClick={(ev) => ev.preventDefault()} size="sm" variant="outline"><Plus /> Install</Button>
                                 </div>
                             </CardContent>
                         </Card>
