@@ -28,25 +28,29 @@ const handleMutate = async (ev: RequestType | RequestDelete) => {
 export const useProfile = (id?: string, load: boolean = true) => {
     const navigate = useNavigate()
     const queryClient = useQueryClient();
-    const { data, isError, isLoading, error } = useQuery([id, "profile"], async () => {
-        logger.info(`Loading Profile ${id}`);
-        const profile = await profiles.findOne({
-            where: [{ id }]
-        });
-        logger.debug("Profile", profile);
-        if (!profile) throw new Error("Failed to get minecraft profile");
+    const { data, isError, isLoading, error } = useQuery({
+        enabled: !!id && load, queryKey: [id, "profile"], queryFn: async () => {
+            logger.info(`Loading Profile ${id}`);
+            const profile = await profiles.findOne({
+                where: [{ id }]
+            });
+            logger.debug("Profile", profile);
+            if (!profile) throw new Error("Failed to get minecraft profile");
 
-        return profile;
-    }, { enabled: !!id && load });
+            return profile;
+        }
+    });
 
-    const mutate = useMutation(handleMutate, {
-        async onSuccess(data, varablies) {
+    const mutate = useMutation({
+        mutationFn: handleMutate,
+
+        async onSuccess(data) {
             if (!data) {
                 navigate("/library")
                 return;
             }
 
-            await queryClient.cancelQueries([id, "profile"]);
+            await queryClient.cancelQueries({ queryKey: [id, "profile"] });
             queryClient.setQueryData<MinecraftProfile>([id, "profile"], (old) => data as MinecraftProfile);
         }
     });

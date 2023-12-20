@@ -6,6 +6,9 @@ interface Array<T> {
 }
 
 
+declare module "@tauri-apps/api/http" {
+    export * from "@tauri-apps/api/types/http";
+}
 
 declare module "@tauri-apps/api/event" {
     export * from "@tauri-apps/api/types/event";
