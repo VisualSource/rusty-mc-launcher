@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Rusty Minecraft Launcher",
-    "version": "0.4.0"
+    "version": "0.4.1"
   },
   "tauri": {
     "allowlist": {
@@ -136,7 +136,7 @@
     },
     "windows": [
       {
-        "userAgent": "VisualSource/rusty-mc-launcher/0.3.0 collin_blosser@yahoo.com",
+        "userAgent": "VisualSource/rusty-mc-launcher/0.4.1 collin_blosser@yahoo.com",
         "fullscreen": false,
         "height": 630,
         "resizable": true,

@@ -26,24 +26,54 @@ import Download from "./pages/Download";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route element={< App />}>
-
+    <Route element={<App />}>
       <Route path="/" element={<Library />}>
-        <Route index loader={librarydata} element={<LibraryRoot />} errorElement={<ProfileError />} />
-        <Route path="/create" action={updateProfile} errorElement={<ProfileError />} element={<ProfileCreate />} />
-        <Route path="/profile/:id" errorElement={<ProfileError />} loader={loadProfile} element={<Profile />} />
-        <Route path="/profile/edit/:id" action={updateProfile} errorElement={<ProfileError />} loader={loadProfile} element={<ProfileEdit />} />
+        <Route
+          index
+          loader={librarydata}
+          element={<LibraryRoot />}
+          errorElement={<ProfileError />}
+        />
+        <Route
+          path="/create"
+          action={updateProfile}
+          errorElement={<ProfileError />}
+          element={<ProfileCreate />}
+        />
+        <Route
+          path="/profile/:id"
+          errorElement={<ProfileError />}
+          loader={loadProfile}
+          element={<Profile />}
+        />
+        <Route
+          path="/profile/edit/:id"
+          action={updateProfile}
+          errorElement={<ProfileError />}
+          loader={loadProfile}
+          element={<ProfileEdit />}
+        />
       </Route>
 
       <Route path="/settings" element={<Settings />} />
 
       <Route path="/downloads" element={<Download />} />
       <Route path="/workshop" element={<Workshop />}>
-        <Route errorElement={<ModrinthBoundaryError />} loader={modrinthSearch} index element={<WorkshopIndex />} />
-        <Route errorElement={<ModrinthBoundaryError />} path=":uuid" loader={loadModrinthPage} element={<ModrinthPage />} />
+        <Route
+          errorElement={<ModrinthBoundaryError />}
+          loader={modrinthSearch}
+          index
+          element={<WorkshopIndex />}
+        />
+        <Route
+          errorElement={<ModrinthBoundaryError />}
+          path=":uuid"
+          loader={loadModrinthPage}
+          element={<ModrinthPage />}
+        />
       </Route>
-    </Route>
-  )
+    </Route>,
+  ),
 );
 
 export default router;

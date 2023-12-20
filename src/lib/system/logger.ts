@@ -18,15 +18,11 @@ info("Loaded Logger");
 debug_log.enabled = import.meta.env.DEV;
 
 const logger = {
-    error,
-    log,
-    warn,
-    info,
-    debug: debug_log
+  error,
+  log,
+  warn,
+  info,
+  debug: debug_log,
 };
 
 export default logger;
-
-
-
-
