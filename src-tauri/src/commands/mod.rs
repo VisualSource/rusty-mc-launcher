@@ -6,8 +6,22 @@ use minecraft_launcher_lib::{
     client::ClientBuilder, install_mod_list, packs, ChannelMessage, FileDownload,
 };
 use std::path::PathBuf;
-use tauri::Window;
+use tauri::{Manager, Window};
 use tauri_plugin_oauth::{start_with_config, OauthConfig};
+
+#[tauri::command]
+pub async fn close_splashscreen(window: Window) {
+    window
+        .get_window("splashscreen")
+        .expect("no window labeled 'splashscreen' found")
+        .close()
+        .expect("Failed to close window");
+    window
+        .get_window("main")
+        .expect("No window labeled 'main' found")
+        .show()
+        .expect("Failed to show main window");
+}
 
 #[tauri::command]
 pub async fn start_server(window: Window, port: u16, _origin: String) -> Result<u16, Error> {

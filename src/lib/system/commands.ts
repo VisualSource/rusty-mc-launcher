@@ -12,7 +12,7 @@ export class PortGenerator {
     return PortGenerator.INSTANCE;
   }
   public port: number = 3123;
-  constructor() {}
+  constructor() { }
   setPort() {
     this.port =
       [3123, 4124, 5434].at(Math.floor((Math.random() * 100) % 3)) ?? 3123;
@@ -75,3 +75,5 @@ export const play = async (settings: LaunchConfig) =>
 export const stop = async () => invoke("stop");
 
 export const isGameRunning = () => invoke<boolean>("is_game_running");
+
+export const closeSplashscreen = () => invoke<void>("close_splashscreen");

@@ -18,6 +18,7 @@ import { DownloadProvider } from "@context/DownloadContext";
 import router from "@/router";
 
 import { init } from "./lib/db/initDb";
+import { closeSplashscreen } from "./lib/system/commands";
 
 const queryClient = new QueryClient();
 
@@ -40,4 +41,6 @@ init().then(() => {
       </QueryClientProvider>
     </React.StrictMode>,
   );
+
+  closeSplashscreen();
 });

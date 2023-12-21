@@ -15,6 +15,7 @@ fn main() {
         .manage(state::TauriState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             commands::play,
+            commands::close_splashscreen,
             commands::stop,
             commands::install,
             commands::check_install,

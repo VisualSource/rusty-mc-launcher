@@ -136,7 +136,16 @@
     },
     "windows": [
       {
-        "userAgent": "VisualSource/rusty-mc-launcher/0.4.1 collin_blosser@yahoo.com",
+        "width": 400,
+        "height": 200,
+        "decorations": false,
+        "resizable": false,
+        "url": "splashscreen.html",
+        "label": "splashscreen",
+        "center": true
+      },
+      {
+        "userAgent": "VisualSource/rusty-mc-launcher/0.4.2 collin_blosser@yahoo.com",
         "fullscreen": false,
         "height": 630,
         "resizable": true,
@@ -144,7 +153,8 @@
         "minWidth": 1080,
         "title": "Minecraft Launcher",
         "width": 1080,
-        "decorations": false
+        "decorations": false,
+        "visible": false
       }
     ]
   }

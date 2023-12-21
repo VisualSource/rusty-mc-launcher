@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Splashscreen</title>
+    <style>
+      html,
+      body {
+        height: 100vh;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        overflow: hidden;
+      }
+      .image-wrapper {
+        height: 100%;
+        width: 100%;
+      }
+
+      .image-wrapper > img {
+        height: 100%;
+        width: 100%;
+        object-fit: contain;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      #container {
+        background-color: rgb(9 9 11 / 1);
+        overflow: hidden;
+        padding: 2rem;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div class="image-wrapper">
+        <img src="./logo.svg" alt="logo" />
+      </div>
+    </div>
+  </body>
+</html>
