@@ -4,25 +4,24 @@ import {
   Route,
 } from "react-router-dom";
 
-import ModrinthBoundaryError from "./components/workshop/ModrinthBoundaryError";
-import WorkshopIndex from "./components/workshop/WorkshopIndex";
-import ProfileCreate from "./components/library/ProfileCreate";
-import ModrinthPage from "./components/workshop/ModrinthPage";
-import ProfileError from "./components/library/ProfileError";
-import LibraryRoot from "./components/library/LibraryRoot";
-import ProfileEdit from "./components/library/ProfileEdit";
-import Profile from "./components/library/Profile";
-import Workshop from "@page/Workshop";
-import Settings from "@page/Settings";
-import Library from "@page/Library";
+import ProfileCreate from "@component/library/content/profile/ProfileCreate";
+import ProfileError from "@component/library/content/profile/ProfileError";
+import ProfileEdit from "@component/library/content/profile/ProfileEdit";
+import WorkshopProject from "@component/workshop/WorkshopProject";
+import Profile from "@component/library/content/profile/Profile";
+import WorkshopSearch from "@component/workshop/WorkshopSearch";
+import WorkshopError from "@component/workshop/WorkshopError";
+import LibraryRoot from "@component/library/LibraryRoot";
+import Download from "@component/download/Download";
+import Settings from "@component/settings/Settings";
+import Library from "@component/library/Library";
 import App from "@component/App";
 
+import getFavoritedProfiles from "./loaders/getFavoritedProfiles";
+import getModrinthProject from "./loaders/getModrinthProject";
 import modrinthSearch from "./loaders/modrinthSearch";
-import loadModrinthPage from "./loaders/modrinth";
-import loadProfile from "./loaders/profile";
-import librarydata from "./loaders/librarydata";
 import updateProfile from "./actions/updateProfile";
-import Download from "./pages/Download";
+import getProfile from "./loaders/getProfile";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -30,7 +29,7 @@ const router = createBrowserRouter(
       <Route path="/" element={<Library />}>
         <Route
           index
-          loader={librarydata}
+          loader={getFavoritedProfiles}
           element={<LibraryRoot />}
           errorElement={<ProfileError />}
         />
@@ -43,14 +42,14 @@ const router = createBrowserRouter(
         <Route
           path="/profile/:id"
           errorElement={<ProfileError />}
-          loader={loadProfile}
+          loader={getProfile}
           element={<Profile />}
         />
         <Route
           path="/profile/edit/:id"
           action={updateProfile}
           errorElement={<ProfileError />}
-          loader={loadProfile}
+          loader={getProfile}
           element={<ProfileEdit />}
         />
       </Route>
@@ -58,18 +57,18 @@ const router = createBrowserRouter(
       <Route path="/settings" element={<Settings />} />
 
       <Route path="/downloads" element={<Download />} />
-      <Route path="/workshop" element={<Workshop />}>
+      <Route path="/workshop">
         <Route
-          errorElement={<ModrinthBoundaryError />}
+          errorElement={<WorkshopError />}
           loader={modrinthSearch}
           index
-          element={<WorkshopIndex />}
+          element={<WorkshopSearch />}
         />
         <Route
-          errorElement={<ModrinthBoundaryError />}
+          errorElement={<WorkshopError />}
           path=":uuid"
-          loader={loadModrinthPage}
-          element={<ModrinthPage />}
+          loader={getModrinthProject}
+          element={<WorkshopProject />}
         />
       </Route>
     </Route>,

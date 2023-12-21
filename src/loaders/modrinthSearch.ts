@@ -1,7 +1,7 @@
+import type { ActionFunction } from "react-router-dom";
 import { getVersion } from "@tauri-apps/api/app";
-import { ActionFunction } from "react-router-dom";
 
-const modrinthSearch: ActionFunction = async ({ params, request }) => {
+const modrinthSearch: ActionFunction = async ({ request }) => {
   const query = new URL(request.url).searchParams;
   const version = await getVersion();
 

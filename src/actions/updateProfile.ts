@@ -1,5 +1,5 @@
-import profiles, { MinecraftProfile } from "@/lib/models/profiles";
 import type { ActionFunction } from "react-router-dom";
+import profiles, { type MinecraftProfile } from "@/lib/models/profiles";
 
 const updateProfile: ActionFunction = async ({ request }) => {
   const data = (await request.json()) as MinecraftProfile;

@@ -24,6 +24,12 @@ pub struct Client {
     process: Option<Child>,
 }
 
+pub enum GameState {
+    Starting,
+    Running,
+    Stopping,
+}
+
 impl Client {
     fn new(cmd: String, args: Vec<String>, game_dir: PathBuf) -> Self {
         Self {

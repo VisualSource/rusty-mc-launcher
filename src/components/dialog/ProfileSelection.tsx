@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { coerce, satisfies } from "semver";
 import { useForm } from "react-hook-form";
+import { Book } from "lucide-react";
 import { z } from "zod";
 
 import {
@@ -29,13 +30,12 @@ import {
   CommandItem,
 } from "../ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useProfiles } from "@/lib/hooks/useProfiles";
 import { getLoaderType } from "@/utils/versionUtils";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Book } from "lucide-react";
 
 const FormSchema = z.object({
   showAll: z.boolean(),
@@ -64,6 +64,13 @@ export const selectProfile = async (limit?: {
 };
 
 const SelectProfile: React.FC = () => {
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isOpen, setOpen] = useState<boolean>(false);
+  const [config, setConfig] = useState<null | {
+    modloaders?: string[];
+    minecraft_versions?: string[];
+  }>(null);
+  const profiles = useProfiles();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -73,13 +80,6 @@ const SelectProfile: React.FC = () => {
   });
 
   const showAll = form.watch("showAll");
-
-  const profiles = useProfiles();
-  const [config, setConfig] = useState<null | {
-    modloaders?: string[];
-    minecraft_versions?: string[];
-  }>(null);
-  const [isOpen, setOpen] = useState<boolean>(false);
 
   const avaliable = useMemo(() => {
     if (!config) return profiles;
@@ -165,7 +165,7 @@ const SelectProfile: React.FC = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Minecraft Version</FormLabel>
-                      <Popover>
+                      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -198,6 +198,7 @@ const SelectProfile: React.FC = () => {
                                   value={value.id}
                                   onSelect={() => {
                                     form.setValue("profile", value.id);
+                                    setPopoverOpen(false);
                                   }}
                                 >
                                   <Avatar>

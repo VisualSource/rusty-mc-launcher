@@ -4,42 +4,50 @@ import { useCallback } from "react";
 import type { MinecraftProfile } from "../models/profiles";
 import { asLaunchConfig } from "../system/launch_config";
 import { play } from "../system/commands";
+import profiles from "../models/profiles";
 import useDownload from "./useDownload";
 import logger from "../system/logger";
 import useUser from "./useUser";
-import profiles from "../models/profiles";
 
 const useRunGame = () => {
   const download = useDownload();
   const { minecraft } = useUser();
 
   const run = useCallback(async (profile: MinecraftProfile) => {
-    try {
-      const user = await minecraft(true);
-      const config = await asLaunchConfig(user, profile);
+    return new Promise<void>(async (ok, reject) => {
+      let callback: ((ev: Event) => Promise<void>) | undefined = undefined;
 
-      document.addEventListener(
-        "mcl::install_ready",
-        async (ev) => {
-          if ((ev as CustomEvent<{ vaild: boolean }>).detail.vaild) {
+      try {
+        const user = await minecraft(true);
+        const config = await asLaunchConfig(user, profile);
+        callback = async (ev: Event) => {
+          const isValid = (ev as CustomEvent<{ vaild: boolean }>).detail.vaild;
+          if (isValid) {
             await profiles.update({
               data: { lastUsed: new Date() },
               where: [{ id: profile.id }],
             });
             await play(config);
+            return ok();
           }
-        },
-        { once: true },
-      );
+          reject();
+        };
 
-      await download.install(config.version, config.game_directory);
-    } catch (error) {
-      logger.error(error);
-      toast.error("Failed to start the game!", { data: { time: new Date() } });
-    }
+        window.addEventListener("mcl::install_ready", callback, { once: true });
+        await download.install(config.version, config.game_directory);
+      } catch (error) {
+        logger.error(error);
+        toast.error("Failed to start the game!", {
+          data: { event: "game-start", type: "failed" },
+        });
+        if (callback)
+          window.removeEventListener("mcl::install_ready", callback);
+        reject();
+      }
+    });
   }, []);
 
-  return { run };
+  return run;
 };
 
 export default useRunGame;

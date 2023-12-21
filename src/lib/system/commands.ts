@@ -56,9 +56,6 @@ export const installPack = async (
   game_dir?: string,
 ) => invoke<void>("install_pack", { file, packType: type, gameDir: game_dir });
 
-//@ts-ignore
-window.test = installPack;
-
 export const check_install = async (version: string, game_dir?: string) => {
   try {
     const result = await invoke<boolean>("check_install", {

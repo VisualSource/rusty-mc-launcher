@@ -1,6 +1,7 @@
 import { type UnlistenFn, listen } from "@tauri-apps/api/event";
 import Queue, { QueueEvent, type QueueWorker } from "queue";
 import { createContext, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 import {
   check_install,
@@ -8,15 +9,13 @@ import {
   installMods,
   installPack,
 } from "@system/commands";
-import { selectProfile } from "@/components/dialog/ProfileSelection";
-import { selectVersion } from "@/components/dialog/SelectVersion";
-import useExternalQueue from "../hooks/useExternalQueue";
-import modrinth, { FileDownload } from "../api/modrinth";
+import modrinth, { type FileDownload } from "../api/modrinth";
+import useExternalQueue from "@hook/useExternalQueue";
 import { getLoaderType } from "@/utils/versionUtils";
+import type ToastData from "@/types/toastData";
 import { queueFactory } from "@/utils/queue";
 import profiles from "../models/profiles";
 import logger from "@system/logger";
-import { toast } from "react-toastify";
 
 export type ModsMetadata = {
   type: "mods";
@@ -297,7 +296,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
             const isInstalled = await check_install(version, game_dir);
 
             if (isInstalled && !forceDownload) {
-              document.dispatchEvent(
+              window.dispatchEvent(
                 new CustomEvent("mcl::install_ready", {
                   detail: { vaild: true },
                 }),

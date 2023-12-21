@@ -12,12 +12,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { TypographyMuted } from "./ui/typography";
-import { Button } from "./ui/button";
-import useDownload from "@/lib/hooks/useDownload";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Progress } from "./ui/progress";
+} from "@component/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
+import { TypographyMuted } from "@component/ui/typography";
+import { Progress } from "@component/ui/progress";
+import { Button } from "@component/ui/button";
+import useDownload from "@hook/useDownload";
 
 const Footer = () => {
   const { queueCurrent } = useDownload();

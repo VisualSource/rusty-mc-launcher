@@ -1,5 +1,5 @@
-import semver from "semver";
 import { getVersion } from "@tauri-apps/api/app";
+import semver from "semver";
 
 type Version = {
   id: string;
@@ -189,7 +189,7 @@ const modrinth = {
     const primaryFile = version.files.find((value) => value.primary);
 
     if (!primaryFile)
-      throw new Error("Failed to find version primary version", {
+      throw new Error("Failed to find primary version", {
         cause: "NO_PRIMARY_VERSION",
       });
 
@@ -222,10 +222,13 @@ const modrinth = {
     game: string,
     fromVersion?: boolean,
   ): Promise<FileDownload[]> => {
-    if (!id) throw new Error("Invald mod id");
+    if (!id) throw new Error("Missing mod id", { cause: "MISSING_PROJECT_ID" });
 
     const wantedVersion = semver.coerce(game);
-    if (!wantedVersion) throw new Error("Failed to parse game version.");
+    if (!wantedVersion)
+      throw new Error("Failed to parse game version.", {
+        cause: "FAILED_TO_GET_GAME_VERSION",
+      });
 
     const response = await fetch(
       fromVersion

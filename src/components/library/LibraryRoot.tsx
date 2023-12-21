@@ -1,25 +1,28 @@
+import { ErrorBoundary } from "react-error-boundary";
 import { useLoaderData } from "react-router-dom";
-import { Separator } from "../ui/separator";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { TypographyH3 } from "../ui/typography";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Book } from "lucide-react";
-import useIsGameRunning from "@/lib/hooks/useIsGameRunning";
-import useRunGame from "@/lib/hooks/useRunGame";
-import { MinecraftProfile } from "@/lib/models/profiles";
-import { cn } from "@/lib/utils";
+import { Suspense } from "react";
+
+import {
+  PatchNotesError,
+  PatchNotesLoading,
+} from "./content/patchnotes/patchNotesFallback";
+import { Card, CardContent, CardHeader, CardTitle } from "@component/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
+import { ScrollArea, ScrollBar } from "@component/ui/scroll-area";
+import type { MinecraftProfile } from "@lib/models/profiles";
+import PatchNotes from "./content/patchnotes/PatchNotes";
+import { TypographyH3 } from "@component/ui/typography";
+import { Separator } from "@component/ui/separator";
+import PlayButton from "../ui/play";
 
 const LibraryRoot: React.FC = () => {
   const data = useLoaderData() as MinecraftProfile[];
-  const { isLoading, state: isRunning } = useIsGameRunning();
-  const { run } = useRunGame();
 
   return (
-    <div className="container text-zinc-50">
-      <ScrollArea>
-        <section>
+    <ScrollArea>
+      <div className="container text-zinc-50 py-4">
+        <section className="flex flex-col">
           <div className="pt-4 flex items-center gap-4 pb-2">
             <TypographyH3>Favorites</TypographyH3>
             <Separator className="dark:bg-zinc-50" />
@@ -41,16 +44,7 @@ const LibraryRoot: React.FC = () => {
                         <Book />
                       </AvatarFallback>
                     </Avatar>
-                    <Button
-                      className={cn({
-                        "bg-orange-500 hover:bg-orange-500/90 dark:bg-orange-900 dark:text-zinc-50 dark:hover:bg-orange-900/90":
-                          isRunning,
-                      })}
-                      disabled={isLoading || isRunning}
-                      onClick={() => run(value)}
-                    >
-                      Play
-                    </Button>
+                    <PlayButton profile={value} />
                   </CardContent>
                 </Card>
               ))}
@@ -58,8 +52,13 @@ const LibraryRoot: React.FC = () => {
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </section>
-      </ScrollArea>
-    </div>
+        <ErrorBoundary fallback={<PatchNotesError />}>
+          <Suspense fallback={<PatchNotesLoading />}>
+            <PatchNotes />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    </ScrollArea>
   );
 };
 

@@ -1,9 +1,9 @@
-import { getName, getVersion } from "@tauri-apps/api/app";
+import { getName } from "@tauri-apps/api/app";
 import localforage from "localforage";
 
 export const initStorage = async () => {
   try {
-    const [name, version] = await Promise.all([getName(), getVersion()]);
+    const [name] = await Promise.all([getName()]);
 
     localforage.config({
       name,

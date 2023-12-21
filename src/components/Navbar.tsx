@@ -1,4 +1,3 @@
-import { useNotificationCenter } from "react-toastify/addons/use-notification-center";
 import {
   Minus,
   X,
@@ -7,17 +6,18 @@ import {
   Hexagon,
   User2,
   Bell,
-  Check,
   Archive,
 } from "lucide-react";
+import { useNotificationCenter } from "react-toastify/addons/use-notification-center";
 import {
   AuthenticatedTemplate,
   UnauthenticatedTemplate,
 } from "@azure/msal-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatRelative } from "date-fns/formatRelative";
 import { appWindow } from "@tauri-apps/api/window";
-import { exit } from "@tauri-apps/api/process";
 import { Link, NavLink } from "react-router-dom";
+import { exit } from "@tauri-apps/api/process";
 
 import {
   NavigationMenu,
@@ -32,27 +32,22 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@component/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { TypographyH4 } from "./ui/typography";
-import { Separator } from "./ui/separator";
-import { Button } from "./ui/button";
+} from "@component/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@component/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
+import { TypographyH4, TypographyMuted } from "@component/ui/typography";
+import { ScrollArea } from "@component/ui/scroll-area";
+import { Separator } from "@component/ui/separator";
+import type ToastData from "@/types/toastData";
+import { Button } from "@component/ui/button";
 import useUser from "@hook/useUser";
-import { cn } from "@/lib/utils";
-import NotificationTime from "./NotificationTime";
-import { toast } from "react-toastify";
-import { ScrollArea } from "./ui/scroll-area";
+import { cn } from "@lib/utils";
 
 const Navbar = () => {
   const { notifications, markAllAsRead, remove, clear } =
@@ -112,15 +107,7 @@ const Navbar = () => {
               <PopoverContent align="end" sideOffset={4} className="w-80">
                 <div className="flex justify-between">
                   <TypographyH4>Notifications</TypographyH4>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() =>
-                      toast.success("Test Content", {
-                        data: { event: "some-event", type: "a" },
-                      })
-                    }
-                  >
+                  <Button variant="secondary" size="sm">
                     View All
                   </Button>
                 </div>
@@ -136,7 +123,14 @@ const Navbar = () => {
                           <div className="line-clamp-1 font-medium">
                             {value.content as React.ReactNode}
                           </div>
-                          <NotificationTime createdAt={value.createdAt} />
+                          <TypographyMuted asChild>
+                            <span>
+                              {formatRelative(
+                                new Date(value.createdAt),
+                                new Date(),
+                              )}
+                            </span>
+                          </TypographyMuted>
                         </div>
                         <Button
                           title="Archive notification"

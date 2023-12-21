@@ -1,7 +1,7 @@
 import localforage from "localforage";
-import { MinecraftProfile } from "@lib/models/profiles";
+import type { MinecraftProfile } from "@lib/models/profiles";
 import { getLoaderType } from "@/utils/versionUtils";
-import { MC } from "@hook/useUser";
+import type { MC } from "@hook/useUser";
 
 type PathBuf = string;
 export interface LaunchConfig {
@@ -102,6 +102,12 @@ export const asLaunchConfig = async (
     data.jvm_args = profile.javaArgs.split(" ");
   }
 
+  if (profile.javaDir) {
+    data.executable_path = profile.javaDir;
+  }
+  if (profile.gameDir) {
+    data.game_directory = profile.gameDir;
+  }
   if (type === "fabric") {
     data.fabric = loader;
   }
