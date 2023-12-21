@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { ScrollArea, ScrollBar } from "@component/ui/scroll-area";
 import { Button } from "@component/ui/button";
 import PatchNotesRoot from "./PatchNotesRoot";
-import { wait } from "@/utils/timer";
 
 type PatchNodes = {
   version: number;
