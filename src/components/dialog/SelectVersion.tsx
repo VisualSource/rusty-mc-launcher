@@ -12,24 +12,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../ui/form";
+} from "@component/ui/form";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "../ui/command";
+} from "@component/ui/command";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Button } from "../ui/button";
+} from "@component/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@component/ui/popover";
+import { Button } from "@component/ui/button";
 import { cn } from "@/lib/utils";
 
 const FormSchema = z.object({

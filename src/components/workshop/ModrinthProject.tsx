@@ -84,20 +84,35 @@ const ModrinthProject: React.FC = () => {
           ) : null}
           <div className="flex flex-wrap p-4 gap-2">
             {data.source_url ? (
-              <a target="_blank" href={data.source_url} className="flex">
+              <a
+                rel="noopener noreferrer"
+                target="_blank"
+                href={data.source_url}
+                className="flex"
+              >
                 <Code className="pr-2" />{" "}
                 <span className="underline text-blue-600">Source</span>{" "}
               </a>
             ) : null}
             {data.issues_url ? (
-              <a target="_blank" href={data.issues_url} className="flex">
+              <a
+                rel="noopener noreferrer"
+                target="_blank"
+                href={data.issues_url}
+                className="flex"
+              >
                 {" "}
                 <Bug className="pr-2" />{" "}
                 <span className="underline text-blue-600">Issues</span>{" "}
               </a>
             ) : null}
             {data.wiki_url ? (
-              <a target="_blank" href={data.wiki_url} className="flex">
+              <a
+                rel="noopener noreferrer"
+                target="_blank"
+                href={data.wiki_url}
+                className="flex"
+              >
                 {" "}
                 <Globe className="pr-2" />{" "}
                 <span className="underline text-blue-600">Wiki</span>
@@ -106,6 +121,7 @@ const ModrinthProject: React.FC = () => {
             {data.discord_url ? (
               <a
                 target="_blank"
+                rel="noopener noreferrer"
                 href={data.discord_url}
                 className="flex items-center"
               >
@@ -120,6 +136,7 @@ const ModrinthProject: React.FC = () => {
                     target="_blank"
                     key={value.id}
                     className="flex"
+                    rel="noopener noreferrer"
                   >
                     <span className="underline text-blue-600">
                       {value.platform}
@@ -164,6 +181,7 @@ const ModrinthProject: React.FC = () => {
             <div>
               <TypographyH4>License</TypographyH4>
               <a
+                rel="noopener noreferrer"
                 className="underline text-blue-600"
                 href={data.license?.url ?? ""}
               >

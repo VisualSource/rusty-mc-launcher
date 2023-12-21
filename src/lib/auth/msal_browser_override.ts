@@ -89,7 +89,6 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (
       }
 
       let href: string = "";
-      let hash: string = "";
       try {
         /*
          * Will throw if cross origin,
@@ -97,7 +96,6 @@ internals.PopupClient.prototype.monitorPopupForHash = async function (
          * since we need the interval to keep running while on STS UI.
          */
         href = popupWindow.location.href;
-        hash = popupWindow.location.hash;
       } catch (e) {}
 
       // Don't process blank pages or cross domain

@@ -12,7 +12,7 @@ export class PortGenerator {
     return PortGenerator.INSTANCE;
   }
   public port: number = 3123;
-  constructor() { }
+  constructor() {}
   setPort() {
     this.port =
       [3123, 4124, 5434].at(Math.floor((Math.random() * 100) % 3)) ?? 3123;
