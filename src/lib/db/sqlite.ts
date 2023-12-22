@@ -1,12 +1,5 @@
-import {
-  writeBinaryFile,
-  createDir,
-  exists,
-  BaseDirectory,
-} from "@tauri-apps/api/fs";
-import { appDataDir, resolve } from "@tauri-apps/api/path";
-import SQLite from "tauri-plugin-sqlite-api";
 import logger from "@system/logger";
+import DB from "./db";
 
 type DB_Type = "NULL" | "INTEGER" | "REAL" | "TEXT" | "BLOB";
 type DB_Type_Extend =
@@ -22,29 +15,29 @@ type DB_Type_Extend =
 type DefaultType<T extends DB_Type_Extend, J = unknown> = T extends "ENUM"
   ? J
   : never | T extends "INTEGER"
-    ? J
-    : never | T extends "DATE"
-      ? "CURRENT_TIMESTAMP" | "CURRENT_DATE" | "CURRENT_TIME"
-      : never | T extends "JSON"
-        ? J
-        : never | T extends "BOOLEAN"
-          ? "TRUE" | "FALSE"
-          : never;
+  ? J
+  : never | T extends "DATE"
+  ? "CURRENT_TIMESTAMP" | "CURRENT_DATE" | "CURRENT_TIME"
+  : never | T extends "JSON"
+  ? J
+  : never | T extends "BOOLEAN"
+  ? "TRUE" | "FALSE"
+  : never;
 
 type InferType<T> = T extends Type<infer R, infer N, infer J>
   ?
-      | (R extends "JSON" ? J : never)
-      | (R extends "ENUM" ? J : never)
-      | (R extends "NULL" ? null : never)
-      | (R extends "INTEGER" ? number : never)
-      | (R extends "REAL" ? number : never)
-      | (R extends "TEXT" ? string : never)
-      | (R extends "BLOG" ? string : never)
-      | (R extends "BOOLEAN" ? boolean : never)
-      | (R extends "DATE" ? Date : never)
-      | (R extends "DATETIME" ? Date : never)
-      | (R extends "NUMERIC" ? number : never)
-      | (N extends "null" ? null : never)
+  | (R extends "JSON" ? J : never)
+  | (R extends "ENUM" ? J : never)
+  | (R extends "NULL" ? null : never)
+  | (R extends "INTEGER" ? number : never)
+  | (R extends "REAL" ? number : never)
+  | (R extends "TEXT" ? string : never)
+  | (R extends "BLOG" ? string : never)
+  | (R extends "BOOLEAN" ? boolean : never)
+  | (R extends "DATE" ? Date : never)
+  | (R extends "DATETIME" ? Date : never)
+  | (R extends "NUMERIC" ? number : never)
+  | (N extends "null" ? null : never)
   : never;
 type SchemaType<P> = { [K in keyof P]: InferType<P[K]> };
 type PartialScheam<P> = Partial<SchemaType<P>>;
@@ -71,62 +64,6 @@ type SchemaDelete<P> = {
 };
 
 export type InferSchema<P> = P extends Schema<infer S> ? SchemaType<S> : never;
-
-const DATABASE_FILE = "database.db";
-
-export class DbGlobal {
-  static INSTANCE: DbGlobal | null = null;
-  static Get(): Promise<DbGlobal> {
-    return new Promise((ok) => {
-      if (DbGlobal.INSTANCE === null) {
-        DbGlobal.INSTANCE = new DbGlobal();
-        DbGlobal.INSTANCE.init().then(() => {
-          ok(DbGlobal.INSTANCE as DbGlobal);
-        });
-      } else {
-        ok(DbGlobal.INSTANCE);
-      }
-    });
-  }
-  private path: string | undefined;
-
-  private _db: SQLite | undefined;
-
-  public get db(): SQLite {
-    if (this._db === undefined) throw new DBError("Not Database was setup");
-    return this._db;
-  }
-
-  public async init() {
-    logger.debug("INIT CONNECTION");
-    if (!this.path) {
-      try {
-        const dir = await appDataDir();
-        const file = await resolve(dir, DATABASE_FILE);
-
-        logger.debug(`Fetching database file. Path: ${file}`);
-
-        const doesExist = await exists(DATABASE_FILE, {
-          dir: BaseDirectory.AppData,
-        });
-        logger.debug(`Checking for database file. Exists: ${doesExist}`);
-        if (!doesExist) {
-          await createDir(dir);
-          logger.debug(`Writing database file.`);
-          await writeBinaryFile(DATABASE_FILE, new Uint8Array([]), {
-            dir: BaseDirectory.AppData,
-          });
-        }
-        this.path = file;
-      } catch (error) {
-        logger.error(error);
-        throw new DBError("Failed to get database file.");
-      }
-    }
-    this._db = await SQLite.open(this.path);
-    logger.debug("READY");
-  }
-}
 
 const enum Nullable {
   Default,
@@ -277,7 +214,7 @@ export class Schema<
       forign?: Record<string, { table: string; column: string }>;
       runAfterCreate?: string;
     } = {},
-  ) {}
+  ) { }
 
   public parse(value: unknown): SchemaType<T> {
     if (typeof value !== "object" || !value)
@@ -292,8 +229,7 @@ export class Schema<
     return output as SchemaType<T>;
   }
   public async prepare() {
-    const global = await DbGlobal.Get();
-    const db = global.db;
+    const db = DB.use();
 
     if (!this.init) {
       this.init = true;
@@ -311,15 +247,14 @@ export class Schema<
           .join(",");
       }
 
-      const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}${
-        foreignKeys ? "," + foreignKeys : ""
-      });`;
+      const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}${foreignKeys ? "," + foreignKeys : ""
+        });`;
       logger.debug(query);
       await db.execute(query);
       if (this.opts?.runAfterCreate) {
         try {
           await db.execute(this.opts.runAfterCreate);
-        } catch (error) {}
+        } catch (error) { }
       }
     } else {
       if (!this.updated) {
@@ -341,8 +276,8 @@ export class Schema<
 
           const query = addOrRemove
             ? `ALTER TABLE ${this.name} ADD COLUMN ${col} ${this.table[
-                col
-              ].toSQL()}`
+              col
+            ].toSQL()}`
             : `ALTER TABLE ${this.name} DROP COLUMN ${col}`;
           logger.debug(query);
           const ok = await db.execute(query);
@@ -367,8 +302,7 @@ export class Schema<
           const innerKey = Object.keys(value)[0];
           const innerValue = Object.values(value)[0];
           acc.query.push(
-            `${"AND" in curr ? "AND" : "OR"} ${innerKey} = $${
-              index + 1 + startIndex
+            `${"AND" in curr ? "AND" : "OR"} ${innerKey} = $${index + 1 + startIndex
             }`,
           );
           acc.values.push(innerValue);
@@ -482,11 +416,10 @@ export class Schema<
         },
       );
 
-      const query = `${
-        this.opts.forign ? "PRAGMA foreign_keys = ON;" : ""
-      }INSERT INTO ${this.name} (${cols.join(", ")}) VALUES (${values.join(
-        ", ",
-      )});`;
+      const query = `${this.opts.forign ? "PRAGMA foreign_keys = ON;" : ""
+        }INSERT INTO ${this.name} (${cols.join(", ")}) VALUES (${values.join(
+          ", ",
+        )});`;
 
       logger.debug(query);
 
@@ -519,7 +452,6 @@ export class Schema<
       }
       const query =
         [
-          this.opts.forign ? "PRAGMA foreign_keys = ON;" : undefined,
           "UPDATE",
           this.name,
           "SET",

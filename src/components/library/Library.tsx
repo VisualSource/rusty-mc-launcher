@@ -26,8 +26,11 @@ const Library: React.FC = () => {
             size="sm"
             variant="ghost"
             className="rounded-sm text-zinc-700"
+            asChild
           >
-            <Grid2X2 />
+            <Link to="/collections">
+              <Grid2X2 />
+            </Link>
           </Button>
         </div>
         <ScrollArea>

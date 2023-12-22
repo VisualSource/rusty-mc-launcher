@@ -51,11 +51,11 @@
       },
       "dialog": {
         "all": false,
-        "ask": false,
+        "ask": true,
         "confirm": true,
-        "message": false,
-        "open": false,
-        "save": false
+        "message": true,
+        "open": true,
+        "save": true
       },
       "window": {
         "all": false,

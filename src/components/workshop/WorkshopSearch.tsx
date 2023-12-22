@@ -25,7 +25,7 @@ const WorkshopSearch: React.FC = () => {
   const [searchParams, _] = useSearchParams();
   const [query] = useDebounce(search, 500);
   const navigate = useNavigate();
-  const data = useLoaderData() as ModrinthApiSearchResponse;
+  const data = useLoaderData();
 
   useEffect(() => {
     if (query.length > 4) {
@@ -107,27 +107,7 @@ const WorkshopSearch: React.FC = () => {
       <ScrollArea>
         <Suspense fallback={<>Loading...</>}>
           <Await resolve={data}>
-            <WorkshopSearchResults
-              nextParams={() => {
-                const offset = searchParams.get("offset");
-                const value = offset ? parseInt(offset) + 21 : 0;
-                if (value < data.total_hits) {
-                  searchParams.set("offset", value.toString());
-                }
-
-                return searchParams.toString();
-              }}
-              prevParams={() => {
-                const offset = searchParams.get("offset");
-                if (offset && offset !== "0") {
-                  searchParams.set(
-                    "offset",
-                    (parseInt(offset) - 21).toString(),
-                  );
-                }
-                return searchParams.toString();
-              }}
-            />
+            <WorkshopSearchResults />
           </Await>
         </Suspense>
       </ScrollArea>

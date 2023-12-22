@@ -1,20 +1,13 @@
-import { Link, useAsyncValue } from "react-router-dom";
+import { Link, To, useAsyncValue, useSearchParams } from "react-router-dom";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@component/ui/card";
-import type { ModrinthProject } from "@lib/api/modrinth";
-import { Button } from "@component/ui/button";
+import type { ModrinthApiSearchResponse } from "@lib/api/modrinth";
 import { Badge } from "@component/ui/badge";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
 
-type SearchResultProps = {
-  nextParams: () => string;
-  prevParams: () => string;
-};
-
-const WorkshopSearchResults: React.FC<SearchResultProps> = ({
-  nextParams,
-  prevParams,
-}) => {
-  const data = useAsyncValue() as { hits: ModrinthProject[] };
+const WorkshopSearchResults: React.FC = () => {
+  const [props] = useSearchParams();
+  const data = useAsyncValue() as ModrinthApiSearchResponse
   return (
     <>
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 grid-flow-row gap-4 px-4">
@@ -55,29 +48,22 @@ const WorkshopSearchResults: React.FC<SearchResultProps> = ({
           </Link>
         ))}
       </div>
-      <div className="w-full flex justify-center gap-8 pb-2 px-4 pt-4">
-        <Button title="Prev Page" asChild>
-          <Link
-            to={{
+      <Pagination className="pt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious to={props.get("offset") === "0" ? -1 as To : { pathname: "/workshop" }} />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext to={{
               pathname: "/workshop",
-              search: prevParams(),
-            }}
-          >
-            Back
-          </Link>
-        </Button>
-        <Button title="Next Page" asChild>
-          <Link
-            preventScrollReset={false}
-            to={{
-              pathname: "/workshop",
-              search: nextParams(),
-            }}
-          >
-            Next
-          </Link>
-        </Button>
-      </div>
+              search: (() => {
+                props.set("offset", (data.offset + 21).toString());
+                return props.toString();
+              })()
+            }} />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </>
   );
 };

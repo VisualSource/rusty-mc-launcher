@@ -28,7 +28,7 @@ const ProfileEdit: React.FC = () => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="h-full py-4 container space-y-8 text-zinc-50 flex flex-col"
         >
-          <ProfileModifyRoot />
+          <ProfileModifyRoot editMods />
         </form>
       </Form>
     </ScrollArea>

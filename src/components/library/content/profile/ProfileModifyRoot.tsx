@@ -1,7 +1,7 @@
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFormContext } from "react-hook-form";
-import { Check } from "lucide-react";
+import { Check, Trash } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -33,6 +33,7 @@ import { Switch } from "@component/ui/switch";
 import { Button } from "@component/ui/button";
 import { Input } from "@component/ui/input";
 import { cn } from "@lib/utils";
+import { TypographyMuted } from "@/components/ui/typography";
 
 export const schema = z
   .object({
@@ -44,7 +45,7 @@ export const schema = z
 
 export const resolver = zodResolver(schema);
 
-const ProfileModifyRoot: React.FC = () => {
+const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({ editMods = false }) => {
   const [popoverVersion, setPopoverVersion] = useState<boolean>(false);
   const { control, watch, setValue } = useFormContext();
 
@@ -89,8 +90,8 @@ const ProfileModifyRoot: React.FC = () => {
                   >
                     {field.value
                       ? minecraft_versions.data?.versions.find(
-                          (language) => language.id === field.value,
-                        )?.id ?? "Version not found"
+                        (language) => language.id === field.value,
+                      )?.id ?? "Version not found"
                       : "Select Version"}
                     <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -294,6 +295,31 @@ const ProfileModifyRoot: React.FC = () => {
           </FormItem>
         )}
       />
+
+      {editMods ? <FormField name="mods" control={control} render={({ field }) => (
+        <FormItem>
+          <FormLabel>Mods</FormLabel>
+          <FormControl>
+            <ul className="space-y-1 pl-2">
+              {field.value.map((item: { id: string; name: string; version: string }) => (
+                <li key={item.id} className="flex justify-between border border-separate border-zinc-800 p-2 rounded-sm">
+                  <div className="flex flex-col">
+                    <h6>{item.name}</h6>
+                    <TypographyMuted>{item.version}</TypographyMuted>
+                  </div>
+                  <Button onClick={() => {
+                    setValue("mods", field.value.filter((a: { id: string; name: string; version: string; }) => a.id !== item.id));
+                  }} size="icon" variant="destructive">
+                    <Trash />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </FormControl>
+          <FormDescription>Installed Mods</FormDescription>
+          <FormMessage />
+        </FormItem>
+      )} /> : null}
 
       <div className="absolute bottom-4 right-4">
         <Button type="submit" className="sticky bottom-4 right-0">
