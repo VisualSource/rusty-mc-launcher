@@ -19,8 +19,13 @@ import router from "@/router";
 import DB from "./lib/db/db";
 import { exit } from "@tauri-apps/api/process";
 import { closeSplashscreen } from "./lib/system/commands";
+import { initLogger } from "./lib/system/logger";
 
-DB.init().then(() => {
+async function init() {
+  await initLogger();
+  await DB.init();
+}
+init().then(() => {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -39,7 +44,6 @@ DB.init().then(() => {
       </QueryClientProvider>
     </React.StrictMode>,
   );
-
   closeSplashscreen()
 }).catch(() => exit(1))
 

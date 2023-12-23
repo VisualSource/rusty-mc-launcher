@@ -10,6 +10,7 @@ const updateProfile: ActionFunction = async ({ request }) => {
       break;
     case "PATCH":
       await profiles.update({ data, where: [{ id: data.id }] });
+      break;
     default:
       break;
   }

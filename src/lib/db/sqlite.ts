@@ -416,10 +416,9 @@ export class Schema<
         },
       );
 
-      const query = `${this.opts.forign ? "PRAGMA foreign_keys = ON;" : ""
-        }INSERT INTO ${this.name} (${cols.join(", ")}) VALUES (${values.join(
-          ", ",
-        )});`;
+      const query = `INSERT INTO ${this.name} (${cols.join(", ")}) VALUES (${values.join(
+        ", ",
+      )});`;
 
       logger.debug(query);
 

@@ -301,7 +301,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({ editMods = false 
           <FormLabel>Mods</FormLabel>
           <FormControl>
             <ul className="space-y-1 pl-2">
-              {field.value.map((item: { id: string; name: string; version: string }) => (
+              {field.value ? field.value.map((item: { id: string; name: string; version: string }) => (
                 <li key={item.id} className="flex justify-between border border-separate border-zinc-800 p-2 rounded-sm">
                   <div className="flex flex-col">
                     <h6>{item.name}</h6>
@@ -313,7 +313,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({ editMods = false 
                     <Trash />
                   </Button>
                 </li>
-              ))}
+              )) : null}
             </ul>
           </FormControl>
           <FormDescription>Installed Mods</FormDescription>

@@ -18,33 +18,35 @@ const Profile: React.FC = () => {
 
   return (
     <ScrollArea className="text-zinc-50">
-      <div className="w-full h-72 bg-blue-950 relative">
-        <div className="p-2">
+      <div className="h-72 bg-blue-950 flex flex-col justify-between">
+        <div className="p-2 flex flex-col max-w-3xl xl:max-w-7xl">
           <TypographyH1 className="line-clamp-1">{data.name}</TypographyH1>
           <ProfileCategories id={data.id} />
         </div>
-        <div className="flex p-4 absolute bottom-0 w-full justify-between bg-zinc-900/60">
-          <div className="flex items-center gap-4">
-            <PlayButton size="lg" profile={data} />
-            <div>
-              <TypographyH4>LAST PLAYED</TypographyH4>
-              <p>
-                {data.lastUsed
-                  ? formatRelative(data.lastUsed, new Date(), {})
-                  : "NEVER"}
-              </p>
+        <div className="relative flex">
+          <div className="flex w-full p-4 absolute bottom-0 justify-between bg-zinc-900/60">
+            <div className="flex shrink-1 items-center gap-4">
+              <PlayButton size="lg" profile={data} />
+              <div className="flex flex-col">
+                <TypographyH4>LAST PLAYED</TypographyH4>
+                <p>
+                  {data.lastUsed
+                    ? formatRelative(data.lastUsed, new Date(), {})
+                    : "NEVER"}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex gap-2 items-center">
-            <Button title="Settings" asChild size="icon">
-              <Link to={`/profile/edit/${data.id}`}>
-                <Settings />
-              </Link>
-            </Button>
-            <Suspense fallback={<Button disabled size="icon"><Component /></Button>}>
-              <AddToCategory id={data.id} />
-            </Suspense>
+            <div className="flex gap-2 items-center">
+              <Button title="Settings" asChild size="icon">
+                <Link to={`/profile/edit/${data.id}`}>
+                  <Settings />
+                </Link>
+              </Button>
+              <Suspense fallback={<Button disabled size="icon"><Component /></Button>}>
+                <AddToCategory id={data.id} />
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>

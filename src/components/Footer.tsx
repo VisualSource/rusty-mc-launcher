@@ -18,6 +18,7 @@ import { TypographyMuted } from "@component/ui/typography";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
+import import_profiles from "@/lib/system/import_profiles";
 
 const Footer = () => {
   const { queueCurrent } = useDownload();
@@ -26,16 +27,16 @@ const Footer = () => {
       <div className="h-full flex justify-start items-center shrink w-full">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="dark:hover:bg-transparent">
+            <Button variant="ghost" className="dark:hover:bg-transparent group">
               <PlusSquare className="pr-2" />
-              <TypographyMuted>Add a Game</TypographyMuted>
+              <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">Add a Game</TypographyMuted>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem asChild>
               <Link to="/create">Create Profile</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>Import Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={import_profiles}>Import Profile</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -46,7 +47,7 @@ const Footer = () => {
           className="hover:bg-transparent dark:hover:bg-transparent"
           asChild
         >
-          <Link to="downloads">
+          <Link to="downloads" className="group">
             {queueCurrent ? (
               <div className="flex gap-3 items-end">
                 <Avatar className="rounded-none">
@@ -78,7 +79,7 @@ const Footer = () => {
             ) : (
               <>
                 <Download className="pr-2" />
-                <TypographyMuted>Manage Downloads</TypographyMuted>
+                <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">Manage Downloads</TypographyMuted>
               </>
             )}
           </Link>

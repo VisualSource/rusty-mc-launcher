@@ -1,6 +1,7 @@
 use crate::errors::Error;
 use crate::state::TauriState;
 use log::{debug, error};
+use minecraft_launcher_lib::client::Client;
 use minecraft_launcher_lib::installer::Installer;
 use minecraft_launcher_lib::{
     client::ClientBuilder, install_mod_list, packs, ChannelMessage, FileDownload,
@@ -21,6 +22,12 @@ pub async fn close_splashscreen(window: Window) {
         .expect("No window labeled 'main' found")
         .show()
         .expect("Failed to show main window");
+}
+#[tauri::command]
+pub async fn get_minecraft_dir() -> Result<String, Error> {
+    let dir = ClientBuilder::get_minecraft_dir()?;
+
+    Ok(dir.to_string_lossy().to_string())
 }
 
 #[tauri::command]

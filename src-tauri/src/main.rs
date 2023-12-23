@@ -5,17 +5,25 @@
 mod commands;
 mod errors;
 mod state;
-use log4rs;
+
+use log::LevelFilter;
+use tauri_plugin_log::LogTarget;
 
 fn main() {
-    log4rs::init_file("log4rs.yml", Default::default()).expect("Failed to boot logger");
+    let logger = tauri_plugin_log::Builder::new()
+        .level(LevelFilter::Debug)
+        .format(|out, message, record| out.finish(format_args!("[{}] {}", record.level(), message)))
+        .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
+        .build();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_sqlite::init())
+        .plugin(logger)
         .manage(state::TauriState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             commands::play,
             commands::close_splashscreen,
+            commands::get_minecraft_dir,
             commands::stop,
             commands::install,
             commands::check_install,

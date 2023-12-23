@@ -1,28 +1,27 @@
-import debug from "debug";
+import createDebug, { type Debugger } from "debug";
+import * as tauriLog from "tauri-plugin-log-api";
 
-const error = debug("mcrl:error");
-const log = debug("mcrl:log");
-const warn = debug("mcrl:warn");
-const info = debug("mcrl:info");
-const debug_log = debug("mcrl:debug");
+const levels = ["error", "warn", "info", "debug"] as const;
+type LoggerLevel = typeof levels[number];
+type Logger = Record<LoggerLevel, Debugger>;
 
+const logger: Logger = (() => {
+  return levels.reduce((acc, value) => {
+    const key = `mcrl:${value}`;
+    acc[value] = createDebug(key);
+    acc[value].color = "green";
+    acc[value].log = (...args: [string, ...unknown[]]) => {
+      const [msg, ...rest] = args;
+      tauriLog[value as keyof typeof tauriLog](msg.replace(key + " ", ""));
+      if (rest.length >= 1) {
+        console.debug(...rest);
+      }
+    }
+    return acc;
+  }, {} as Logger);
+})();
 localStorage.debug = import.meta.env.PUBLIC_VITE_DEBUG ?? "mrcl:error";
-debug_log.log = console.debug.bind(console);
-info.log = console.info.bind(console);
-warn.log = console.warn.bind(console);
-error.log = console.error.bind(console);
-log.log = console.log.bind(console);
+logger.debug.enabled = import.meta.env.DEV;
 
-info("Loaded Logger");
-
-debug_log.enabled = import.meta.env.DEV;
-
-const logger = {
-  error,
-  log,
-  warn,
-  info,
-  debug: debug_log,
-};
-
+export const initLogger = () => tauriLog.attachConsole().then(() => logger.info("Logger Ready"));
 export default logger;

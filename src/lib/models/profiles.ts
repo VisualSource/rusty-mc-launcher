@@ -10,7 +10,7 @@ const profiles = new Schema("profile", {
   name: Type.Text(),
   created: Type.Date().default("CURRENT_TIMESTAMP"),
   lastUsed: Type.Date().default("CURRENT_TIMESTAMP").nullable(),
-  icon: Type.Blob().nullable(),
+  icon: Type.Text().nullable(),
   lastVersionId: Type.Text(),
   gameDir: Type.Text().nullable(),
   javaDir: Type.Text().nullable(),

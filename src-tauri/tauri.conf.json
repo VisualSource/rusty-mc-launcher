@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Rusty Minecraft Launcher",
-    "version": "0.4.2"
+    "version": "0.4.3"
   },
   "tauri": {
     "allowlist": {
@@ -16,7 +16,12 @@
         "exists": true,
         "writeFile": true,
         "createDir": true,
-        "scope": ["$APPDATA/database.db", "$APPDATA/"]
+        "readFile": true,
+        "scope": [
+          "$APPDATA/database.db",
+          "$APPDATA/**/*",
+          "$APPDATA/Roaming/**/*"
+        ]
       },
       "notification": {
         "all": true
@@ -114,7 +119,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["./log4rs.yml", "./cli/*"],
+      "resources": ["./cli/*", "../logo.svg"],
       "shortDescription": "",
       "targets": "all",
       "windows": {
