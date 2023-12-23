@@ -25,12 +25,19 @@ const Sidebar = () => {
   return (
     <>
       {collections.map((value) => (
-        <ErrorBoundary key={value.group_id} fallback={<li>
-          <div className="flex py-0.5 px-1  text-zinc-50 items-center bg-gradient-to-r from-zinc-700/95 from-10% to-zinc-800 w-full">
-            <AlertTriangle className="h-5 w-5 mr-1" />
-            <div className="text-sm line-clamp-1 uppercase font-medium">Error loading "{value.name}"</div>
-          </div>
-        </li>}>
+        <ErrorBoundary
+          key={value.group_id}
+          fallback={
+            <li>
+              <div className="flex py-0.5 px-1  text-zinc-50 items-center bg-gradient-to-r from-zinc-700/95 from-10% to-zinc-800 w-full">
+                <AlertTriangle className="h-5 w-5 mr-1" />
+                <div className="text-sm line-clamp-1 uppercase font-medium">
+                  Error loading "{value.name}"
+                </div>
+              </div>
+            </li>
+          }
+        >
           <Suspense fallback={<CollectionLoading />}>
             <Collection
               id={value.group_id}

@@ -263,9 +263,7 @@ const Navbar = () => {
                     <Link to="/">Home</Link>
                   </Button>
                   <Button className="w-full rounded-none" variant="ghost">
-                    <Link to="/collections">
-                      Collections
-                    </Link>
+                    <Link to="/collections">Collections</Link>
                   </Button>
                   <Separator />
                   <Button

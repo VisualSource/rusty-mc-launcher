@@ -9,7 +9,10 @@ import { ScrollArea, ScrollBar } from "@component/ui/scroll-area";
 import PatchNotes from "./content/patchnotes/PatchNotes";
 import { TypographyH3 } from "@component/ui/typography";
 import { Separator } from "@component/ui/separator";
-import Favorites, { FavoritesErrored, FavoritesLoading } from "./content/Favorites";
+import Favorites, {
+  FavoritesErrored,
+  FavoritesLoading,
+} from "./content/Favorites";
 
 const LibraryRoot: React.FC = () => {
   return (

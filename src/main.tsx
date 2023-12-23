@@ -25,26 +25,26 @@ async function init() {
   await initLogger();
   await DB.init();
 }
-init().then(() => {
-  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <MsalProvider instance={masl}>
-          <DownloadProvider>
-            <RouterProvider router={router} />
-            <ToastContainer position="bottom-right" theme="dark" />
-            <SelectVersionDialog />
-            <ErrorBoundary fallback={<></>}>
-              <Suspense fallback={<></>}>
-                <SelectProfile />
-              </Suspense>
-            </ErrorBoundary>
-          </DownloadProvider>
-        </MsalProvider>
-      </QueryClientProvider>
-    </React.StrictMode>,
-  );
-  closeSplashscreen()
-}).catch(() => exit(1))
-
-
+init()
+  .then(() => {
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <MsalProvider instance={masl}>
+            <DownloadProvider>
+              <RouterProvider router={router} />
+              <ToastContainer position="bottom-right" theme="dark" />
+              <SelectVersionDialog />
+              <ErrorBoundary fallback={<></>}>
+                <Suspense fallback={<></>}>
+                  <SelectProfile />
+                </Suspense>
+              </ErrorBoundary>
+            </DownloadProvider>
+          </MsalProvider>
+        </QueryClientProvider>
+      </React.StrictMode>,
+    );
+    closeSplashscreen();
+  })
+  .catch(() => exit(1));

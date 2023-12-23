@@ -31,7 +31,6 @@ export const msalConfig = {
             logger.debug(message);
             break;
           default:
-            logger.log(message);
             break;
         }
       },

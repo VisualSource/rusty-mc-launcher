@@ -29,14 +29,18 @@ const Footer = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="dark:hover:bg-transparent group">
               <PlusSquare className="pr-2" />
-              <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">Add a Game</TypographyMuted>
+              <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">
+                Add a Game
+              </TypographyMuted>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem asChild>
               <Link to="/create">Create Profile</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={import_profiles}>Import Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={import_profiles}>
+              Import Profile
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -79,7 +83,9 @@ const Footer = () => {
             ) : (
               <>
                 <Download className="pr-2" />
-                <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">Manage Downloads</TypographyMuted>
+                <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">
+                  Manage Downloads
+                </TypographyMuted>
               </>
             )}
           </Link>

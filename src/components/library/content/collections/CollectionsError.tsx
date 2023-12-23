@@ -1,7 +1,5 @@
 const CollectionsError: React.FC = () => {
-    return (
-        <div></div>
-    );
-}
+  return <div></div>;
+};
 
 export default CollectionsError;

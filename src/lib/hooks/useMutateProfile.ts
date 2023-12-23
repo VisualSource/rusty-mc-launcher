@@ -12,7 +12,6 @@ const mutateProfile = async (ev: RequestType) => {
   switch (ev.type) {
     case "create": {
       const result = await profiles.create({ data: ev.data });
-      logger.log("Create Result", result);
       break;
     }
     case "delete": {

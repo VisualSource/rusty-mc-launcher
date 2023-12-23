@@ -32,13 +32,23 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<App />}>
       <Route path="/" element={<Library />}>
-        <Route path="/collection" element={<Navigate to="/" />} action={updateCollection} />
+        <Route
+          path="/collection"
+          element={<Navigate to="/" />}
+          action={updateCollection}
+        />
         <Route
           index
           element={<LibraryRoot />}
           errorElement={<ProfileError message="Failed to load root" />}
         />
-        <Route path="/collections" action={handleCollections} loader={getCollections} element={<Collections />} errorElement={<CollectionsError />} />
+        <Route
+          path="/collections"
+          action={handleCollections}
+          loader={getCollections}
+          element={<Collections />}
+          errorElement={<CollectionsError />}
+        />
         <Route
           path="/create"
           action={updateProfile}
@@ -54,7 +64,9 @@ const router = createBrowserRouter(
         <Route
           path="/profile/edit/:id"
           action={updateProfile}
-          errorElement={<ProfileError message="Failed to load profile for edit." />}
+          errorElement={
+            <ProfileError message="Failed to load profile for edit." />
+          }
           loader={getProfile}
           element={<ProfileEdit />}
         />

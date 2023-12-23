@@ -2,7 +2,11 @@ import { Link, useLoaderData } from "react-router-dom";
 import { formatRelative } from "date-fns/formatRelative";
 import { Component, Settings } from "lucide-react";
 
-import { TypographyH1, TypographyH4, TypographyMuted } from "@component/ui/typography";
+import {
+  TypographyH1,
+  TypographyH4,
+  TypographyMuted,
+} from "@component/ui/typography";
 import { MinecraftProfile } from "@lib/models/profiles";
 import { ScrollArea } from "@component/ui/scroll-area";
 import ProfileCategories from "./ProfileCategories";
@@ -11,7 +15,6 @@ import { Button } from "@component/ui/button";
 import AddToCategory from "./AddToCategory";
 import { Suspense } from "react";
 import { Separator } from "@/components/ui/separator";
-
 
 const Profile: React.FC = () => {
   const data = useLoaderData() as MinecraftProfile;
@@ -43,7 +46,13 @@ const Profile: React.FC = () => {
                   <Settings />
                 </Link>
               </Button>
-              <Suspense fallback={<Button disabled size="icon"><Component /></Button>}>
+              <Suspense
+                fallback={
+                  <Button disabled size="icon">
+                    <Component />
+                  </Button>
+                }
+              >
                 <AddToCategory id={data.id} />
               </Suspense>
             </div>
@@ -51,12 +60,14 @@ const Profile: React.FC = () => {
         </div>
       </div>
       <div className="h-96">
-        {(data.loader !== "vanilla") || data.lastVersionId.includes("fabric") || data.lastVersionId.includes("forge") ? (
+        {data.loader !== "vanilla" ||
+        data.lastVersionId.includes("fabric") ||
+        data.lastVersionId.includes("forge") ? (
           <section className="container py-4">
             <TypographyH4>Mods</TypographyH4>
             <Separator />
             <ul className="space-y-1">
-              {data.mods?.map(value => (
+              {data.mods?.map((value) => (
                 <li key={value.id} className="p-2">
                   <h6 className="text-sm">{value.name}</h6>
                   <TypographyMuted>Version: {value.version}</TypographyMuted>

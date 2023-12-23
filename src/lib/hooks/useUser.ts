@@ -83,7 +83,7 @@ const loadMinecraftProfile = async (
   const id = `${account.nativeAccountId ?? account.homeAccountId}-minecraft`;
   const data = await localforage.getItem<MC | null>(id);
   const fetchProfile = async () => {
-    logger.log("Refresh minecraft token");
+    logger.info("Refresh minecraft token");
     const profile = await getMinecraft(instance);
     localforage.setItem(id, profile);
     return profile;

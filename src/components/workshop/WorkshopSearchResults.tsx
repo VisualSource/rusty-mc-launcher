@@ -3,11 +3,19 @@ import { Link, To, useAsyncValue, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@component/ui/card";
 import type { ModrinthApiSearchResponse } from "@lib/api/modrinth";
 import { Badge } from "@component/ui/badge";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination";
 
 const WorkshopSearchResults: React.FC = () => {
   const [props] = useSearchParams();
-  const data = useAsyncValue() as ModrinthApiSearchResponse
+  const data = useAsyncValue() as ModrinthApiSearchResponse;
   return (
     <>
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 grid-flow-row gap-4 px-4">
@@ -51,16 +59,24 @@ const WorkshopSearchResults: React.FC = () => {
       <Pagination className="pt-4">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious to={props.get("offset") === "0" ? -1 as To : { pathname: "/workshop" }} />
+            <PaginationPrevious
+              to={
+                props.get("offset") === "0"
+                  ? (-1 as To)
+                  : { pathname: "/workshop" }
+              }
+            />
           </PaginationItem>
           <PaginationItem>
-            <PaginationNext to={{
-              pathname: "/workshop",
-              search: (() => {
-                props.set("offset", (data.offset + 21).toString());
-                return props.toString();
-              })()
-            }} />
+            <PaginationNext
+              to={{
+                pathname: "/workshop",
+                search: (() => {
+                  props.set("offset", (data.offset + 21).toString());
+                  return props.toString();
+                })(),
+              }}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

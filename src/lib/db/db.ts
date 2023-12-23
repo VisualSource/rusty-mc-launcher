@@ -21,7 +21,7 @@ export default class DB {
   static init() {
     return new Promise<void>((ok, reject) => {
       try {
-        const inst = new DB()
+        const inst = new DB();
         inst.init().then(() => ok());
       } catch (error) {
         reject(error);
@@ -31,7 +31,7 @@ export default class DB {
 
   private _connection: SQLite | undefined;
 
-  constructor() { }
+  constructor() {}
 
   private async init() {
     const dir = await appDataDir();
@@ -43,7 +43,9 @@ export default class DB {
       dir: BaseDirectory.AppData,
     });
 
-    logger.debug(`Checking for database file. Exists: ${fileExist ? "yes" : "no"}`);
+    logger.debug(
+      `Checking for database file. Exists: ${fileExist ? "yes" : "no"}`,
+    );
     if (!fileExist) {
       await createDir(dir);
       logger.debug(`Creating new database file.`);
