@@ -15,29 +15,29 @@ type DB_Type_Extend =
 type DefaultType<T extends DB_Type_Extend, J = unknown> = T extends "ENUM"
   ? J
   : never | T extends "INTEGER"
-    ? J
-    : never | T extends "DATE"
-      ? "CURRENT_TIMESTAMP" | "CURRENT_DATE" | "CURRENT_TIME"
-      : never | T extends "JSON"
-        ? J
-        : never | T extends "BOOLEAN"
-          ? "TRUE" | "FALSE"
-          : never;
+  ? J
+  : never | T extends "DATE"
+  ? "CURRENT_TIMESTAMP" | "CURRENT_DATE" | "CURRENT_TIME"
+  : never | T extends "JSON"
+  ? J
+  : never | T extends "BOOLEAN"
+  ? "TRUE" | "FALSE"
+  : never;
 
 type InferType<T> = T extends Type<infer R, infer N, infer J>
   ?
-      | (R extends "JSON" ? J : never)
-      | (R extends "ENUM" ? J : never)
-      | (R extends "NULL" ? null : never)
-      | (R extends "INTEGER" ? number : never)
-      | (R extends "REAL" ? number : never)
-      | (R extends "TEXT" ? string : never)
-      | (R extends "BLOG" ? string : never)
-      | (R extends "BOOLEAN" ? boolean : never)
-      | (R extends "DATE" ? Date : never)
-      | (R extends "DATETIME" ? Date : never)
-      | (R extends "NUMERIC" ? number : never)
-      | (N extends "null" ? null : never)
+  | (R extends "JSON" ? J : never)
+  | (R extends "ENUM" ? J : never)
+  | (R extends "NULL" ? null : never)
+  | (R extends "INTEGER" ? number : never)
+  | (R extends "REAL" ? number : never)
+  | (R extends "TEXT" ? string : never)
+  | (R extends "BLOG" ? string : never)
+  | (R extends "BOOLEAN" ? boolean : never)
+  | (R extends "DATE" ? Date : never)
+  | (R extends "DATETIME" ? Date : never)
+  | (R extends "NUMERIC" ? number : never)
+  | (N extends "null" ? null : never)
   : never;
 type SchemaType<P> = { [K in keyof P]: InferType<P[K]> };
 type PartialScheam<P> = Partial<SchemaType<P>>;
@@ -214,7 +214,7 @@ export class Schema<
       forign?: Record<string, { table: string; column: string }>;
       runAfterCreate?: string;
     } = {},
-  ) {}
+  ) { }
 
   public parse(value: unknown): SchemaType<T> {
     if (typeof value !== "object" || !value)
@@ -247,15 +247,14 @@ export class Schema<
           .join(",");
       }
 
-      const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}${
-        foreignKeys ? "," + foreignKeys : ""
-      });`;
+      const query = `CREATE TABLE IF NOT EXISTS ${this.name} (${fields}${foreignKeys ? "," + foreignKeys : ""
+        });`;
       logger.debug(query);
       await db.execute(query);
       if (this.opts?.runAfterCreate) {
         try {
           await db.execute(this.opts.runAfterCreate);
-        } catch (error) {}
+        } catch (error) { }
       }
     } else {
       if (!this.updated) {
@@ -277,8 +276,8 @@ export class Schema<
 
           const query = addOrRemove
             ? `ALTER TABLE ${this.name} ADD COLUMN ${col} ${this.table[
-                col
-              ].toSQL()}`
+              col
+            ].toSQL()}`
             : `ALTER TABLE ${this.name} DROP COLUMN ${col}`;
           logger.debug(query);
           const ok = await db.execute(query);
@@ -303,8 +302,7 @@ export class Schema<
           const innerKey = Object.keys(value)[0];
           const innerValue = Object.values(value)[0];
           acc.query.push(
-            `${"AND" in curr ? "AND" : "OR"} ${innerKey} = $${
-              index + 1 + startIndex
+            `${"AND" in curr ? "AND" : "OR"} ${innerKey} = $${index + 1 + startIndex
             }`,
           );
           acc.values.push(innerValue);
@@ -326,7 +324,7 @@ export class Schema<
     };
   }
 
-  public async execute<D>(sql: string, values?: unknown[]) {
+  public async execute<D>(sql: string, values?: unknown[], parse: boolean = false) {
     const db = await this.prepare();
     try {
       const result = await db.select<D[]>(
@@ -335,6 +333,9 @@ export class Schema<
       );
       if (!result) return null;
 
+      if (parse) {
+        return result.map(value => this.parse(value));
+      }
       return result;
     } catch (error) {
       logger.error(error);

@@ -16,18 +16,19 @@ use crate::manifest::Manifest;
 // 3. build exec cmd
 // 4. run
 
+#[derive(Debug, Serialize)]
+pub enum GameProcessStatus {
+    NotRunning,
+    Running,
+    Exited(i32),
+}
+
 #[derive(Default, Debug)]
 pub struct Client {
     cmd: String,
     args: Vec<String>,
     game_dir: PathBuf,
     process: Option<Child>,
-}
-
-pub enum GameState {
-    Starting,
-    Running,
-    Stopping,
 }
 
 impl Client {
@@ -39,17 +40,21 @@ impl Client {
             process: None,
         }
     }
-    pub fn is_running(&mut self) -> Result<bool, LauncherLibError> {
-        if let Some(pid) = self.process.as_mut() {
-            let status = pid.try_wait()?;
 
-            return match status {
-                Some(_) => Ok(false),
-                None => Ok(true),
-            };
+    pub fn is_running(&mut self) -> Result<GameProcessStatus, LauncherLibError> {
+        if let Some(pid) = self.process.as_mut() {
+            if let Some(exit_status) = pid.try_wait()? {
+                self.process = None;
+
+                let code = exit_status.code().unwrap_or_default();
+
+                return Ok(GameProcessStatus::Exited(code));
+            }
+
+            return Ok(GameProcessStatus::Running);
         }
 
-        Ok(false)
+        Ok(GameProcessStatus::NotRunning)
     }
 
     pub async fn stop(&mut self) -> Result<(), LauncherLibError> {
@@ -359,17 +364,26 @@ impl ClientBuilder {
                     // right way then fallback to junctions.
                     // @see https://stackoverflow.com/questions/64991523/why-are-administrator-privileges-required-to-create-a-symlink-on-windows
                     if let Err(err) = windows::fs::symlink_dir(&mcl_mods_folder, &mods_folder) {
-                        error!("Symlink Error: {}", err.to_string());
-                        warn!("Unable to create symlink thought method, using fallback.");
+                        warn!(
+                            "Unable to create symlink thought method, using fallback. Reason: {}",
+                            err.to_string()
+                        );
 
-                        tokio::process::Command::new("cmd")
+                        if let Err(fallback_err) = tokio::process::Command::new("cmd")
                             .arg("/C")
                             .arg("mklink")
                             .arg("/J")
                             .arg(mods_folder)
                             .arg(mcl_mods_folder)
                             .output()
-                            .await?;
+                            .await
+                        {
+                            error!("Fallback failed: {}", fallback_err.to_string());
+
+                            return Err(LauncherLibError::Generic(
+                                "Unable to create link mods folder".into(),
+                            ));
+                        }
                     }
                 } else {
                     warn!("Did not create sys link");

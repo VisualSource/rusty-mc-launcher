@@ -60,9 +60,15 @@ const Profile: React.FC = () => {
         </div>
       </div>
       <div className="h-96">
+        <section className="container py-4">
+          <TypographyH4>Profile Info</TypographyH4>
+          <Separator />
+          <div>Game Version: <TypographyMuted asChild><span>{data.lastVersionId}</span></TypographyMuted></div>
+        </section>
+
         {data.loader !== "vanilla" ||
-        data.lastVersionId.includes("fabric") ||
-        data.lastVersionId.includes("forge") ? (
+          data.lastVersionId.includes("fabric") ||
+          data.lastVersionId.includes("forge") ? (
           <section className="container py-4">
             <TypographyH4>Mods</TypographyH4>
             <Separator />

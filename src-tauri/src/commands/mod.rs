@@ -1,28 +1,15 @@
 use crate::errors::Error;
 use crate::state::TauriState;
 use log::{debug, error};
-use minecraft_launcher_lib::client::Client;
 use minecraft_launcher_lib::installer::Installer;
 use minecraft_launcher_lib::{
-    client::ClientBuilder, install_mod_list, packs, ChannelMessage, FileDownload,
+    client::ClientBuilder, client::GameProcessStatus, install_mod_list, packs, ChannelMessage,
+    FileDownload,
 };
 use std::path::PathBuf;
-use tauri::{Manager, Window};
+use tauri::Window;
 use tauri_plugin_oauth::{start_with_config, OauthConfig};
 
-#[tauri::command]
-pub async fn close_splashscreen(window: Window) {
-    window
-        .get_window("splashscreen")
-        .expect("no window labeled 'splashscreen' found")
-        .close()
-        .expect("Failed to close window");
-    window
-        .get_window("main")
-        .expect("No window labeled 'main' found")
-        .show()
-        .expect("Failed to show main window");
-}
 #[tauri::command]
 pub async fn get_minecraft_dir() -> Result<String, Error> {
     let dir = ClientBuilder::get_minecraft_dir()?;
@@ -168,7 +155,9 @@ pub async fn stop(state: tauri::State<'_, TauriState>) -> Result<(), Error> {
 }
 
 #[tauri::command]
-pub async fn is_game_running(state: tauri::State<'_, TauriState>) -> Result<bool, Error> {
+pub async fn is_game_running(
+    state: tauri::State<'_, TauriState>,
+) -> Result<GameProcessStatus, Error> {
     let mut nt = state.0.lock().await;
 
     let status = nt.is_running()?;

@@ -17,11 +17,7 @@
         "writeFile": true,
         "createDir": true,
         "readFile": true,
-        "scope": [
-          "$APPDATA/database.db",
-          "$APPDATA/**/*",
-          "$APPDATA/Roaming/**/*"
-        ]
+        "scope": ["$APPDATA/Roaming/**/*", "$APPDATA/**"]
       },
       "notification": {
         "all": true
@@ -71,7 +67,7 @@
         "maximize": true,
         "minimize": true,
         "print": false,
-        "requestUserAttention": false,
+        "requestUserAttention": true,
         "setAlwaysOnTop": false,
         "setCursorGrab": false,
         "setCursorIcon": false,
@@ -119,7 +115,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["./cli/*", "../logo.svg"],
+      "resources": ["./cli/*"],
       "shortDescription": "",
       "targets": "all",
       "windows": {
@@ -141,16 +137,7 @@
     },
     "windows": [
       {
-        "width": 400,
-        "height": 200,
-        "decorations": false,
-        "resizable": false,
-        "url": "splashscreen.html",
-        "label": "splashscreen",
-        "center": true
-      },
-      {
-        "userAgent": "VisualSource/rusty-mc-launcher/0.4.2 collin_blosser@yahoo.com",
+        "userAgent": "VisualSource/rusty-mc-launcher/0.4.x",
         "fullscreen": false,
         "height": 630,
         "resizable": true,
@@ -158,8 +145,7 @@
         "minWidth": 1080,
         "title": "Minecraft Launcher",
         "width": 1080,
-        "decorations": false,
-        "visible": false
+        "decorations": false
       }
     ]
   }

@@ -1,10 +1,11 @@
 import localforage from "localforage";
+import { MinecraftAccount } from "../auth/minecraft_login_flow";
 import type { MinecraftProfile } from "@lib/models/profiles";
 import { getLoaderType } from "@/utils/versionUtils";
-import type { MC } from "@hook/useUser";
+import logger from "./logger";
 
 type PathBuf = string;
-export interface LaunchConfig {
+export type LaunchConfig = {
   profile_id?: string;
   launcher_name?: string;
   laucher_version?: string;
@@ -45,6 +46,9 @@ const fetchLastet = async () => {
 
   let exp = new Date();
   exp.setDate(exp.getDate() + 5);
+
+  logger.info(`Lastest Version Exp: ${exp.toISOString()}`);
+
   return localforage.setItem<LastestVersions["latest"] & { exp: Date }>(
     "latest-release",
     { ...request.latest, exp },
@@ -52,7 +56,7 @@ const fetchLastet = async () => {
 };
 
 export const asLaunchConfig = async (
-  user: MC | undefined,
+  user: MinecraftAccount | undefined,
   profile: MinecraftProfile | null | undefined,
 ): Promise<LaunchConfig> => {
   if (!user || !profile) throw new Error("Missing user profile");
@@ -66,16 +70,16 @@ export const asLaunchConfig = async (
       exp: Date;
     }>("latest-release");
 
-    if (!latest || latest.exp <= new Date()) {
+    if (!latest || new Date() >= latest.exp) {
       const request = await fetchLastet();
       lastVersionId =
         request[
-          profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
+        profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
         ];
     } else {
       lastVersionId =
         latest[
-          profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
+        profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
         ];
     }
   }
@@ -121,5 +125,6 @@ export const asLaunchConfig = async (
     data["resolution_width"] = profile.resolution.width;
   }
 
+  console.log(data);
   return data;
 };

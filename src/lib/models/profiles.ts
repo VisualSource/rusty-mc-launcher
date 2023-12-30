@@ -1,5 +1,6 @@
-import { Schema, Type, type InferSchema } from "../db/sqlite";
-import { type LoaderType } from "../hooks/useMinecraftVersion";
+import { type LoaderType } from "@lib/hooks/useMinecraftVersion";
+import { Schema, Type, type InferSchema } from "@lib/db/sqlite";
+import { type FileDownload } from "@lib/api/modrinth";
 
 const profiles = new Schema("profile", {
   id: Type.Text().primary_key(),
@@ -20,7 +21,7 @@ const profiles = new Schema("profile", {
   resolution: Type.Json<{ width: number; height: number }>().nullable(),
   active: Type.Boolean().default("FALSE"),
   loader: Type.Enum<LoaderType>().default("vanilla").non_nullable(),
-  mods: Type.Json<{ id: string; version: string; name: string }[]>().nullable(),
+  mods: Type.Json<FileDownload[]>().nullable(),
 });
 
 export type MinecraftProfile = InferSchema<typeof profiles>;

@@ -443,13 +443,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
             await profiles.update({
               where: [{ id: selectedProfile.id }],
               data: {
-                mods: (selectedProfile.mods ?? []).concat(
-                  newlyAddedMods.map((value) => ({
-                    name: value.name,
-                    id: value.id,
-                    version: value.version,
-                  })),
-                ),
+                mods: (selectedProfile.mods ?? []).concat(newlyAddedMods),
               },
             });
 

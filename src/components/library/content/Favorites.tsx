@@ -43,8 +43,10 @@ const Favorites: React.FC = () => {
     queryKey: [CATEGORY_KEY, 1],
     queryFn: async () => {
       const result = await profiles.execute<MinecraftProfile>(
-        `SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = 1`,
+        `SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = 1`, [], true
       );
+
+      console.log(result);
       return result ?? [];
     },
   });

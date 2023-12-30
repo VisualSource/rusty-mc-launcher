@@ -31,7 +31,7 @@ export default class DB {
 
   private _connection: SQLite | undefined;
 
-  constructor() {}
+  constructor() { }
 
   private async init() {
     const dir = await appDataDir();

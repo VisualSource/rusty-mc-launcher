@@ -11,99 +11,70 @@ import {
 import { Client } from "@microsoft/microsoft-graph-client";
 import { useMsal, useAccount } from "@azure/msal-react";
 import { useQuery } from "@tanstack/react-query";
+import { addSeconds } from "date-fns/addSeconds";
 import localforage from "localforage";
 import { useCallback } from "react";
 
-import getMinecraft from "@auth/minecraft_login_flow";
+import { getUserAccountProfile, type MicrosoftProfile } from '@lib/user/getUserAccountProfile';
+import getMinecraftAccount, { type MinecraftAccount } from "@auth/minecraft_login_flow";
+import { getUserAccountAvatar } from '@/lib/user/getUserAccountAvatar';
+import { PortGenerator } from "@lib/system/commands";
+import { loginRequest } from "@lib/config/auth";
 import logger from "@system/logger";
-import { PortGenerator } from "../system/commands";
-import { loginRequest } from "../config/auth";
 
-export type MC = Awaited<ReturnType<typeof getMinecraft>>;
-
-interface Profile {
-  "@odata.context": string;
-  displayName: string;
-  surname: string;
-  givenName: string;
-  id: string;
-  userPrincipalName: string;
-  businessPhones: string[];
-  jobTitle: null | string;
-  mail: null | string;
-  mobilePhone: null | string;
-  officeLocation: null | string;
-  preferredLanguage: null | string;
-}
-
-export interface ProfileFull extends Profile {
+export interface UserAccount extends MicrosoftProfile {
   photo: string;
-  minecraft: MC | null;
+  minecraft: MinecraftAccount | null;
 }
 
-const getMSAPhoto = async (account: AccountInfo, client: Client) => {
-  const id = `${account.nativeAccountId ?? account.homeAccountId}-photo`;
-  const data = await localforage.getItem<Blob | null>(id);
+/** 
+ * Seconds Since the Epoch
+ * @type {Date}
+ * @link https://stackoverflow.com/questions/39926104/what-format-is-the-exp-expiration-time-claim-in-a-jwt
+ */
+const UNIX_EPOCH_DATE = new Date("1970-01-01T00:00:00Z");
 
-  if (!data) {
-    const image = await client.api("/me/photo/$value").get();
-
-    await localforage.setItem(id, image);
-
-    return URL.createObjectURL(image);
-  }
-
-  if (data instanceof Blob) return URL.createObjectURL(data);
-
-  return `https://api.dicebear.com/5.x/initials/svg?seed=${account.username}`;
+const fetchProfile = async (instance: IPublicClientApplication, id: string) => {
+  const profile = await getMinecraftAccount(instance);
+  localforage.setItem(id, profile);
+  return profile;
 };
 
-const getMSAProfile = async (account: AccountInfo, client: Client) => {
-  const id = `${account.nativeAccountId ?? account.homeAccountId}-profile`;
-  const data = await localforage.getItem<Profile | null>(id);
-
-  if (!data) {
-    const request = await client.api("/me").get();
-
-    await localforage.setItem(id, request);
-
-    return request;
-  }
-
-  return data;
-};
-
-const loadMinecraftProfile = async (
+const getMinecraftProfile = async (
   account: AccountInfo | null,
   instance: IPublicClientApplication,
-  freshFetch: boolean = false,
 ) => {
   if (!account)
     throw new Error("No user account selected to fetch minecraft profile.");
   const id = `${account.nativeAccountId ?? account.homeAccountId}-minecraft`;
-  const data = await localforage.getItem<MC | null>(id);
-  const fetchProfile = async () => {
-    logger.info("Refresh minecraft token");
-    const profile = await getMinecraft(instance);
-    localforage.setItem(id, profile);
-    return profile;
-  };
+  const data = await localforage.getItem<MinecraftAccount | null>(id);
 
-  if (!data || freshFetch) return fetchProfile();
+  if (!data) {
+    logger.info("No user token found. Fetching token.");
+    return fetchProfile(instance, id);
+  }
+
   const token = JSON.parse(atob(data.token.access_token.split(".")[1])) as {
     exp: number;
   };
-  if (token.exp < (new Date() as never as number) / 1000) {
-    return fetchProfile();
+
+  const expiration_time = addSeconds(UNIX_EPOCH_DATE, token.exp);
+  if (new Date() >= expiration_time) {
+    logger.info("User token expired, Fetching new token.");
+    return fetchProfile(instance, id);
   }
+
+  logger.info("User token up to date, Proceding.");
 
   return data;
 };
 
-export type LoadedProfile = Awaited<ReturnType<typeof loadMinecraftProfile>>;
-
-//https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib
-//https://azuread.github.io/microsoft-authentication-library-for-js/ref/modules/_azure_msal_browser.html#authorizationcoderequest
+/**
+ * Minecraft Login flow python impl 
+ * @see https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib
+ * 
+ * @return {*} 
+ */
 const useUser = () => {
   const account = useAccount();
   const { instance } = useMsal();
@@ -126,12 +97,12 @@ const useUser = () => {
       const client = Client.initWithMiddleware({ authProvider });
 
       const [profile, photo, minecraft] = await Promise.allSettled([
-        getMSAProfile(account as AccountInfo, client),
-        getMSAPhoto(account as AccountInfo, client),
-        loadMinecraftProfile(account, instance),
+        getUserAccountProfile(account as AccountInfo, client),
+        getUserAccountAvatar(account as AccountInfo, client),
+        getMinecraftProfile(account, instance),
       ]);
 
-      const user: ProfileFull =
+      const user: UserAccount =
         profile.status === "fulfilled" ? profile.value : {};
       user.photo = photo.status === "fulfilled" ? photo.value : "";
       user.minecraft =
@@ -167,7 +138,7 @@ const useUser = () => {
     logout,
     login,
     minecraft: (fresh: boolean = false) =>
-      loadMinecraftProfile(account, instance, fresh),
+      getMinecraftProfile(account, instance),
     user: data,
     isLoading,
     isError,

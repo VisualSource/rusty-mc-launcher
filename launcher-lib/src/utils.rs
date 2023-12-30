@@ -41,13 +41,13 @@ pub use emit;
 
 pub mod mods {
     use super::*;
-    #[derive(Debug, Deserialize, Serialize, Clone)]
+    #[derive(Debug, Deserialize, Serialize, Clone, Default)]
     pub struct File {
         pub hash: String,
         pub url: String,
         pub size: i32,
     }
-    #[derive(Debug, Deserialize, Serialize, Clone)]
+    #[derive(Debug, Deserialize, Serialize, Clone, Default)]
     pub struct FileDownload {
         pub id: String,
         pub name: String,

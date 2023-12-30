@@ -1,7 +1,7 @@
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFormContext } from "react-hook-form";
-import { Check, Trash } from "lucide-react";
+import { Book, Check, Trash } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -34,6 +34,7 @@ import { Button } from "@component/ui/button";
 import { Input } from "@component/ui/input";
 import { cn } from "@lib/utils";
 import { TypographyMuted } from "@/components/ui/typography";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const schema = z
   .object({
@@ -48,6 +49,7 @@ export const resolver = zodResolver(schema);
 const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
   editMods = false,
 }) => {
+  const [icon, setIcon] = useState<boolean>(false);
   const [popoverVersion, setPopoverVersion] = useState<boolean>(false);
   const { control, watch, setValue } = useFormContext();
 
@@ -72,6 +74,52 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
       />
 
       <FormField
+        control={control}
+        name="icon"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>Profile Icon</FormLabel>
+            <Popover open={icon} onOpenChange={setIcon}>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <div className="flex items-center line-clamp-1">
+                    <Avatar className="h-8 w-8 mr-2">
+                      <AvatarFallback>
+                        <Book />
+                      </AvatarFallback>
+                      <AvatarImage src={field.value} alt="profile icon" />
+                    </Avatar>
+                    <Input value={field.value}
+                      placeholder="No Icon"
+                      onChange={(ev) => field.onChange(ev.target.value)}
+                      role="combobox"
+                      className={cn(
+                        "justify-between",
+                        !field.value && "text-muted-foreground",
+                      )} />
+                    <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </div>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="p-0">
+                <Command>
+                  <CommandInput
+                    placeholder="Search versions..."
+                    className="h-9"
+                  />
+                  <CommandEmpty>No icons found.</CommandEmpty>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <FormDescription>
+              The icon for this profile.
+            </FormDescription>
+            <FormMessage />
+          </FormItem >
+        )}
+      />
+
+      < FormField
         defaultValue="latest-release"
         control={control}
         name="lastVersionId"
@@ -92,8 +140,8 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
                   >
                     {field.value
                       ? minecraft_versions.data?.versions.find(
-                          (language) => language.id === field.value,
-                        )?.id ?? "Version not found"
+                        (language) => language.id === field.value,
+                      )?.id ?? "Version not found"
                       : "Select Version"}
                     <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -139,7 +187,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      <FormField
+      < FormField
         defaultValue="vanilla"
         control={control}
         name="loader"
@@ -166,7 +214,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      <FormField
+      < FormField
         name="console"
         control={control}
         render={({ field }) => (
@@ -181,7 +229,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
           </FormItem>
         )}
       />
-      <FormField
+      < FormField
         name="disable_chat"
         control={control}
         render={({ field }) => (
@@ -197,7 +245,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      <FormField
+      < FormField
         name="disable_mulitplayer"
         control={control}
         render={({ field }) => (
@@ -215,7 +263,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      <FormField
+      < FormField
         name="is_demo"
         control={control}
         render={({ field }) => (
@@ -231,7 +279,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      <FormField
+      < FormField
         name="gameDir"
         control={control}
         render={({ field: { value, ...field } }) => (
@@ -253,7 +301,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      <FormField
+      < FormField
         name="javaDir"
         control={control}
         render={({ field: { value, ...field } }) => (
@@ -275,7 +323,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      <FormField
+      < FormField
         name="javaArgs"
         control={control}
         render={({ field: { value, ...field } }) => (
@@ -298,17 +346,18 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      {editMods ? (
-        <FormField
-          name="mods"
-          control={control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mods</FormLabel>
-              <FormControl>
-                <ul className="space-y-1 pl-2">
-                  {field.value
-                    ? field.value.map(
+      {
+        editMods ? (
+          <FormField
+            name="mods"
+            control={control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mods</FormLabel>
+                <FormControl>
+                  <ul className="space-y-1 pl-2">
+                    {field.value
+                      ? field.value.map(
                         (item: {
                           id: string;
                           name: string;
@@ -343,15 +392,16 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
                           </li>
                         ),
                       )
-                    : null}
-                </ul>
-              </FormControl>
-              <FormDescription>Installed Mods</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : null}
+                      : null}
+                  </ul>
+                </FormControl>
+                <FormDescription>Installed Mods</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null
+      }
 
       <div className="absolute bottom-4 right-4">
         <Button type="submit" className="sticky bottom-4 right-0">

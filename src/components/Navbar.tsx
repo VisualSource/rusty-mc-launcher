@@ -172,7 +172,7 @@ const Navbar = () => {
                             size="sm"
                             className="rounded-none line-clamp-1 h-9"
                           >
-                            {user?.displayName ?? "Username"}
+                            {user?.minecraft?.profile.name ?? user?.displayName ?? "Username"}
                           </Button>
                         </DropdownMenuTrigger>
                       </AuthenticatedTemplate>

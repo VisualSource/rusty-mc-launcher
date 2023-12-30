@@ -17,6 +17,7 @@ const useInstallContent = () => {
         minecraft_versions?: string[];
         modloaders?: string[];
         modList?: string[];
+        name: string;
       },
     ) => {
       try {

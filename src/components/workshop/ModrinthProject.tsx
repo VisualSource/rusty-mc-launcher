@@ -131,18 +131,18 @@ const ModrinthProject: React.FC = () => {
             ) : null}
             {data.donation_urls
               ? data.donation_urls.map((value) => (
-                  <a
-                    href={value.url}
-                    target="_blank"
-                    key={value.id}
-                    className="flex"
-                    rel="noopener noreferrer"
-                  >
-                    <span className="underline text-blue-600">
-                      {value.platform}
-                    </span>{" "}
-                  </a>
-                ))
+                <a
+                  href={value.url}
+                  target="_blank"
+                  key={value.id}
+                  className="flex"
+                  rel="noopener noreferrer"
+                >
+                  <span className="underline text-blue-600">
+                    {value.platform}
+                  </span>{" "}
+                </a>
+              ))
               : null}
           </div>
         </section>
@@ -157,6 +157,7 @@ const ModrinthProject: React.FC = () => {
                   installContent(data.slug, data.project_type, {
                     minecraft_versions: data?.game_versions,
                     modloaders: data?.loaders,
+                    name: data.title
                   })
                 }
               >

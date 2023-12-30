@@ -3,6 +3,8 @@ import { useCallback } from "react";
 
 import type { MinecraftProfile } from "../models/profiles";
 import { asLaunchConfig } from "../system/launch_config";
+import { queryClient } from "../config/queryClient";
+import { QUERY_KEY } from "./useIsGameRunning";
 import { play } from "../system/commands";
 import profiles from "../models/profiles";
 import useDownload from "./useDownload";
@@ -27,7 +29,11 @@ const useRunGame = () => {
               data: { lastUsed: new Date() },
               where: [{ id: profile.id }],
             });
-            await play(config);
+            await play(config).catch(() => {
+              window.dispatchEvent(new CustomEvent("mcl::game-exit-status", { detail: { exitCode: 1, msg: "" } }));
+              reject();
+            });
+            await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] })
             return ok();
           }
           reject();

@@ -13,6 +13,9 @@ const PlayButton: React.FC<ButtonProps & { profile: MinecraftProfile }> = ({
   const [isPreparing, setIsPreparing] = useState(false);
   const { isLoading, state: isRunning } = useIsGameRunning();
   const run = useRunGame();
+
+  const running = isRunning === "Running";
+
   return (
     <Button
       {...props}
@@ -20,18 +23,18 @@ const PlayButton: React.FC<ButtonProps & { profile: MinecraftProfile }> = ({
         setIsPreparing(true);
         run(profile).finally(() => setIsPreparing(false));
       }}
-      disabled={isLoading || isRunning || isPreparing}
+      disabled={isLoading || running || isPreparing}
       className={cn(
         {
           "bg-blue-500 hover:bg-blue-500/90 dark:bg-blue-900 dark:text-zinc-50 dark:hover:bg-blue-900/90":
             isPreparing,
           "bg-orange-500 hover:bg-orange-500/90 dark:bg-orange-900 dark:text-zinc-50 dark:hover:bg-orange-900/90":
-            isRunning,
+            running,
         },
         className,
       )}
     >
-      {isPreparing ? "Preparing" : isRunning ? "Running" : "Play"}
+      {isPreparing ? "Preparing" : running ? "Running" : "Play"}
     </Button>
   );
 };

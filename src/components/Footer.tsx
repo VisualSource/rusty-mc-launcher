@@ -72,11 +72,11 @@ const Footer = () => {
                       <span>{queueCurrent.msg}</span>
                     </TypographyMuted>
                     <TypographyMuted asChild>
-                      <span>{100 * (queueCurrent.ammount_current / 100)}%</span>
+                      <span>{Math.floor(100 * (queueCurrent.ammount_current / queueCurrent.ammount))}%</span>
                     </TypographyMuted>
                   </div>
                   <Progress
-                    value={100 * (queueCurrent.ammount_current / 100)}
+                    value={Math.floor(100 * (queueCurrent.ammount_current / queueCurrent.ammount))}
                   />
                 </div>
               </div>

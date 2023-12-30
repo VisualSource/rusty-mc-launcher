@@ -1,24 +1,16 @@
 import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
 import type { IPublicClientApplication } from "@azure/msal-browser";
-import { xboxRequest } from "../config/auth";
-import getToken from "./getToken";
+import { xboxRequest } from "@lib/config/auth";
+import getToken from "@lib/auth/getToken";
 
-interface XboxLiveAuthenticationResponse {
+type XboxLiveAuthenticationResponse = {
   Token: string;
   DisplayClaims: {
     xui: { uhs: string }[];
   };
 }
 
-interface XboxLiveAuthenticationResponse {
-  Token: string;
-}
-
-interface MinecraftAuthenticationResponse {
-  access_token: string;
-}
-
-interface MinecraftProfileResponse {
+type MinecraftProfileResponse = {
   capes?: {
     alias: string;
     id: string;
@@ -36,12 +28,12 @@ interface MinecraftProfileResponse {
   profileActions: {};
 }
 
-const getMinecraft = async (instance: IPublicClientApplication) => {
+const getMinecraftAccount = async (instance: IPublicClientApplication) => {
   const token = await getToken(instance, xboxRequest);
 
-  const client = await getClient();
+  const httpClient = await getClient();
 
-  const { data: xbox_resp } = await client.post<XboxLiveAuthenticationResponse>(
+  const { data: xbox_resp } = await httpClient.post<XboxLiveAuthenticationResponse>(
     "https://user.auth.xboxlive.com/user/authenticate",
     Body.json({
       Properties: {
@@ -59,7 +51,7 @@ const getMinecraft = async (instance: IPublicClientApplication) => {
   const xboxToken = xbox_resp.Token;
 
   const { data: xbox_security_token_resp } =
-    await client.post<XboxLiveAuthenticationResponse>(
+    await httpClient.post<XboxLiveAuthenticationResponse>(
       "https://xsts.auth.xboxlive.com/xsts/authorize",
       Body.json({
         Properties: {
@@ -77,7 +69,7 @@ const getMinecraft = async (instance: IPublicClientApplication) => {
   const xbox_security_token = xbox_security_token_resp.Token;
 
   const { data: minecraft_resp } =
-    await client.post<MinecraftAuthenticationResponse>(
+    await httpClient.post<{ access_token: string; }>(
       "https://api.minecraftservices.com/authentication/login_with_xbox",
       Body.json({
         identityToken: `XBL3.0 x=${userHash};${xbox_security_token}`,
@@ -91,7 +83,7 @@ const getMinecraft = async (instance: IPublicClientApplication) => {
     xuid: string;
   };
 
-  const { data: mcp } = await client.get<MinecraftProfileResponse>(
+  const { data: mcp } = await httpClient.get<MinecraftProfileResponse>(
     "https://api.minecraftservices.com/minecraft/profile",
     {
       headers: {
@@ -109,4 +101,6 @@ const getMinecraft = async (instance: IPublicClientApplication) => {
   };
 };
 
-export default getMinecraft;
+export type MinecraftAccount = Awaited<ReturnType<typeof getMinecraftAccount>>;
+
+export default getMinecraftAccount;

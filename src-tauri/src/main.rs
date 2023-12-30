@@ -7,12 +7,36 @@ mod errors;
 mod state;
 
 use log::LevelFilter;
-use tauri_plugin_log::LogTarget;
+use tauri_plugin_log::{LogTarget, TimezoneStrategy};
+
+const DEFAULT_TIMEZONE_STRATEGY: TimezoneStrategy = TimezoneStrategy::UseUtc;
 
 fn main() {
+    let level = if let Some(value) = option_env!("MCL_LOG") {
+        value
+            .parse::<LevelFilter>()
+            .unwrap_or_else(|_| LevelFilter::Info)
+    } else {
+        LevelFilter::Info
+    };
+
     let logger = tauri_plugin_log::Builder::new()
-        .level(LevelFilter::Debug)
-        .format(|out, message, record| out.finish(format_args!("[{}] {}", record.level(), message)))
+        .level(level)
+        .format(move |out, message, record| {
+            let time = DEFAULT_TIMEZONE_STRATEGY.get_now();
+
+            out.finish(format_args!(
+                "[{}-{}-{}:{}:{}:{}][{}] {}",
+                time.year(),
+                time.month(),
+                time.day(),
+                time.hour(),
+                time.minute(),
+                time.second(),
+                record.level(),
+                message
+            ))
+        })
         .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
         .build();
 
@@ -22,7 +46,6 @@ fn main() {
         .manage(state::TauriState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             commands::play,
-            commands::close_splashscreen,
             commands::get_minecraft_dir,
             commands::stop,
             commands::install,

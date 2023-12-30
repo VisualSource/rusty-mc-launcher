@@ -54,6 +54,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/src-tauri/Cargo.lock') }}
       - uses: tauri-apps/tauri-action@dev
         env:
+          MCL_LOG: "INFO"
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           PUBLIC_VITE_CLIENT_ID: ${{ secrets.PUBLIC_VITE_CLIENT_ID  }}
