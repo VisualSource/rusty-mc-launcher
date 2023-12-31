@@ -1,4 +1,4 @@
-import { Component } from "lucide-react";
+import { LibraryBig } from "lucide-react";
 import {
   Dialog,
   DialogDescription,
@@ -31,7 +31,7 @@ const AddToCategory: React.FC<{ id: string }> = ({ id }) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button title="Add to collection" size="icon">
-          <Component />
+          <LibraryBig />
         </Button>
       </DialogTrigger>
       <DialogContent className="text-zinc-50">

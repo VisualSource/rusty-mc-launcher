@@ -77,3 +77,5 @@ export const stop = async () => invoke("stop");
 export const isGameRunning = () => invoke<"NotRunning" | "Running" | { Exited: number }>("is_game_running");
 
 export const getMinecraftDir = () => invoke<string>("get_minecraft_dir");
+
+export const validateMods = (props: { id: string; game_dir?: string, files: FileDownload[] }) => invoke<Array<FileDownload>>("validate_mods", props);

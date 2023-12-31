@@ -1,12 +1,15 @@
 use crate::client::ClientBuilder;
+use crate::event;
 use crate::utils::{self, download_file, ChannelMessage};
 use crate::{errors::LauncherLibError, utils::mods::FileDownload};
 use futures::StreamExt;
 use log::{error, info};
 use normalize_path::{self, NormalizePath};
+use sha1::{Digest, Sha1};
+use std::future;
 use std::path::PathBuf;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::{fs, sync::mpsc};
-
 #[derive(serde::Deserialize, serde::Serialize)]
 struct ModManifest {
     id: String,
@@ -119,4 +122,73 @@ pub async fn install_mod_list(
     utils::emit!(channel, "complete", "{ \"status\":\"ok\" }");
 
     Ok(())
+}
+
+pub async fn validate_mods(
+    mods_directory: PathBuf,
+    files: Vec<FileDownload>,
+    channel: mpsc::Sender<ChannelMessage>,
+) -> Result<Vec<FileDownload>, LauncherLibError> {
+    event!(&channel,"start", {
+        "key": "mods_validation",
+        "msg": "Validating Mods",
+        "ammount": files.len()
+    });
+
+    if !mods_directory.exists() {
+        return Err(LauncherLibError::NotFound("No path was found.".into()));
+    }
+
+    let invalid = futures::stream::iter(files.into_iter().map(|item| {
+        let dir = mods_directory.clone();
+        let tx = channel.clone();
+        async move {
+            let path = dir
+                .join(format!("{}-{}.jar", item.id, item.version))
+                .normalize();
+
+            event!(&tx,"download",{
+                "msg": format!("Validating Mod: {}", item.name),
+                "ammount": 1,
+                "size_current": 0
+            });
+
+            if path.is_file() {
+                let mut h = Sha1::new();
+                let mut raw = tokio::fs::File::open(&path).await?;
+                let mut buffer = Vec::new();
+
+                raw.read_to_end(&mut buffer).await?;
+                h.update(&buffer);
+                raw.shutdown().await?;
+                let result = hex::encode(h.finalize());
+                if result != item.download.hash {
+                    return Ok(Some(item));
+                }
+
+                Ok(None)
+            } else {
+                Ok(Some(item))
+            }
+        }
+    }))
+    .buffer_unordered(50)
+    .collect::<Vec<Result<Option<FileDownload>, LauncherLibError>>>();
+
+    let result = invalid
+        .await
+        .into_iter()
+        .filter_map(|i| i.transpose())
+        .filter_map(|x| match x {
+            Ok(value) => Some(value),
+            Err(err) => {
+                error!("{}", err.to_string());
+                None
+            }
+        })
+        .collect::<Vec<FileDownload>>();
+
+    event!(&channel,"end",{"key":"mods_validation","msg":"Mods Validated"});
+
+    Ok(result)
 }

@@ -10,6 +10,6 @@ pub mod packs;
 mod runtime;
 mod utils;
 
-pub use mods::install_mod_list;
+pub use mods::{install_mod_list, validate_mods};
 pub use utils::mods::FileDownload;
 pub use utils::ChannelMessage;

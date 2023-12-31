@@ -8,6 +8,7 @@ import {
   install,
   installMods,
   installPack,
+  validateMods,
 } from "@system/commands";
 import modrinth, { type FileDownload } from "../api/modrinth";
 import useExternalQueue from "@hook/useExternalQueue";
@@ -38,16 +39,23 @@ export type PackMetadata = {
   packType: "resource" | "shader";
 };
 
+export type ModsValidationMetadata = {
+  type: "mods_validation",
+  game_dir?: string;
+  id: string;
+  files: FileDownload[]
+}
+
 export type QueueItem = {
   ammount: number;
   ammount_current: number;
   size: number;
   size_current: number;
-  type: "client" | "mods" | "pack";
+  type: "client" | "mods" | "pack" | "mods_validation";
   msg: string;
   download: DownloadEvent | null;
   key: `${string}-${string}-${string}-${string}-${string}`;
-  metadata: ModsMetadata | ClientMetadata | PackMetadata;
+  metadata: ModsMetadata | ClientMetadata | PackMetadata | ModsValidationMetadata;
 };
 
 type FetchEvent = {
@@ -73,6 +81,7 @@ type DownloadClient = {
   queueErrored: QueueItem[];
   clearCompleted: () => void;
   clearErrored: () => void;
+  validateMods: (id: string) => Promise<void>;
   install: (
     version: string,
     game_dir?: string,
@@ -224,6 +233,68 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
         clearCompleted() {
           queues.completed.queue.clear();
         },
+        async validateMods(id: string) {
+          try {
+            const queue_id = crypto.randomUUID();
+            const profile = await profiles.findOne({ where: [{ id }] });
+
+            if (!profile) throw new Error("No Profile was found.");
+
+            if (profile.mods === null) {
+              return;
+            }
+
+            queues.next.queue.enqueue({
+              ammount: 0,
+              ammount_current: 0,
+              download: null,
+              key: queue_id,
+              size_current: 0,
+              msg: "Starting Mods Validation",
+              size: 0,
+              type: "mods_validation",
+              metadata: {
+                type: "mods_validation",
+                files: profile.mods,
+                id
+              },
+            });
+
+            install_queue.push(async (cb) => {
+              if (!cb)
+                throw new Error("Callback handler not avaliable", {
+                  cause: "NO_CALLBACK_HANDLER",
+                });
+              const data = queues.next.queue.dequeueItem(id);
+              try {
+                if (!data)
+                  throw new Error("Failed to get queue data", {
+                    cause: "MISSING_QUEUE_METADATA",
+                  });
+                if (data.metadata.type !== "mods_validation")
+                  throw new Error("Unable to process, non pack metadata");
+
+                setCurrentItem(data);
+
+                await validateMods({ id: data.metadata.id, files: data.metadata.files, game_dir: data.metadata.game_dir });
+
+                cb(undefined, data);
+              } catch (error) {
+                logger.error(error);
+                cb(new QueueError(error as Error, data));
+              }
+            });
+          } catch (error) {
+            logger.error(error);
+            toast.error(
+              (error as Error)?.message ?? `Failed to validate profile.`,
+              {
+                data: {},
+              },
+            );
+          }
+        },
+
         async installPack(packId, type) {
           try {
             const file = await modrinth.GetPackFile(packId);

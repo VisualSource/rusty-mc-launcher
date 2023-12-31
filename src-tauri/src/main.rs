@@ -53,6 +53,7 @@ fn main() {
             commands::start_server,
             commands::install_mods,
             commands::install_pack,
+            commands::validate_mods,
             commands::is_game_running
         ])
         .run(tauri::generate_context!())

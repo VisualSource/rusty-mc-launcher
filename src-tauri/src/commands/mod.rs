@@ -7,6 +7,7 @@ use minecraft_launcher_lib::{
     FileDownload,
 };
 use std::path::PathBuf;
+use std::result;
 use tauri::Window;
 use tauri_plugin_oauth::{start_with_config, OauthConfig};
 
@@ -176,4 +177,38 @@ pub async fn play(
     let mut nt = state.0.lock().await;
     *nt = running_client;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn validate_mods(
+    id: String,
+    game_dir: Option<PathBuf>,
+    files: Vec<FileDownload>,
+    window: tauri::Window,
+) -> Result<Vec<FileDownload>, Error> {
+    debug!("Starting mods validation");
+    let dir = ClientBuilder::get_minecraft_dir()?;
+    let mod_dir = game_dir.unwrap_or_else(|| dir).join(".mcl").join(id);
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(32);
+
+    let manager = tokio::spawn(async move {
+        while let Some(msg) = rx.recv().await {
+            debug!("{:#?}", msg);
+            if msg.event == "end" {
+                rx.close();
+            }
+            if let Err(err) = window.emit("mcl::download", msg) {
+                error!("Failed to notify window: {}", err);
+            }
+        }
+    });
+
+    let result = minecraft_launcher_lib::validate_mods(mod_dir, files, tx).await;
+
+    if let Err(err) = manager.await {
+        error!("Failed to exit event manager: {}", err);
+    };
+
+    result.map_err(|e| Error::Launcher(e))
 }

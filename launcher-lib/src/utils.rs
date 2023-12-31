@@ -26,9 +26,6 @@ impl ChannelMessage {
     }
 }
 
-/*if let Err(err) = $channel.send(ChannelMessage::new($event, $msg)).await {
-    error!("Failed to send message: {}", err);
-}*/
 #[macro_export]
 macro_rules! emit {
     ($channel:expr,$event:expr,$msg:expr) => {
@@ -39,8 +36,36 @@ macro_rules! emit {
 }
 pub use emit;
 
+#[macro_export]
+macro_rules! event {
+    ($channel:expr, $event:expr, $json:tt) => {
+        crate::utils::event_internal::send_event($channel, $event, serde_json::json!($json)).await;
+    };
+}
+
+pub mod event_internal {
+    use crate::ChannelMessage;
+    use log::error;
+
+    pub async fn send_event<T>(
+        channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
+        event: T,
+        message: serde_json::Value,
+    ) where
+        T: Into<String>,
+    {
+        if let Err(error) = channel
+            .send(ChannelMessage::new(event.into(), message.to_string()))
+            .await
+        {
+            error!("{}", error);
+        }
+    }
+}
+
 pub mod mods {
     use super::*;
+
     #[derive(Debug, Deserialize, Serialize, Clone, Default)]
     pub struct File {
         pub hash: String,
@@ -58,7 +83,7 @@ pub mod mods {
 
 pub mod fabric {
     use super::*;
-    use crate::utils::emit;
+    use crate::event;
     use serde::Deserialize;
     use std::env::temp_dir;
     use std::process::Stdio;
@@ -82,11 +107,10 @@ pub mod fabric {
         game_dir: &PathBuf,
         runtime: String,
     ) -> Result<(), LauncherLibError> {
-        emit!(
-            channel,
-            "start",
-            "{ \"key\":\"modloader\", \"msg\": \"Installing Fabric\" }"
-        );
+        event!(&channel,"start", {
+            "key": "modloader",
+            "msg":"Installing Fabric"
+        });
 
         let temp = temp_dir().join("fabricInstaller.jar").normalize();
         let content = reqwest::get(FABRIC_VERSIONS)
@@ -103,19 +127,18 @@ pub mod fabric {
                     "Failed to find statle fabric installer".to_string(),
                 ))?;
 
-        emit!(
-            channel,
-            "fetch",
-            "{ \"msg\": \"Fabric Jar\", \"ammount\": 1, \"size\": 0 }"
-        );
+        event!(&channel, "fetch",{
+            "msg": "Fabric Jar",
+            "ammount": 1,
+            "size": 0
+        });
 
         download_file(&download.url, &temp, None).await?;
 
-        emit!(
-            channel,
-            "download",
-            "{ \"size\": 0, \"file\": \"Fabric Jar\" }"
-        );
+        event!(&channel,"download",{
+            "size": 0,
+            "file": "Fabric Jar"
+        });
 
         let exec = jvm::get_exec(&runtime, game_dir, true);
 
@@ -142,11 +165,7 @@ pub mod fabric {
 
         remove_file(&temp).await?;
 
-        emit!(
-            channel,
-            "end",
-            "{ \"key\":\"modloader\", \"msg\": \"Fabric Installed.\" }"
-        );
+        event!(&channel,"end",{"key":"modloader","msg":"Fabric Installed."});
 
         Ok(())
     }

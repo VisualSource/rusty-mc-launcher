@@ -290,8 +290,7 @@ impl Installer {
                                     }
                                     //https://github.com/Majored/rs-async-zip/blob/main/examples/file_extraction.rs
                                     for index in 0..reader.file().entries().len() {
-                                        let entry =
-                                            &reader.file().entries().get(index).unwrap().entry();
+                                        let entry = &reader.file().entries().get(index).unwrap();
                                         let filename = entry.filename().clone().into_string()?;
 
                                         let path = filename

@@ -1,6 +1,6 @@
 import { Link, useLoaderData } from "react-router-dom";
 import { formatRelative } from "date-fns/formatRelative";
-import { Component, Settings } from "lucide-react";
+import { Component, LibraryBig, Settings } from "lucide-react";
 
 import {
   TypographyH1,
@@ -15,9 +15,11 @@ import { Button } from "@component/ui/button";
 import AddToCategory from "./AddToCategory";
 import { Suspense } from "react";
 import { Separator } from "@/components/ui/separator";
+import useDownload from "@/lib/hooks/useDownload";
 
 const Profile: React.FC = () => {
   const data = useLoaderData() as MinecraftProfile;
+  const { validateMods } = useDownload();
 
   return (
     <ScrollArea className="text-zinc-50">
@@ -49,12 +51,17 @@ const Profile: React.FC = () => {
               <Suspense
                 fallback={
                   <Button disabled size="icon">
-                    <Component />
+                    <LibraryBig />
                   </Button>
                 }
               >
                 <AddToCategory id={data.id} />
               </Suspense>
+              {data.loader !== "vanilla" ? (
+                <Button onClick={() => validateMods(data.id)} size="icon" title="Validate Files">
+                  <Component />
+                </Button>
+              ) : null}
             </div>
           </div>
         </div>
