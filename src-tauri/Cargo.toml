@@ -7,23 +7,23 @@ license = ""
 repository = "https://github.com/VisualSource/rusty-mc-launcher"
 default-run = "app"
 edition = "2021"
-rust-version = "1.72.1"
+rust-version = "1.77.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5.0", features = [] }
+tauri-build = { version = "1.5.1", features = [] }
 
 [dependencies]
-tokio = { version = "1.35.0", features = ["sync"] }
-log = "0.4.20"
+tokio = { version = "1.37.0", features = ["sync"] }
+log = "0.4.21"
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 thiserror = "1.0"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri-plugin-oauth = { git="https://github.com/FabianLars/tauri-plugin-oauth" }
 tauri-plugin-sqlite = { git="https://github.com/lzdyes/tauri-plugin-sqlite", tag = "v0.1.1" }
-tauri = { version = "1.5.3", features = [ "window-request-user-attention", "fs-read-file", "dialog-open", "dialog-save", "dialog-ask", "dialog-message", "shell-open", "dialog-confirm", "fs-create-dir", "fs-exists", "fs-write-file", "http-request", "notification-all", "path-all", "updater", "window-close", "window-hide", "window-maximize", "window-minimize", "window-show", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
+tauri = { version = "1.6.2", features = [ "window-request-user-attention", "fs-read-file", "dialog-open", "dialog-save", "dialog-ask", "dialog-message", "shell-open", "dialog-confirm", "fs-create-dir", "fs-exists", "fs-write-file", "http-request", "notification-all", "path-all", "updater", "window-close", "window-hide", "window-maximize", "window-minimize", "window-show", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
 minecraft-launcher-lib = { path = "../launcher-lib"  }
 
 [features]

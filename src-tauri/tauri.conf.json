@@ -115,7 +115,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["./cli/*"],
+      "resources": ["./bin/*"],
       "shortDescription": "",
       "targets": "all",
       "windows": {

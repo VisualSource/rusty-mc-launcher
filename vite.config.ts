@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
+/// <reference types="vitest" />
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -10,6 +11,9 @@ export default defineConfig({
   clearScreen: false,
   server: {
     strictPort: true
+  },
+  test: {
+
   },
   resolve: {
     alias: {

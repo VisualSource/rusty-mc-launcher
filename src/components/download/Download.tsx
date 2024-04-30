@@ -1,5 +1,5 @@
 import { FileDiff, Monitor, PackagePlus } from "lucide-react";
-import FileSizeFormat from "@saekitominaga/file-size-format";
+import { formatSize } from '@lib/size_format';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import SectionDivider from "@component/download/SectionDivider";
@@ -9,7 +9,7 @@ import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
 import DownloadItem from "./DownloadItem";
 
-const size = (size: number) => FileSizeFormat.si(size, { space: true });
+const size = (size: number) => formatSize(size, { space: true });
 
 const Download: React.FC = () => {
   const {
