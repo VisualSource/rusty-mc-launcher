@@ -320,7 +320,7 @@ export const BrowserAuthErrorMessage = {
  */
 export class BrowserAuthError extends AuthError {
   constructor(errorCode: string) {
-    super(errorCode, BrowserAuthErrorMessages[errorCode]);
+    super(errorCode, (BrowserAuthErrorMessages as never)[errorCode]);
 
     Object.setPrototypeOf(this, BrowserAuthError.prototype);
     this.name = "BrowserAuthError";

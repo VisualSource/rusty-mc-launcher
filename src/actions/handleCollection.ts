@@ -1,8 +1,9 @@
+import type { ActionFunction } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import { queryClient } from "@/lib/config/queryClient";
 import { CATEGORIES_KEY } from "@/lib/hooks/keys";
 import categories from "@/lib/models/categories";
-import type { ActionFunction } from "react-router-dom";
-import { toast } from "react-toastify";
 
 const handleCollections: ActionFunction = async ({ request }) => {
   const data = await request.formData();
@@ -54,7 +55,7 @@ const handleCollections: ActionFunction = async ({ request }) => {
       const result = await categories.execute<{ max: number }>(
         "SELECT MAX(group_id) as max FROM %table%;",
       );
-      const group_id = (result?.at(0)?.max ?? 1) + 1;
+      const group_id = ((result?.at(0) as { max: number })?.max ?? 1) + 1;
 
       await categories.execute("INSERT INTO %table% VALUES (?,?,?, NULL)", [
         crypto.randomUUID(),

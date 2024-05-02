@@ -12,6 +12,7 @@ import { useNotificationCenter } from "react-toastify/addons/use-notification-ce
 import {
   AuthenticatedTemplate,
   UnauthenticatedTemplate,
+  useAccount,
 } from "@azure/msal-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns/formatRelative";
@@ -48,6 +49,7 @@ import type ToastData from "@/types/toastData";
 import { Button } from "@component/ui/button";
 import useUser from "@hook/useUser";
 import { cn } from "@lib/utils";
+import { useAvatar } from "@/lib/hooks/useAvatar";
 
 const Navbar = () => {
   const { notifications, markAllAsRead, remove, clear } =
@@ -57,7 +59,9 @@ const Navbar = () => {
     queryFn: () => appWindow.isMaximized(),
     networkMode: "offlineFirst",
   });
-  const { account, minecraft, avatar, isLoading, logout, login } = useUser();
+  const account = useAccount();
+  const avatar = useAvatar();
+  const { account: mcAccount, isLoading, logout, login } = useUser();
   const queryClient = useQueryClient();
 
   return (
@@ -160,7 +164,7 @@ const Navbar = () => {
               <div>
                 <div className="flex pr-2">
                   <Avatar className="h-8 rounded-none">
-                    <AvatarImage className="h-full" src={avatar} />
+                    <AvatarImage className="h-full" src={avatar.data} />
                     <AvatarFallback className="rounded-none">
                       <User2 />
                     </AvatarFallback>
@@ -171,7 +175,7 @@ const Navbar = () => {
                         size="sm"
                         className="line-clamp-1 h-8 rounded-none"
                       >
-                        {minecraft?.account.name ??
+                        {mcAccount?.account.name ??
                           account?.username ??
                           account?.name ??
                           "Username"}

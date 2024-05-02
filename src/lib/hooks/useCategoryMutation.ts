@@ -34,10 +34,9 @@ const useCategoryMutation = () => {
               `SELECT COUNT(*) as count FROM %table% WHERE group_id=${data.group} AND profile_id="${data.profile}";`,
             );
 
-            if (exists && exists.at(0)?.count === 0) {
+            if (exists && (exists.at(0) as { count: number })?.count === 0) {
               await categories.execute(
-                `INSERT INTO %table% (id,group_id,profile_id) VALUES ("${crypto.randomUUID()}",${
-                  data.group
+                `INSERT INTO %table% (id,group_id,profile_id) VALUES ("${crypto.randomUUID()}",${data.group
                 },"${data.profile}");`,
               );
             }

@@ -1,5 +1,5 @@
 import localforage from "localforage";
-import { MinecraftAccount } from "../auth/minecraft_login_flow";
+import { MinecraftAccount } from "../api/minecraftAccount";
 import type { MinecraftProfile } from "@lib/models/profiles";
 import { getLoaderType } from "@/utils/versionUtils";
 import logger from "./logger";
@@ -74,12 +74,12 @@ export const asLaunchConfig = async (
       const request = await fetchLastet();
       lastVersionId =
         request[
-          profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
+        profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
         ];
     } else {
       lastVersionId =
         latest[
-          profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
+        profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
         ];
     }
   }
@@ -91,9 +91,9 @@ export const asLaunchConfig = async (
     console: profile.console,
     version: lastVersionId,
     token: user.token.access_token,
-    uuid: user.profile.id,
+    uuid: user.account.id,
     xuid: user.xuid,
-    username: user.profile.name,
+    username: user.account.name,
     client_id: import.meta.env.PUBLIC_VITE_CLIENT_ID,
     use_custom_resolution: !!profile?.resolution,
     is_demo: false,

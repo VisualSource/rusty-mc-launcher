@@ -13,14 +13,14 @@ import useUser from "./useUser";
 
 const useRunGame = () => {
   const download = useDownload();
-  const { minecraft } = useUser();
+  const { getMinecraftAccount } = useUser();
 
   const run = useCallback(async (profile: MinecraftProfile) => {
     return new Promise<void>(async (ok, reject) => {
       let callback: ((ev: Event) => Promise<void>) | undefined = undefined;
 
       try {
-        const user = await minecraft(true);
+        const user = await getMinecraftAccount();
         const config = await asLaunchConfig(user, profile);
         callback = async (ev: Event) => {
           const isValid = (ev as CustomEvent<{ vaild: boolean }>).detail.vaild;

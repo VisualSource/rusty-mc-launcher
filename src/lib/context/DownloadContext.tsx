@@ -56,10 +56,10 @@ export type QueueItem = {
   download: DownloadEvent | null;
   key: `${string}-${string}-${string}-${string}-${string}`;
   metadata:
-    | ModsMetadata
-    | ClientMetadata
-    | PackMetadata
-    | ModsValidationMetadata;
+  | ModsMetadata
+  | ClientMetadata
+  | PackMetadata
+  | ModsValidationMetadata;
 };
 
 type FetchEvent = {
@@ -443,8 +443,8 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
               (error as Error)?.message ?? "Failed to install client",
               {
                 data: {
-                  body: "Failed to install client",
-                  time: new Date(),
+                  title: "Failed to install client",
+                  //time: new Date(),
                 },
               },
             );
@@ -511,7 +511,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
             if (!newlyAddedMods.length) {
               toast.success<ToastData>("Mods already installed on profile.", {
                 data: {
-                  time: new Date(),
+                  //time: new Date(),
                   event: "install",
                   type: "mods",
                 },
@@ -581,7 +581,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
               (error as Error)?.message ?? "Failed to download mods.",
               {
                 data: {
-                  time: new Date(),
+                  //time: new Date(),
                   event: "install-error",
                   type: "mods",
                 },
