@@ -9,9 +9,9 @@ const CollectionItem: React.FC<{
   icon: string;
 }> = ({ uuid, name, icon }) => {
   return (
-    <li className="text-zinc-50 pl-5 py-1 pr-1 hover:bg-zinc-700/75">
+    <li className="py-1 pl-5 pr-1 text-zinc-50 hover:bg-zinc-700/75">
       <Link to={`/profile/${uuid}`} className="flex items-center gap-2">
-        <Avatar className="rounded-none h-5 w-5">
+        <Avatar className="h-5 w-5 rounded-none">
           <AvatarImage className="rounded-none" src={icon} />
           <AvatarFallback className="rounded-none">
             <Book />

@@ -4,10 +4,10 @@
  */
 
 import {
-    AccountInfo,
-    AuthenticationResult as CommonAuthenticationResult,
+  AccountInfo,
+  AuthenticationResult as CommonAuthenticationResult,
 } from "@azure/msal-common";
 
 export type AuthenticationResult = CommonAuthenticationResult & {
-    account: AccountInfo;
+  account: AccountInfo;
 };

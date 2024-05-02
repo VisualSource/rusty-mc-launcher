@@ -35,17 +35,17 @@ import { PopupWindowAttributes } from "./PopupWindowAttributes";
  */
 
 export type PopupRequest = Partial<
-    Omit<
-        CommonAuthorizationUrlRequest,
-        | "responseMode"
-        | "scopes"
-        | "codeChallenge"
-        | "codeChallengeMethod"
-        | "requestedClaimsHash"
-        | "nativeBroker"
-    >
+  Omit<
+    CommonAuthorizationUrlRequest,
+    | "responseMode"
+    | "scopes"
+    | "codeChallenge"
+    | "codeChallengeMethod"
+    | "requestedClaimsHash"
+    | "nativeBroker"
+  >
 > & {
-    scopes: Array<string>;
-    popupWindowAttributes?: PopupWindowAttributes;
-    tokenBodyParameters?: StringDict;
+  scopes: Array<string>;
+  popupWindowAttributes?: PopupWindowAttributes;
+  tokenBodyParameters?: StringDict;
 };

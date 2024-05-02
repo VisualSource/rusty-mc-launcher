@@ -1,12 +1,12 @@
 import createDebug, { type Debugger } from "debug";
 import { warn, error, debug, info, attachConsole } from "tauri-plugin-log-api";
 
-
 const levels = [
   { name: "error", color: "red", logger: error },
   { name: "warn", color: "yellow", logger: warn },
   { name: "info", color: "blue", logger: info },
-  { name: "debug", color: "green", logger: debug }] as const;
+  { name: "debug", color: "green", logger: debug },
+] as const;
 
 const namespaces = ["app", "auth"] as const;
 type Level = Record<(typeof levels)[number]["name"], Debugger>;
@@ -32,7 +32,6 @@ function initLogger() {
 }
 export const { app, auth } = initLogger();
 
-export const attachLogger = () => attachConsole().then(() => app.info("Logger Ready"));
+export const attachLogger = () =>
+  attachConsole().then(() => app.info("Logger Ready"));
 export default app;
-
-

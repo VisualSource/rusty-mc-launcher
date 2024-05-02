@@ -12,7 +12,11 @@ const useIsGameRunning = () => {
       if (typeof result === "string") return result;
 
       if (result.Exited !== 0) {
-        window.dispatchEvent(new CustomEvent("mcl::game-exit-status", { detail: { exitCode: result.Exited } }));
+        window.dispatchEvent(
+          new CustomEvent("mcl::game-exit-status", {
+            detail: { exitCode: result.Exited },
+          }),
+        );
       }
 
       return "NotRunning";

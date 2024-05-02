@@ -4,5 +4,5 @@
  */
 
 export interface BridgeCapabilities {
-    queryAccount: boolean;
+  queryAccount: boolean;
 }

@@ -4,16 +4,16 @@
  */
 
 import {
-    Logger,
-    IPerformanceClient,
-    PerformanceEvents,
-    invokeAsync,
-    invoke,
-    ServerResponseType,
+  Logger,
+  IPerformanceClient,
+  PerformanceEvents,
+  invokeAsync,
+  invoke,
+  ServerResponseType,
 } from "@azure/msal-common";
 import {
-    createBrowserAuthError,
-    BrowserAuthErrorCodes,
+  createBrowserAuthError,
+  BrowserAuthErrorCodes,
 } from "../error/BrowserAuthError";
 import { DEFAULT_IFRAME_TIMEOUT_MS } from "../config/Configuration";
 
@@ -23,38 +23,38 @@ import { DEFAULT_IFRAME_TIMEOUT_MS } from "../config/Configuration";
  * @param userRequestScopes
  */
 export async function initiateAuthRequest(
-    requestUrl: string,
-    performanceClient: IPerformanceClient,
-    logger: Logger,
-    correlationId: string,
-    navigateFrameWait?: number
+  requestUrl: string,
+  performanceClient: IPerformanceClient,
+  logger: Logger,
+  correlationId: string,
+  navigateFrameWait?: number,
 ): Promise<HTMLIFrameElement> {
-    performanceClient.addQueueMeasurement(
-        PerformanceEvents.SilentHandlerInitiateAuthRequest,
-        correlationId
-    );
+  performanceClient.addQueueMeasurement(
+    PerformanceEvents.SilentHandlerInitiateAuthRequest,
+    correlationId,
+  );
 
-    if (!requestUrl) {
-        // Throw error if request URL is empty.
-        logger.info("Navigate url is empty");
-        throw createBrowserAuthError(BrowserAuthErrorCodes.emptyNavigateUri);
-    }
-    if (navigateFrameWait) {
-        return invokeAsync(
-            loadFrame,
-            PerformanceEvents.SilentHandlerLoadFrame,
-            logger,
-            performanceClient,
-            correlationId
-        )(requestUrl, navigateFrameWait, performanceClient, correlationId);
-    }
-    return invoke(
-        loadFrameSync,
-        PerformanceEvents.SilentHandlerLoadFrameSync,
-        logger,
-        performanceClient,
-        correlationId
-    )(requestUrl);
+  if (!requestUrl) {
+    // Throw error if request URL is empty.
+    logger.info("Navigate url is empty");
+    throw createBrowserAuthError(BrowserAuthErrorCodes.emptyNavigateUri);
+  }
+  if (navigateFrameWait) {
+    return invokeAsync(
+      loadFrame,
+      PerformanceEvents.SilentHandlerLoadFrame,
+      logger,
+      performanceClient,
+      correlationId,
+    )(requestUrl, navigateFrameWait, performanceClient, correlationId);
+  }
+  return invoke(
+    loadFrameSync,
+    PerformanceEvents.SilentHandlerLoadFrameSync,
+    logger,
+    performanceClient,
+    correlationId,
+  )(requestUrl);
 }
 
 /**
@@ -63,76 +63,74 @@ export async function initiateAuthRequest(
  * @param timeout
  */
 export async function monitorIframeForHash(
-    iframe: HTMLIFrameElement,
-    timeout: number,
-    pollIntervalMilliseconds: number,
-    performanceClient: IPerformanceClient,
-    logger: Logger,
-    correlationId: string,
-    responseType: ServerResponseType
+  iframe: HTMLIFrameElement,
+  timeout: number,
+  pollIntervalMilliseconds: number,
+  performanceClient: IPerformanceClient,
+  logger: Logger,
+  correlationId: string,
+  responseType: ServerResponseType,
 ): Promise<string> {
-    performanceClient.addQueueMeasurement(
-        PerformanceEvents.SilentHandlerMonitorIframeForHash,
-        correlationId
-    );
+  performanceClient.addQueueMeasurement(
+    PerformanceEvents.SilentHandlerMonitorIframeForHash,
+    correlationId,
+  );
 
-    return new Promise<string>((resolve, reject) => {
-        if (timeout < DEFAULT_IFRAME_TIMEOUT_MS) {
-            logger.warning(
-                `system.loadFrameTimeout or system.iframeHashTimeout set to lower (${timeout}ms) than the default (${DEFAULT_IFRAME_TIMEOUT_MS}ms). This may result in timeouts.`
-            );
-        }
+  return new Promise<string>((resolve, reject) => {
+    if (timeout < DEFAULT_IFRAME_TIMEOUT_MS) {
+      logger.warning(
+        `system.loadFrameTimeout or system.iframeHashTimeout set to lower (${timeout}ms) than the default (${DEFAULT_IFRAME_TIMEOUT_MS}ms). This may result in timeouts.`,
+      );
+    }
 
+    /*
+     * Polling for iframes can be purely timing based,
+     * since we don't need to account for interaction.
+     */
+    const timeoutId = window.setTimeout(() => {
+      window.clearInterval(intervalId);
+      reject(
+        createBrowserAuthError(BrowserAuthErrorCodes.monitorWindowTimeout),
+      );
+    }, timeout);
+
+    const intervalId = window.setInterval(() => {
+      let href: string = "";
+      const contentWindow = iframe.contentWindow;
+      try {
         /*
-         * Polling for iframes can be purely timing based,
-         * since we don't need to account for interaction.
+         * Will throw if cross origin,
+         * which should be caught and ignored
+         * since we need the interval to keep running while on STS UI.
          */
-        const timeoutId = window.setTimeout(() => {
-            window.clearInterval(intervalId);
-            reject(
-                createBrowserAuthError(
-                    BrowserAuthErrorCodes.monitorWindowTimeout
-                )
-            );
-        }, timeout);
+        href = contentWindow ? contentWindow.location.href : "";
+      } catch (e) {}
 
-        const intervalId = window.setInterval(() => {
-            let href: string = "";
-            const contentWindow = iframe.contentWindow;
-            try {
-                /*
-                 * Will throw if cross origin,
-                 * which should be caught and ignored
-                 * since we need the interval to keep running while on STS UI.
-                 */
-                href = contentWindow ? contentWindow.location.href : "";
-            } catch (e) {}
+      if (!href || href === "about:blank") {
+        return;
+      }
 
-            if (!href || href === "about:blank") {
-                return;
-            }
-
-            let responseString = "";
-            if (contentWindow) {
-                if (responseType === ServerResponseType.QUERY) {
-                    responseString = contentWindow.location.search;
-                } else {
-                    responseString = contentWindow.location.hash;
-                }
-            }
-            window.clearTimeout(timeoutId);
-            window.clearInterval(intervalId);
-            resolve(responseString);
-        }, pollIntervalMilliseconds);
-    }).finally(() => {
-        invoke(
-            removeHiddenIframe,
-            PerformanceEvents.RemoveHiddenIframe,
-            logger,
-            performanceClient,
-            correlationId
-        )(iframe);
-    });
+      let responseString = "";
+      if (contentWindow) {
+        if (responseType === ServerResponseType.QUERY) {
+          responseString = contentWindow.location.search;
+        } else {
+          responseString = contentWindow.location.hash;
+        }
+      }
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+      resolve(responseString);
+    }, pollIntervalMilliseconds);
+  }).finally(() => {
+    invoke(
+      removeHiddenIframe,
+      PerformanceEvents.RemoveHiddenIframe,
+      logger,
+      performanceClient,
+      correlationId,
+    )(iframe);
+  });
 }
 
 /**
@@ -142,35 +140,35 @@ export async function monitorIframeForHash(
  * @deprecated
  */
 function loadFrame(
-    urlNavigate: string,
-    navigateFrameWait: number,
-    performanceClient: IPerformanceClient,
-    correlationId: string
+  urlNavigate: string,
+  navigateFrameWait: number,
+  performanceClient: IPerformanceClient,
+  correlationId: string,
 ): Promise<HTMLIFrameElement> {
-    performanceClient.addQueueMeasurement(
-        PerformanceEvents.SilentHandlerLoadFrame,
-        correlationId
-    );
+  performanceClient.addQueueMeasurement(
+    PerformanceEvents.SilentHandlerLoadFrame,
+    correlationId,
+  );
 
-    /*
-     * This trick overcomes iframe navigation in IE
-     * IE does not load the page consistently in iframe
-     */
+  /*
+   * This trick overcomes iframe navigation in IE
+   * IE does not load the page consistently in iframe
+   */
 
-    return new Promise((resolve, reject) => {
-        const frameHandle = createHiddenIframe();
+  return new Promise((resolve, reject) => {
+    const frameHandle = createHiddenIframe();
 
-        window.setTimeout(() => {
-            if (!frameHandle) {
-                reject("Unable to load iframe");
-                return;
-            }
+    window.setTimeout(() => {
+      if (!frameHandle) {
+        reject("Unable to load iframe");
+        return;
+      }
 
-            frameHandle.src = urlNavigate;
+      frameHandle.src = urlNavigate;
 
-            resolve(frameHandle);
-        }, navigateFrameWait);
-    });
+      resolve(frameHandle);
+    }, navigateFrameWait);
+  });
 }
 /**
  * @hidden
@@ -180,11 +178,11 @@ function loadFrame(
  * @param logger
  */
 function loadFrameSync(urlNavigate: string): HTMLIFrameElement {
-    const frameHandle = createHiddenIframe();
+  const frameHandle = createHiddenIframe();
 
-    frameHandle.src = urlNavigate;
+  frameHandle.src = urlNavigate;
 
-    return frameHandle;
+  return frameHandle;
 }
 
 /**
@@ -193,20 +191,20 @@ function loadFrameSync(urlNavigate: string): HTMLIFrameElement {
  * @ignore
  */
 function createHiddenIframe(): HTMLIFrameElement {
-    const authFrame = document.createElement("iframe");
+  const authFrame = document.createElement("iframe");
 
-    authFrame.className = "msalSilentIframe";
-    authFrame.style.visibility = "hidden";
-    authFrame.style.position = "absolute";
-    authFrame.style.width = authFrame.style.height = "0";
-    authFrame.style.border = "0";
-    authFrame.setAttribute(
-        "sandbox",
-        "allow-scripts allow-same-origin allow-forms"
-    );
-    document.body.appendChild(authFrame);
+  authFrame.className = "msalSilentIframe";
+  authFrame.style.visibility = "hidden";
+  authFrame.style.position = "absolute";
+  authFrame.style.width = authFrame.style.height = "0";
+  authFrame.style.border = "0";
+  authFrame.setAttribute(
+    "sandbox",
+    "allow-scripts allow-same-origin allow-forms",
+  );
+  document.body.appendChild(authFrame);
 
-    return authFrame;
+  return authFrame;
 }
 
 /**
@@ -215,7 +213,7 @@ function createHiddenIframe(): HTMLIFrameElement {
  * @ignore
  */
 function removeHiddenIframe(iframe: HTMLIFrameElement): void {
-    if (document.body === iframe.parentNode) {
-        document.body.removeChild(iframe);
-    }
+  if (document.body === iframe.parentNode) {
+    document.body.removeChild(iframe);
+  }
 }

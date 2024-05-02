@@ -64,7 +64,7 @@ const Navbar = () => {
     <TooltipProvider>
       <header
         data-tauri-drag-region
-        className="z-50 bg-zinc-950 text-zinc-400 shadow-md row-span-1"
+        className="z-50 row-span-1 bg-zinc-950 text-zinc-400 shadow-md"
       >
         <section data-tauri-drag-region className="flex justify-between">
           <div className="flex">
@@ -73,7 +73,7 @@ const Navbar = () => {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="rounded-none h-full"
+                  className="h-full rounded-none"
                 >
                   <Hexagon className="pr-2" />
                   MCL
@@ -91,14 +91,14 @@ const Navbar = () => {
                 <DropdownMenuItem onClick={() => exit()}>Exit</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" variant="ghost" className="rounded-none h-full">
+            <Button size="sm" variant="ghost" className="h-full rounded-none">
               View
             </Button>
           </div>
           <div className="flex">
             <Popover>
               <PopoverTrigger asChild>
-                <div className="flex justify-center items-center pr-2">
+                <div className="flex items-center justify-center pr-2">
                   <Button size="icon" variant="secondary">
                     <Bell className="h-5 w-5" />
                   </Button>
@@ -116,7 +116,7 @@ const Navbar = () => {
                     {notifications.map((value) => (
                       <li
                         key={value.id}
-                        className="py-1 px-4 rounded-md bg-zinc-700 flex justify-between items-center"
+                        className="flex items-center justify-between rounded-md bg-zinc-700 px-4 py-1"
                       >
                         {(value.icon as React.ReactNode) ?? null}
                         <div>
@@ -157,10 +157,9 @@ const Navbar = () => {
             </Popover>
 
             <DropdownMenu>
-
               <div>
                 <div className="flex pr-2">
-                  <Avatar className="rounded-none h-8">
+                  <Avatar className="h-8 rounded-none">
                     <AvatarImage className="h-full" src={avatar} />
                     <AvatarFallback className="rounded-none">
                       <User2 />
@@ -170,9 +169,12 @@ const Navbar = () => {
                     <DropdownMenuTrigger asChild>
                       <Button
                         size="sm"
-                        className="rounded-none line-clamp-1 h-8"
+                        className="line-clamp-1 h-8 rounded-none"
                       >
-                        {minecraft?.account.name ?? account?.username ?? account?.name ?? "Username"}
+                        {minecraft?.account.name ??
+                          account?.username ??
+                          account?.name ??
+                          "Username"}
                       </Button>
                     </DropdownMenuTrigger>
                   </AuthenticatedTemplate>
@@ -193,9 +195,7 @@ const Navbar = () => {
                   </DropdownMenuContent>
                 </AuthenticatedTemplate>
               </div>
-
             </DropdownMenu>
-
 
             <Button
               variant="ghost"
@@ -232,20 +232,20 @@ const Navbar = () => {
         <section
           data-tauri-drag-region
           aria-label="Page Header"
-          className="p-2 flex items-center text-zinc-100"
+          className="flex items-center p-2 text-zinc-100"
         >
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuTrigger
                   showIcon={false}
-                  className="rounded-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent data-[active]:bg-transparent dark:data-[active]:bg-transparent data-[state=open]:bg-transparent dark:data-[state=open]:bg-transparent"
+                  className="rounded-none bg-transparent hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
                 >
                   <NavLink
                     to=""
                     className={({ isActive }) =>
                       cn({
-                        "text-blue-300 border-b-2 border-blue-300": isActive,
+                        "border-b-2 border-blue-300 text-blue-300": isActive,
                       })
                     }
                   >
@@ -276,13 +276,13 @@ const Navbar = () => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger
                   showIcon={false}
-                  className="rounded-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent data-[active]:bg-transparent dark:data-[active]:bg-transparent data-[state=open]:bg-transparent dark:data-[state=open]:bg-transparent"
+                  className="rounded-none bg-transparent hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
                 >
                   <NavLink
                     to="workshop"
                     className={({ isActive }) =>
                       cn({
-                        "text-blue-300 border-b-2 border-blue-300": isActive,
+                        "border-b-2 border-blue-300 text-blue-300": isActive,
                       })
                     }
                   >

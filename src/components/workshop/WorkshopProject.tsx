@@ -8,10 +8,10 @@ const WorkshopProject: React.FC = () => {
   const data = useLoaderData();
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       <Suspense
         fallback={
-          <div className="w-full flex flex-col justify-center items-center">
+          <div className="flex w-full flex-col items-center justify-center">
             <Spinner />
           </div>
         }

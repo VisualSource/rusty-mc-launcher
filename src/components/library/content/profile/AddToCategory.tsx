@@ -23,7 +23,6 @@ import useCategories from "@/lib/hooks/useCategories";
 import { Button } from "@component/ui/button";
 import { Label } from "@/components/ui/label";
 
-
 const AddToCategory: React.FC<{ id: string }> = ({ id }) => {
   const [open, setOpen] = useState(false);
   const categories = useCategories();

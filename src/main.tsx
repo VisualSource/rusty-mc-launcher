@@ -5,7 +5,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { ToastContainer } from "react-toastify";
 import ReactDOM from "react-dom/client";
 import React, { Suspense } from "react";
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";

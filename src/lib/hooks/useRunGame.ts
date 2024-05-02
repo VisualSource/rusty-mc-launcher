@@ -30,10 +30,14 @@ const useRunGame = () => {
               where: [{ id: profile.id }],
             });
             await play(config).catch(() => {
-              window.dispatchEvent(new CustomEvent("mcl::game-exit-status", { detail: { exitCode: 1, msg: "" } }));
+              window.dispatchEvent(
+                new CustomEvent("mcl::game-exit-status", {
+                  detail: { exitCode: 1, msg: "" },
+                }),
+              );
               reject();
             });
-            await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] })
+            await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
             return ok();
           }
           reject();

@@ -23,14 +23,14 @@ const Profile: React.FC = () => {
 
   return (
     <ScrollArea className="text-zinc-50">
-      <div className="h-72 bg-blue-950 flex flex-col justify-between">
-        <div className="p-2 flex flex-col max-w-3xl xl:max-w-7xl">
+      <div className="flex h-72 flex-col justify-between bg-blue-950">
+        <div className="flex max-w-3xl flex-col p-2 xl:max-w-7xl">
           <TypographyH1 className="line-clamp-1">{data.name}</TypographyH1>
           <ProfileCategories id={data.id} />
         </div>
         <div className="relative flex">
-          <div className="flex w-full p-4 absolute bottom-0 justify-between bg-zinc-900/60">
-            <div className="flex shrink-1 items-center gap-4">
+          <div className="absolute bottom-0 flex w-full justify-between bg-zinc-900/60 p-4">
+            <div className="shrink-1 flex items-center gap-4">
               <PlayButton size="lg" profile={data} />
               <div className="flex flex-col">
                 <TypographyH4>LAST PLAYED</TypographyH4>
@@ -42,7 +42,7 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <Button title="Settings" asChild size="icon">
                 <Link to={`/profile/edit/${data.id}`}>
                   <Settings />
@@ -58,7 +58,11 @@ const Profile: React.FC = () => {
                 <AddToCategory id={data.id} />
               </Suspense>
               {data.loader !== "vanilla" ? (
-                <Button onClick={() => validateMods(data.id)} size="icon" title="Validate Files">
+                <Button
+                  onClick={() => validateMods(data.id)}
+                  size="icon"
+                  title="Validate Files"
+                >
                   <Component />
                 </Button>
               ) : null}
@@ -70,12 +74,17 @@ const Profile: React.FC = () => {
         <section className="container py-4">
           <TypographyH4>Profile Info</TypographyH4>
           <Separator />
-          <div>Game Version: <TypographyMuted asChild><span>{data.lastVersionId}</span></TypographyMuted></div>
+          <div>
+            Game Version:{" "}
+            <TypographyMuted asChild>
+              <span>{data.lastVersionId}</span>
+            </TypographyMuted>
+          </div>
         </section>
 
         {data.loader !== "vanilla" ||
-          data.lastVersionId.includes("fabric") ||
-          data.lastVersionId.includes("forge") ? (
+        data.lastVersionId.includes("fabric") ||
+        data.lastVersionId.includes("forge") ? (
           <section className="container py-4">
             <TypographyH4>Mods</TypographyH4>
             <Separator />

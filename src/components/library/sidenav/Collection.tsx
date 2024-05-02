@@ -26,9 +26,9 @@ const Collection: React.FC<{
         onOpenChange={(ev) => setOpen(ev)}
         className="w-full"
       >
-        <CollapsibleTrigger className="flex py-0.5 px-1 text-zinc-50 items-center bg-gradient-to-r from-zinc-700/95 from-10% to-zinc-800 w-full">
+        <CollapsibleTrigger className="flex w-full items-center bg-gradient-to-r from-zinc-700/95 from-10% to-zinc-800 px-1 py-0.5 text-zinc-50">
           {open ? <Minus /> : <Plus />}
-          <h1 className="text-sm mr-1 line-clamp-1 font-medium">
+          <h1 className="mr-1 line-clamp-1 text-sm font-medium">
             {name.toUpperCase()}
           </h1>
           <TypographyMuted className="text-zinc-500">({count})</TypographyMuted>

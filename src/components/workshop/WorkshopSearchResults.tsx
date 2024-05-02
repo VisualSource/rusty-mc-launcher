@@ -18,7 +18,7 @@ const WorkshopSearchResults: React.FC = () => {
   const data = useAsyncValue() as ModrinthApiSearchResponse;
   return (
     <>
-      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 grid-flow-row gap-4 px-4">
+      <div className="grid flex-1 grid-flow-row grid-cols-1 gap-4 px-4 sm:grid-cols-2 xl:grid-cols-3">
         {data.hits.map((project) => (
           <Link key={project.project_id} to={`/workshop/${project.project_id}`}>
             <Card className="h-full">
@@ -32,9 +32,9 @@ const WorkshopSearchResults: React.FC = () => {
                   ))}
                 </div>
               </CardHeader>
-              <CardContent className="grid grid-cols-5 gap-2 h-full">
+              <CardContent className="grid h-full grid-cols-5 gap-2">
                 <div className="col-span-2">
-                  <img className="w-40 h-40" src={project.icon_url} />
+                  <img className="h-40 w-40" src={project.icon_url} />
                 </div>
                 <div className="col-span-3 flex flex-col gap-2">
                   <p className="line-clamp-5">{project.description}</p>

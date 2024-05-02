@@ -11,6 +11,6 @@ import { AccountInfo } from "@azure/msal-common";
  * - account                - Account object that will be logged out of. All tokens tied to this account will be cleared.
  */
 export type ClearCacheRequest = {
-    correlationId?: string;
-    account?: AccountInfo | null;
+  correlationId?: string;
+  account?: AccountInfo | null;
 };

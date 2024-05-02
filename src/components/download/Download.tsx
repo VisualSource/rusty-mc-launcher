@@ -1,5 +1,5 @@
 import { FileDiff, Monitor, PackagePlus } from "lucide-react";
-import { formatSize } from '@lib/size_format';
+import { formatSize } from "@lib/size_format";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import SectionDivider from "@component/download/SectionDivider";
@@ -21,12 +21,12 @@ const Download: React.FC = () => {
     clearErrored,
   } = useDownload();
   return (
-    <div className="grid grid-rows-6 grid-cols-1 h-full text-zinc-50">
-      <div className="row-span-2 bg-blue-900/20 p-2 border-b-blue-300 border-b">
+    <div className="grid h-full grid-cols-1 grid-rows-6 text-zinc-50">
+      <div className="row-span-2 border-b border-b-blue-300 bg-blue-900/20 p-2">
         {queueCurrent ? (
           <div className="flex gap-4">
-            <Avatar className="rounded-none h-32 w-32 xl:h-60 xl:w-60">
-              <AvatarFallback className="rounded-lg h-32 w-32 xl:h-60 xl:w-60">
+            <Avatar className="h-32 w-32 rounded-none xl:h-60 xl:w-60">
+              <AvatarFallback className="h-32 w-32 rounded-lg xl:h-60 xl:w-60">
                 {queueCurrent.type === "client" ? (
                   <Monitor className="h-24 w-24" />
                 ) : queueCurrent.type === "mods" ? (
@@ -54,10 +54,10 @@ const Download: React.FC = () => {
           </div>
         ) : null}
       </div>
-      <ScrollArea className="row-span-4 container py-2">
-        <section className="flex flex-col w-full">
+      <ScrollArea className="container row-span-4 py-2">
+        <section className="flex w-full flex-col">
           <SectionDivider label="Up Next" count={queueNext.length} />
-          <div className="flex flex-col pl-4 pt-2 gap-2">
+          <div className="flex flex-col gap-2 pl-4 pt-2">
             {queueNext.length ? (
               queueNext.map((item) => <DownloadItem {...item} />)
             ) : (
@@ -67,13 +67,13 @@ const Download: React.FC = () => {
         </section>
 
         {queueCompleted.length ? (
-          <section className="flex flex-col w-full">
+          <section className="flex w-full flex-col">
             <SectionDivider label="Completed" count={queueCompleted.length}>
               <Button size="sm" onClick={() => clearCompleted()}>
                 Clear
               </Button>
             </SectionDivider>
-            <div className="flex flex-col pl-4 pt-2 gap-2">
+            <div className="flex flex-col gap-2 pl-4 pt-2">
               {queueCompleted.map((item) => (
                 <DownloadItem {...item} />
               ))}
@@ -88,7 +88,7 @@ const Download: React.FC = () => {
                 Clear
               </Button>
             </SectionDivider>
-            <div className="flex flex-col pl-4 pt-2 gap-2">
+            <div className="flex flex-col gap-2 pl-4 pt-2">
               {queueErrored.map((item) => (
                 <DownloadItem {...item} />
               ))}

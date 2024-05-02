@@ -20,17 +20,16 @@ import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
 
-
 const Footer = () => {
   const { queueCurrent } = useDownload();
   return (
-    <footer className="flex h-16 bg-zinc-950 shadow text-zinc-400 row-span-1">
-      <div className="h-full flex justify-start items-center shrink w-full">
+    <footer className="row-span-1 flex h-16 bg-zinc-950 text-zinc-400 shadow">
+      <div className="flex h-full w-full shrink items-center justify-start">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="dark:hover:bg-transparent group">
+            <Button variant="ghost" className="group dark:hover:bg-transparent">
               <PlusSquare className="pr-2" />
-              <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">
+              <TypographyMuted className="transition-colors dark:group-hover:text-zinc-300">
                 Add a Game
               </TypographyMuted>
             </Button>
@@ -46,7 +45,7 @@ const Footer = () => {
         </DropdownMenu>
       </div>
 
-      <div className="h-full flex items-center justify-center flex-1 w-full">
+      <div className="flex h-full w-full flex-1 items-center justify-center">
         <Button
           variant="ghost"
           className="hover:bg-transparent dark:hover:bg-transparent"
@@ -54,7 +53,7 @@ const Footer = () => {
         >
           <Link to="downloads" className="group">
             {queueCurrent ? (
-              <div className="flex gap-3 items-end">
+              <div className="flex items-end gap-3">
                 <Avatar className="rounded-none">
                   <AvatarFallback className="rounded-lg">
                     {queueCurrent.type === "client" ? (
@@ -68,23 +67,33 @@ const Footer = () => {
                   <AvatarImage />
                 </Avatar>
                 <div className="w-96">
-                  <div className="w-full flex justify-between">
+                  <div className="flex w-full justify-between">
                     <TypographyMuted asChild className="line-clamp-1">
                       <span>{queueCurrent.msg}</span>
                     </TypographyMuted>
                     <TypographyMuted asChild>
-                      <span>{Math.floor(100 * (queueCurrent.ammount_current / queueCurrent.ammount))}%</span>
+                      <span>
+                        {Math.floor(
+                          100 *
+                            (queueCurrent.ammount_current /
+                              queueCurrent.ammount),
+                        )}
+                        %
+                      </span>
                     </TypographyMuted>
                   </div>
                   <Progress
-                    value={Math.floor(100 * (queueCurrent.ammount_current / queueCurrent.ammount))}
+                    value={Math.floor(
+                      100 *
+                        (queueCurrent.ammount_current / queueCurrent.ammount),
+                    )}
                   />
                 </div>
               </div>
             ) : (
               <>
                 <Download className="pr-2" />
-                <TypographyMuted className="dark:group-hover:text-zinc-300 transition-colors">
+                <TypographyMuted className="transition-colors dark:group-hover:text-zinc-300">
                   Manage Downloads
                 </TypographyMuted>
               </>
@@ -93,7 +102,7 @@ const Footer = () => {
         </Button>
       </div>
 
-      <div className="h-full flex items-center justify-end shrink w-full"></div>
+      <div className="flex h-full w-full shrink items-center justify-end"></div>
     </footer>
   );
 };

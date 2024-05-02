@@ -9,8 +9,8 @@ import { BridgeCapabilities } from "./BridgeCapabilities";
 import { TokenRequest } from "./TokenRequest";
 
 export interface IBridgeProxy {
-    getTokenInteractive(request: TokenRequest): Promise<AuthResult>;
-    getTokenSilent(request: TokenRequest): Promise<AuthResult>;
-    getActiveAccount(): Promise<AccountInfo>;
-    getHostCapabilities(): BridgeCapabilities | null;
+  getTokenInteractive(request: TokenRequest): Promise<AuthResult>;
+  getTokenSilent(request: TokenRequest): Promise<AuthResult>;
+  getActiveAccount(): Promise<AccountInfo>;
+  getHostCapabilities(): BridgeCapabilities | null;
 }

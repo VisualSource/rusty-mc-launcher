@@ -48,9 +48,9 @@ const WorkshopSearch: React.FC = () => {
   }, [query]);
 
   return (
-    <div className="h-full flex flex-col gap-2">
+    <div className="flex h-full flex-col gap-2">
       <ScrollRestoration />
-      <search className="grid grid-cols-12 text-zinc-50 py-2 px-4 gap-2 row-span-1">
+      <search className="row-span-1 grid grid-cols-12 gap-2 px-4 py-2 text-zinc-50">
         <Input
           onChange={(ev) => setSearch(ev.target.value)}
           value={search}

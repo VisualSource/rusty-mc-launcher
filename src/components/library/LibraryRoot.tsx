@@ -17,13 +17,13 @@ import Favorites, {
 const LibraryRoot: React.FC = () => {
   return (
     <ScrollArea>
-      <div className="container text-zinc-50 py-4">
+      <div className="container py-4 text-zinc-50">
         <section className="flex flex-col">
-          <div className="pt-4 flex items-center gap-4 pb-2">
+          <div className="flex items-center gap-4 pb-2 pt-4">
             <TypographyH3>Favorites</TypographyH3>
             <Separator className="dark:bg-zinc-50" />
           </div>
-          <ScrollArea className="w-full h-80 whitespace-nowrap">
+          <ScrollArea className="h-80 w-full whitespace-nowrap">
             <div className="flex w-max space-x-4 p-4">
               <ErrorBoundary fallback={<FavoritesErrored />}>
                 <Suspense fallback={<FavoritesLoading />}>

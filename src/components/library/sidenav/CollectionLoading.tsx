@@ -3,7 +3,7 @@ import { Skeleton } from "@component/ui/skeleton";
 const CollectionLoading: React.FC = () => {
   return (
     <li>
-      <Skeleton className="w-full h-7 rounded-none" />
+      <Skeleton className="h-7 w-full rounded-none" />
     </li>
   );
 };

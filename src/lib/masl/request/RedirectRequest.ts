@@ -34,18 +34,18 @@ import { CommonAuthorizationUrlRequest, StringDict } from "@azure/msal-common";
  * - onRedirectNavigate         - Callback that will be passed the url that MSAL will navigate to. Returning false in the callback will stop navigation.
  */
 export type RedirectRequest = Partial<
-    Omit<
-        CommonAuthorizationUrlRequest,
-        | "responseMode"
-        | "scopes"
-        | "codeChallenge"
-        | "codeChallengeMethod"
-        | "requestedClaimsHash"
-        | "nativeBroker"
-    >
+  Omit<
+    CommonAuthorizationUrlRequest,
+    | "responseMode"
+    | "scopes"
+    | "codeChallenge"
+    | "codeChallengeMethod"
+    | "requestedClaimsHash"
+    | "nativeBroker"
+  >
 > & {
-    scopes: Array<string>;
-    redirectStartPage?: string;
-    onRedirectNavigate?: (url: string) => boolean | void;
-    tokenBodyParameters?: StringDict;
+  scopes: Array<string>;
+  redirectStartPage?: string;
+  onRedirectNavigate?: (url: string) => boolean | void;
+  tokenBodyParameters?: StringDict;
 };

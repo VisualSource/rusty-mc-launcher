@@ -13,14 +13,14 @@ const SectionDivider: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   return (
     <div className="flex w-full items-center">
-      <div className="flex items-center gap-2 flex-nowrap whitespace-nowrap mr-2">
+      <div className="mr-2 flex flex-nowrap items-center gap-2 whitespace-nowrap">
         <TypographyH4 className="text-lg">{label}</TypographyH4>
         <TypographyMuted asChild>
           <span>({count})</span>
         </TypographyMuted>
       </div>
-      <Separator className="dark:bg-zinc-500 h-[2px] shrink" />
-      <div className="flex flex-grow whitespace-nowrap ml-2">{children}</div>
+      <Separator className="h-[2px] shrink dark:bg-zinc-500" />
+      <div className="ml-2 flex flex-grow whitespace-nowrap">{children}</div>
     </div>
   );
 };

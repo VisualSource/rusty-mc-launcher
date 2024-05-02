@@ -28,8 +28,8 @@ const ModrinthProject: React.FC = () => {
           <Link to={-1 as To}>Back</Link>
         </Button>
       </div>
-      <div className="flex flex-col text-zinc-50 container">
-        <div className="py-4 flex justify-between">
+      <div className="container flex flex-col text-zinc-50">
+        <div className="flex justify-between py-4">
           <div>
             <TypographyH1>{data.title}</TypographyH1>
             <div>
@@ -49,7 +49,7 @@ const ModrinthProject: React.FC = () => {
           </div>
         </div>
 
-        <section className="p-2 bg-blue-900/20 shadow-2xl rounded-md">
+        <section className="rounded-md bg-blue-900/20 p-2 shadow-2xl">
           {data.gallery?.length ? (
             <>
               <div className="h-96">
@@ -67,7 +67,7 @@ const ModrinthProject: React.FC = () => {
                   <button
                     onClick={() => setImage(i)}
                     className={cn("h-24", {
-                      "border border-blue-700 shadow-2xl rounded-sm":
+                      "rounded-sm border border-blue-700 shadow-2xl":
                         i === image,
                     })}
                     key={value.ordering}
@@ -82,7 +82,7 @@ const ModrinthProject: React.FC = () => {
               <Separator className="my-4" />
             </>
           ) : null}
-          <div className="flex flex-wrap p-4 gap-2">
+          <div className="flex flex-wrap gap-2 p-4">
             {data.source_url ? (
               <a
                 rel="noopener noreferrer"
@@ -91,7 +91,7 @@ const ModrinthProject: React.FC = () => {
                 className="flex"
               >
                 <Code className="pr-2" />{" "}
-                <span className="underline text-blue-600">Source</span>{" "}
+                <span className="text-blue-600 underline">Source</span>{" "}
               </a>
             ) : null}
             {data.issues_url ? (
@@ -103,7 +103,7 @@ const ModrinthProject: React.FC = () => {
               >
                 {" "}
                 <Bug className="pr-2" />{" "}
-                <span className="underline text-blue-600">Issues</span>{" "}
+                <span className="text-blue-600 underline">Issues</span>{" "}
               </a>
             ) : null}
             {data.wiki_url ? (
@@ -115,7 +115,7 @@ const ModrinthProject: React.FC = () => {
               >
                 {" "}
                 <Globe className="pr-2" />{" "}
-                <span className="underline text-blue-600">Wiki</span>
+                <span className="text-blue-600 underline">Wiki</span>
               </a>
             ) : null}
             {data.discord_url ? (
@@ -126,30 +126,30 @@ const ModrinthProject: React.FC = () => {
                 className="flex items-center"
               >
                 <DiscordLogoIcon />{" "}
-                <span className="underline pl-2 text-blue-600">Discord</span>
+                <span className="pl-2 text-blue-600 underline">Discord</span>
               </a>
             ) : null}
             {data.donation_urls
               ? data.donation_urls.map((value) => (
-                <a
-                  href={value.url}
-                  target="_blank"
-                  key={value.id}
-                  className="flex"
-                  rel="noopener noreferrer"
-                >
-                  <span className="underline text-blue-600">
-                    {value.platform}
-                  </span>{" "}
-                </a>
-              ))
+                  <a
+                    href={value.url}
+                    target="_blank"
+                    key={value.id}
+                    className="flex"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="text-blue-600 underline">
+                      {value.platform}
+                    </span>{" "}
+                  </a>
+                ))
               : null}
           </div>
         </section>
 
         <div className="grid grid-cols-4 gap-8 pt-4">
           <div className="col-span-3 flex flex-col gap-4">
-            <section className="p-4 flex justify-between bg-blue-900/20 shadow-2xl rounded-md">
+            <section className="flex justify-between rounded-md bg-blue-900/20 p-4 shadow-2xl">
               <TypographyH4>{data.title}</TypographyH4>
 
               <Button
@@ -157,14 +157,14 @@ const ModrinthProject: React.FC = () => {
                   installContent(data.slug, data.project_type, {
                     minecraft_versions: data?.game_versions,
                     modloaders: data?.loaders,
-                    name: data.title
+                    name: data.title,
                   })
                 }
               >
                 <Plus /> Install
               </Button>
             </section>
-            <article className="prose max-w-none prose-invert mb-4">
+            <article className="prose prose-invert mb-4 max-w-none">
               <ReactMarkdown
                 rehypePlugins={[rehypeRaw]}
                 remarkPlugins={[remarkGfm]}
@@ -183,7 +183,7 @@ const ModrinthProject: React.FC = () => {
               <TypographyH4>License</TypographyH4>
               <a
                 rel="noopener noreferrer"
-                className="underline text-blue-600"
+                className="text-blue-600 underline"
                 href={data.license?.url ?? ""}
               >
                 {data.license.name}

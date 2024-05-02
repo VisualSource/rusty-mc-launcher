@@ -24,8 +24,8 @@ const CollectionItem: React.FC<{
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="aspect-square h-44 bg-zinc-800 hover:bg-slate-800 shadow-lg flex items-center justify-center rounded-md">
-          <TypographyH4 className="text-lg line-clamp-1 text-zinc-50">
+        <button className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800">
+          <TypographyH4 className="line-clamp-1 text-lg text-zinc-50">
             {collection.name}
           </TypographyH4>
         </button>
@@ -44,7 +44,7 @@ const CollectionItem: React.FC<{
               <TypographyMuted>Unable to edit this collection.</TypographyMuted>
             </div>
           ) : (
-            <div className="grid items-center gap-1.5 w-full mb-4">
+            <div className="mb-4 grid w-full items-center gap-1.5">
               <input
                 name="id"
                 defaultValue={collection.id}
@@ -66,7 +66,7 @@ const CollectionItem: React.FC<{
           )}
 
           <DialogFooter>
-            <div className="flex justify-between w-full">
+            <div className="flex w-full justify-between">
               {collection.group_id === 0 || collection.group_id === 1 ? null : (
                 <Button
                   onClick={() => {

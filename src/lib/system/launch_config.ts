@@ -35,7 +35,7 @@ export type LaunchConfig = {
   forge?: string;
   fabric?: string;
   client_id?: string;
-}
+};
 
 type LastestVersions = { latest: { release: string; snapshot: string } };
 
@@ -74,12 +74,12 @@ export const asLaunchConfig = async (
       const request = await fetchLastet();
       lastVersionId =
         request[
-        profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
+          profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
         ];
     } else {
       lastVersionId =
         latest[
-        profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
+          profile.lastVersionId.replace("latest-", "") as "release" | "snapshot"
         ];
     }
   }

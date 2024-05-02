@@ -1,6 +1,4 @@
-import {
-  type SilentRequest,
-} from "@masl/index";
+import { type SilentRequest } from "@masl/index";
 
 export const xboxRequest = {
   scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],

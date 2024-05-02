@@ -40,11 +40,11 @@ export type PackMetadata = {
 };
 
 export type ModsValidationMetadata = {
-  type: "mods_validation",
+  type: "mods_validation";
   game_dir?: string;
   id: string;
-  files: FileDownload[]
-}
+  files: FileDownload[];
+};
 
 export type QueueItem = {
   ammount: number;
@@ -55,7 +55,11 @@ export type QueueItem = {
   msg: string;
   download: DownloadEvent | null;
   key: `${string}-${string}-${string}-${string}-${string}`;
-  metadata: ModsMetadata | ClientMetadata | PackMetadata | ModsValidationMetadata;
+  metadata:
+    | ModsMetadata
+    | ClientMetadata
+    | PackMetadata
+    | ModsValidationMetadata;
 };
 
 type FetchEvent = {
@@ -256,7 +260,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
               metadata: {
                 type: "mods_validation",
                 files: profile.mods,
-                id
+                id,
               },
             });
 
@@ -276,7 +280,11 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
                 setCurrentItem(data);
 
-                await validateMods({ id: data.metadata.id, files: data.metadata.files, game_dir: data.metadata.game_dir });
+                await validateMods({
+                  id: data.metadata.id,
+                  files: data.metadata.files,
+                  game_dir: data.metadata.game_dir,
+                });
 
                 cb(undefined, data);
               } catch (error) {

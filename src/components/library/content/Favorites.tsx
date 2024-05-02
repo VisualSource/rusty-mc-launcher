@@ -11,7 +11,7 @@ import PlayButton from "@/components/ui/play";
 
 export const FavoritesErrored: React.FC = () => {
   return (
-    <div className="w-full flex flex-col justify-center items-center">
+    <div className="flex w-full flex-col items-center justify-center">
       <AlertTriangle />
       <TypographyH3>Failed to load Favorites</TypographyH3>
     </div>
@@ -28,7 +28,7 @@ export const FavoritesLoading: React.FC = () => {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <Skeleton className="h-36 w-full rounded-sm" />
-            <Skeleton className="w-full h-9" />
+            <Skeleton className="h-9 w-full" />
           </CardContent>
         </Card>
       ))}
@@ -41,7 +41,9 @@ const Favorites: React.FC = () => {
     queryKey: [CATEGORY_KEY, 1],
     queryFn: async () => {
       const result = await profiles.execute<MinecraftProfile>(
-        `SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = 1`, [], true
+        `SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = 1`,
+        [],
+        true,
       );
       return result ?? [];
     },
@@ -57,7 +59,7 @@ const Favorites: React.FC = () => {
             <CardTitle>{value.name}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <Avatar className="rounded-none w-full aspect-square h-36">
+            <Avatar className="aspect-square h-36 w-full rounded-none">
               <AvatarImage
                 src={value.icon ?? undefined}
                 className="rounded-none"

@@ -7,6 +7,6 @@ import { AccountInfo } from "./AccountInfo";
 import { TokenResponse } from "./TokenResponse";
 
 export type AuthResult = {
-    token: TokenResponse;
-    account: AccountInfo;
+  token: TokenResponse;
+  account: AccountInfo;
 };

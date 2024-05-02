@@ -5,7 +5,7 @@ import {
   type Configuration,
   LogLevel,
 } from "@masl/index";
-import { auth } from '@system/logger';
+import { auth } from "@system/logger";
 
 const configuration: Configuration = {
   auth: {
@@ -37,15 +37,15 @@ const configuration: Configuration = {
             auth.error(message);
             break;
         }
-      }
-    }
-  }
-}
+      },
+    },
+  },
+};
 
 export const getPCA = async () => {
   const pca = new PublicClientApplication(configuration);
 
-  pca.addEventCallback(ev => {
+  pca.addEventCallback((ev) => {
     switch (ev.eventType) {
       case EventType.LOGIN_SUCCESS: {
         if (!ev.payload) break;
@@ -57,7 +57,7 @@ export const getPCA = async () => {
         if (pca.getActiveAccount()) break;
 
         const accounts = pca.getAllAccounts();
-        const account = accounts.at(0)
+        const account = accounts.at(0);
         if (!account) break;
 
         pca.setActiveAccount(account);
@@ -67,4 +67,4 @@ export const getPCA = async () => {
   });
 
   return pca;
-}
+};

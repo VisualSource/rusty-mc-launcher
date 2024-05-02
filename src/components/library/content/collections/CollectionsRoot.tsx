@@ -26,17 +26,17 @@ const CollectionsRoot: React.FC = () => {
 
   return (
     <ScrollArea>
-      <div className="flex flex-wrap p-2 gap-4">
+      <div className="flex flex-wrap gap-4 p-2">
         {data.map((collection) => (
           <CollectionItem key={collection.id} collection={collection} />
         ))}
         <Dialog onOpenChange={setAddCollectionsOpen} open={addCollectionOpen}>
           <DialogTrigger asChild>
             <button
-              className="aspect-square h-44 bg-zinc-800 hover:bg-slate-800 shadow-lg flex items-center justify-center rounded-md"
+              className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800"
               title="Add Collection"
             >
-              <Plus className="text-zinc-50 h-12 w-12" />
+              <Plus className="h-12 w-12 text-zinc-50" />
             </button>
           </DialogTrigger>
           <DialogContent className="text-zinc-50">
@@ -48,7 +48,7 @@ const CollectionsRoot: React.FC = () => {
               action="/collections"
               method="POST"
             >
-              <div className="grid items-center gap-1.5 w-full">
+              <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="collection-name">Collection name</Label>
                 <Input
                   autoComplete="false"

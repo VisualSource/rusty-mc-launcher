@@ -9,9 +9,9 @@ import { CommonAuthorizationUrlRequest } from "@azure/msal-common";
  * This type is deprecated and will be removed on the next major version update
  */
 export type AuthorizationUrlRequest = Omit<
-    CommonAuthorizationUrlRequest,
-    "state" | "nonce" | "requestedClaimsHash" | "nativeBroker"
+  CommonAuthorizationUrlRequest,
+  "state" | "nonce" | "requestedClaimsHash" | "nativeBroker"
 > & {
-    state: string;
-    nonce: string;
+  state: string;
+  nonce: string;
 };

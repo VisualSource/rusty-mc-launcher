@@ -1,13 +1,13 @@
-import { useAccount, useMsal, } from '@azure/msal-react';
-import { useQuery } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useAccount, useMsal } from "@azure/msal-react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 
-import { getGraphClient, getAccountPhoto } from '@lib/api/graphClient';
+import { getGraphClient, getAccountPhoto } from "@lib/api/graphClient";
 import { getMinecraftAccount } from "@lib/api/minecraftAccount";
-import { PortGenerator } from '@system/commands';
+import { PortGenerator } from "@system/commands";
 import { InteractionStatus } from "@masl/index";
-import getToken from '../auth/getToken';
-import { xboxRequest } from '../auth/loginRequests';
+import getToken from "../auth/getToken";
+import { xboxRequest } from "../auth/loginRequests";
 
 const useUser = () => {
   const account = useAccount();
@@ -29,14 +29,17 @@ const useUser = () => {
 
       const [userResult, imageResult] = await Promise.allSettled([
         getMinecraftAccount(account.homeAccountId, xbAccessToken),
-        getAccountPhoto(client, account.homeAccountId)
+        getAccountPhoto(client, account.homeAccountId),
       ]);
 
       if (userResult.status === "rejected") throw userResult.reason;
-      const image_path = imageResult.status === "fulfilled" ? imageResult.value : `https://api.dicebear.com/5.x/initials/svg?seed=${account.homeAccountId}`;
+      const image_path =
+        imageResult.status === "fulfilled"
+          ? imageResult.value
+          : `https://api.dicebear.com/5.x/initials/svg?seed=${account.homeAccountId}`;
 
-      return { image: image_path, account: userResult.value }
-    }
+      return { image: image_path, account: userResult.value };
+    },
   });
 
   const login = useCallback(async () => {
@@ -46,7 +49,7 @@ const useUser = () => {
       scopes: ["User.Read"],
       extraScopesToConsent: ["XboxLive.SignIn", "XboxLive.offline_access"],
       redirectUri: `http://localhost:${port}`,
-      prompt: "select_account"
+      prompt: "select_account",
     });
   }, [instance]);
 
@@ -54,7 +57,7 @@ const useUser = () => {
     const port = PortGenerator.getInstance().setPort();
     await instance.logoutPopup({
       postLogoutRedirectUri: `http://localhost:${port}`,
-    })
+    });
   }, [instance]);
 
   return {
@@ -65,13 +68,11 @@ const useUser = () => {
     login,
     isLoading: isLoading || inProgress !== InteractionStatus.None,
     isError,
-    error
+    error,
   };
-}
+};
 
 export default useUser;
-
-
 
 /*import {
   AuthCodeMSALBrowserAuthenticationProvider,
@@ -102,7 +103,7 @@ export interface UserAccount extends MicrosoftProfile {
   minecraft: MinecraftAccount | null;
 }*/
 
-/** 
+/**
  * Seconds Since the Epoch
  * @type {Date}
  * @link https://stackoverflow.com/questions/39926104/what-format-is-the-exp-expiration-time-claim-in-a-jwt
@@ -145,10 +146,10 @@ const getMinecraftProfile = async (
 };*/
 
 /**
- * Minecraft Login flow python impl 
+ * Minecraft Login flow python impl
  * @see https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib
- * 
- * @return {*} 
+ *
+ * @return {*}
  */
 /*const useUser = () => {
   const account = useAccount();

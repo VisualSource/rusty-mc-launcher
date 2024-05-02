@@ -42,7 +42,7 @@ const PatchNotes: React.FC = () => {
   return (
     <PatchNotesRoot>
       <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex w-max space-x-4 p-4 flex-nowrap">
+        <div className="flex w-max flex-nowrap space-x-4 p-4">
           {data.slice(0, 8).map((value) => (
             <Card className="relative w-80" key={value.id}>
               <CardHeader>
@@ -50,7 +50,7 @@ const PatchNotes: React.FC = () => {
                 <CardDescription>{value.type}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
-                <Avatar className="rounded-none w-full h-56">
+                <Avatar className="h-56 w-full rounded-none">
                   <AvatarImage
                     src={`https://launchercontent.mojang.com${value.image.url}`}
                     alt={value.image.title}

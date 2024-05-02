@@ -82,21 +82,23 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
             <Popover open={icon} onOpenChange={setIcon}>
               <PopoverTrigger asChild>
                 <FormControl>
-                  <div className="flex items-center line-clamp-1">
-                    <Avatar className="h-8 w-8 mr-2">
+                  <div className="line-clamp-1 flex items-center">
+                    <Avatar className="mr-2 h-8 w-8">
                       <AvatarFallback>
                         <Book />
                       </AvatarFallback>
                       <AvatarImage src={field.value} alt="profile icon" />
                     </Avatar>
-                    <Input value={field.value}
+                    <Input
+                      value={field.value}
                       placeholder="No Icon"
                       onChange={(ev) => field.onChange(ev.target.value)}
                       role="combobox"
                       className={cn(
                         "justify-between",
                         !field.value && "text-muted-foreground",
-                      )} />
+                      )}
+                    />
                     <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </div>
                 </FormControl>
@@ -111,15 +113,13 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
                 </Command>
               </PopoverContent>
             </Popover>
-            <FormDescription>
-              The icon for this profile.
-            </FormDescription>
+            <FormDescription>The icon for this profile.</FormDescription>
             <FormMessage />
-          </FormItem >
+          </FormItem>
         )}
       />
 
-      < FormField
+      <FormField
         defaultValue="latest-release"
         control={control}
         name="lastVersionId"
@@ -140,8 +140,8 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
                   >
                     {field.value
                       ? minecraft_versions.data?.versions.find(
-                        (language) => language.id === field.value,
-                      )?.id ?? "Version not found"
+                          (language) => language.id === field.value,
+                        )?.id ?? "Version not found"
                       : "Select Version"}
                     <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -187,7 +187,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      < FormField
+      <FormField
         defaultValue="vanilla"
         control={control}
         name="loader"
@@ -214,7 +214,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      < FormField
+      <FormField
         name="console"
         control={control}
         render={({ field }) => (
@@ -229,7 +229,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
           </FormItem>
         )}
       />
-      < FormField
+      <FormField
         name="disable_chat"
         control={control}
         render={({ field }) => (
@@ -245,7 +245,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      < FormField
+      <FormField
         name="disable_mulitplayer"
         control={control}
         render={({ field }) => (
@@ -263,7 +263,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      < FormField
+      <FormField
         name="is_demo"
         control={control}
         render={({ field }) => (
@@ -279,7 +279,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      < FormField
+      <FormField
         name="gameDir"
         control={control}
         render={({ field: { value, ...field } }) => (
@@ -301,7 +301,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      < FormField
+      <FormField
         name="javaDir"
         control={control}
         render={({ field: { value, ...field } }) => (
@@ -323,7 +323,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      < FormField
+      <FormField
         name="javaArgs"
         control={control}
         render={({ field: { value, ...field } }) => (
@@ -346,18 +346,17 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
         )}
       />
 
-      {
-        editMods ? (
-          <FormField
-            name="mods"
-            control={control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mods</FormLabel>
-                <FormControl>
-                  <ul className="space-y-1 pl-2">
-                    {field.value
-                      ? field.value.map(
+      {editMods ? (
+        <FormField
+          name="mods"
+          control={control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mods</FormLabel>
+              <FormControl>
+                <ul className="space-y-1 pl-2">
+                  {field.value
+                    ? field.value.map(
                         (item: {
                           id: string;
                           name: string;
@@ -365,7 +364,7 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
                         }) => (
                           <li
                             key={item.id}
-                            className="flex justify-between border border-separate border-zinc-800 p-2 rounded-sm"
+                            className="flex border-separate justify-between rounded-sm border border-zinc-800 p-2"
                           >
                             <div className="flex flex-col">
                               <h6>{item.name}</h6>
@@ -392,16 +391,15 @@ const ProfileModifyRoot: React.FC<{ editMods?: boolean }> = ({
                           </li>
                         ),
                       )
-                      : null}
-                  </ul>
-                </FormControl>
-                <FormDescription>Installed Mods</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ) : null
-      }
+                    : null}
+                </ul>
+              </FormControl>
+              <FormDescription>Installed Mods</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : null}
 
       <div className="absolute bottom-4 right-4">
         <Button type="submit" className="sticky bottom-4 right-0">

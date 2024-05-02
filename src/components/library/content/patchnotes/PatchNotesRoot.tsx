@@ -4,7 +4,7 @@ import { Separator } from "@component/ui/separator";
 const PatchNotesRoot: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <section className="flex flex-col">
-      <div className="pt-4 flex items-center gap-4 pb-2 whitespace-nowrap">
+      <div className="flex items-center gap-4 whitespace-nowrap pb-2 pt-4">
         <TypographyH3>Patch Notes</TypographyH3>
         <Separator className="dark:bg-zinc-50" />
       </div>

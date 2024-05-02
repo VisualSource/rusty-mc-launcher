@@ -11,13 +11,13 @@ import Sidebar from "./sidenav/Sidebar";
 
 const Library: React.FC = () => {
   return (
-    <div className="grid grid-rows-6 grid-cols-12 h-full">
-      <section className="col-span-3 xl:col-span-2 row-span-full border-r-4 border-zinc-900">
-        <div className="bg-zinc-950 flex gap-1 p-2 shadow-lg">
+    <div className="grid h-full grid-cols-12 grid-rows-6">
+      <section className="col-span-3 row-span-full border-r-4 border-zinc-900 xl:col-span-2">
+        <div className="flex gap-1 bg-zinc-950 p-2 shadow-lg">
           <Button
             size="sm"
             variant="secondary"
-            className="w-full rounded-sm justify-start"
+            className="w-full justify-start rounded-sm"
             asChild
           >
             <Link to="/">HOME</Link>
@@ -37,7 +37,7 @@ const Library: React.FC = () => {
           <ul className="pt-2 text-white">
             <ErrorBoundary
               fallback={
-                <li className="w-full flex flex-col items-center justify-center p-4">
+                <li className="flex w-full flex-col items-center justify-center p-4">
                   <AlertTriangle className="h-16 w-16" />
                   <TypographyH4>Failed to load profiles!</TypographyH4>
                 </li>
@@ -45,7 +45,7 @@ const Library: React.FC = () => {
             >
               <Suspense
                 fallback={
-                  <li className="w-full flex justify-center p-4">
+                  <li className="flex w-full justify-center p-4">
                     <Spinner />{" "}
                   </li>
                 }
@@ -56,7 +56,7 @@ const Library: React.FC = () => {
           </ul>
         </ScrollArea>
       </section>
-      <section className="flex flex-col row-span-full h-full col-span-9 xl:col-span-10 bg-blue-900/10">
+      <section className="col-span-9 row-span-full flex h-full flex-col bg-blue-900/10 xl:col-span-10">
         <Outlet />
       </section>
     </div>
