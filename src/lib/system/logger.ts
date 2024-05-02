@@ -1,28 +1,38 @@
 import createDebug, { type Debugger } from "debug";
-import * as tauriLog from "tauri-plugin-log-api";
+import { warn, error, debug, info, attachConsole } from "tauri-plugin-log-api";
 
-const levels = ["error", "warn", "info", "debug"] as const;
-type LoggerLevel = (typeof levels)[number];
-type Logger = Record<LoggerLevel, Debugger>;
 
-const logger: Logger = (() => {
-  return levels.reduce((acc, value) => {
-    const key = `mcrl:${value}`;
-    acc[value] = createDebug(key);
-    acc[value].color = "green";
-    acc[value].log = (...args: [string, ...unknown[]]) => {
-      const [msg, ...rest] = args;
-      tauriLog[value as keyof typeof tauriLog](msg.replace(key + " ", ""));
-      if (rest.length >= 1) {
-        console.debug(...rest);
-      }
-    };
+const levels = [
+  { name: "error", color: "red", logger: error },
+  { name: "warn", color: "yellow", logger: warn },
+  { name: "info", color: "blue", logger: info },
+  { name: "debug", color: "green", logger: debug }] as const;
+
+const namespaces = ["app", "auth"] as const;
+type Level = Record<(typeof levels)[number]["name"], Debugger>;
+type Loggers = Record<(typeof namespaces)[number], Level>;
+
+function initLogger() {
+  const root = createDebug("mcrl");
+
+  const loggers = namespaces.reduce((acc, namespace) => {
+    const ns = root.extend(namespace);
+    acc[namespace] = levels.reduce((a, level) => {
+      a[level.name] = ns.extend(level.name);
+      a[level.name].color = level.color;
+      a[level.name].log = level.logger;
+      return a;
+    }, {} as Level);
     return acc;
-  }, {} as Logger);
-})();
-localStorage.debug = import.meta.env.PUBLIC_VITE_DEBUG ?? "mrcl:error";
-logger.debug.enabled = import.meta.env.DEV;
+  }, {} as Loggers);
 
-export const initLogger = () =>
-  tauriLog.attachConsole().then(() => logger.info("Logger Ready"));
-export default logger;
+  localStorage.debug = import.meta.env.PUBLIC_VITE_DEBUG ?? "mrcl:*:error";
+
+  return loggers;
+}
+export const { app, auth } = initLogger();
+
+export const attachLogger = () => attachConsole().then(() => app.info("Logger Ready"));
+export default app;
+
+

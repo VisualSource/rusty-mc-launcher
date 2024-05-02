@@ -1,3 +1,7 @@
+import { useFetcher, useLoaderData } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -5,15 +9,10 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogContent,
-  DialogClose,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus } from "lucide-react";
-import { useState } from "react";
-import { useFetcher, useLoaderData, useSubmit } from "react-router-dom";
 import CollectionItem from "./CollectionItem";
 
 const CollectionsRoot: React.FC = () => {

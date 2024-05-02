@@ -22,6 +22,7 @@
       "@/*": ["./*"],
       "@context/*": ["lib/context/*"],
       "@system/*": ["lib/system/*"],
+      "@masl/*": ["./lib/masl/*"],
       "@component/*": ["components/*"],
       "@lib/*": ["lib/*"],
       "@polyfill/*": ["lib/polyfill/*"],

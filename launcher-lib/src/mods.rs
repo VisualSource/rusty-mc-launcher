@@ -6,7 +6,6 @@ use futures::StreamExt;
 use log::{error, info};
 use normalize_path::{self, NormalizePath};
 use sha1::{Digest, Sha1};
-use std::future;
 use std::path::PathBuf;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::{fs, sync::mpsc};
@@ -63,7 +62,7 @@ pub async fn install_mod_list(
     let mut files_total_size = 0;
 
     for file in &files {
-        files_total_size = file.download.size + files_total_size;
+        files_total_size += file.download.size;
     }
 
     create_or_update_mod_manifest(id.clone(), &mod_folder, &files).await?;

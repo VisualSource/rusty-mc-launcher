@@ -1,6 +1,7 @@
+import { Component, LibraryBig, Settings } from "lucide-react";
 import { Link, useLoaderData } from "react-router-dom";
 import { formatRelative } from "date-fns/formatRelative";
-import { Component, LibraryBig, Settings } from "lucide-react";
+import { Suspense } from "react";
 
 import {
   TypographyH1,
@@ -9,13 +10,12 @@ import {
 } from "@component/ui/typography";
 import { MinecraftProfile } from "@lib/models/profiles";
 import { ScrollArea } from "@component/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import ProfileCategories from "./ProfileCategories";
+import useDownload from "@/lib/hooks/useDownload";
 import PlayButton from "@/components/ui/play";
 import { Button } from "@component/ui/button";
 import AddToCategory from "./AddToCategory";
-import { Suspense } from "react";
-import { Separator } from "@/components/ui/separator";
-import useDownload from "@/lib/hooks/useDownload";
 
 const Profile: React.FC = () => {
   const data = useLoaderData() as MinecraftProfile;

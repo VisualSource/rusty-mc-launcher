@@ -6,17 +6,20 @@ settings:
 
 dependencies:
   '@azure/msal-browser':
-    specifier: ^2.38.4
-    version: 2.38.4
+    specifier: ^3.13.0
+    version: 3.13.0
+  '@azure/msal-common':
+    specifier: ^14.9.0
+    version: 14.9.0
   '@azure/msal-react':
-    specifier: ^1.5.13
-    version: 1.5.13(@azure/msal-browser@2.38.4)(react@18.3.1)
+    specifier: ^2.0.15
+    version: 2.0.15(@azure/msal-browser@3.13.0)(react@18.3.1)
   '@hookform/resolvers':
     specifier: ^3.3.4
     version: 3.3.4(react-hook-form@7.51.3)
   '@microsoft/microsoft-graph-client':
     specifier: ^3.0.7
-    version: 3.0.7(@azure/msal-browser@2.38.4)
+    version: 3.0.7(@azure/msal-browser@3.13.0)
   '@octokit/rest':
     specifier: ^20.1.0
     version: 20.1.0
@@ -199,12 +202,9 @@ devDependencies:
   '@headlessui/tailwindcss':
     specifier: ^0.2.0
     version: 0.2.0(tailwindcss@3.4.3)
-  '@tailwindcss/forms':
-    specifier: ^0.5.7
-    version: 0.5.7(tailwindcss@3.4.3)
-  '@tailwindcss/typography':
-    specifier: ^0.5.13
-    version: 0.5.13(tailwindcss@3.4.3)
+  '@tanstack/react-query-devtools':
+    specifier: ^5.32.1
+    version: 5.32.1(@tanstack/react-query@5.32.1)(react@18.3.1)
   '@tauri-apps/cli':
     specifier: ^1.5.12
     version: 1.5.12
@@ -276,26 +276,26 @@ packages:
     hasBin: true
     dev: true
 
-  /@azure/msal-browser@2.38.4:
-    resolution: {integrity: sha512-d1qSanWO9fRKurrxhiyMOIj2jMoGw+2pHb51l2PXNwref7xQO+UeOP2q++5xfHQoUmgTtNuERhitynHla+dvhQ==}
+  /@azure/msal-browser@3.13.0:
+    resolution: {integrity: sha512-fD906nmJei3yE7la6DZTdUtXKvpwzJURkfsiz9747Icv4pit77cegSm6prJTKLQ1fw4iiZzrrWwxnhMLrTf5gQ==}
     engines: {node: '>=0.8.0'}
     dependencies:
-      '@azure/msal-common': 13.3.1
+      '@azure/msal-common': 14.9.0
     dev: false
 
-  /@azure/msal-common@13.3.1:
-    resolution: {integrity: sha512-Lrk1ozoAtaP/cp53May3v6HtcFSVxdFrg2Pa/1xu5oIvsIwhxW6zSPibKefCOVgd5osgykMi5jjcZHv8XkzZEQ==}
+  /@azure/msal-common@14.9.0:
+    resolution: {integrity: sha512-yzBPRlWPnTBeixxLNI3BBIgF5/bHpbhoRVuuDBnYjCyWRavaPUsKAHUDYLqpGkBLDciA6TCc6GOxN4/S3WiSxg==}
     engines: {node: '>=0.8.0'}
     dev: false
 
-  /@azure/msal-react@1.5.13(@azure/msal-browser@2.38.4)(react@18.3.1):
-    resolution: {integrity: sha512-rv3q7hwZS5VQs5AXgdoXwrPnCc0/xs3YmWNxhyCFw7JWZ3Nq0hV1JJSvWXZgXQIINOV7hCky3lYaRgHYT9qyKw==}
+  /@azure/msal-react@2.0.15(@azure/msal-browser@3.13.0)(react@18.3.1):
+    resolution: {integrity: sha512-WtZGPxA6rWqGhovmWPUXjUyKTp/TUa4Oekk6FSa9ldCayd1QzYT9XcoAEqA0EfT0Fx12KiNvJyDDKckBU6J/+Q==}
     engines: {node: '>=10'}
     peerDependencies:
-      '@azure/msal-browser': ^2.38.4
+      '@azure/msal-browser': ^3.13.0
       react: ^16.8.0 || ^17 || ^18
     dependencies:
-      '@azure/msal-browser': 2.38.4
+      '@azure/msal-browser': 3.13.0
       react: 18.3.1
     dev: false
 
@@ -899,7 +899,7 @@ packages:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  /@microsoft/microsoft-graph-client@3.0.7(@azure/msal-browser@2.38.4):
+  /@microsoft/microsoft-graph-client@3.0.7(@azure/msal-browser@3.13.0):
     resolution: {integrity: sha512-/AazAV/F+HK4LIywF9C+NYHcJo038zEnWkteilcxC1FM/uK/4NVGDKGrxx7nNq1ybspAroRKT4I1FHfxQzxkUw==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -917,7 +917,7 @@ packages:
       stream-browserify:
         optional: true
     dependencies:
-      '@azure/msal-browser': 2.38.4
+      '@azure/msal-browser': 3.13.0
       '@babel/runtime': 7.24.5
       tslib: 2.6.2
     dev: false
@@ -2420,30 +2420,23 @@ packages:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
     dev: true
 
-  /@tailwindcss/forms@0.5.7(tailwindcss@3.4.3):
-    resolution: {integrity: sha512-QE7X69iQI+ZXwldE+rzasvbJiyV/ju1FGHH0Qn2W3FKbuYtqp8LKcy6iSw79fVUT5/Vvf+0XgLCeYVG+UV6hOw==}
-    peerDependencies:
-      tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
-    dependencies:
-      mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.4.3
-    dev: true
-
-  /@tailwindcss/typography@0.5.13(tailwindcss@3.4.3):
-    resolution: {integrity: sha512-ADGcJ8dX21dVVHIwTRgzrcunY6YY9uSlAHHGVKvkA+vLc5qLwEszvKts40lx7z0qc4clpjclwLeK5rVCV2P/uw==}
-    peerDependencies:
-      tailwindcss: '>=3.0.0 || insiders'
-    dependencies:
-      lodash.castarray: 4.4.0
-      lodash.isplainobject: 4.0.6
-      lodash.merge: 4.6.2
-      postcss-selector-parser: 6.0.10
-      tailwindcss: 3.4.3
-    dev: true
-
   /@tanstack/query-core@5.32.1:
     resolution: {integrity: sha512-mCWa1wdGb1jiny4+qYegbSeadcFj+Nq65KFSs4A1DRveoIq7SrTwUhqu7hrB6d54cQH5x59DfJvxusn3w1Cj/g==}
-    dev: false
+
+  /@tanstack/query-devtools@5.32.1:
+    resolution: {integrity: sha512-7Xq57Ctopiy/4atpb0uNY5VRuCqRS/1fi/WBCKKX6jHMa6cCgDuV/AQuiwRXcKARbq2OkVAOrW2v4xK9nTbcCA==}
+    dev: true
+
+  /@tanstack/react-query-devtools@5.32.1(@tanstack/react-query@5.32.1)(react@18.3.1):
+    resolution: {integrity: sha512-NjNRPgCReZxgY5f56gnoTCR47NznHlQR4w2cW/W8B0QY8afkbPPnRlfzofs2SwdFW7F37Ysgjm8jtolPTzfa2Q==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.32.1
+      react: ^18.0.0
+    dependencies:
+      '@tanstack/query-devtools': 5.32.1
+      '@tanstack/react-query': 5.32.1(react@18.3.1)
+      react: 18.3.1
+    dev: true
 
   /@tanstack/react-query@5.32.1(react@18.3.1):
     resolution: {integrity: sha512-+nXLMB0JK0XwTJ+lQt49DPNLrbSppni9N5W5yMR085yW3YaRKRUFhfVTER3TvQd1UycHpoGPFnt1gHiijXERAg==}
@@ -2452,7 +2445,6 @@ packages:
     dependencies:
       '@tanstack/query-core': 5.32.1
       react: 18.3.1
-    dev: false
 
   /@tanstack/react-virtual@3.5.0(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-rtvo7KwuIvqK9zb0VZ5IL7fiJAEnG+0EiFZz8FUOs+2mhGqdGmjKIaT1XU7Zq0eFqL0jonLlhbayJI/J2SA/Bw==}
@@ -3771,18 +3763,6 @@ packages:
     resolution: {integrity: sha512-xYHt68QRoYGjeeM/XOE1uJtvXQAgvszfBhjV4yvsQH0u2i9I6cI6c6/eG4Hh3UAOVn0y/xAXwmTzEay49Q//HA==}
     dev: true
 
-  /lodash.castarray@4.4.0:
-    resolution: {integrity: sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==}
-    dev: true
-
-  /lodash.isplainobject@4.0.6:
-    resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==}
-    dev: true
-
-  /lodash.merge@4.6.2:
-    resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
-    dev: true
-
   /lodash.template@4.5.0:
     resolution: {integrity: sha512-84vYFxIkmidUiFxidA/KjjH9pAycqW+h980j7Fuz5qxRtO9pgB7MDFTdys1N7A5mcucRiDyEq4fusljItR1T/A==}
     dependencies:
@@ -3813,7 +3793,6 @@ packages:
     hasBin: true
     dependencies:
       js-tokens: 4.0.0
-    dev: false
 
   /loupe@2.3.7:
     resolution: {integrity: sha512-zSMINGVYkdpYSOBmLi0D1Uo7JU9nVdQKrHxC8eYlV+9YKK9WePqAlL7lSlorG/U2Fw1w0hTBmaa/jrQ3UbPHtA==}
@@ -4311,11 +4290,6 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /mini-svg-data-uri@1.4.4:
-    resolution: {integrity: sha512-r9deDe9p5FJUPZAk3A59wGH7Ii9YrjjWw0jmw/liSbHl2CHiyXj6FcDXDu2K3TjVAXqiJdaw3xxwlZZr9E6nHg==}
-    hasBin: true
-    dev: true
-
   /minimatch@7.4.6:
     resolution: {integrity: sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==}
     engines: {node: '>=10'}
@@ -4603,14 +4577,6 @@ packages:
       postcss: 8.4.38
       postcss-selector-parser: 6.0.16
 
-  /postcss-selector-parser@6.0.10:
-    resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==}
-    engines: {node: '>=4'}
-    dependencies:
-      cssesc: 3.0.0
-      util-deprecate: 1.0.2
-    dev: true
-
   /postcss-selector-parser@6.0.16:
     resolution: {integrity: sha512-A0RVJrX+IUkVZbW3ClroRWurercFhieevHB38sr2+l9eUClMqome3LmEmnhlNy+5Mr2EYN6B2Kaw9wYdd+VHiw==}
     engines: {node: '>=4'}
@@ -4868,7 +4834,6 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
-    dev: false
 
   /read-cache@1.0.0:
     resolution: {integrity: sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA==}

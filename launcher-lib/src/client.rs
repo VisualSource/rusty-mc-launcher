@@ -130,11 +130,9 @@ impl ClientBuilder {
                 let appdata = std::env::var("APPDATA")?;
                 Ok(PathBuf::from(appdata).join(".minecraft").normalize())
             }
-            _ => {
-                return Err(LauncherLibError::Generic(
-                    "Game Directory is not set.".to_string(),
-                ));
-            }
+            _ => Err(LauncherLibError::Generic(
+                "Game Directory is not set.".to_string(),
+            )),
         }
     }
 
@@ -354,6 +352,7 @@ impl ClientBuilder {
 
                 if mods_folder.exists() && mods_folder.is_symlink() {
                     debug!("Mods: Droping symlink folder.");
+                    // try elevated remove
                     fs::remove_dir(&mods_folder).await?;
                 }
 
@@ -365,24 +364,37 @@ impl ClientBuilder {
                     // @see https://stackoverflow.com/questions/64991523/why-are-administrator-privileges-required-to-create-a-symlink-on-windows
                     if let Err(err) = windows::fs::symlink_dir(&mcl_mods_folder, &mods_folder) {
                         warn!(
-                            "Unable to create symlink thought method, using fallback. Reason: {}",
+                            "Unable to create symlink though method, using fallback. Reason: {}",
                             err.to_string()
                         );
 
-                        if let Err(fallback_err) = tokio::process::Command::new("cmd")
+                        if let Err(err) = tokio::process::Command::new("cmd")
                             .arg("/C")
                             .arg("mklink")
-                            .arg("/J")
-                            .arg(mods_folder)
-                            .arg(mcl_mods_folder)
+                            .arg("/D")
+                            .arg(&mods_folder)
+                            .arg(&mcl_mods_folder)
                             .output()
                             .await
                         {
-                            error!("Fallback failed: {}", fallback_err.to_string());
+                            if err.kind() == std::io::ErrorKind::PermissionDenied {
+                                if let Err(err2) = tokio::process::Command::new("elevate.cmd")
+                                    .arg("cmd")
+                                    .arg("/C")
+                                    .arg("mklink")
+                                    .arg("/D")
+                                    .arg(mods_folder)
+                                    .arg(mcl_mods_folder)
+                                    .output()
+                                    .await
+                                {
+                                    error!("Fallback failed: {}", err2.to_string());
 
-                            return Err(LauncherLibError::Generic(
-                                "Unable to create link mods folder".into(),
-                            ));
+                                    return Err(LauncherLibError::Generic(
+                                        "Unable to create link mods folder".into(),
+                                    ));
+                                }
+                            }
                         }
                     }
                 } else {

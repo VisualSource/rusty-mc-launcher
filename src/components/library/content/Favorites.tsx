@@ -4,12 +4,10 @@ import { AlertTriangle, Book } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import profiles, { type MinecraftProfile } from "@/lib/models/profiles";
-import { CATEGORY_KEY } from "@/lib/hooks/keys";
-import PlayButton from "@/components/ui/play";
-import React from "react";
 import { TypographyH3 } from "@/components/ui/typography";
 import { Skeleton } from "@/components/ui/skeleton";
-import { wait } from "@/utils/timer";
+import { CATEGORY_KEY } from "@/lib/hooks/keys";
+import PlayButton from "@/components/ui/play";
 
 export const FavoritesErrored: React.FC = () => {
   return (
@@ -45,8 +43,6 @@ const Favorites: React.FC = () => {
       const result = await profiles.execute<MinecraftProfile>(
         `SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = 1`, [], true
       );
-
-      console.log(result);
       return result ?? [];
     },
   });

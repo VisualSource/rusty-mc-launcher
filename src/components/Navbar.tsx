@@ -57,7 +57,7 @@ const Navbar = () => {
     queryFn: () => appWindow.isMaximized(),
     networkMode: "offlineFirst",
   });
-  const { user, isLoading, logout, login } = useUser();
+  const { account, minecraft, avatar, isLoading, logout, login } = useUser();
   const queryClient = useQueryClient();
 
   return (
@@ -155,50 +155,48 @@ const Navbar = () => {
                 </div>
               </PopoverContent>
             </Popover>
-            <Tooltip>
-              <DropdownMenu>
-                <TooltipTrigger asChild>
-                  <div>
-                    <div className="flex pr-2">
-                      <Avatar className="rounded-none h-9">
-                        <AvatarImage className="h-full" src={user?.photo} />
-                        <AvatarFallback className="rounded-none">
-                          <User2 />
-                        </AvatarFallback>
-                      </Avatar>
-                      <AuthenticatedTemplate>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            size="sm"
-                            className="rounded-none line-clamp-1 h-9"
-                          >
-                            {user?.minecraft?.profile.name ?? user?.displayName ?? "Username"}
-                          </Button>
-                        </DropdownMenuTrigger>
-                      </AuthenticatedTemplate>
-                      <UnauthenticatedTemplate>
-                        <Button
-                          disabled={isLoading}
-                          onClick={() => login()}
-                          size="sm"
-                          className="rounded-none"
-                        >
-                          {isLoading ? "Login" : "Loading..."}
-                        </Button>
-                      </UnauthenticatedTemplate>
-                    </div>
-                    <AuthenticatedTemplate>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem>Signout</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </AuthenticatedTemplate>
-                  </div>
-                </TooltipTrigger>
-              </DropdownMenu>
-              <TooltipContent>
-                <p>Mannage Account</p>
-              </TooltipContent>
-            </Tooltip>
+
+            <DropdownMenu>
+
+              <div>
+                <div className="flex pr-2">
+                  <Avatar className="rounded-none h-8">
+                    <AvatarImage className="h-full" src={avatar} />
+                    <AvatarFallback className="rounded-none">
+                      <User2 />
+                    </AvatarFallback>
+                  </Avatar>
+                  <AuthenticatedTemplate>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        className="rounded-none line-clamp-1 h-8"
+                      >
+                        {minecraft?.account.name ?? account?.username ?? account?.name ?? "Username"}
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </AuthenticatedTemplate>
+                  <UnauthenticatedTemplate>
+                    <Button
+                      disabled={isLoading}
+                      onClick={() => login()}
+                      size="sm"
+                      className="rounded-none"
+                    >
+                      {isLoading ? "Login" : "Loading..."}
+                    </Button>
+                  </UnauthenticatedTemplate>
+                </div>
+                <AuthenticatedTemplate>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>Signout</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </AuthenticatedTemplate>
+              </div>
+
+            </DropdownMenu>
+
+
             <Button
               variant="ghost"
               size="icon"

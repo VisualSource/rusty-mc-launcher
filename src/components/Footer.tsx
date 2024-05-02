@@ -15,10 +15,11 @@ import {
 } from "@component/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { TypographyMuted } from "@component/ui/typography";
+import import_profiles from "@/lib/system/import_profiles";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
-import import_profiles from "@/lib/system/import_profiles";
+
 
 const Footer = () => {
   const { queueCurrent } = useDownload();

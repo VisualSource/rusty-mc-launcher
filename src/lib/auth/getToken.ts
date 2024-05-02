@@ -1,7 +1,7 @@
 import type {
   IPublicClientApplication,
   SilentRequest,
-} from "@azure/msal-browser";
+} from "@masl/index";
 import { PortGenerator } from "@system/commands";
 import logger from "@system/logger";
 
@@ -16,7 +16,7 @@ const getToken = async (
       ...request,
       redirectUri: `http://localhost:${port}`,
     });
-  });
+  }).then(e => e.accessToken);
 };
 
 export default getToken;

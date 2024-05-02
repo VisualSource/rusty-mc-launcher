@@ -1,4 +1,4 @@
-import FileSizeFormat from "@saekitominaga/file-size-format";
+import { formatSize } from "@lib/size_format";
 import { FileDiff, Monitor, PackagePlus } from "lucide-react";
 
 import type {
@@ -39,7 +39,7 @@ const DownloadItem: React.FC<QueueItem> = ({ type, metadata, size }) => {
               Minecraft {(metadata as PackMetadata).name}
             </TypographyH4>
             <TypographyMuted>
-              {FileSizeFormat.si(size, { space: true })}
+              {formatSize(size, { space: true })}
             </TypographyMuted>
           </div>
         ) : null}

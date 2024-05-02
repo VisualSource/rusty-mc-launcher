@@ -5,11 +5,12 @@ import { MsalProvider } from "@azure/msal-react";
 import { ToastContainer } from "react-toastify";
 import ReactDOM from "react-dom/client";
 import React, { Suspense } from "react";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 
-import { masl } from "@auth/msal";
+import { getPCA } from "@auth/msal";
 
 import SelectVersionDialog from "@component/dialog/SelectVersion";
 import SelectProfile from "@component/dialog/ProfileSelection";
@@ -18,20 +19,22 @@ import { queryClient } from "./lib/config/queryClient";
 import router from "@/router";
 import DB from "./lib/db/db";
 import { exit } from "@tauri-apps/api/process";
-import { initLogger } from "./lib/system/logger";
+import { attachLogger } from "./lib/system/logger";
 import GameCrash from "./components/dialog/GameCrash";
 
 async function init() {
-  await initLogger();
+  await attachLogger();
   await DB.init();
+  return getPCA();
 }
 
 init()
-  .then(() => {
+  .then((pca) => {
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-          <MsalProvider instance={masl}>
+          <ReactQueryDevtools initialIsOpen={false} />
+          <MsalProvider instance={pca}>
             <DownloadProvider>
               <RouterProvider router={router} />
               <ToastContainer position="bottom-right" theme="dark" />

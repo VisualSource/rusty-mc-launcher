@@ -1,10 +1,10 @@
+import { ErrorBoundary } from "react-error-boundary";
+import { AlertTriangle } from "lucide-react";
 import { Suspense } from "react";
 
 import CollectionLoading from "./CollectionLoading";
 import useCategories from "@hook/useCategories";
 import Collection from "./Collection";
-import { ErrorBoundary } from "react-error-boundary";
-import { AlertTriangle } from "lucide-react";
 
 const Sidebar = () => {
   const collections = useCategories();
@@ -41,8 +41,8 @@ const Sidebar = () => {
           <Suspense fallback={<CollectionLoading />}>
             <Collection
               id={value.group_id}
-              name={value.name}
-              count={value.count - 1}
+              name={value.name ?? ""}
+              count={(value as { count: number }).count - 1}
             />
           </Suspense>
         </ErrorBoundary>

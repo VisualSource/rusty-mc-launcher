@@ -1,4 +1,79 @@
-import {
+import { useAccount, useMsal, } from '@azure/msal-react';
+import { useQuery } from '@tanstack/react-query';
+import { useCallback } from 'react';
+
+import { getGraphClient, getAccountPhoto } from '@lib/api/graphClient';
+import { getMinecraftAccount } from "@lib/api/minecraftAccount";
+import { PortGenerator } from '@system/commands';
+import { InteractionStatus } from "@masl/index";
+import getToken from '../auth/getToken';
+import { xboxRequest } from '../auth/loginRequests';
+
+const useUser = () => {
+  const account = useAccount();
+  const { instance, inProgress } = useMsal();
+
+  const { isLoading, isError, error, data } = useQuery({
+    enabled: !!account?.homeAccountId,
+    queryKey: ["account", account?.homeAccountId],
+    retry: 4,
+    queryFn: async () => {
+      if (!account) throw new Error("No user account loggedin!");
+
+      const { accessToken } = await instance.acquireTokenSilent({
+        scopes: ["User.Read"],
+      });
+      const client = getGraphClient(accessToken);
+
+      const xbAccessToken = await getToken(instance, xboxRequest);
+
+      const [userResult, imageResult] = await Promise.allSettled([
+        getMinecraftAccount(account.homeAccountId, xbAccessToken),
+        getAccountPhoto(client, account.homeAccountId)
+      ]);
+
+      if (userResult.status === "rejected") throw userResult.reason;
+      const image_path = imageResult.status === "fulfilled" ? imageResult.value : `https://api.dicebear.com/5.x/initials/svg?seed=${account.homeAccountId}`;
+
+      return { image: image_path, account: userResult.value }
+    }
+  });
+
+  const login = useCallback(async () => {
+    const port = PortGenerator.getInstance().setPort();
+
+    await instance.loginPopup({
+      scopes: ["User.Read"],
+      extraScopesToConsent: ["XboxLive.SignIn", "XboxLive.offline_access"],
+      redirectUri: `http://localhost:${port}`,
+      prompt: "select_account"
+    });
+  }, [instance]);
+
+  const logout = useCallback(async () => {
+    const port = PortGenerator.getInstance().setPort();
+    await instance.logoutPopup({
+      postLogoutRedirectUri: `http://localhost:${port}`,
+    })
+  }, [instance]);
+
+  return {
+    account,
+    minecraft: data?.account,
+    avatar: data?.image,
+    logout,
+    login,
+    isLoading: isLoading || inProgress !== InteractionStatus.None,
+    isError,
+    error
+  };
+}
+
+export default useUser;
+
+
+
+/*import {
   AuthCodeMSALBrowserAuthenticationProvider,
   type AuthCodeMSALBrowserAuthenticationProviderOptions,
 } from "@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser";
@@ -25,14 +100,14 @@ import logger from "@system/logger";
 export interface UserAccount extends MicrosoftProfile {
   photo: string;
   minecraft: MinecraftAccount | null;
-}
+}*/
 
 /** 
  * Seconds Since the Epoch
  * @type {Date}
  * @link https://stackoverflow.com/questions/39926104/what-format-is-the-exp-expiration-time-claim-in-a-jwt
  */
-const UNIX_EPOCH_DATE = new Date("1970-01-01T00:00:00Z");
+/*const UNIX_EPOCH_DATE = new Date("1970-01-01T00:00:00Z");
 
 const fetchProfile = async (instance: IPublicClientApplication, id: string) => {
   const profile = await getMinecraftAccount(instance);
@@ -67,7 +142,7 @@ const getMinecraftProfile = async (
   logger.info("User token up to date, Proceding.");
 
   return data;
-};
+};*/
 
 /**
  * Minecraft Login flow python impl 
@@ -75,7 +150,7 @@ const getMinecraftProfile = async (
  * 
  * @return {*} 
  */
-const useUser = () => {
+/*const useUser = () => {
   const account = useAccount();
   const { instance } = useMsal();
   const { data, isError, isLoading, error } = useQuery({
@@ -148,4 +223,4 @@ const useUser = () => {
   };
 };
 
-export default useUser;
+export default useUser;*/

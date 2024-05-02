@@ -7,7 +7,6 @@ use minecraft_launcher_lib::{
     FileDownload,
 };
 use std::path::PathBuf;
-use std::result;
 use tauri::Window;
 use tauri_plugin_oauth::{start_with_config, OauthConfig};
 

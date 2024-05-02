@@ -28,13 +28,13 @@ import {
   SelectValue,
 } from "@component/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@component/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TypographyMuted } from "@/components/ui/typography";
 import useMinecraftVersions from "@hook/useMinecraftVersion";
 import { Switch } from "@component/ui/switch";
 import { Button } from "@component/ui/button";
 import { Input } from "@component/ui/input";
 import { cn } from "@lib/utils";
-import { TypographyMuted } from "@/components/ui/typography";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const schema = z
   .object({

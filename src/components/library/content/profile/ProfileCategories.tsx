@@ -1,11 +1,11 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
+import { useSubmit } from "react-router-dom";
 import { Suspense } from "react";
+
+import { Skeleton } from "@/components/ui/skeleton";
 import categories from "@/lib/models/categories";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import logger from "@/lib/system/logger";
-import { useSubmit } from "react-router-dom";
 import { dialog } from "@tauri-apps/api";
 
 const ProfileCategories: React.FC<{ id: string }> = ({ id }) => {
