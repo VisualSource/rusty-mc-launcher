@@ -45,9 +45,7 @@
           "https://xsts.auth.xboxlive.com/xsts/authorize",
           "https://api.minecraftservices.com/authentication/login_with_xbox",
           "https://api.minecraftservices.com/minecraft/profile",
-          "http://localhost:3123/exit",
-          "http://localhost:4124/exit",
-          "http://localhost:5434/exit"
+          "http://localhost/exit"
         ]
       },
       "app": {

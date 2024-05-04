@@ -4,11 +4,11 @@ import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import {
-  check_install,
-  install,
+  validateGameFiles,
+  installGame,
+  validateModsFiles,
   installMods,
   installPack,
-  validateMods,
 } from "@system/commands";
 import modrinth, { type FileDownload } from "../api/modrinth";
 import useExternalQueue from "@hook/useExternalQueue";
@@ -163,7 +163,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
     listen<{
       event: "fetch" | "download" | "complete" | "end" | "start";
       value: string;
-    }>("mcl::download", (ev) => {
+    }>("rmcl:://download", (ev) => {
       setTimeout(() => {
         try {
           const data = JSON.parse(ev.payload.value);
@@ -280,7 +280,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
                 setCurrentItem(data);
 
-                await validateMods({
+                await validateModsFiles({
                   id: data.metadata.id,
                   files: data.metadata.files,
                   game_dir: data.metadata.game_dir,
@@ -344,13 +344,13 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
                 setCurrentItem(data);
 
-                await installPack(
-                  data.metadata.file,
-                  data.metadata.packType.replace(/^\w/, (c) =>
+                await installPack({
+                  source: data.metadata.file,
+                  game_dir: data.metadata.game_dir,
+                  type: data.metadata.packType.replace(/^\w/, (c) =>
                     c.toUpperCase(),
                   ) as "Resource" | "Shader",
-                  data.metadata.game_dir,
-                );
+                });
 
                 cb(undefined, data);
               } catch (error) {
@@ -372,7 +372,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
         },
         async install(version, game_dir, forceDownload) {
           try {
-            const isInstalled = await check_install(version, game_dir);
+            const isInstalled = await validateGameFiles({ version, game_dir });
 
             if (isInstalled && !forceDownload) {
               window.dispatchEvent(
@@ -419,7 +419,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
                 setCurrentItem(data);
 
-                await install(data.metadata.version, data.metadata.game_dir);
+                await installGame(data.metadata);
 
                 document.dispatchEvent(
                   new CustomEvent("mcl::install_ready", {
@@ -564,11 +564,11 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                   throw new Error("Unable to process, non mod metadata");
                 setCurrentItem(data);
 
-                await installMods(
-                  data.metadata.profile,
-                  data.metadata.mods,
-                  data.metadata.game_dir ?? undefined,
-                );
+                await installMods({
+                  files: data.metadata.mods,
+                  profile_id: data.metadata.profile, game_dir:
+                    data.metadata.game_dir ?? undefined
+                });
 
                 cb(undefined, data);
               } catch (error) {

@@ -1,7 +1,7 @@
 use std::env::consts;
 use std::path::PathBuf;
 
-use log::{error, info};
+use log::info;
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
@@ -39,7 +39,7 @@ pub use emit;
 #[macro_export]
 macro_rules! event {
     ($channel:expr, $event:expr, $json:tt) => {
-        crate::utils::event_internal::send_event($channel, $event, serde_json::json!($json)).await;
+        $crate::utils::event_internal::send_event($channel, $event, serde_json::json!($json)).await;
     };
 }
 
@@ -102,9 +102,9 @@ pub mod fabric {
 
     pub async fn run_fabric_installer(
         channel: mpsc::Sender<ChannelMessage>,
-        mc: &String,
-        loader_version: &String,
-        game_dir: &PathBuf,
+        mc: &str,
+        loader_version: &str,
+        game_dir: &std::path::Path,
         runtime: String,
     ) -> Result<(), LauncherLibError> {
         event!(&channel,"start", {
@@ -149,9 +149,9 @@ pub mod fabric {
             "-dir",
             game_dir.to_str().ok_or(LauncherLibError::PathBufError)?,
             "-mcversion",
-            mc.as_str(),
+            mc,
             "-loader",
-            loader_version.as_str(),
+            loader_version,
             "-noprofile",
             "-snapshot",
         ];
@@ -173,7 +173,7 @@ pub mod fabric {
 pub mod jvm {
     use super::*;
 
-    pub fn get_exec(runtime: &String, game_dir: &PathBuf, console: bool) -> PathBuf {
+    pub fn get_exec(runtime: &String, game_dir: &std::path::Path, console: bool) -> PathBuf {
         let platform = get_platform();
 
         let cmd = if !console && consts::OS == "windows" {

@@ -14,12 +14,16 @@ const configuration: Configuration = {
     redirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
     postLogoutRedirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
   },
+  cache: {
+    cacheLocation: "localStorage"
+  },
   system: {
+
     allowNativeBroker: true,
     loggerOptions: {
+      piiLoggingEnabled: false,
       logLevel: import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
-      loggerCallback(level: LogLevel, message: string, containsPii: boolean) {
-        if (containsPii) return;
+      loggerCallback(level: LogLevel, message: string) {
         switch (level) {
           case LogLevel.Error:
             auth.error(message);
@@ -31,10 +35,10 @@ const configuration: Configuration = {
             auth.info(message);
             break;
           case LogLevel.Verbose:
-            auth.debug(message);
+            auth.verbose(message);
             break;
           case LogLevel.Trace:
-            auth.error(message);
+            auth.trace(message);
             break;
         }
       },
@@ -53,7 +57,15 @@ export const getPCA = async () => {
         pca.setActiveAccount(account);
         break;
       }
-      case EventType.INITIALIZE_END: {
+      case EventType.ACCOUNT_ADDED: {
+        auth.debug("New Account Added");
+        break;
+      }
+      case EventType.ACCOUNT_REMOVED: {
+        auth.debug("Account has been removed");
+        break;
+      }
+      /*case EventType.INITIALIZE_END: {
         if (pca.getActiveAccount()) break;
 
         const accounts = pca.getAllAccounts();
@@ -62,9 +74,19 @@ export const getPCA = async () => {
 
         pca.setActiveAccount(account);
         break;
-      }
+      }*/
     }
   });
+
+  console.log(pca.getActiveAccount(), pca.getAllAccounts());
+
+  if (!pca.getActiveAccount()) {
+    const accounts = pca.getAllAccounts();
+    const account = accounts.at(0);
+    if (account) {
+      pca.setActiveAccount(account);
+    }
+  }
 
   return pca;
 };

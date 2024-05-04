@@ -19,11 +19,14 @@ import { queryClient } from "./lib/config/queryClient";
 import router from "@/router";
 import DB from "./lib/db/db";
 import { exit } from "@tauri-apps/api/process";
-import { attachLogger } from "./lib/system/logger";
+import { attachLogger, auth } from "./lib/system/logger";
 import GameCrash from "./components/dialog/GameCrash";
 
 async function init() {
   await attachLogger();
+
+  auth.debug("%O", localStorage)
+
   await DB.init();
   return getPCA();
 }

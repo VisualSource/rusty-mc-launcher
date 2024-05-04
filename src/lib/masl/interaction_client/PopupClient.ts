@@ -547,12 +547,11 @@ export class PopupClient extends StandardInteractionClient {
    * @param timeout - timeout for processing hash once popup is redirected back to application
    */
   monitorPopupForHash(popupWindow: Window): Promise<string> {
-    let port: number | null = null;
     let unlisten: Promise<UnlistenFn> | undefined;
     let intervalId: NodeJS.Timeout | undefined;
 
     const hasHandler = new Promise<string>((resolve, reject) => {
-      unlisten = once<string>("redirect_uri", (ev) => {
+      unlisten = once<string>("rmcl://auth_response", (ev) => {
         const payload = JSON.parse(ev.payload) as {
           status: "ok" | "error";
           data: string;
@@ -562,7 +561,18 @@ export class PopupClient extends StandardInteractionClient {
           this.logger.verbose(
             "PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
           );
-          resolve(payload.data);
+
+          const url = new URL(payload.data);
+          console.log(url);
+          const responseType = this.config.auth.OIDCOptions.serverResponseType;
+          let responseString = "";
+          if (responseType === ServerResponseType.QUERY) {
+            responseString = url.search;
+          } else {
+            responseString = url.hash;
+          }
+
+          resolve(responseString);
           return;
         }
         reject(createBrowserAuthError(BrowserAuthErrorCodes.popupWindowError));
@@ -582,17 +592,11 @@ export class PopupClient extends StandardInteractionClient {
     });
 
     return (async () => {
-      port = await startAuthServer();
-      if (!port)
-        throw createBrowserAuthError(BrowserAuthErrorCodes.popupWindowError);
+
       this.logger.verbose("PopupHandler.monitorPopupForHash - polling started");
       return Promise.race([closeHandler, hasHandler]);
     })().finally(() => {
       clearInterval(intervalId);
-      if (port !== null)
-        fetch(`http://127.0.0.1:${port}/exit`).catch((e) =>
-          this.logger.error(e.message ?? "Close auth server error."),
-        );
       this.cleanPopup(popupWindow);
       unlisten
         ?.then((unsubscribe) => unsubscribe())
@@ -762,9 +766,8 @@ export class PopupClient extends StandardInteractionClient {
    * @param request
    */
   generatePopupName(scopes: Array<string>, authority: string): string {
-    return `${BrowserConstants.POPUP_NAME_PREFIX}.${
-      this.config.auth.clientId
-    }.${scopes.join("-")}.${authority}.${this.correlationId}`;
+    return `${BrowserConstants.POPUP_NAME_PREFIX}.${this.config.auth.clientId
+      }.${scopes.join("-")}.${authority}.${this.correlationId}`;
   }
 
   /**

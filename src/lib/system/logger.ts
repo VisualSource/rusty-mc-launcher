@@ -6,6 +6,8 @@ const levels = [
   { name: "warn", color: "yellow", logger: warn },
   { name: "info", color: "blue", logger: info },
   { name: "debug", color: "green", logger: debug },
+  { name: "trace", color: "green", logger: debug },
+  { name: "verbose", color: "green", logger: debug, }
 ] as const;
 
 const namespaces = ["app", "auth"] as const;
@@ -13,7 +15,7 @@ type Level = Record<(typeof levels)[number]["name"], Debugger>;
 type Loggers = Record<(typeof namespaces)[number], Level>;
 
 function initLogger() {
-  const root = createDebug("mcrl");
+  const root = createDebug("rmcl");
 
   const loggers = namespaces.reduce((acc, namespace) => {
     const ns = root.extend(namespace);
@@ -26,7 +28,7 @@ function initLogger() {
     return acc;
   }, {} as Loggers);
 
-  localStorage.debug = import.meta.env.PUBLIC_VITE_DEBUG ?? "mrcl:*:error";
+  localStorage.debug = import.meta.env.PUBLIC_VITE_DEBUG ?? "rmcl:*:error";
 
   return loggers;
 }

@@ -2,7 +2,6 @@ use async_compression::tokio::write::LzmaDecoder;
 use futures::StreamExt;
 use log::{debug, error, warn};
 use sha1::{Digest, Sha1};
-use std::path::PathBuf;
 use tokio::{fs, io::AsyncWriteExt, sync::mpsc::Sender};
 
 use crate::errors::LauncherLibError;
@@ -23,7 +22,7 @@ impl Jvm {
     pub async fn install_jvm(
         &self,
         version: String,
-        game_dir: &PathBuf,
+        game_dir: &std::path::Path,
     ) -> Result<(), LauncherLibError> {
         //ChannelMessage::new("end", "{{ \"key\":\"jvm\" }}")
         utils::emit!(
@@ -72,7 +71,7 @@ impl Jvm {
         let mut download_size: i32 = 0;
 
         // get combined download size and files exclude dirs
-        for (_, file) in &jvm.files {
+        for file in jvm.files.values() {
             if let Some(download) = &file.downloads {
                 if let Some(lzma) = &download.lzma {
                     download_size += lzma.size
@@ -257,14 +256,14 @@ impl Jvm {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    /*use super::*;
 
     fn init() {
         let _ = env_logger::builder()
             .filter_module("minecraft_launcher_lib", log::LevelFilter::Debug)
             .is_test(true)
             .try_init();
-    }
+    }*/
 
     /*#[tokio::test]
     async fn test_jvm_install() {

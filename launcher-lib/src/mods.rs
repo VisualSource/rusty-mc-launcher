@@ -17,8 +17,8 @@ struct ModManifest {
 
 async fn create_or_update_mod_manifest(
     id: String,
-    mods_folder: &PathBuf,
-    files: &Vec<FileDownload>,
+    mods_folder: &std::path::Path,
+    files: &[FileDownload],
 ) -> Result<(), LauncherLibError> {
     let dir = mods_folder.join("manifest.json");
 
@@ -26,13 +26,13 @@ async fn create_or_update_mod_manifest(
         let manifest_str = fs::read_to_string(&dir).await?;
         let mut old_manifest = serde_json::from_str::<ModManifest>(&manifest_str)?;
 
-        old_manifest.mods.extend(files.clone());
+        old_manifest.mods.extend(files.to_owned());
 
         old_manifest
     } else {
         ModManifest {
             id: id.clone(),
-            mods: files.clone(),
+            mods: files.to_owned(),
         }
     };
 

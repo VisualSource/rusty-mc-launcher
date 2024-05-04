@@ -1,5 +1,5 @@
 import type { IPublicClientApplication, SilentRequest } from "@masl/index";
-import { PortGenerator } from "@system/commands";
+import { startAuthServer, closeAuthServer } from "@system/commands";
 import logger from "@system/logger";
 
 const getToken = async (
@@ -9,12 +9,17 @@ const getToken = async (
   return instance
     .acquireTokenSilent(request)
     .catch(async () => {
-      const port = PortGenerator.getInstance().setPort();
-      logger.debug(`Login port: (${port})`);
-      return instance.acquireTokenPopup({
-        ...request,
-        redirectUri: `http://localhost:${port}`,
-      });
+      let port;
+      try {
+        port = await startAuthServer();
+        logger.debug(`Login port: (${port})`);
+        return instance.acquireTokenPopup({
+          ...request,
+          redirectUri: `http://localhost:${port}`,
+        });
+      } finally {
+        closeAuthServer(port);
+      }
     })
     .then((e) => e.accessToken);
 };

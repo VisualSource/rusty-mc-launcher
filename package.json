@@ -19,7 +19,7 @@
     "@azure/msal-react": "^2.0.15",
     "@hookform/resolvers": "^3.3.4",
     "@microsoft/microsoft-graph-client": "^3.0.7",
-    "@octokit/rest": "^20.1.0",
+    "@octokit/rest": "^20.1.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-aspect-ratio": "^1.0.3",
@@ -59,7 +59,7 @@
     "immutability-helper": "^3.1.1",
     "isomorphic-fetch": "^3.0.0",
     "localforage": "^1.10.0",
-    "lucide-react": "^0.376.0",
+    "lucide-react": "^0.378.0",
     "queue": "^7.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -76,7 +76,7 @@
     "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",
     "tauri-plugin-sqlite-api": "github:lzdyes/tauri-plugin-sqlite#v0.1.1",
     "use-debounce": "^10.0.0",
-    "zod": "^3.23.5",
+    "zod": "^3.23.6",
     "zod-validation-error": "^3.2.0"
   },
   "devDependencies": {
@@ -85,7 +85,7 @@
     "@tauri-apps/cli": "^1.5.12",
     "@total-typescript/ts-reset": "^0.5.1",
     "@types/debug": "^4.1.12",
-    "@types/node": "^20.12.7",
+    "@types/node": "^20.12.8",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
     "@types/semver": "^7.5.8",
@@ -97,7 +97,7 @@
     "shadcn-ui": "^0.8.0",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",
-    "vite": "^5.2.10",
-    "vitest": "^1.5.3"
+    "vite": "^5.2.11",
+    "vitest": "^1.6.0"
   }
 }

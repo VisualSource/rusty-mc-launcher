@@ -1,86 +1,86 @@
-import { invoke } from "@tauri-apps/api";
+import type { InvokeArgs } from "@tauri-apps/api/tauri";
+import { getClient } from '@tauri-apps/api/http';
+import { invoke, } from "@tauri-apps/api";
+import { z } from 'zod';
+import logger from "@system/logger";
 import type { FileDownload } from "../api/modrinth";
 import type { LaunchConfig } from "./launch_config";
-import logger from "./logger";
 
-export class PortGenerator {
-  static INSTANCE: PortGenerator | null;
-  static getInstance(): PortGenerator {
-    if (!PortGenerator.INSTANCE) {
-      PortGenerator.INSTANCE = new PortGenerator();
-    }
-    return PortGenerator.INSTANCE;
-  }
-  public port: number = 3123;
-  constructor() {}
-  setPort() {
-    this.port =
-      [3123, 4124, 5434].at(Math.floor((Math.random() * 100) % 3)) ?? 3123;
-    return this.port;
-  }
-}
-
-export const startAuthServer = async () => {
-  try {
-    const generator = PortGenerator.getInstance();
-    await invoke("start_server", {
-      port: generator.port,
-      origin: window.location.origin,
-    });
-    return generator.port;
-  } catch (error) {
-    logger.error(error);
-    return null;
-  }
-};
-
-export const installMods = async (
-  id: string,
+type CurrentGameState = "NotRunning" | "Running" | { Exited: number };
+type Version = { version: string; game_dir?: string; };
+type ModInstall = {
+  profile_id: string;
   files: FileDownload[],
-  game_dir?: string,
-) => {
-  await invoke("install_mods", { id, gameDir: game_dir, files });
-};
-
-export const install = async (version: string, game_dir?: string) => {
-  try {
-    await invoke("install", { gameDir: game_dir, version });
-  } catch (error) {
-    logger.error(error);
-  }
-};
-
-export const installPack = async (
-  file: FileDownload,
+  game_dir?: string;
+}
+type PackInstall = {
+  source: FileDownload,
   type: "Resource" | "Shader",
   game_dir?: string,
-) => invoke<void>("install_pack", { file, packType: type, gameDir: game_dir });
-
-export const check_install = async (version: string, game_dir?: string) => {
-  try {
-    const result = await invoke<boolean>("check_install", {
-      version,
-      gameDir: game_dir,
-    });
-    return result;
-  } catch (error) {
-    logger.error(error);
-    return false;
-  }
-};
-
-export const play = async (settings: LaunchConfig) =>
-  invoke("play", { settings });
-
-export const stop = async () => invoke("stop");
-
-export const isGameRunning = () =>
-  invoke<"NotRunning" | "Running" | { Exited: number }>("is_game_running");
-
-export const getMinecraftDir = () => invoke<string>("get_minecraft_dir");
-
-export const validateMods = (props: {
-  id: string;
+}
+type ModPackInstall = {
   game_dir?: string;
-  files: FileDownload[];
-}) => invoke<Array<FileDownload>>("validate_mods", props);
+  profile_id: string;
+}
+
+type ValidatePackFileArgs = {}
+type ValidateModPackArgs = {}
+type ValidateModsArgs = {}
+
+const commands = {
+  "start_auth_server": null,
+
+  "play": z.object({}),
+  "stop": null,
+  "is_game_running": null,
+  "get_minecraft_dir": null,
+
+  "validate_game_files": z.object({ version: z.string(), game_dir: z.string().optional() }),
+  "validate_mods_files": z.object({}),
+  "validate_pack_files": z.object({}),
+  "validate_modpack_files": z.object({}),
+
+  "install_game": z.object({ version: z.string(), game_dir: z.string().optional() }),
+  "install_pack": z.object({
+    source: z.object({}),
+    type: z.enum(["Resource", "Shader"]),
+    game_dir: z.string().optional()
+  }),
+  "install_mods": z.object({}),
+  "install_modpack": z.object({})
+}
+
+const runInvoke = async <T = void>(command: keyof typeof commands, args: InvokeArgs | undefined) => {
+  const schema = commands[command];
+  if (!schema) {
+    return invoke<T>(command, args);
+  }
+  const data = schema.parse(args);
+  return invoke<T>(command, data);
+}
+
+export const closeAuthServer = async (port: number | undefined) => {
+  if (port === undefined) return;
+  try {
+    const client = await getClient();
+    await client.get(`http://localhost:${port}/exit`)
+  } catch (error) {
+    logger.warn("Failed to close auth server or server war already closed!");
+  }
+}
+export const startAuthServer = () => runInvoke<number>("start_auth_server", undefined);
+
+export const startGame = (settings: LaunchConfig) => runInvoke("play", settings);
+export const stopGame = () => runInvoke("stop", undefined);
+export const isGameRunning = () => runInvoke<CurrentGameState>("is_game_running", undefined);
+export const getDefaultMinecraftDirectory = () => runInvoke<string>("get_minecraft_dir", undefined);
+
+export const validateGameFiles = (args: Version) => runInvoke<boolean>("validate_game_files", args);
+export const validatePackFiles = (args: ValidatePackFileArgs) => runInvoke<boolean>("validate_pack_files", args);
+export const validateModsFiles = (args: ValidateModsArgs) => runInvoke<boolean>("validate_mods_files", args);
+export const validateModPackFiles = (args: ValidateModPackArgs) => runInvoke<boolean>("validate_modpack_files", args);
+
+export const installGame = (args: Version) => runInvoke("install_game", args);
+export const installPack = (args: PackInstall) => runInvoke("install_pack", args);
+export const installMods = (args: ModInstall) => runInvoke("install_mods", args);
+export const installModPack = (args: ModPackInstall) => runInvoke("install_modpack", args);

@@ -1,59 +1,85 @@
 import { useAccount, useMsal } from "@azure/msal-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import { getMinecraftAccount } from "@lib/api/minecraftAccount";
-import { xboxRequest } from "../auth/loginRequests";
-import { PortGenerator } from "@system/commands";
-import { IPublicClientApplication, InteractionStatus } from "@masl/index";
+import { startAuthServer, closeAuthServer } from "@system/commands";
+import { AccountInfo } from "@masl/index";
+
 import getToken from "../auth/getToken";
-
-
-const getAccount = async (instance: IPublicClientApplication, userId: string | undefined) => {
-  if (!userId) throw new Error("Invalid userid");
-  const accessToken = await getToken(instance, xboxRequest);
-  return getMinecraftAccount(userId, accessToken);
-}
+import { auth } from "../system/logger";
 
 const useUser = () => {
   const msAccount = useAccount();
-  const { instance, inProgress } = useMsal();
+  const { instance } = useMsal();
 
   const mcAccount = useQuery({
     enabled: !!msAccount?.homeAccountId,
     queryKey: ["account", msAccount?.homeAccountId],
     queryFn: async (args) => {
-      const key = args.queryKey.at(1);
-      return getAccount(instance, key);
+      const accessToken = await getToken(instance, {
+        scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
+        extraQueryParameters: {
+          response_type: "code",
+        },
+      });
+      const id = args.queryKey.at(1);
+      if (!id) throw new Error("Failed to get userid");
+      return getMinecraftAccount(id, accessToken);
     }
   });
 
   const login = useCallback(async () => {
-    const port = PortGenerator.getInstance().setPort();
+    let port
+    try {
+      port = await startAuthServer();
 
-    await instance.loginPopup({
-      scopes: ["User.Read"],
-      extraScopesToConsent: ["XboxLive.SignIn", "XboxLive.offline_access"],
-      redirectUri: `http://localhost:${port}`,
-      prompt: "select_account",
-    });
+      auth.trace(`Watching login port at: ${port}`);
+
+      await instance.loginPopup({
+        scopes: ["User.Read"],
+        extraScopesToConsent: ["XboxLive.SignIn", "XboxLive.offline_access"],
+        redirectUri: `http://localhost:${port}`,
+        prompt: "select_account",
+      });
+    } finally {
+      closeAuthServer(port);
+    }
   }, [instance]);
 
-  const logout = useCallback(async () => {
-    const port = PortGenerator.getInstance().setPort();
-    await instance.logoutPopup({
-      postLogoutRedirectUri: `http://localhost:${port}`,
-    });
+  const logout = useCallback(async (account: AccountInfo | null) => {
+    if (!account) return;
+    let port;
+    try {
+      port = await startAuthServer();
+      auth.trace("Watching logout port at: %d", port);
+      await instance.logoutPopup({
+        postLogoutRedirectUri: `http://localhost:${port}`,
+        account
+      });
+    } finally {
+      closeAuthServer(port);
+    }
   }, [instance]);
 
-  const getMinecraftAccount = useCallback(() => getAccount(instance, msAccount?.homeAccountId), [msAccount?.homeAccountId, instance])
+  const refresh = useCallback(async () => {
+    if (!msAccount) throw new Error("Invalid userid");
+    const accessToken = await getToken(instance, {
+      scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
+      forceRefresh: true,
+      extraQueryParameters: {
+        response_type: "code",
+      },
+    });
+    return getMinecraftAccount(msAccount.homeAccountId, accessToken);
+
+  }, [msAccount?.homeAccountId, instance])
 
   return {
     account: mcAccount.data,
     logout,
     login,
-    getMinecraftAccount,
-    isLoading: mcAccount.isLoading || inProgress !== InteractionStatus.None,
+    refresh,
     isError: mcAccount.isError,
     error: mcAccount.error,
   };

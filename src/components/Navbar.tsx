@@ -61,7 +61,7 @@ const Navbar = () => {
   });
   const account = useAccount();
   const avatar = useAvatar();
-  const { account: mcAccount, isLoading, logout, login } = useUser();
+  const { account: mcAccount, logout, login } = useUser();
   const queryClient = useQueryClient();
 
   return (
@@ -84,10 +84,7 @@ const Navbar = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => logout()}>
-                  Sign Out...
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+
                 <DropdownMenuItem asChild>
                   <Link to="settings">Settings</Link>
                 </DropdownMenuItem>
@@ -175,7 +172,7 @@ const Navbar = () => {
                         size="sm"
                         className="line-clamp-1 h-8 rounded-none"
                       >
-                        {mcAccount?.account.name ??
+                        {mcAccount?.details.name ??
                           account?.username ??
                           account?.name ??
                           "Username"}
@@ -184,18 +181,18 @@ const Navbar = () => {
                   </AuthenticatedTemplate>
                   <UnauthenticatedTemplate>
                     <Button
-                      disabled={isLoading}
+                      disabled={!!account}
                       onClick={() => login()}
                       size="sm"
                       className="rounded-none"
                     >
-                      {isLoading ? "Login" : "Loading..."}
+                      {!account ? "Login" : "Loading..."}
                     </Button>
                   </UnauthenticatedTemplate>
                 </div>
                 <AuthenticatedTemplate>
                   <DropdownMenuContent>
-                    <DropdownMenuItem>Signout</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => logout(account)}>Signout</DropdownMenuItem>
                   </DropdownMenuContent>
                 </AuthenticatedTemplate>
               </div>

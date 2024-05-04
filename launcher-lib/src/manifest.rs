@@ -133,7 +133,7 @@ impl Manifest {
         self
     }
 
-    pub fn libs_as_string(&self, seperator: &Option<String>, root: &PathBuf, version: &String) -> Result<String,LauncherLibError> {
+    pub fn libs_as_string(&self, seperator: &Option<String>, root: &std::path::Path, version: &String) -> Result<String,LauncherLibError> {
 
         let mut output: Vec<String> = vec![];
 
@@ -147,7 +147,7 @@ impl Manifest {
                                     "name" => map_value.replace("osx", "macos") == consts::OS,
                                     "arch" => map_value == consts::ARCH,
                                     "version" => {
-                                        if let Ok(re) = regex::Regex::new(&map_value) {
+                                        if let Ok(re) = regex::Regex::new(map_value) {
                                             let os_version = os_info::get().version().to_string();
                                             return re.is_match(&os_version);
                                         }
@@ -199,7 +199,7 @@ impl Manifest {
                 continue;
             }
 
-            let (org, name,libv) = match lib.name.splitn(3, ":").collect::<Vec<&str>>().get(0..=2) {
+            let (org, name,libv) = match lib.name.splitn(3, ':').collect::<Vec<&str>>().get(0..=2) {
                 Some(value) => (value[0],value[1],value[2]),
                 None => return Err(LauncherLibError::Generic(format!("Failed to parse library {}",lib.name)))
             };
@@ -208,7 +208,7 @@ impl Manifest {
             // Path => net/fabricmc/tiny-mappings-parser/0.3.0+build.17/tiny-mappings-parser-0.3.0+build.17.jar
             let path = format!(
                     "{0}/{1}/{2}/{1}-{2}.jar",
-                    org.replace(".", "/"),
+                    org.replace('.', "/"),
                     name,
                     libv
                 );
@@ -220,12 +220,10 @@ impl Manifest {
 
         output.push(client_jar.to_str().ok_or(LauncherLibError::PathBufError)?.to_string());
 
-        let class_sperator = if let Some(sep) = seperator { sep } else {
-            if consts::OS == "windows" { ";" } else { ":" }
-        };
+        let class_sperator = if let Some(sep) = seperator { sep } else if consts::OS == "windows" { ";" } else { ":" };
 
 
-        Ok(output.join(&class_sperator))
+        Ok(output.join(class_sperator))
     }
 }
 
@@ -277,7 +275,7 @@ impl Arguments {
             match arg {
                 Arg::Flag(value) => {
                     debug!("Parse Flag: {}",value);
-                    if let Some(cp) = re.captures(&value) {
+                    if let Some(cp) = re.captures(value) {
                         let result = match &cp["target"] {
                             "launcher_name" => {
                                 let temp = "rust-minecraft-launcher".to_string();
@@ -326,7 +324,7 @@ impl Arguments {
                             }  
                             "game_assets" => {
                                 let path = settings.game_directory.as_ref().ok_or_else(
-                                    ||LauncherLibError::Generic("Failed to get game assets dir!".to_string()))?.join(format!("assets/virtual/legacy")).normalize();
+                                    ||LauncherLibError::Generic("Failed to get game assets dir!".to_string()))?.join("assets/virtual/legacy").normalize();
                                 let assets = path.to_str()
                                 .ok_or_else(||LauncherLibError::Generic("Failed to get game assets dir!".to_string()))?;
                                 value.replace("${game_assets}", assets)
@@ -383,7 +381,7 @@ impl Arguments {
                                         "name" => map_value.replace("osx", "macos") == consts::OS,
                                         "arch" => map_value == consts::ARCH,
                                         "version" => {
-                                            if let Ok(re) = regex::Regex::new(&map_value) {
+                                            if let Ok(re) = regex::Regex::new(map_value) {
                                                 let os_version = os_info::get().version().to_string();
                                                 return re.is_match(&os_version);
                                             }

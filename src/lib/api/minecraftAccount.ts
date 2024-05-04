@@ -1,13 +1,15 @@
 import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
 import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
-import getToken from "../auth/getToken";
+import { auth } from '@system/logger';
 
 const MINECRAFT_LOGIN =
   "https://api.minecraftservices.com/authentication/login_with_xbox";
 const MINECRAFT_PROFILE = "https://api.minecraftservices.com/minecraft/profile";
 const XBOX_AUTHENTICATE = "https://user.auth.xboxlive.com/user/authenticate";
 const LIVE_AUTHENTICATE = "https://xsts.auth.xboxlive.com/xsts/authorize";
+const MC_LOGIN_RELAY = "rp://api.minecraftservices.com/"
+const XBOX_LIVE_RELAY = "http://auth.xboxlive.com"
 const UNIX_EPOCH_DATE = new Date("1970-01-01T00:00:00Z");
 
 export type MinecraftAccount = {
@@ -16,7 +18,7 @@ export type MinecraftAccount = {
   token: {
     access_token: string;
   };
-  account: {
+  details: {
     capes?: {
       alias: string;
       id: string;
@@ -39,7 +41,7 @@ export async function getMinecraftAccount(
   userId: string,
   accessToken: string,
 ): Promise<MinecraftAccount> {
-  const key = `${userId}.minecraft.profile`;
+  const key = `${userId}.profile.minecraft`;
   const raw = localStorage.getItem(key);
 
   if (raw) {
@@ -50,7 +52,8 @@ export async function getMinecraftAccount(
   }
   const http = await getClient();
 
-  // #region Xbox Login
+  // #region Authenticate with Xbox Live.
+  auth.info("Authenticate With Xbox Live")
   const authRequest = await http.post<{
     Token: string;
     DisplayClaims: { xui: { uhs: string }[] };
@@ -62,20 +65,19 @@ export async function getMinecraftAccount(
         SiteName: "user.auth.xboxlive.com",
         RpsTicket: `d=${accessToken}`,
       },
-      RelyingParty: "http://auth.xboxlive.com",
+      RelyingParty: XBOX_LIVE_RELAY,
       TokenType: "JWT",
     }),
     { responseType: ResponseType.JSON },
   );
-
-  console.log(authRequest.data);
 
   const userHash = authRequest.data.DisplayClaims.xui.at(0)?.uhs;
   if (!userHash) throw new Error("Failed to get user hash");
   const xboxToken = authRequest.data.Token;
   // #endregion
 
-  // #region Minecraft Login
+  // #region Authenticate with XSTS
+  auth.info("Authenticate with XSTS");
   const liveRequest = await http.post<{ Token: string }>(
     LIVE_AUTHENTICATE,
     Body.json({
@@ -83,7 +85,7 @@ export async function getMinecraftAccount(
         SandboxId: "RETAIL",
         UserTokens: [xboxToken],
       },
-      RelyingParty: "rp://api.minecraftservices.com/",
+      RelyingParty: MC_LOGIN_RELAY,
       TokenType: "JWT",
     }),
     { responseType: ResponseType.JSON },
@@ -92,7 +94,8 @@ export async function getMinecraftAccount(
   const liveToken = liveRequest.data.Token;
   // #endregion
 
-  // #region Get Minecraft Token
+  // #region Authenticate with minecraft
+  auth.info("Authenticate with minecraft");
   const minecraftLoginRequest = await http.post<{ access_token: string }>(
     MINECRAFT_LOGIN,
     Body.json({
@@ -107,7 +110,8 @@ export async function getMinecraftAccount(
   // #endregion
 
   //#region Get Minecraft Profile
-  const userProfile = await http.get<MinecraftAccount["account"]>(
+  auth.info("Fetching minecraft profile");
+  const userProfile = await http.get<MinecraftAccount["details"]>(
     MINECRAFT_PROFILE,
     {
       headers: {
@@ -122,10 +126,12 @@ export async function getMinecraftAccount(
     exp: expDate,
     xuid: jwt.xuid,
     token: minecraftLoginRequest.data,
-    account: userProfile.data,
+    details: userProfile.data,
   };
 
   localStorage.setItem(key, JSON.stringify(profile));
 
   return profile;
 }
+
+

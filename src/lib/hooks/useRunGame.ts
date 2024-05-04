@@ -5,7 +5,7 @@ import type { MinecraftProfile } from "../models/profiles";
 import { asLaunchConfig } from "../system/launch_config";
 import { queryClient } from "../config/queryClient";
 import { QUERY_KEY } from "./useIsGameRunning";
-import { play } from "../system/commands";
+import { startGame } from "../system/commands";
 import profiles from "../models/profiles";
 import useDownload from "./useDownload";
 import logger from "../system/logger";
@@ -13,14 +13,14 @@ import useUser from "./useUser";
 
 const useRunGame = () => {
   const download = useDownload();
-  const { getMinecraftAccount } = useUser();
+  const { refresh } = useUser();
 
   const run = useCallback(async (profile: MinecraftProfile) => {
     return new Promise<void>(async (ok, reject) => {
       let callback: ((ev: Event) => Promise<void>) | undefined = undefined;
 
       try {
-        const user = await getMinecraftAccount();
+        const user = await refresh();
         const config = await asLaunchConfig(user, profile);
         callback = async (ev: Event) => {
           const isValid = (ev as CustomEvent<{ vaild: boolean }>).detail.vaild;
@@ -29,7 +29,7 @@ const useRunGame = () => {
               data: { lastUsed: new Date() },
               where: [{ id: profile.id }],
             });
-            await play(config).catch(() => {
+            await startGame(config).catch(() => {
               window.dispatchEvent(
                 new CustomEvent("mcl::game-exit-status", {
                   detail: { exitCode: 1, msg: "" },

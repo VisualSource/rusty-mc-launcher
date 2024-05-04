@@ -202,7 +202,7 @@ impl Installer {
                                         "name" => map_value.replace("osx", "macos") == consts::OS,
                                         "arch" => map_value == consts::ARCH,
                                         "version" => {
-                                            if let Ok(re) = regex::Regex::new(&map_value) {
+                                            if let Ok(re) = regex::Regex::new(map_value) {
                                                 let os_version =
                                                     os_info::get().version().to_string();
                                                 return re.is_match(&os_version);
@@ -280,7 +280,9 @@ impl Installer {
                                 );
 
                                 if let Some(extract) = &lib.extract {
-                                    let archive = fs::File::open(output_file).await?;
+                                    let archive = tokio::io::BufReader::new(
+                                        fs::File::open(output_file).await?,
+                                    );
                                     let mut reader = ZipFileReader::with_tokio(archive).await?;
 
                                     let outdir = game_dir.join(format!("versions/{}/natives", id));
@@ -294,8 +296,8 @@ impl Installer {
                                         let filename = entry.filename().clone().into_string()?;
 
                                         let path = filename
-                                            .replace("\\", "/")
-                                            .split("/")
+                                            .replace('\\', "/")
+                                            .split('/')
                                             .map(sanitize_filename::sanitize)
                                             .collect::<PathBuf>();
 
@@ -347,7 +349,7 @@ impl Installer {
 
                 if let Some(url) = &lib.url {
                     let (org, name, version) =
-                        match lib.name.splitn(2, ":").collect::<Vec<&str>>().get(0..=2) {
+                        match lib.name.splitn(2, ':').collect::<Vec<&str>>().get(0..=2) {
                             Some(value) => (value[0], value[1], value[2]),
                             None => {
                                 return Err(LauncherLibError::Generic(
@@ -360,11 +362,11 @@ impl Installer {
                     // Path => net/fabricmc/tiny-mappings-parser/0.3.0+build.17/tiny-mappings-parser-0.3.0+build.17.jar
                     let path = format!(
                         "{0}/{1}/{2}/{1}-{2}.jar",
-                        org.replace(".", "/"),
+                        org.replace('.', "/"),
                         name,
                         version
                     );
-                    let seperator = if url.ends_with("/") { "" } else { "/" };
+                    let seperator = if url.ends_with('/') { "" } else { "/" };
                     let url = format!("{}{}{}", url, seperator, path);
                     let output_dir = game_dir.join(path).normalize();
 
