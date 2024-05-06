@@ -154,7 +154,7 @@ fn handle_connection(
     port: u16,
 ) -> Result<RequestResult, crate::errors::Error> {
     let mut buffer = [0; 4048];
-    conn.read(&mut buffer)?;
+    conn.read_exact(&mut buffer)?;
 
     let mut headers = [httparse::EMPTY_HEADER; 16];
     let mut request = httparse::Request::new(&mut headers);

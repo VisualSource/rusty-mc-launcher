@@ -563,7 +563,7 @@ export class PopupClient extends StandardInteractionClient {
           );
 
           const url = new URL(payload.data);
-          console.log(url);
+
           const responseType = this.config.auth.OIDCOptions.serverResponseType;
           let responseString = "";
           if (responseType === ServerResponseType.QUERY) {

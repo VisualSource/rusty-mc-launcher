@@ -8,19 +8,27 @@ mod oauth;
 mod state;
 
 use log::LevelFilter;
+use tauri::Manager;
 use tauri_plugin_log::{LogTarget, TimezoneStrategy};
 
 const DEFAULT_TIMEZONE_STRATEGY: TimezoneStrategy = TimezoneStrategy::UseUtc;
 
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    args: Vec<String>,
+    cwd: String,
+}
+
 fn main() {
+    // deep link
+    tauri_plugin_deep_link::prepare("us.visualsource.rmcl");
+
+    // Setup logger
     let level = if let Some(value) = option_env!("MCL_LOG") {
-        value
-            .parse::<LevelFilter>()
-            .unwrap_or_else(|_| LevelFilter::Error)
+        value.parse::<LevelFilter>().unwrap_or(LevelFilter::Error)
     } else {
         LevelFilter::Info
     };
-
     let time_format = time::format_description::parse(
         "[weekday repr:short], [day] [month repr:short] [year] [hour]:[minute]:[second]",
     )
@@ -52,8 +60,33 @@ fn main() {
         .build();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            if let Err(err) = app.emit_all("rmcl://start", Payload { args: argv, cwd }) {
+                log::error!("{}", err);
+            }
+        }))
         .plugin(tauri_plugin_sqlite::init())
         .plugin(logger)
+        .setup(|app| {
+            let handle = app.handle();
+            tauri_plugin_deep_link::register("rmcl", move |request| {
+                let items = request.split('?').collect::<Vec<&str>>();
+
+                if items.len() < 2 {
+                    return;
+                }
+
+                let root = items[0];
+                let payload = items[1];
+                log::info!("Deep Link: Root({}) Payload({})", root, payload);
+                if let Err(err) = handle.emit_all(root, payload) {
+                    log::error!("{}", err);
+                }
+            })
+            .expect("Failed to register deep linker");
+
+            Ok(())
+        })
         .manage(state::TauriState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             commands::start_auth_server,
