@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
+import Navbar from "./navbar/Navbar";
 import Footer from "./Footer";
-import Navbar from "./Navbar";
 
 function App() {
   return (
-    <div className="main-layout grid h-full text-zinc-50">
+    <div className="flex flex-col text-zinc-50 flex-1 overflow-hidden">
       <Navbar />
-      <main className="row-span-1 flex flex-col bg-zinc-900">
+      <main className="flex bg-zinc-900 overflow-hidden">
         <Outlet />
       </main>
       <Footer />

@@ -10,15 +10,16 @@ import { auth } from "@system/logger";
 const configuration: Configuration = {
   auth: {
     clientId: import.meta.env.PUBLIC_VITE_CLIENT_ID,
-    authority: `https://login.microsoftonline.com/consumers/`,
-    redirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
-    postLogoutRedirectUri: import.meta.env.PUBLIC_VITE_REDIRECT_URI,
+    authority: "https://login.microsoftonline.com/consumers/",
+    redirectUri: "http://localhost",
+    postLogoutRedirectUri: "http://localhost"
   },
   cache: {
-    cacheLocation: "localStorage"
+    temporaryCacheLocation: "sessionStorage",
+    cacheLocation: "localStorage",
+    cacheMigrationEnabled: true,
   },
   system: {
-
     allowNativeBroker: true,
     loggerOptions: {
       piiLoggingEnabled: false,

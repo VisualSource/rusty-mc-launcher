@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import useCategories from "@/lib/hooks/useCategories";
+import useCategories from "@hook/useCategories";
 import { Button } from "@component/ui/button";
 import { Label } from "@/components/ui/label";
 

@@ -6,8 +6,8 @@ import { getMinecraftAccount } from "@lib/api/minecraftAccount";
 import { startAuthServer, closeAuthServer } from "@system/commands";
 import { AccountInfo } from "@masl/index";
 
-import getToken from "../auth/getToken";
-import { auth } from "../system/logger";
+import getToken from "@lib/auth/getToken";
+import { auth } from "@system/logger";
 
 const useUser = () => {
   const msAccount = useAccount();

@@ -31,7 +31,7 @@ import {
 } from "../ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { useProfiles } from "@/lib/hooks/useProfiles";
+import { useProfiles } from "@hook/useProfiles";
 import { getLoaderType } from "@/utils/versionUtils";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
@@ -98,9 +98,9 @@ const SelectProfile: React.FC = () => {
 
       const allowed = config.minecraft_versions
         ? config.minecraft_versions.some((value) => {
-            if (!version) return false;
-            return satisfies(version, value);
-          })
+          if (!version) return false;
+          return satisfies(version, value);
+        })
         : true;
 
       const loader = config.modloaders
@@ -177,8 +177,8 @@ const SelectProfile: React.FC = () => {
                             >
                               {field.value
                                 ? avaliable.find(
-                                    (value) => value.id === field.value,
-                                  )?.name
+                                  (value) => value.id === field.value,
+                                )?.name
                                 : "Select Version"}
                               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -235,7 +235,7 @@ const SelectProfile: React.FC = () => {
                 />
 
                 {config?.minecraft_versions?.length &&
-                config.modloaders?.length ? (
+                  config.modloaders?.length ? (
                   <FormField
                     control={form.control}
                     name="showAll"

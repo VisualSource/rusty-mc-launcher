@@ -1,14 +1,14 @@
 import { toast } from "react-toastify";
 import { useCallback } from "react";
 
-import type { MinecraftProfile } from "../models/profiles";
-import { asLaunchConfig } from "../system/launch_config";
-import { queryClient } from "../config/queryClient";
-import { QUERY_KEY } from "./useIsGameRunning";
-import { startGame } from "../system/commands";
-import profiles from "../models/profiles";
+import type { MinecraftProfile } from "@lib/models/profiles";
+import { asLaunchConfig } from "@system/launch_config";
+import { queryClient } from "@lib/config/queryClient";
+import { QUERY_KEY } from "@hook/useIsGameRunning";
+import { startGame } from "@system/commands";
+import profiles from "@lib/models/profiles";
 import useDownload from "./useDownload";
-import logger from "../system/logger";
+import logger from "@system/logger";
 import useUser from "./useUser";
 
 const useRunGame = () => {

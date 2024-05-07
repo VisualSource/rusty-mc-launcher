@@ -2,7 +2,7 @@ import type { ActionFunction } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { queryClient } from "@/lib/config/queryClient";
-import { CATEGORIES_KEY } from "@/lib/hooks/keys";
+import { CATEGORIES_KEY } from "@hook/keys";
 import categories from "@/lib/models/categories";
 
 const handleCollections: ActionFunction = async ({ request }) => {

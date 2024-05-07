@@ -23,7 +23,7 @@ import useDownload from "@hook/useDownload";
 const Footer = () => {
   const { queueCurrent } = useDownload();
   return (
-    <footer className="row-span-1 flex h-16 bg-zinc-950 text-zinc-400 shadow">
+    <footer className="flex h-16 bg-zinc-950 text-zinc-400 shadow flex-shrink-0 flex-grow-0">
       <div className="flex h-full w-full shrink items-center justify-start">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -75,8 +75,8 @@ const Footer = () => {
                       <span>
                         {Math.floor(
                           100 *
-                            (queueCurrent.ammount_current /
-                              queueCurrent.ammount),
+                          (queueCurrent.ammount_current /
+                            queueCurrent.ammount),
                         )}
                         %
                       </span>
@@ -85,7 +85,7 @@ const Footer = () => {
                   <Progress
                     value={Math.floor(
                       100 *
-                        (queueCurrent.ammount_current / queueCurrent.ammount),
+                      (queueCurrent.ammount_current / queueCurrent.ammount),
                     )}
                   />
                 </div>

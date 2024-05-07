@@ -12,7 +12,7 @@ import { MinecraftProfile } from "@lib/models/profiles";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import ProfileCategories from "./ProfileCategories";
-import useDownload from "@/lib/hooks/useDownload";
+import useDownload from "@hook/useDownload";
 import PlayButton from "@/components/ui/play";
 import { Button } from "@component/ui/button";
 import AddToCategory from "./AddToCategory";
@@ -83,8 +83,8 @@ const Profile: React.FC = () => {
         </section>
 
         {data.loader !== "vanilla" ||
-        data.lastVersionId.includes("fabric") ||
-        data.lastVersionId.includes("forge") ? (
+          data.lastVersionId.includes("fabric") ||
+          data.lastVersionId.includes("forge") ? (
           <section className="container py-4">
             <TypographyH4>Mods</TypographyH4>
             <Separator />

@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { selectVersion } from "@/components/dialog/SelectVersion";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import useDownload from "./useDownload";
-import logger from "../system/logger";
+import logger from "@system/logger";
 
 const useInstallContent = () => {
   const { installMods, installPack } = useDownload();

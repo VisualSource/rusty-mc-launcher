@@ -1,21 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer base {
+  html,
+  body {
+    height: 100vh;
+    margin: 0;
+  }
+}
 
 @layer components {
   #root {
-    @apply h-screen;
+    @apply flex h-screen flex-col;
+  }
+
+  .scrollbar {
+    scrollbar-color: rgb(113 113 122 / var(--tw-bg-opacity))
+      rgb(24 24 27 / var(--tw-bg-opacity));
+    scrollbar-width: thin;
   }
 
   .main-layout {
     grid-template-rows: 88px calc(100vh - 64px - 88px) 64px;
   }
-}
-
-html,
-body {
-  height: 100vh;
-  margin: 0;
 }
 
 /*@layer components {

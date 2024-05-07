@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CATEGORIES_KEY } from "./keys";
-import categories from "../models/categories";
+import categories from "@lib/models/categories";
 
 const query = async () => {
   const result = await categories.execute<{

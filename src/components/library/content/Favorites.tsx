@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import profiles, { type MinecraftProfile } from "@/lib/models/profiles";
 import { TypographyH3 } from "@/components/ui/typography";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CATEGORY_KEY } from "@/lib/hooks/keys";
+import { CATEGORY_KEY } from "@hook/keys";
 import PlayButton from "@/components/ui/play";
 
 export const FavoritesErrored: React.FC = () => {

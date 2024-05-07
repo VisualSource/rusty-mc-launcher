@@ -22,11 +22,11 @@
       "@/*": ["./*"],
       "@context/*": ["lib/context/*"],
       "@system/*": ["lib/system/*"],
-      "@masl/*": ["./lib/masl/*"],
+      "@masl/*": ["lib/masl/*"],
       "@component/*": ["components/*"],
       "@lib/*": ["lib/*"],
       "@polyfill/*": ["lib/polyfill/*"],
-      "@hook/*": ["lib/hooks/*"],
+      "@hook/*": ["hooks/*"],
       "@auth/*": ["lib/auth/*"],
       "@page/*": ["pages/*"],
       "@util/*": ["utils/*"]

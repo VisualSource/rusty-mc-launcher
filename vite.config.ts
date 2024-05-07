@@ -25,7 +25,7 @@ export default defineConfig({
       "@component": resolve(__dirname, "./src/components"),
       "@lib": resolve(__dirname, "./src/lib"),
       "@polyfill": resolve(__dirname, "./src/lib/polyfill"),
-      "@hook": resolve(__dirname, "./src/lib/hooks/"),
+      "@hook": resolve(__dirname, "./src/hooks/"),
       "@auth": resolve(__dirname, "./src/lib/auth"),
       "@page": resolve(__dirname, "./src/pages"),
       "@util": resolve(__dirname, "./src/utils")

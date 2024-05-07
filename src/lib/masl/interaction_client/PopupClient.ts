@@ -592,7 +592,6 @@ export class PopupClient extends StandardInteractionClient {
     });
 
     return (async () => {
-
       this.logger.verbose("PopupHandler.monitorPopupForHash - polling started");
       return Promise.race([closeHandler, hasHandler]);
     })().finally(() => {

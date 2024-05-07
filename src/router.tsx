@@ -27,6 +27,7 @@ import modrinthSearch from "./loaders/modrinthSearch";
 import updateProfile from "./actions/updateProfile";
 import getProfile from "./loaders/getProfile";
 import updateCollection from "./actions/updateCollection";
+import Workshop from "./components/workshop/Workshop";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -76,10 +77,12 @@ const router = createBrowserRouter(
 
       <Route path="/downloads" element={<Download />} />
       <Route path="/workshop">
+        <Route index element={<Workshop />} />
+
         <Route
           errorElement={<WorkshopError />}
           loader={modrinthSearch}
-          index
+          path="search"
           element={<WorkshopSearch />}
         />
         <Route

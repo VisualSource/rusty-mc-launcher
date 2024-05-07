@@ -13,6 +13,7 @@ use tauri::Window;
 
 #[tauri::command]
 pub async fn start_auth_server(window: Window) -> Result<u16, Error> {
+    debug!("Starting Auth server");
     let port = start(move |url| {
         if let Err(err) = window.emit(
             "rmcl://auth_response",
@@ -21,7 +22,7 @@ pub async fn start_auth_server(window: Window) -> Result<u16, Error> {
             error!("{}", err);
         }
     })?;
-
+    debug!("Starting Auth Server on port: {}", port);
     Ok(port)
 }
 
@@ -81,10 +82,7 @@ pub async fn validate_mods_files(
 ) -> Result<bool, Error> {
     debug!("Starting mods validation");
     let dir = ClientBuilder::get_minecraft_dir()?;
-    let mod_dir = game_dir
-        .unwrap_or_else(|| dir)
-        .join(".mcl")
-        .join(profile_id);
+    let mod_dir = game_dir.unwrap_or(dir).join(".mcl").join(profile_id);
 
     let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(32);
 
@@ -147,7 +145,7 @@ pub async fn install_game(
         error!("Failed to exit event manager: {}", err);
     };
 
-    result.map_err(|err| Error::from(err))
+    result.map_err(Error::from)
 }
 
 #[tauri::command]
@@ -179,7 +177,7 @@ pub async fn install_mods(
         error!("Failed to exit event manager: {}", err);
     };
 
-    handler.map_err(|err| Error::from(err))
+    handler.map_err(Error::from)
 }
 
 #[tauri::command]
@@ -213,7 +211,7 @@ pub async fn install_pack(
         error!("Failed to exit event manager: {}", err);
     };
 
-    handler.map_err(|err| Error::from(err))
+    handler.map_err(Error::from)
 }
 
 #[tauri::command]
