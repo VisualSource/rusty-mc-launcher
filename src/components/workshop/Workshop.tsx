@@ -2,11 +2,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from "react-router-dom";
 
+import { TypographyH2, TypographyH3, TypographyInlineCode } from "../ui/typography";
 import { ScrollArea, ScrollBar } from "@component/ui/scroll-area";
 import { ProjectsService } from "@lib/api/modrinth/services.gen";
-import { TypographyH3 } from "../ui/typography";
 import { Separator } from '../ui/separator';
 import Search from './Search';
+
+import { WorkshopCard, WorkshopCardSkeleton } from "./WorkshopCard";
 
 const Workshop = () => {
     const newReleases = useQuery({
@@ -25,57 +27,59 @@ const Workshop = () => {
     });
 
     return (
-        <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 88px - 64px)" }}>
+        <div className="flex flex-col overflow-hidden w-full">
             <Search />
-            <div className="px-6 overflow-y-scroll scrollbar">
+            <div className="pl-6 overflow-y-scroll scrollbar bg-zinc-900">
                 <section className="h-64 flex flex-col">
-                    <TypographyH3>Popular</TypographyH3>
-                    <Separator />
-                    {popular.isLoading ? (
-                        <div>Loading</div>
-                    ) : popular.isError ? (<div>{popular?.error.message}</div>) : (
-                        <ScrollArea className="whitespace-nowrap">
+                    <TypographyH3 className="mb-2">Popular</TypographyH3>
+                    <Separator className="dark:bg-white" />
+                    <ScrollArea className="whitespace-nowrap bg-zinc-950">
+                        {popular.isLoading ? (
                             <div className="flex w-max space-x-6 p-4">
-                                {popular.data?.hits.map((item) => (
-                                    <Link className="flex p-2" to={`/workshop/${item.project_id}`} key={item.project_id}>
-                                        <div className="h-40 w-40">
-                                            <img className="h-full w-full" alt={item.title} src={item.icon_url ?? undefined} />
-                                        </div>
-                                        <div className="ml-2">
-                                            <h1 className="font-bold text-lg"> {item.title}</h1>
-
-                                            <p className="w-60 text-sm text-wrap">{item.description}</p>
-                                        </div>
-                                    </Link>
+                                {Array(10).fill(0).map((_, i) => (
+                                    <WorkshopCardSkeleton key={i} />
                                 ))}
                             </div>
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>)}
+                        ) : popular.isError ? (
+                            <div className='flex flex-col justify-center items-center h-40'>
+                                <TypographyH2>Failed to load</TypographyH2>
+                                <TypographyInlineCode className="text-red-500">{popular?.error.message}</TypographyInlineCode>
+                            </div>
+                        ) : (
+                            <div className="flex w-max space-x-6 p-4">
+                                {popular.data?.hits.map((item) => (
+                                    <WorkshopCard project={item} key={item.project_id} />
+                                ))}
+                            </div>
+                        )}
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
                 </section>
 
                 <section className="h-64 flex flex-col">
-                    <TypographyH3>Newest</TypographyH3>
-                    <Separator />
-                    {newReleases.isLoading ? (
-                        <div>Loading</div>
-                    ) : newReleases.isError ? (<div>{newReleases?.error.message}</div>) : (
-                        <ScrollArea className="whitespace-nowrap">
+                    <TypographyH3 className="mb-2">Newest</TypographyH3>
+                    <Separator className="dark:bg-white" />
+                    <ScrollArea className="whitespace-nowrap bg-zinc-950">
+                        {newReleases.isLoading ? (
                             <div className="flex w-max space-x-6 p-4">
-                                {newReleases.data?.hits.map((item) => (
-                                    <Link className="flex p-2" to={`/workshop/${item.project_id}`} key={item.project_id}>
-                                        <div className="h-40 w-40">
-                                            <img className="h-full w-full" alt={item.title} src={item.icon_url ?? undefined} />
-                                        </div>
-                                        <div className="ml-2">
-                                            <h1 className="font-bold text-lg"> {item.title}</h1>
-
-                                            <p className="w-60 text-sm text-wrap">{item.description}</p>
-                                        </div>
-                                    </Link>
+                                {Array(10).fill(0).map((_, i) => (
+                                    <WorkshopCardSkeleton key={i} />
                                 ))}
                             </div>
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>)}
+                        ) : newReleases.isError ? (
+                            <div className='flex flex-col justify-center items-center h-40'>
+                                <TypographyH2>Failed to load</TypographyH2>
+                                <TypographyInlineCode className="text-red-500">{newReleases?.error.message}</TypographyInlineCode>
+                            </div>
+                        ) : (
+                            <div className="flex w-max space-x-6 p-4">
+                                {newReleases.data?.hits.map((item) => (
+                                    <WorkshopCard project={item} key={item.project_id} />
+                                ))}
+                            </div>
+                        )}
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
                 </section>
             </div>
         </div>

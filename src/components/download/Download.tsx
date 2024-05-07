@@ -21,7 +21,7 @@ const Download: React.FC = () => {
     clearErrored,
   } = useDownload();
   return (
-    <div className="grid h-full grid-cols-1 grid-rows-6 text-zinc-50">
+    <div className="grid h-full grid-cols-1 grid-rows-6 text-zinc-50 w-full">
       <div className="row-span-2 border-b border-b-blue-300 bg-blue-900/20 p-2">
         {queueCurrent ? (
           <div className="flex gap-4">

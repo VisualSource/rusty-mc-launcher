@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 export const NavbarLower: React.FC = () => {
     return (
-        <section className="h-14 flex items-center p-2 text-zinc-100 ml-2">
+        <section className="h-14 flex items-center p-2 text-zinc-100 ml-2" data-tauri-drag-region>
             <NavigationMenu>
                 <NavigationMenuList>
                     <NavigationMenuItem>
@@ -67,6 +67,23 @@ export const NavbarLower: React.FC = () => {
                                 }
                             >
                                 WORKSHOP
+                            </NavLink>
+                        </NavigationMenuTrigger>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                        <NavigationMenuTrigger
+                            showIcon={false}
+                            className="rounded-none px-2 bg-transparent hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
+                        >
+                            <NavLink
+                                to="downloads"
+                                className={({ isActive }) =>
+                                    cn("transition-colors", {
+                                        "border-b-2 border-blue-300 text-blue-300": isActive,
+                                    })
+                                }
+                            >
+                                DOWNLOADS
                             </NavLink>
                         </NavigationMenuTrigger>
                     </NavigationMenuItem>

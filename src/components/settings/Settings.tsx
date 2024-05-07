@@ -31,8 +31,8 @@ const Settings = () => {
 
   return (
     <Tabs
-      className="grid h-full grid-cols-12 bg-blue-900/20 text-zinc-50"
-      defaultValue="info"
+      className="grid h-full grid-cols-12 bg-blue-900/20 text-zinc-50 w-full"
+      defaultValue="about"
       orientation="vertical"
     >
       <TabsList className="col-span-2 flex h-full flex-col items-start justify-start gap-2">

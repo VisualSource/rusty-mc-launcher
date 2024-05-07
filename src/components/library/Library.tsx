@@ -11,7 +11,7 @@ import Sidebar from "./sidenav/Sidebar";
 
 const Library: React.FC = () => {
   return (
-    <div className="grid h-full grid-cols-12 grid-rows-6">
+    <div className="grid h-full grid-cols-12 grid-rows-6 bg-zinc-900">
       <section className="col-span-3 row-span-full border-r-4 border-zinc-900 xl:col-span-2">
         <div className="flex gap-1 bg-zinc-950 p-2 shadow-lg">
           <Button
