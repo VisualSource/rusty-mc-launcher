@@ -13,7 +13,6 @@ use tauri::Window;
 
 #[tauri::command]
 pub async fn start_auth_server(window: Window) -> Result<u16, Error> {
-    debug!("Starting Auth server");
     let port = start(move |url| {
         if let Err(err) = window.emit(
             "rmcl://auth_response",

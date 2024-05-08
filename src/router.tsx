@@ -82,7 +82,7 @@ const router = createBrowserRouter(
         <Route
           errorElement={<WorkshopError />}
           loader={modrinthSearch}
-          path="search"
+          path="/workshop/search"
           element={<WorkshopSearch />}
         />
         <Route
