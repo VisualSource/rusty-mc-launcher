@@ -1,10 +1,10 @@
 # Rusty Minecraft Launcher
 
-![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/VisualSource/rusty-mc-launcher?include_prereleases)[![publish]
+[<img src="https://img.shields.io/github/v/release/VisualSource/rusty-mc-launcher?include_prereleases" alt="GitHub release (latest SemVer including pre-releases"/>](publish)
 
-(https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml/badge.svg)](https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml)[![MIT License]
+[<img src="https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml/badge.svg" alt="MIT License"/>](https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml)
 
-(https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/VisualSource/rusty-mc-launcher/blob/master/LICENSEs)
+[<img src="https://img.shields.io/apm/l/atomic-design-ui.svg" alt="LICENSE"/>](https://github.com/VisualSource/rusty-mc-launcher/blob/master/)
 
 Rusty Minecraft Launcher is a Minecraft Client launcher and a simple one click mod installer.
 Supports Forge, Fabric, Vanilla, and OptiFine clients
@@ -19,12 +19,12 @@ See [Relase Notes](RELEASE_NOTES.md)
 
 - Installable Clients
   - [x] Vanilla
-  - [x] Forge
+  - [ ] Forge
   - [x] Fabric
-  - [] OptiFine
+  - [ ] OptiFine
 - Profile Support
-  - [ ] Import From Offical Launcher
-  - [ ] Export to Offical Launcher
+  - [x] Import From Offical Launcher
+  - [x] Export to Offical Launcher
 - Modpacks
   - [ ] One click Install
   - [ ] Auto update
@@ -32,7 +32,7 @@ See [Relase Notes](RELEASE_NOTES.md)
   - [x] One Click Install
   - [ ] Auto update
 - Account
-  - [ ] Multi account support
+  - [x] Multi account support
 
 #### Possible Support
 
