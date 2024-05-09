@@ -15,7 +15,7 @@ import useExternalQueue from "@hook/useExternalQueue";
 import { getLoaderType } from "@/utils/versionUtils";
 import type ToastData from "@/types/toastData";
 import { queueFactory } from "@/utils/queue";
-import profiles from "../models/profiles";
+import { profile } from "../models/profiles";
 import logger from "@system/logger";
 
 export type ModsMetadata = {
@@ -238,69 +238,69 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
           queues.completed.queue.clear();
         },
         async validateMods(id: string) {
-          try {
-            const queue_id = crypto.randomUUID();
-            const profile = await profiles.findOne({ where: [{ id }] });
-
-            if (!profile) throw new Error("No Profile was found.");
-
-            if (profile.mods === null) {
-              return;
-            }
-
-            queues.next.queue.enqueue({
-              ammount: 0,
-              ammount_current: 0,
-              download: null,
-              key: queue_id,
-              size_current: 0,
-              msg: "Starting Mods Validation",
-              size: 0,
-              type: "mods_validation",
-              metadata: {
-                type: "mods_validation",
-                files: profile.mods,
-                id,
-              },
-            });
-
-            install_queue.push(async (cb) => {
-              if (!cb)
-                throw new Error("Callback handler not avaliable", {
-                  cause: "NO_CALLBACK_HANDLER",
-                });
-              const data = queues.next.queue.dequeueItem(id);
-              try {
-                if (!data)
-                  throw new Error("Failed to get queue data", {
-                    cause: "MISSING_QUEUE_METADATA",
-                  });
-                if (data.metadata.type !== "mods_validation")
-                  throw new Error("Unable to process, non pack metadata");
-
-                setCurrentItem(data);
-
-                await validateModsFiles({
-                  id: data.metadata.id,
-                  files: data.metadata.files,
-                  game_dir: data.metadata.game_dir,
-                });
-
-                cb(undefined, data);
-              } catch (error) {
-                logger.error(error);
-                cb(new QueueError(error as Error, data));
+          /*  try {
+              const queue_id = crypto.randomUUID();
+              const profile = await profiles.findOne({ where: [{ id }] });
+  
+              if (!profile) throw new Error("No Profile was found.");
+  
+              if (profile.mods === null) {
+                return;
               }
-            });
-          } catch (error) {
-            logger.error(error);
-            toast.error(
-              (error as Error)?.message ?? `Failed to validate profile.`,
-              {
-                data: {},
-              },
-            );
-          }
+  
+              queues.next.queue.enqueue({
+                ammount: 0,
+                ammount_current: 0,
+                download: null,
+                key: queue_id,
+                size_current: 0,
+                msg: "Starting Mods Validation",
+                size: 0,
+                type: "mods_validation",
+                metadata: {
+                  type: "mods_validation",
+                  files: profile.mods,
+                  id,
+                },
+              });
+  
+              install_queue.push(async (cb) => {
+                if (!cb)
+                  throw new Error("Callback handler not avaliable", {
+                    cause: "NO_CALLBACK_HANDLER",
+                  });
+                const data = queues.next.queue.dequeueItem(id);
+                try {
+                  if (!data)
+                    throw new Error("Failed to get queue data", {
+                      cause: "MISSING_QUEUE_METADATA",
+                    });
+                  if (data.metadata.type !== "mods_validation")
+                    throw new Error("Unable to process, non pack metadata");
+  
+                  setCurrentItem(data);
+  
+                  await validateModsFiles({
+                    id: data.metadata.id,
+                    files: data.metadata.files,
+                    game_dir: data.metadata.game_dir,
+                  });
+  
+                  cb(undefined, data);
+                } catch (error) {
+                  logger.error(error);
+                  cb(new QueueError(error as Error, data));
+                }
+              });
+            } catch (error) {
+              logger.error(error);
+              toast.error(
+                (error as Error)?.message ?? `Failed to validate profile.`,
+                {
+                  data: {},
+                },
+              );
+            }*/
         },
 
         async installPack(packId, type) {
@@ -456,138 +456,138 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
           }
         },
         async installMods(profileId, modIds, version) {
-          try {
-            const selectedProfile = await profiles.findOne({
-              where: [{ id: profileId }],
-            });
-            if (!selectedProfile)
-              throw new Error("Failed to find profile", {
-                cause: "FAILED_FIND_PROFILE",
-              });
-
-            const loader = getLoaderType(selectedProfile.lastVersionId);
-            if (loader.type === "vanilla")
-              throw new Error("Unable to install mod on given profile.", {
-                cause: "NONMODDED_PROFILE",
-              });
-
-            const files = await Promise.allSettled(
-              modIds.map(async (mod) => {
-                return modrinth
-                  .GetVersionFiles(mod, loader.type, loader.game)
-                  .catch(() => {
-                    return modrinth.GetVersionFiles(
-                      mod,
-                      loader.type,
-                      version.game,
-                    );
-                  })
-                  .then((value) => value.flat(1));
-              }),
-            );
-
-            const content: FileDownload[] = [];
-
-            for (const item of files) {
-              if (item.status === "fulfilled") {
-                content.push(...item.value);
-                continue;
-              }
-
-              throw new Error(
-                "Failed to install mod: No Valid version avalible",
-                { cause: "NO_VALID_VERSION_FOUND" },
-              );
-            }
-
-            const installedModsIds = (selectedProfile.mods ?? []).map(
-              (value) => value.id,
-            );
-            const newlyAddedMods = content.filter(
-              (item) => !installedModsIds.includes(item.id),
-            );
-
-            // there are not new mods to download!
-            if (!newlyAddedMods.length) {
-              toast.success<ToastData>("Mods already installed on profile.", {
-                data: {
-                  //time: new Date(),
-                  event: "install",
-                  type: "mods",
-                },
-              });
-              return;
-            }
-
-            await profiles.update({
-              where: [{ id: selectedProfile.id }],
-              data: {
-                mods: (selectedProfile.mods ?? []).concat(newlyAddedMods),
-              },
-            });
-
-            const size = newlyAddedMods.reduce(
-              (pre, curr) => pre + curr.download.size,
-              0,
-            );
-            const id = crypto.randomUUID();
-
-            queues.next.queue.enqueue({
-              ammount: files.length,
-              ammount_current: 0,
-              download: null,
-              key: id,
-              msg: "Installing Mods",
-              size: size,
-              size_current: 0,
-              type: "mods",
-              metadata: {
-                type: "mods",
-                profile: selectedProfile.id,
-                mods: newlyAddedMods,
-                game_dir: selectedProfile.gameDir,
-              },
-            });
-
-            install_queue.push(async (cb) => {
-              if (!cb)
-                throw new Error("Callback handler not avaliable", {
-                  cause: "NO_CALLBACK_HANDLER",
-                });
-              const data = queues.next.queue.dequeueItem(id);
-              try {
-                if (!data)
-                  throw new Error("Failed to get queue data", {
-                    cause: "MISSING_QUEUE_METADATA",
-                  });
-                if (data.metadata.type !== "mods")
-                  throw new Error("Unable to process, non mod metadata");
-                setCurrentItem(data);
-
-                await installMods({
-                  files: data.metadata.mods,
-                  profile_id: data.metadata.profile, game_dir:
-                    data.metadata.game_dir ?? undefined
-                });
-
-                cb(undefined, data);
-              } catch (error) {
-                cb(new QueueError(error as Error));
-              }
-            });
-          } catch (error) {
-            logger.error(error);
-            toast.error<ToastData>(
-              (error as Error)?.message ?? "Failed to download mods.",
-              {
-                data: {
-                  //time: new Date(),
-                  event: "install-error",
-                  type: "mods",
-                },
-              },
-            );
-          }
+          /* try {
+             const selectedProfile = await profiles.findOne({
+               where: [{ id: profileId }],
+             });
+             if (!selectedProfile)
+               throw new Error("Failed to find profile", {
+                 cause: "FAILED_FIND_PROFILE",
+               });
+ 
+             const loader = getLoaderType(selectedProfile.lastVersionId);
+             if (loader.type === "vanilla")
+               throw new Error("Unable to install mod on given profile.", {
+                 cause: "NONMODDED_PROFILE",
+               });
+ 
+             const files = await Promise.allSettled(
+               modIds.map(async (mod) => {
+                 return modrinth
+                   .GetVersionFiles(mod, loader.type, loader.game)
+                   .catch(() => {
+                     return modrinth.GetVersionFiles(
+                       mod,
+                       loader.type,
+                       version.game,
+                     );
+                   })
+                   .then((value) => value.flat(1));
+               }),
+             );
+ 
+             const content: FileDownload[] = [];
+ 
+             for (const item of files) {
+               if (item.status === "fulfilled") {
+                 content.push(...item.value);
+                 continue;
+               }
+ 
+               throw new Error(
+                 "Failed to install mod: No Valid version avalible",
+                 { cause: "NO_VALID_VERSION_FOUND" },
+               );
+             }
+ 
+             const installedModsIds = (selectedProfile.mods ?? []).map(
+               (value) => value.id,
+             );
+             const newlyAddedMods = content.filter(
+               (item) => !installedModsIds.includes(item.id),
+             );
+ 
+             // there are not new mods to download!
+             if (!newlyAddedMods.length) {
+               toast.success<ToastData>("Mods already installed on profile.", {
+                 data: {
+                   //time: new Date(),
+                   event: "install",
+                   type: "mods",
+                 },
+               });
+               return;
+             }
+ 
+             await profiles.update({
+               where: [{ id: selectedProfile.id }],
+               data: {
+                 mods: (selectedProfile.mods ?? []).concat(newlyAddedMods),
+               },
+             });
+ 
+             const size = newlyAddedMods.reduce(
+               (pre, curr) => pre + curr.download.size,
+               0,
+             );
+             const id = crypto.randomUUID();
+ 
+             queues.next.queue.enqueue({
+               ammount: files.length,
+               ammount_current: 0,
+               download: null,
+               key: id,
+               msg: "Installing Mods",
+               size: size,
+               size_current: 0,
+               type: "mods",
+               metadata: {
+                 type: "mods",
+                 profile: selectedProfile.id,
+                 mods: newlyAddedMods,
+                 game_dir: selectedProfile.gameDir,
+               },
+             });
+ 
+             install_queue.push(async (cb) => {
+               if (!cb)
+                 throw new Error("Callback handler not avaliable", {
+                   cause: "NO_CALLBACK_HANDLER",
+                 });
+               const data = queues.next.queue.dequeueItem(id);
+               try {
+                 if (!data)
+                   throw new Error("Failed to get queue data", {
+                     cause: "MISSING_QUEUE_METADATA",
+                   });
+                 if (data.metadata.type !== "mods")
+                   throw new Error("Unable to process, non mod metadata");
+                 setCurrentItem(data);
+ 
+                 await installMods({
+                   files: data.metadata.mods,
+                   profile_id: data.metadata.profile, game_dir:
+                     data.metadata.game_dir ?? undefined
+                 });
+ 
+                 cb(undefined, data);
+               } catch (error) {
+                 cb(new QueueError(error as Error));
+               }
+             });
+           } catch (error) {
+             logger.error(error);
+             toast.error<ToastData>(
+               (error as Error)?.message ?? "Failed to download mods.",
+               {
+                 data: {
+                   //time: new Date(),
+                   event: "install-error",
+                   type: "mods",
+                 },
+               },
+             );
+           }*/
         },
       }}
     >

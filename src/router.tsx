@@ -60,17 +60,14 @@ const router = createBrowserRouter(
           path="/profile/:id"
           errorElement={<ProfileError message="Failed to load profile." />}
           loader={getProfile}
-          element={<Profile />}
-        />
-        <Route
-          path="/profile/edit/:id"
-          action={updateProfile}
-          errorElement={
-            <ProfileError message="Failed to load profile for edit." />
-          }
-          loader={getProfile}
-          element={<ProfileEdit />}
-        />
+          element={<Profile />}>
+          <Route
+            path="/profile/:id/edit"
+            action={updateProfile}
+            element={<ProfileEdit />}
+          />
+        </Route>
+
       </Route>
 
       <Route path="/settings" element={<Settings />} />

@@ -1,6 +1,6 @@
 import { queryClient } from "@/lib/config/queryClient";
 import { CATEGORIES_KEY, CATEGORY_KEY } from "@hook/keys";
-import categories from "@/lib/models/categories";
+//import categories from "@/lib/models/categories";
 import type { ActionFunction } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -29,24 +29,24 @@ const updateCollection: ActionFunction = async ({ request }) => {
     });
   }
 
-  switch (request.method) {
-    case "DELETE": {
-      await categories.delete({
-        where: [{ profile_id: id }, { AND: { group_id: collection } }],
-      });
-      break;
-    }
-    case "POST": {
-      await categories.execute("INSERT INTO %table% VALUES (?,?,NULL,?);", [
-        crypto.randomUUID(),
-        collection,
-        id,
-      ]);
-      break;
-    }
-    default:
-      break;
-  }
+  /* switch (request.method) {
+     case "DELETE": {
+       await categories.delete({
+         where: [{ profile_id: id }, { AND: { group_id: collection } }],
+       });
+       break;
+     }
+     case "POST": {
+       await categories.execute("INSERT INTO %table% VALUES (?,?,NULL,?);", [
+         crypto.randomUUID(),
+         collection,
+         id,
+       ]);
+       break;
+     }
+     default:
+       break;
+   }*/
 
   queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, collection] });
   queryClient.invalidateQueries({ queryKey: ["PROFILE_CATEGORIES", id] });

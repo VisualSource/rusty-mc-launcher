@@ -4,7 +4,7 @@ import { useSubmit } from "react-router-dom";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import categories from "@/lib/models/categories";
+//import categories from "@/lib/models/categories";
 import { Badge } from "@/components/ui/badge";
 import { dialog } from "@tauri-apps/api";
 
@@ -29,19 +29,19 @@ const Inner: React.FC<{ id: string }> = ({ id }) => {
   const { data, error } = useSuspenseQuery({
     queryKey: ["PROFILE_CATEGORIES", id],
     queryFn: async () => {
-      const data = await categories.execute<{ name: string; group_id: number }>(
-        "SELECT name, group_id FROM categories WHERE profile_id IS NULL AND group_id IN (SELECT group_id FROM categories WHERE profile_id = ?);",
-        [id],
-      );
-      return data ?? [];
+      /* const data = await categories.execute<{ name: string; group_id: number }>(
+         "SELECT name, group_id FROM categories WHERE profile_id IS NULL AND group_id IN (SELECT group_id FROM categories WHERE profile_id = ?);",
+         [id],
+       );*/
+      return [];
     },
   });
 
   if (error) {
     throw new Error("Failed to load profile categories");
   }
-
-  return (
+  return null;
+  /*return (
     <>
       {data.map((value) => (
         <Badge
@@ -74,7 +74,7 @@ const Inner: React.FC<{ id: string }> = ({ id }) => {
         </Badge>
       ))}
     </>
-  );
+  );*/
 };
 
 export default ProfileCategories;

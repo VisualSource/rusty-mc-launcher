@@ -16,7 +16,7 @@ import { queryClient } from "./lib/config/queryClient";
 import { attachLogger } from "./lib/system/logger";
 import { getPCA } from "@auth/msal";
 import router from "@/router";
-import DB from "./lib/db/db";
+import DB from "@lib/api/db";
 import "./index.css";
 
 async function init() {

@@ -1,29 +1,35 @@
-import { type LoaderType } from "@lib/hooks/useMinecraftVersion";
-import { Schema, Type, type InferSchema } from "@lib/db/sqlite";
-import { type FileDownload } from "@lib/api/modrinth";
+import { z } from "zod";
 
-const profiles = new Schema("profile", {
-  id: Type.Text().primary_key(),
-  console: Type.Boolean().default("FALSE"),
-  is_demo: Type.Boolean().default("FALSE"),
-  disable_mulitplayer: Type.Boolean().default("FALSE"),
-  disable_chat: Type.Boolean().default("FALSE"),
-  name: Type.Text(),
-  created: Type.Date().default("CURRENT_TIMESTAMP"),
-  lastUsed: Type.Date().default("CURRENT_TIMESTAMP").nullable(),
-  icon: Type.Text().nullable(),
-  lastVersionId: Type.Text(),
-  gameDir: Type.Text().nullable(),
-  javaDir: Type.Text().nullable(),
-  javaArgs: Type.Text().nullable(),
-  logConfig: Type.Text().nullable(),
-  logConfigIsXML: Type.Boolean().default("TRUE"),
-  resolution: Type.Json<{ width: number; height: number }>().nullable(),
-  active: Type.Boolean().default("FALSE"),
-  loader: Type.Enum<LoaderType>().default("vanilla").non_nullable(),
-  mods: Type.Json<FileDownload[]>().nullable(),
-});
+export const profile = {
+  name: "profile",
+  schema: z.object({
+    id: z.string().uuid(),
+    console: z.coerce.boolean().default(false),
+    is_demo: z.coerce.boolean().default(false),
+    disable_mulitplayer: z.coerce.boolean().default(false),
+    disable_chat: z.coerce.boolean().default(false),
+    name: z.string(),
+    created: z.string().datetime(),
+    lastUsed: z.string().datetime(),
+    icon: z.string().url().nullable(),
+    lastVersionId: z.string(),
+    gameDir: z.string().nullable(),
+    javaDir: z.string().nullable(),
+    javaArgs: z.string().nullable(),
+    logConfig: z.string().nullable(),
+    logConfigIsXML: z.coerce.boolean().default(true),
+    resolution: z.string().transform((str, ctx) => {
+      try {
+        return JSON.parse(str);
+      } catch (error) {
+        ctx.addIssue({ code: 'custom', message: 'Invalid JSON' })
+        return z.NEVER;
+      }
+    }).pipe(z.object({ width: z.number(), height: z.number() })).or(z.null()),
+    active: z.coerce.boolean().default(false),
+    loader: z.enum(["fabric", "forge", "vanilla"]).default("vanilla"),
+  })
+}
 
-export type MinecraftProfile = InferSchema<typeof profiles>;
 
-export default profiles;
+export type MinecraftProfile = z.infer<typeof profile.schema>;

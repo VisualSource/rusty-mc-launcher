@@ -127,7 +127,7 @@ const ProjectTypeList = () => {
             <SelectContent >
                 <SelectGroup>
                     {projectType.data.map((type) => (
-                        <SelectItem value={type}>View: {type.replace(/^./, type[0].toUpperCase() ?? "")}</SelectItem>
+                        <SelectItem key={type} value={type}>View: {type.replace(/^./, type[0].toUpperCase() ?? "")}</SelectItem>
                     ))}
                 </SelectGroup>
             </SelectContent>

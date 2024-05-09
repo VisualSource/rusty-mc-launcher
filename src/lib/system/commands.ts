@@ -1,8 +1,6 @@
 import type { InvokeArgs } from "@tauri-apps/api/tauri";
-import { getClient } from '@tauri-apps/api/http';
 import { invoke, } from "@tauri-apps/api";
 import { z } from 'zod';
-import logger from "@system/logger";
 import type { FileDownload } from "../api/modrinth";
 import type { LaunchConfig } from "./launch_config";
 
@@ -29,6 +27,7 @@ type ValidateModsArgs = {}
 
 const commands = {
   "start_auth_server": null,
+  "close_auth_server": z.object({ port: z.number().positive() }),
 
   "play": z.object({}),
   "stop": null,
@@ -59,15 +58,7 @@ const runInvoke = async <T = void>(command: keyof typeof commands, args: InvokeA
   return invoke<T>(command, data);
 }
 
-export const closeAuthServer = async (port: number | undefined) => {
-  if (port === undefined) return;
-  try {
-    const client = await getClient();
-    await client.get(`http://localhost:${port}/exit`)
-  } catch (error) {
-    logger.warn("Failed to close auth server or server war already closed!");
-  }
-}
+export const closeAuthServer = async (port: number) => runInvoke("close_auth_server", { port });
 export const startAuthServer = () => runInvoke<number>("start_auth_server", undefined);
 
 export const startGame = (settings: LaunchConfig) => runInvoke("play", settings);

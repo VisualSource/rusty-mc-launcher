@@ -9,9 +9,8 @@ import {
   CardTitle,
 } from "@component/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
-import { ScrollArea, ScrollBar } from "@component/ui/scroll-area";
 import { Button } from "@component/ui/button";
-import PatchNotesRoot from "./PatchNotesRoot";
+
 
 type PatchNodes = {
   version: number;
@@ -23,6 +22,7 @@ type PatchNodes = {
       url: string;
       title: string;
     };
+    shortText: string;
     contentPath: string;
     id: string;
   }[];
@@ -34,40 +34,36 @@ const PatchNotes: React.FC = () => {
     queryFn: () =>
       fetch("https://launchercontent.mojang.com/v2/javaPatchNotes.json")
         .then((value) => value.json() as Promise<PatchNodes>)
-        .then((value) => value.entries),
+        .then((value) => value.entries.slice(0, 10)),
   });
 
   if (error) throw new Error("Failed to load patch notes");
 
   return (
-    <PatchNotesRoot>
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex w-max flex-nowrap space-x-4 p-4">
-          {data.slice(0, 8).map((value) => (
-            <Card className="relative w-80" key={value.id}>
-              <CardHeader>
-                <CardTitle> {value.title}</CardTitle>
-                <CardDescription>{value.type}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <Avatar className="h-56 w-full rounded-none">
-                  <AvatarImage
-                    src={`https://launchercontent.mojang.com${value.image.url}`}
-                    alt={value.image.title}
-                    className="rounded-none"
-                  />
-                  <AvatarFallback className="rounded-none">
-                    <GanttChartSquare />
-                  </AvatarFallback>
-                </Avatar>
-                <Button>View Notes</Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-    </PatchNotesRoot>
+    <>
+      {data.map((value) => (
+        <Card className="relative w-96" key={value.id}>
+          <CardHeader>
+            <CardTitle> {value.title}</CardTitle>
+            <CardDescription>{value.type}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Avatar className="h-56 w-full rounded-none">
+              <AvatarImage
+                src={`https://launchercontent.mojang.com${value.image.url}`}
+                alt={value.image.title}
+                className="rounded-none"
+              />
+              <AvatarFallback className="rounded-none">
+                <GanttChartSquare />
+              </AvatarFallback>
+            </Avatar>
+            <p className="text-wrap text-sm">{value.shortText}</p>
+            <Button>View Notes</Button>
+          </CardContent>
+        </Card>
+      ))}
+    </>
   );
 };
 

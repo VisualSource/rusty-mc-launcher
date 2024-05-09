@@ -66,20 +66,8 @@ export const getPCA = async () => {
         auth.debug("Account has been removed");
         break;
       }
-      /*case EventType.INITIALIZE_END: {
-        if (pca.getActiveAccount()) break;
-
-        const accounts = pca.getAllAccounts();
-        const account = accounts.at(0);
-        if (!account) break;
-
-        pca.setActiveAccount(account);
-        break;
-      }*/
     }
   });
-
-  console.log(pca.getActiveAccount(), pca.getAllAccounts());
 
   if (!pca.getActiveAccount()) {
     const accounts = pca.getAllAccounts();

@@ -1,46 +1,72 @@
 import { ErrorBoundary } from "react-error-boundary";
 import { Suspense } from "react";
 
-import {
-  PatchNotesError,
-  PatchNotesLoading,
-} from "./content/patchnotes/patchNotesFallback";
+import { PatchNotesLoading, } from "./content/patchnotes/patchNotesFallback";
+import Favorites, { FavoritesLoading, } from "./content/Favorites";
 import { ScrollArea, ScrollBar } from "@component/ui/scroll-area";
 import PatchNotes from "./content/patchnotes/PatchNotes";
+import { ErrorFallback } from "./content/ErrorFallback";
 import { TypographyH3 } from "@component/ui/typography";
 import { Separator } from "@component/ui/separator";
-import Favorites, {
-  FavoritesErrored,
-  FavoritesLoading,
-} from "./content/Favorites";
+import ModPacks from "./content/ModPacks";
 
 const LibraryRoot: React.FC = () => {
   return (
-    <ScrollArea>
-      <div className="container py-4 text-zinc-50">
-        <section className="flex flex-col">
-          <div className="flex items-center gap-4 pb-2 pt-4">
-            <TypographyH3>Favorites</TypographyH3>
-            <Separator className="dark:bg-zinc-50" />
-          </div>
+    <div className="container py-4 text-zinc-50 scrollbar overflow-y-scroll overflow-x-hidden w-full">
+
+      <section className="flex flex-col">
+        <div className="flex items-center gap-4 pb-2 pt-4">
+          <TypographyH3>Favorites</TypographyH3>
+          <Separator className="dark:bg-zinc-50" />
+        </div>
+        <ErrorBoundary fallbackRender={ErrorFallback}>
           <ScrollArea className="h-80 w-full whitespace-nowrap">
             <div className="flex w-max space-x-4 p-4">
-              <ErrorBoundary fallback={<FavoritesErrored />}>
-                <Suspense fallback={<FavoritesLoading />}>
-                  <Favorites />
-                </Suspense>
-              </ErrorBoundary>
+              <Suspense fallback={<FavoritesLoading />}>
+                <Favorites />
+              </Suspense>
             </div>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
-        </section>
-        <ErrorBoundary fallback={<PatchNotesError />}>
-          <Suspense fallback={<PatchNotesLoading />}>
-            <PatchNotes />
-          </Suspense>
         </ErrorBoundary>
-      </div>
-    </ScrollArea>
+      </section>
+
+
+      <section className="flex flex-col w-full">
+        <div className="flex items-center gap-4 whitespace-nowrap pb-2 pt-4">
+          <TypographyH3>Patch Notes</TypographyH3>
+          <Separator className="dark:bg-zinc-50" />
+        </div>
+        <ErrorBoundary fallbackRender={ErrorFallback}>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex w-max flex-nowrap space-x-4 p-4">
+              <Suspense fallback={<PatchNotesLoading />}>
+                <PatchNotes />
+              </Suspense>
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </ErrorBoundary>
+      </section>
+
+      <section className="flex flex-col w-full">
+        <div className="flex items-center gap-4 whitespace-nowrap pb-2 pt-4">
+          <TypographyH3>Popular modpacks</TypographyH3>
+          <Separator className="dark:bg-zinc-50" />
+        </div>
+        <ErrorBoundary fallbackRender={ErrorFallback}>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex w-max flex-nowrap space-x-4 p-4">
+              <Suspense fallback={<PatchNotesLoading />}>
+                <ModPacks />
+              </Suspense>
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </ErrorBoundary>
+      </section>
+    </div>
+
   );
 };
 

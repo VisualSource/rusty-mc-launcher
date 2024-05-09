@@ -90,6 +90,7 @@ fn main() {
         .manage(state::TauriState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             commands::start_auth_server,
+            commands::close_auth_server,
             commands::play,
             commands::stop,
             commands::is_game_running,

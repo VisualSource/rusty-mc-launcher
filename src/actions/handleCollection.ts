@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 
 import { queryClient } from "@/lib/config/queryClient";
 import { CATEGORIES_KEY } from "@hook/keys";
-import categories from "@/lib/models/categories";
+//import categories from "@/lib/models/categories";
 
 const handleCollections: ActionFunction = async ({ request }) => {
   const data = await request.formData();
@@ -20,10 +20,10 @@ const handleCollections: ActionFunction = async ({ request }) => {
         return new Response(null, { status: 400 });
       }
 
-      await categories.execute("UPDATE %table% Set name = ? WHERE id = ?", [
-        name,
-        id,
-      ]);
+      /* await categories.execute("UPDATE %table% Set name = ? WHERE id = ?", [
+         name,
+         id,
+       ]);*/
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
       break;
@@ -39,10 +39,10 @@ const handleCollections: ActionFunction = async ({ request }) => {
         return new Response(null, { status: 400 });
       }
 
-      await categories.execute("DELETE FROM %table% WHERE id = ?;", [id]);
+      /*await categories.execute("DELETE FROM %table% WHERE id = ?;", [id]);
       await categories.execute("DELETE FROM %table% WHERE group_id = ?;", [
         group_id,
-      ]);
+      ]);*/
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
 
@@ -52,7 +52,7 @@ const handleCollections: ActionFunction = async ({ request }) => {
       const name = data.get("collection-name")?.toString();
       if (!name) return new Response(null, { status: 400 });
 
-      const result = await categories.execute<{ max: number }>(
+      /*const result = await categories.execute<{ max: number }>(
         "SELECT MAX(group_id) as max FROM %table%;",
       );
       const group_id = ((result?.at(0) as { max: number })?.max ?? 1) + 1;
@@ -61,7 +61,7 @@ const handleCollections: ActionFunction = async ({ request }) => {
         crypto.randomUUID(),
         group_id,
         name,
-      ]);
+      ]);*/
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
       break;

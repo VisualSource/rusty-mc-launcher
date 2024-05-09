@@ -3,7 +3,6 @@
  * Licensed under the MIT License.
  */
 import { once, type UnlistenFn } from "@tauri-apps/api/event";
-import { startAuthServer } from "@/lib/system/commands";
 import {
   CommonAuthorizationCodeRequest,
   AuthorizationCodeClient,

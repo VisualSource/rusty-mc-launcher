@@ -7,7 +7,7 @@ use minecraft_launcher_lib::{
     FileDownload,
 };
 
-use crate::oauth::start;
+use crate::oauth::{cancel, start};
 use std::path::PathBuf;
 use tauri::Window;
 
@@ -23,6 +23,12 @@ pub async fn start_auth_server(window: Window) -> Result<u16, Error> {
     })?;
     debug!("Starting Auth Server on port: {}", port);
     Ok(port)
+}
+
+#[tauri::command]
+pub fn close_auth_server(port: u16) -> Result<(), Error> {
+    debug!("Closing auth server on port: {port}");
+    cancel(port).map_err(Error::from)
 }
 
 // Game Function commands

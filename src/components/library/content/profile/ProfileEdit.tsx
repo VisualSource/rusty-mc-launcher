@@ -1,4 +1,4 @@
-import { useLoaderData, useSubmit } from "react-router-dom";
+import { useOutletContext, useSubmit, } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 import ProfileModifyRoot, { resolver } from "./ProfileModifyRoot";
@@ -7,7 +7,8 @@ import { ScrollArea } from "@component/ui/scroll-area";
 import { Form } from "@/components/ui/form";
 
 const ProfileEdit: React.FC = () => {
-  const data = useLoaderData() as MinecraftProfile;
+  const data = useOutletContext() as MinecraftProfile;
+
   const submit = useSubmit();
   const form = useForm<MinecraftProfile>({
     resolver,
@@ -22,7 +23,7 @@ const ProfileEdit: React.FC = () => {
   };
 
   return (
-    <ScrollArea>
+    <ScrollArea className="bg-zinc-900 rounded-md shadow-lg">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

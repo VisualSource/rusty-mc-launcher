@@ -13,6 +13,7 @@ use log::error;
 
 use crate::errors::Error;
 
+const EXIT: [u8; 4] = [1, 3, 3, 7];
 const HTTP_RESPONSE: &str = "
 <html>
     <head>
@@ -156,6 +157,10 @@ fn handle_connection(
     let mut buffer = [0; 4048];
     let _ = conn.read(&mut buffer)?;
 
+    if buffer[..4] == EXIT {
+        return Ok(RequestResult::Exit);
+    }
+
     let mut headers = [httparse::EMPTY_HEADER; 16];
     let mut request = httparse::Request::new(&mut headers);
     request
@@ -211,4 +216,14 @@ fn handle_connection(
     conn.flush()?;
 
     Ok(result)
+}
+
+pub fn cancel(port: u16) -> Result<(), std::io::Error> {
+    // Using tcp instead of something global-ish like an AtomicBool,
+    // so we don't have to dive into the set_nonblocking madness.
+    let mut stream = TcpStream::connect(SocketAddr::from(([127, 0, 0, 1], port)))?;
+    stream.write_all(&EXIT)?;
+    stream.flush()?;
+
+    Ok(())
 }

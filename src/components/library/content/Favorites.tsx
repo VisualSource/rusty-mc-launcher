@@ -1,22 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { AlertTriangle, Book } from "lucide-react";
-
+import { Book } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import profiles, { type MinecraftProfile } from "@/lib/models/profiles";
-import { TypographyH3 } from "@/components/ui/typography";
+import { CATEGORY_KEY, CATEGORIES_ENUM } from "@hook/keys";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CATEGORY_KEY } from "@hook/keys";
+import { profile } from "@lib/models/profiles";
 import PlayButton from "@/components/ui/play";
-
-export const FavoritesErrored: React.FC = () => {
-  return (
-    <div className="flex w-full flex-col items-center justify-center">
-      <AlertTriangle />
-      <TypographyH3>Failed to load Favorites</TypographyH3>
-    </div>
-  );
-};
+import DB from "@lib/api/db";
 
 export const FavoritesLoading: React.FC = () => {
   return (
@@ -38,14 +28,11 @@ export const FavoritesLoading: React.FC = () => {
 
 const Favorites: React.FC = () => {
   const { data, error } = useSuspenseQuery({
-    queryKey: [CATEGORY_KEY, 1],
+    queryKey: [CATEGORY_KEY, CATEGORIES_ENUM.Favorites],
     queryFn: async () => {
-      const result = await profiles.execute<MinecraftProfile>(
-        `SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = 1`,
-        [],
-        true,
-      );
-      return result ?? [];
+      const db = DB.use();
+      const result = await db.select<unknown[]>(`SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = ?`, [CATEGORIES_ENUM.Favorites]);
+      return result.map(item => profile.schema.parse(item));
     },
   });
 

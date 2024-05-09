@@ -1,8 +1,7 @@
-import { Link, To, useAsyncValue, useSearchParams } from "react-router-dom";
+import { Link, useAsyncValue, useSearchParams } from "react-router-dom";
+import { Download, Heart, RefreshCcw } from "lucide-react";
 import { formatRelative } from 'date-fns/formatRelative';
-import { Card, CardContent, CardHeader } from "@component/ui/card";
-import type { SearchResults } from "@lib/api/modrinth/types.gen";
-import { Badge } from "@component/ui/badge";
+
 import {
   Pagination,
   PaginationContent,
@@ -11,21 +10,22 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "../ui/pagination";
-import { TypographyH3 } from "../ui/typography";
-import { Download, Heart, RefreshCcw } from "lucide-react";
-
-const next = (params: URLSearchParams, offset: number) => {
-  params.set("offset", (offset + 18).toString());
-  return params.toString();
-}
+} from "@component/ui/pagination";
+import { Card, CardContent, CardHeader } from "@component/ui/card";
+import type { SearchResults } from "@lib/api/modrinth/types.gen";
+import { TypographyH3 } from "@component/ui/typography";
+import { Badge } from "@component/ui/badge";
+import { range } from '@lib/range';
 
 const page = (total: number, limit: number, offset: number) => {
   return offset >= total ? 1 : Math.ceil(offset / limit) + 1;
 }
 
-const range = (start: number, end: number, step: number = 1) => {
-  return Array(end - start + 1).fill(0).map((_, idx) => start + (idx * step));
+const getQuery = (params: URLSearchParams, offset: number, max: number) => {
+  if (offset < 0) offset = 0;
+  if (offset > max) offset = max;
+  params.set("offset", offset.toString());
+  return params.toString();
 }
 
 const WorkshopSearchResults: React.FC = () => {
@@ -91,32 +91,58 @@ const WorkshopSearchResults: React.FC = () => {
         <PaginationContent>
 
           <PaginationItem>
-            <PaginationPrevious to={{ search: `offset=${data.offset - data.limit}` }} />
+            <PaginationPrevious to={{
+              search: getQuery(params, data.offset - data.limit, data.total_hits)
+            }} />
           </PaginationItem>
 
           <PaginationItem>
-            <PaginationLink isActive={currentPage === 1} to={{}}>1</PaginationLink>
+            <PaginationLink isActive={currentPage === 1} to={{
+              search: "offset=0"
+            }}>1</PaginationLink>
           </PaginationItem>
 
           {currentPage <= 5 ? (
             <>
-              {range(1, 5, data.limit).map((offset) => (
-                <PaginationItem key={`offset_${offset}`}>
-                  <PaginationLink isActive={currentPage === page(data.total_hits, data.limit, offset)} to={{ search: `offset=${offset}` }}>{page(data.total_hits, data.limit, offset)}</PaginationLink>
-                </PaginationItem>
-              ))}
+              {range(1, 5).map((offset) => {
+                const itemPage = page(data.total_hits, data.limit, offset * data.limit);
+                return (
+                  <PaginationItem key={`offset_${offset * data.limit}`}>
+                    <PaginationLink isActive={currentPage === itemPage} to={{
+                      search: getQuery(params, offset * data.limit, data.total_hits)
+                    }}>{itemPage}</PaginationLink>
+                  </PaginationItem>
+                )
+              })}
               <PaginationItem>
                 <PaginationEllipsis />
               </PaginationItem>
+            </>
+          ) : currentPage >= (maxPages - 4) ? (
+            <>
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+              {range(-5, -2).map((offset) => {
+                const i = data.total_hits + (data.limit * offset);
+                const itemsPage = page(data.total_hits, data.limit, i);
+                return (
+                  <PaginationItem key={`offset_${i}`}>
+                    <PaginationLink isActive={currentPage === itemsPage} to={{
+                      search: getQuery(params, i, data.total_hits)
+                    }}>{itemsPage}</PaginationLink>
+                  </PaginationItem>
+                )
+              })}
             </>
           ) : (
             <>
               <PaginationItem>
                 <PaginationEllipsis />
               </PaginationItem>
-              {range(-1, 1, 18).map((offset) => (
-                <PaginationItem key={`offset_${offset + data.offset}`}>
-                  <PaginationLink isActive={currentPage === page(data.total_hits, data.limit, offset + data.offset)} to={{ search: `offset=${(offset + data.offset)}` }}>{page(data.total_hits, data.limit, offset + data.limit)}</PaginationLink>
+              {range(-1, 1).map((offset) => (
+                <PaginationItem key={`offset_${data.offset + (data.limit * offset)}`}>
+                  <PaginationLink isActive={currentPage === page(data.total_hits, data.limit, data.offset + (data.limit * offset))} to={{ search: `offset=${data.offset + (data.limit * offset)}` }}>{page(data.total_hits, data.limit, data.offset + (data.limit * offset))}</PaginationLink>
                 </PaginationItem>
               ))}
               <PaginationItem>
@@ -126,13 +152,14 @@ const WorkshopSearchResults: React.FC = () => {
           )}
 
           <PaginationItem>
-            <PaginationLink isActive={currentPage === maxPages} to={{ search: `offset=${data.total_hits - 18}` }}>{maxPages}</PaginationLink>
+            <PaginationLink isActive={currentPage === maxPages} to={{
+              search: `offset=${data.total_hits}`
+            }}>{maxPages}</PaginationLink>
           </PaginationItem>
 
           <PaginationItem>
             <PaginationNext to={{
-              pathname: "/workshop/search",
-              search: `offset=${data.offset + data.limit}`
+              search: getQuery(params, data.offset + data.limit, data.total_hits)
             }} />
           </PaginationItem>
 
