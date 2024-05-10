@@ -27,7 +27,6 @@ export const profile = {
       }
     }).pipe(z.object({ width: z.number(), height: z.number() })).or(z.null()),
     active: z.coerce.boolean().default(false),
-    loader: z.enum(["fabric", "forge", "vanilla"]).default("vanilla"),
   })
 }
 

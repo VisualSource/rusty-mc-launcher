@@ -30,12 +30,10 @@ const useUser = () => {
   });
 
   const login = useCallback(async () => {
-    let port
+    let port = null;
     try {
       port = await startAuthServer();
-
       auth.trace(`Watching login port at: ${port}`);
-
       await instance.loginPopup({
         scopes: ["User.Read"],
         extraScopesToConsent: ["XboxLive.SignIn", "XboxLive.offline_access"],
@@ -43,13 +41,13 @@ const useUser = () => {
         prompt: "select_account",
       });
     } finally {
-      closeAuthServer(port);
+      if (port !== null) closeAuthServer(port);
     }
   }, [instance]);
 
   const logout = useCallback(async (account: AccountInfo | null) => {
     if (!account) return;
-    let port;
+    let port = null;
     try {
       port = await startAuthServer();
       auth.trace("Watching logout port at: %d", port);
@@ -58,7 +56,7 @@ const useUser = () => {
         account
       });
     } finally {
-      closeAuthServer(port);
+      if (port !== null) closeAuthServer(port);
     }
   }, [instance]);
 

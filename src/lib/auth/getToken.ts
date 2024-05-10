@@ -9,16 +9,17 @@ const getToken = async (
   return instance
     .acquireTokenSilent(request)
     .catch(async () => {
-      let port;
+      let port = null;
       try {
         port = await startAuthServer();
         logger.debug(`Login port: (${port})`);
-        return instance.acquireTokenPopup({
+        const token = await instance.acquireTokenPopup({
           ...request,
           redirectUri: `http://localhost:${port}`,
         });
+        return token;
       } finally {
-        closeAuthServer(port);
+        if (port !== null) closeAuthServer(port);
       }
     })
     .then((e) => e.accessToken);

@@ -55,13 +55,13 @@ export const NavbarUpper: React.FC = () => {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button className="flex justify-center items-center bg-white text-black px-3 mr-2">
-                            <span className="text-sm mr-1">{account?.details.name}</span>
+                            <span className="text-sm mr-1">{account?.details.name ?? "Login"}</span>
                             <ChevronDown className="h-4 w-4" />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                         <UnauthenticatedTemplate>
-                            <DropdownMenuItem onClick={() => login()}>Logint</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => login()}>Login</DropdownMenuItem>
                         </UnauthenticatedTemplate>
                         <AuthenticatedTemplate>
                             <DropdownMenuItem onClick={() => logout(msAccount)}>Signout</DropdownMenuItem>

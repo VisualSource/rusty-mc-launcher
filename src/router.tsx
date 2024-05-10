@@ -28,6 +28,7 @@ import updateProfile from "./actions/updateProfile";
 import getProfile from "./loaders/getProfile";
 import updateCollection from "./actions/updateCollection";
 import Workshop from "./components/workshop/Workshop";
+import ProfileContent from "./components/library/content/profile/ProfileContent";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -38,13 +39,8 @@ const router = createBrowserRouter(
           element={<Navigate to="/" />}
           action={updateCollection}
         />
-        <Route
-          index
-          element={<LibraryRoot />}
-          errorElement={<ProfileError message="Failed to load root" />}
-        />
-        <Route
-          path="/collections"
+        <Route index element={<LibraryRoot />} errorElement={<ProfileError message="Failed to load root" />} />
+        <Route path="/collections"
           action={handleCollections}
           loader={getCollections}
           element={<Collections />}
@@ -61,8 +57,9 @@ const router = createBrowserRouter(
           errorElement={<ProfileError message="Failed to load profile." />}
           loader={getProfile}
           element={<Profile />}>
+          <Route index element={<ProfileContent />} />
           <Route
-            path="/profile/:id/edit"
+            path="edit"
             action={updateProfile}
             element={<ProfileEdit />}
           />
@@ -73,6 +70,7 @@ const router = createBrowserRouter(
       <Route path="/settings" element={<Settings />} />
 
       <Route path="/downloads" element={<Download />} />
+
       <Route path="/workshop">
         <Route index element={<Workshop />} />
 
