@@ -1,4 +1,4 @@
-use crate::errors::LauncherLibError;
+use crate::errors::LauncherError;
 use serde::Deserialize;
 
 const LAUNCHER_META: &str = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
@@ -30,7 +30,7 @@ struct VersionManifest {
 
 pub async fn get_launcher_manifest(
     version: Option<String>,
-) -> Result<VersionManifestItem, LauncherLibError> {
+) -> Result<VersionManifestItem, LauncherError> {
     let resp = reqwest::get(LAUNCHER_META)
         .await?
         .json::<VersionManifest>()
@@ -42,7 +42,7 @@ pub async fn get_launcher_manifest(
         return Ok(data.to_owned());
     }
 
-    Err(LauncherLibError::NotFound("minecraft version".to_string()))
+    Err(LauncherError::NotFound("minecraft version".to_string()))
 }
 
 #[cfg(test)]

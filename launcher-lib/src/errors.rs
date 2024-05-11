@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum LauncherLibError {
+pub enum LauncherError {
     #[error(transparent)]
     Http(#[from] reqwest::Error),
     #[error(transparent)]

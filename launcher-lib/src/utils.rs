@@ -9,7 +9,7 @@ use tokio::fs::{create_dir_all, remove_file, File};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::mpsc;
 
-use crate::errors::LauncherLibError;
+use crate::errors::LauncherError;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChannelMessage {
@@ -106,7 +106,7 @@ pub mod fabric {
         loader_version: &str,
         game_dir: &std::path::Path,
         runtime: String,
-    ) -> Result<(), LauncherLibError> {
+    ) -> Result<(), LauncherError> {
         event!(&channel,"start", {
             "key": "modloader",
             "msg":"Installing Fabric"
@@ -123,7 +123,7 @@ pub mod fabric {
                 .installer
                 .into_iter()
                 .find(|x| x.stable)
-                .ok_or(LauncherLibError::NotFound(
+                .ok_or(LauncherError::NotFound(
                     "Failed to find statle fabric installer".to_string(),
                 ))?;
 
@@ -144,10 +144,10 @@ pub mod fabric {
 
         let args = [
             "-jar",
-            temp.to_str().ok_or(LauncherLibError::PathBufError)?,
+            temp.to_str().ok_or(LauncherError::PathBufError)?,
             "client",
             "-dir",
-            game_dir.to_str().ok_or(LauncherLibError::PathBufError)?,
+            game_dir.to_str().ok_or(LauncherError::PathBufError)?,
             "-mcversion",
             mc,
             "-loader",
@@ -233,7 +233,7 @@ pub async fn download_file(
     url: &String,
     dir: &PathBuf,
     sha1: Option<&String>,
-) -> Result<String, LauncherLibError> {
+) -> Result<String, LauncherError> {
     if let Some(p) = dir.parent() {
         if !p.exists() {
             create_dir_all(&p).await?;
@@ -277,7 +277,7 @@ pub async fn download_file(
 
     if let Some(sha) = sha1 {
         if &result != sha {
-            return Err(LauncherLibError::Sha1Error);
+            return Err(LauncherError::Sha1Error);
         }
     }
 

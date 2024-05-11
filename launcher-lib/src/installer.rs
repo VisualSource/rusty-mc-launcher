@@ -13,7 +13,7 @@ use crate::errors::LauncherLibError;
 use crate::manifest::asset_index::AssetIndex;
 use crate::manifest::{Manifest, RuleCondition};
 use crate::metadata::get_launcher_manifest;
-use crate::runtime::Jvm;
+
 use crate::utils::fabric;
 use crate::utils::{self, download_file, ChannelMessage};
 
@@ -80,8 +80,7 @@ impl Installer {
             loader,
             version,
             loader_version,
-            game_dir: game_dir
-                .unwrap_or(ClientBuilder::get_minecraft_dir().expect("Failed to get game dir.")),
+            game_dir: game_dir.expect("Failed to get game dir."),
         }
     }
 
@@ -503,11 +502,11 @@ impl Installer {
         }
 
         // java
-        if let Some(java) = &manifest.java_version {
+        /*if let Some(java) = &manifest.java_version {
             let jvm = Jvm::new(self.channel.clone());
             jvm.install_jvm(java.component.clone(), &self.game_dir)
                 .await?;
-        }
+        }*/
 
         // debug!("{:#?}",manifest.arguments);
 
