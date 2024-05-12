@@ -21,18 +21,18 @@ pub enum RuleCondition {
 }
 
 impl RuleCondition {
-    pub fn parse(&self, state: Option<&super::state::State>) -> Option<bool> {
+    pub fn parse(&self, config: Option<&super::Config>) -> Option<bool> {
         match self {
             Self::Features { action, features } => {
-                let state = state?;
+                let config = config?;
                 let result = features
                     .iter()
                     .all(|(feature, value)| match feature.as_str() {
-                        "is_demo_user" => state.is_demo_user == *value,
-                        "has_custom_resolution" => state.has_custom_resolution == *value,
-                        "is_quick_play_realms" => state.is_quick_play_realms == *value,
-                        "has_quick_plays_support" => state.has_quick_plays_support == *value,
-                        "is_quick_play_multiplayer" => state.is_quick_play_multiplayer == *value,
+                        "is_demo_user" => *value == config.is_demo_user(),
+                        "has_custom_resolution" => *value == config.has_custom_resolution(),
+                        "is_quick_play_realms" => *value == config.is_quick_play_realms(),
+                        "has_quick_plays_support" => *value == config.has_quick_plays_support(),
+                        "is_quick_play_multiplayer" => *value == config.is_quick_play_multiplayer(),
                         _ => false,
                     });
 
@@ -69,36 +69,32 @@ pub enum Arg {
 }
 
 impl Arg {
-    fn replace_arg(flag: &String, flags: &std::collections::HashMap<String, String>) -> String {
+    fn replace_arg(flag: &String, config: &super::Config) -> String {
         match lazy_regex::regex_captures!(r"\$\{(?P<target>.+)\}", flag) {
-            Some((_, target)) => match flags.get(target) {
+            Some((_, target)) => match config.get_replacement(target) {
                 Some(flag_value) => {
                     let key = format!("${{{}}}", target);
-                    flag.replace(&key, flag_value)
+                    flag.replace(&key, &flag_value)
                 }
                 None => flag.to_owned(),
             },
             _ => flag.to_owned(),
         }
     }
-    fn parse(
-        &self,
-        state: &super::state::State,
-        flags: &std::collections::HashMap<String, String>,
-    ) -> Option<String> {
+    fn parse(&self, config: &super::Config) -> Option<String> {
         match self {
-            Self::Flag(flag) => Some(Self::replace_arg(flag, flags)),
+            Self::Flag(flag) => Some(Self::replace_arg(flag, config)),
             Arg::Rule { rules, value } => {
                 let result = rules
                     .iter()
-                    .all(|condition| condition.parse(Some(state)).unwrap_or(false));
+                    .all(|condition| condition.parse(Some(config)).unwrap_or(false));
 
                 if result {
                     let flag = match value {
                         RuleValue::Item(item) => item.to_owned(),
                         RuleValue::List(items) => items
                             .iter()
-                            .map(|flag| Arg::replace_arg(flag, flags))
+                            .map(|flag| Arg::replace_arg(flag, config))
                             .collect::<Vec<String>>()
                             .join(" "),
                     };
@@ -121,24 +117,19 @@ pub struct Arguments {
 }
 
 impl Arguments {
-    pub fn parse_args(
-        list: &[Arg],
-        state: &super::state::State,
-        flags: &std::collections::HashMap<String, String>,
-    ) -> Vec<String> {
+    pub fn parse_args(list: &[Arg], config: &super::Config) -> Vec<String> {
         list.iter()
-            .filter_map(|arg| arg.parse(state, flags))
+            .filter_map(|arg| arg.parse(config))
             .collect::<Vec<String>>()
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::launcher::Config;
+
     use super::*;
-    use crate::launcher::state::State;
-    use std::collections::HashMap;
-    const MINECRAFT_ARGUMENTS_1_20_6: &str = r#"
-    {
+    const MINECRAFT_ARGUMENTS_1_20_6: &str = r#"{
         "game": [
           "--username",
           "${auth_player_name}",
@@ -264,24 +255,35 @@ mod tests {
     fn test_game_args_parse() {
         let minecraft_1_20_6 = test_value(MINECRAFT_ARGUMENTS_1_20_6);
 
-        let state = State::default();
-        let flags: HashMap<String, String> = std::collections::HashMap::from_iter([
-            ("auth_player_name".to_string(), "TEST_USERNAME".to_string()),
-            ("version_name".to_string(), "1.20".to_string()),
-            ("game_directory".to_string(), "C://".to_string()),
-            ("assets_root".to_string(), "C://".to_string()),
-            ("assets_index_name".to_string(), "16".to_string()),
-            ("auth_uuid".to_string(), "uuid".to_string()),
-            ("auth_access_token".to_string(), "token".to_string()),
-            ("clientid".to_string(), "CLIENT_ID".to_string()),
-            ("auth_xuid".to_string(), "XUID".to_string()),
-            ("user_type".to_string(), "msa".to_string()),
-            ("version_type".to_string(), "VERSION".to_string()),
-        ]);
+        let config = Config {
+            auth_player_name: "TEST_USERNAME".to_string(),
+            auth_access_token: "token".to_string(),
+            version_name: "1.20".to_string(),
+            game_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
+            runtime_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
+            version: "1.20".to_string(),
+            additonal_java_arguments: None,
+            resolution_height: None,
+            resolution_width: None,
+            quick_play_multiplayer: None,
+            quick_play_path: None,
+            quick_play_realms: None,
+            demo: false,
+            quick_play_single_player: None,
+            launcher_name: None,
+            launcher_version: None,
+            assets_index_name: "16".to_string(),
+            auth_uuid: "uuid".to_string(),
+            clientid: "CLIENT_ID".to_string(),
+            auth_xuid: "XUID".to_string(),
+            user_type: "msa".to_string(),
+            version_type: "VERSION".to_string(),
+            classpath: String::new(),
+        };
 
         println!("{:#?}", minecraft_1_20_6);
 
-        let result = Arguments::parse_args(&minecraft_1_20_6.game, &state, &flags);
+        let result = Arguments::parse_args(&minecraft_1_20_6.game, &config);
 
         assert_eq!(
             result,
@@ -316,26 +318,33 @@ mod tests {
     fn test_game_args_parse_with_res() {
         let minecraft_1_20_6 = test_value(MINECRAFT_ARGUMENTS_1_20_6);
 
-        let mut state = State::default();
-        state.has_custom_resolution = Some(true);
+        let config = Config {
+            auth_player_name: "TEST_USERNAME".to_string(),
+            auth_access_token: "token".to_string(),
+            version_name: "1.20".to_string(),
+            game_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
+            runtime_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
+            version: "1.20".to_string(),
+            additonal_java_arguments: None,
+            resolution_height: Some("542".to_string()),
+            resolution_width: Some("854".to_string()),
+            quick_play_multiplayer: None,
+            quick_play_path: None,
+            quick_play_realms: None,
+            demo: false,
+            quick_play_single_player: None,
+            launcher_name: None,
+            launcher_version: None,
+            assets_index_name: "16".to_string(),
+            auth_uuid: "uuid".to_string(),
+            clientid: "CLIENT_ID".to_string(),
+            auth_xuid: "XUID".to_string(),
+            user_type: "msa".to_string(),
+            version_type: "VERSION".to_string(),
+            classpath: String::new(),
+        };
 
-        let flags: HashMap<String, String> = std::collections::HashMap::from_iter([
-            ("auth_player_name".to_string(), "TEST_USERNAME".to_string()),
-            ("version_name".to_string(), "1.20".to_string()),
-            ("game_directory".to_string(), "C://".to_string()),
-            ("assets_root".to_string(), "C://".to_string()),
-            ("assets_index_name".to_string(), "16".to_string()),
-            ("auth_uuid".to_string(), "uuid".to_string()),
-            ("auth_access_token".to_string(), "token".to_string()),
-            ("clientid".to_string(), "CLIENT_ID".to_string()),
-            ("auth_xuid".to_string(), "XUID".to_string()),
-            ("user_type".to_string(), "msa".to_string()),
-            ("version_type".to_string(), "VERSION".to_string()),
-            ("resolution_width".to_string(), "854".to_string()),
-            ("resolution_height".to_string(), "542".to_string()),
-        ]);
-
-        let result = Arguments::parse_args(&minecraft_1_20_6.game, &state, &flags);
+        let result = Arguments::parse_args(&minecraft_1_20_6.game, &config);
 
         assert_eq!(
             result,
@@ -371,18 +380,33 @@ mod tests {
     fn test_java_args_parse() {
         let minecraft_1_20_6 = test_value(MINECRAFT_ARGUMENTS_1_20_6);
 
-        let state = State::default();
-        let flags: HashMap<String, String> = std::collections::HashMap::from_iter([
-            (
-                "natives_directory".to_string(),
-                "C://natives_directory".to_string(),
-            ),
-            ("launcher_name".to_string(), "TEST".to_string()),
-            ("launcher_version".to_string(), "0.0.0".to_string()),
-            ("classpath".to_string(), "C://classpath".to_string()),
-        ]);
+        let config = Config {
+            auth_player_name: "TEST_USERNAME".to_string(),
+            auth_access_token: "token".to_string(),
+            version_name: "1.20".to_string(),
+            game_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
+            runtime_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
+            version: "1.20".to_string(),
+            additonal_java_arguments: None,
+            resolution_height: Some("542".to_string()),
+            resolution_width: Some("854".to_string()),
+            quick_play_multiplayer: None,
+            quick_play_path: None,
+            quick_play_realms: None,
+            demo: false,
+            quick_play_single_player: None,
+            launcher_name: None,
+            launcher_version: None,
+            assets_index_name: "16".to_string(),
+            auth_uuid: "uuid".to_string(),
+            clientid: "CLIENT_ID".to_string(),
+            auth_xuid: "XUID".to_string(),
+            user_type: "msa".to_string(),
+            version_type: "VERSION".to_string(),
+            classpath: String::new(),
+        };
 
-        let result = Arguments::parse_args(&minecraft_1_20_6.jvm, &state, &flags);
+        let result = Arguments::parse_args(&minecraft_1_20_6.jvm, &config);
 
         assert_eq!(result,vec!["-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",  
         "-Djava.library.path=C://natives_directory",
