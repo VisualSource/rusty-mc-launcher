@@ -1,10 +1,11 @@
 pub mod arguments;
 mod state;
 use self::arguments::Arguments;
+use crate::state::AppState;
 use crate::{errors::LauncherError, manifest::Manifest};
 use normalize_path::NormalizePath;
 use serde::Deserialize;
-use std::{collections::HashMap, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 pub struct LaunchConfig {
@@ -204,19 +205,9 @@ impl Config {
     }
 }
 
-struct SystemConfig {
-    java: HashMap<String, String>,
-}
-
-impl SystemConfig {
-    fn get_java(&self, version: usize) -> Option<&String> {
-        self.java.get(&format!("JAVA_{}", version))
-    }
-}
-
 pub async fn start_game(
     launch_config: LaunchConfig,
-    system_config: SystemConfig,
+    system_config: &AppState,
 ) -> Result<(), LauncherError> {
     let (config, manifest) = Config::from(launch_config).await?;
 
@@ -247,23 +238,43 @@ pub async fn start_game(
 }
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::{path::PathBuf, str::FromStr};
     #[tokio::test]
     async fn test_start() {
-        let config = super::Config {
-            java_args: Vec::new(),
+        let settings = LaunchConfig {
             runtime_directory: PathBuf::from_str(
                 "C:\\Users\\Collin\\AppData\\Roaming\\com.modrinth.theseus\\meta",
             )
-            .expect("Failed to create path"),
+            .expect("Failed to make path"),
             game_directory: PathBuf::from_str(
                 "C:\\Users\\Collin\\AppData\\Roaming\\com.modrinth.theseus\\profiles\\g",
             )
-            .expect("Failed to create path"),
+            .expect("Failed to make path"),
             version: "1.20.6".to_string(),
+            auth_player_name: "USERNAME".to_string(),
+            auth_uuid: "UUID".to_string(),
+            auth_access_token: "ACCESS_TOKEN".to_string(),
+            auth_xuid: "XUID".to_string(),
+
+            demo: false,
+
+            additonal_java_arguments: Some(vec!["-Xmx2048M".to_string()]),
+
+            resolution_width: None,
+            resolution_height: None,
+            quick_play_path: None,
+            quick_play_single_player: None,
+            quick_play_realms: None,
+            quick_play_multiplayer: None,
         };
 
-        super::start_game(config)
+        let mut system = AppState::default();
+        system
+            .insert_java(21, PathBuf::from_str("C:\\Users\\Collin\\AppData\\Roaming\\com.modrinth.theseus\\meta\\java_versions\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe").expect("Failed to make path"))
+            .expect("Failed to insert");
+
+        start_game(settings, &system)
             .await
             .expect("Failed to build string");
     }

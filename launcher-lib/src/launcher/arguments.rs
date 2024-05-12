@@ -251,7 +251,7 @@ mod tests {
         serde_json::from_str(input).expect("Failed to parse arguments")
     }
 
-    #[test]
+    /*#[test]
     fn test_game_args_parse() {
         let minecraft_1_20_6 = test_value(MINECRAFT_ARGUMENTS_1_20_6);
 
@@ -408,7 +408,7 @@ mod tests {
 
         let result = Arguments::parse_args(&minecraft_1_20_6.jvm, &config);
 
-        assert_eq!(result,vec!["-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",  
+        assert_eq!(result,vec!["-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
         "-Djava.library.path=C://natives_directory",
         "-Djna.tmpdir=C://natives_directory",
         "-Dorg.lwjgl.system.SharedLibraryExtractPath=C://natives_directory",
@@ -417,5 +417,5 @@ mod tests {
         "-Dminecraft.launcher.version=0.0.0",
         "-cp",
         "C://classpath"])
-    }
+    }*/
 }

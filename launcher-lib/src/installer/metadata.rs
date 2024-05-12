@@ -29,14 +29,14 @@ struct VersionManifest {
 }
 
 pub async fn get_launcher_manifest(
-    version: Option<String>,
+    version: Option<&str>,
 ) -> Result<VersionManifestItem, LauncherError> {
     let resp = reqwest::get(LAUNCHER_META)
         .await?
         .json::<VersionManifest>()
         .await?;
 
-    let mc_version = version.unwrap_or(resp.latest.release);
+    let mc_version = version.unwrap_or(&resp.latest.release);
 
     if let Some(data) = resp.versions.iter().find(|x| x.id == mc_version) {
         return Ok(data.to_owned());
@@ -53,7 +53,7 @@ mod tests {
     async fn test_get_launcher_manifest() -> Result<(), ()> {
         let version = "1.17.1".to_string();
 
-        if let Ok(data) = get_launcher_manifest(Some(version.clone())).await {
+        if let Ok(data) = get_launcher_manifest(Some(&version)).await {
             print!("{:#?}", data);
 
             assert_eq!(data.id, version);

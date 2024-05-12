@@ -11,7 +11,7 @@ use tokio::sync::mpsc;
 
 use crate::errors::LauncherError;
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+/*#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChannelMessage {
     pub event: String,
     pub value: String,
@@ -61,7 +61,7 @@ pub mod event_internal {
             error!("{}", error);
         }
     }
-}
+}*/
 
 pub mod mods {
     use super::*;
@@ -107,10 +107,10 @@ pub mod fabric {
         game_dir: &std::path::Path,
         runtime: String,
     ) -> Result<(), LauncherError> {
-        event!(&channel,"start", {
+        /*event!(&channel,"start", {
             "key": "modloader",
             "msg":"Installing Fabric"
-        });
+        });*/
 
         let temp = temp_dir().join("fabricInstaller.jar").normalize();
         let content = reqwest::get(FABRIC_VERSIONS)
@@ -140,7 +140,7 @@ pub mod fabric {
             "file": "Fabric Jar"
         });
 
-        let exec = jvm::get_exec(&runtime, game_dir, true);
+        //let exec = jvm::get_exec(&runtime, game_dir, true);
 
         let args = [
             "-jar",
@@ -156,12 +156,12 @@ pub mod fabric {
             "-snapshot",
         ];
 
-        Command::new(exec)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .args(args)
-            .output()
-            .await?;
+        /*Command::new(exec)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .args(args)
+        .output()
+        .await?;*/
 
         remove_file(&temp).await?;
 
@@ -172,34 +172,6 @@ pub mod fabric {
 }
 pub mod jvm {
     use super::*;
-
-    pub fn get_exec(runtime: &String, game_dir: &std::path::Path, console: bool) -> PathBuf {
-        let platform = get_platform();
-
-        let cmd = if !console && consts::OS == "windows" {
-            "javaw"
-        } else {
-            "java"
-        };
-
-        let mut data = game_dir.join(format!(
-            "runtime/{0}/{1}/{0}/bin/{2}",
-            runtime, platform, cmd
-        ));
-
-        if consts::OS == "windows" {
-            data.set_extension("exe");
-        }
-
-        if !data.is_file() {
-            data = game_dir.join(format!(
-                "runtime/{0}/{1}/{0}/jre.bundle/Contents/Home/bin/{2}",
-                runtime, platform, cmd
-            ));
-        }
-
-        data.normalize()
-    }
 
     pub fn get_platform() -> String {
         match consts::OS {
