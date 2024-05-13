@@ -2,57 +2,390 @@ mod metadata;
 pub mod utils;
 use std::path::PathBuf;
 
-use crate::event;
+use crate::manifest;
+use crate::manifest::asset_index::AssetIndex;
+use crate::manifest::{Downloads, Library, Manifest};
 use crate::{errors::LauncherError, state::AppState};
+use async_zip::tokio::read::seek::ZipFileReader;
+use futures::StreamExt;
 use metadata::get_launcher_manifest;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
+use tokio::fs::{self, File, OpenOptions};
+use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
+use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use utils::ChannelMessage;
 #[derive(Debug, Deserialize)]
 pub struct InstallConfig {
-    profile_name: String,
     app_directory: PathBuf,
     version: String,
 }
-
-/***
- * Install Events
- *
- * Structure
- *      type: String,
- *      payload: object
- *  Types
- *
- *
- *
- */
 
 pub async fn install_minecraft(
     app: &mut AppState,
     config: InstallConfig,
     event_channel: mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherError> {
-    event!(&event_channel, "download", { "type": "status", "payload": { "message": "Starting minecraft install." } });
+    // event!(&event_channel, "download", { "type": "status", "payload": { "message": "Starting minecraft install." } });
 
-    let profile_dir = config.app_directory.join(config.profile_name);
-    let runtime_dir = config.app_directory.join("runtime");
+    let runtime_directory = config.app_directory.join("runtime");
+    let version_directory = runtime_directory.join("versions").join(&config.version);
 
-    let launcher_manifest = get_launcher_manifest(Some(&config.version)).await?;
-
-    let client_jar_name = format!("{}.jar", launcher_manifest.id);
-    let client_jar = runtime_dir
-        .join("versions")
-        .join(&launcher_manifest.id)
-        .join(&client_jar_name)
-        .normalize();
-    let client_json = runtime_dir
-        .join("versions")
-        .join(&launcher_manifest.id)
-        .join(format!("{}.json", launcher_manifest.id))
+    let client_manfiest_file = version_directory
+        .join(format!("{}.json", config.version))
         .normalize();
 
-    event!(&event_channel, "download", { "type": "download", "payload": { "message": "Version Manifest", "file": client_jar_name, "size":  } });
+    if !(client_manfiest_file.exists() && client_manfiest_file.is_file()) {
+        let launcher_manifest = get_launcher_manifest(Some(&config.version)).await?;
+        utils::download_file(
+            &launcher_manifest.url,
+            &client_manfiest_file,
+            None,
+            Some(&launcher_manifest.sha1),
+        )
+        .await?;
+    }
+
+    let manifset = Manifest::read_manifest(&client_manfiest_file, false).await?;
+    let java_version = manifset
+        .java_version
+        .ok_or(LauncherError::NotFound("Java not found".to_string()))?
+        .major_version;
+    if app.get_java(java_version).is_none() {
+        let (build_version, path) =
+            download_java(&event_channel, &runtime_directory, java_version).await?;
+        app.insert_java(java_version, build_version, path)?;
+    }
+
+    tokio::try_join! {
+        download_client(&event_channel, &config.version, &version_directory, manifset.downloads),
+        download_assets(&event_channel, &runtime_directory, manifset.asset_index),
+        download_libraries(&event_channel,&runtime_directory,&config.version,manifset.libraries)
+    }?;
+
+    Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+struct JavaDownload {
+    download_url: String,
+    name: String,
+    java_version: Vec<usize>,
+}
+fn sanitize_file_path(path: &str) -> PathBuf {
+    // Replaces backwards slashes
+    path.replace('\\', "/")
+        // Sanitizes each component
+        .split('/')
+        .map(sanitize_filename::sanitize)
+        .collect()
+}
+
+async fn download_java(
+    _event_channel: &mpsc::Sender<ChannelMessage>,
+    runtime_directory: &std::path::Path,
+    java: usize,
+) -> Result<(String, PathBuf), LauncherError> {
+    let java_directory = runtime_directory.join("java").normalize();
+
+    let temp = std::env::temp_dir();
+
+    let url = &format!("https://api.azul.com/metadata/v1/zulu/packages?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",std::env::consts::ARCH, java, std::env::consts::OS);
+
+    let request = utils::REQUEST_CLIENT.get(url);
+
+    let response = request.send().await?;
+
+    let result = response.json::<Vec<JavaDownload>>().await?;
+    let java_download = result.first().ok_or(LauncherError::NotFound(
+        "The required java version was not found".to_string(),
+    ))?;
+
+    let java_vesrion = java_download
+        .java_version
+        .iter()
+        .map(|e| e.to_string())
+        .collect::<Vec<String>>()
+        .join(".");
+
+    let temp_file = temp.join(&java_download.name);
+
+    let mut jrep = utils::REQUEST_CLIENT
+        .get(&java_download.download_url)
+        .send()
+        .await?;
+
+    let mut file = tokio::fs::File::open(&temp_file).await?;
+
+    while let Some(mut chunk) = jrep.chunk().await? {
+        file.write_all_buf(&mut chunk).await?;
+    }
+
+    let archive = tokio::io::BufReader::new(file).compat();
+    let mut reader = ZipFileReader::new(archive).await?;
+
+    for index in 0..reader.file().entries().len() {
+        let entry = reader
+            .file()
+            .entries()
+            .get(index)
+            .ok_or(LauncherError::Generic("".to_string()))?;
+        let path = java_directory.join(sanitize_file_path(entry.filename().as_str()?));
+
+        let entry_is_dir = entry.dir()?;
+
+        if entry_is_dir {
+            if !path.exists() {
+                fs::create_dir_all(&path).await?;
+            }
+        } else {
+            let parent = path
+                .parent()
+                .ok_or(LauncherError::Generic("".to_string()))?;
+            if !parent.is_dir() {
+                fs::create_dir_all(parent).await?;
+            }
+
+            let mut entry_reader = reader.reader_without_entry(index).await?;
+            let writer = OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&path)
+                .await?;
+            futures::io::copy(&mut entry_reader, &mut writer.compat_write()).await?;
+        }
+    }
+
+    fs::remove_file(temp_file).await?;
+
+    let java = java_directory
+        .join(java_download.name.replace(".zip", ""))
+        .join("bin")
+        .join("javaw.exe")
+        .normalize();
+
+    Ok((java_vesrion, java))
+}
+
+async fn download_client(
+    _event_channel: &mpsc::Sender<ChannelMessage>,
+    version: &str,
+    versions_directory: &std::path::Path,
+    downloads: Option<Downloads>,
+) -> Result<(), LauncherError> {
+    let downloads = downloads.ok_or(LauncherError::NotFound(
+        "Client jar downloads section is missing!".to_string(),
+    ))?;
+
+    let client_jar = versions_directory
+        .join(format!("{}.jar", version))
+        .normalize();
+
+    utils::download_file(
+        &downloads.client.url,
+        &client_jar,
+        None,
+        Some(&downloads.client.sha1),
+    )
+    .await?;
+
+    Ok(())
+}
+
+async fn download_libraries(
+    event_channel: &mpsc::Sender<ChannelMessage>,
+    runtime_directory: &std::path::Path,
+    version: &str,
+    libraries: Vec<Library>,
+) -> Result<(), LauncherError> {
+    let library_directory = runtime_directory.join("libraries");
+    let natvies_directory = runtime_directory.join("natives").join(version);
+
+    let installed = futures::stream::iter(libraries.into_iter().map(|lib| {
+        let lib_dir = library_directory.clone();
+        let nat_dir = natvies_directory.clone();
+        async move {
+            if let Some(rules) = lib.rules {
+                let allow = rules
+                    .iter()
+                    .all(|condition| condition.parse(None).unwrap_or(false));
+                if !allow {
+                    return Ok(());
+                }
+            }
+
+            let artifact_path = Library::get_artifact_path(&lib.name)?;
+            let path = lib_dir.join(&artifact_path).normalize();
+
+            match &lib.downloads {
+                Some(downloads) => {
+                    utils::download_file(
+                        &downloads.artifact.url,
+                        &path,
+                        None,
+                        Some(&downloads.artifact.sha1),
+                    )
+                    .await?;
+                }
+                None => {
+                    let url = format!(
+                        "{}{}",
+                        &lib.url
+                            .unwrap_or("https://libraries.minecraft.net/".to_string()),
+                        &artifact_path
+                    );
+                    utils::download_file(&url, &path, None, lib.sha1.as_deref()).await?;
+                }
+            }
+
+            if let Some(natives) = &lib.natives {
+                let os = std::env::consts::OS.replace("macos", "osx");
+
+                if let Some(native) = natives.get(&os) {
+                    let downloads = lib
+                        .downloads
+                        .ok_or(LauncherError::NotFound("".to_owned()))?;
+                    let classifiers = downloads
+                        .classifiers
+                        .ok_or(LauncherError::NotFound("".to_string()))?;
+                    let classifier =
+                        classifiers
+                            .get(native)
+                            .ok_or(LauncherError::NotFound(format!(
+                                "Failed to get native for library: {}",
+                                lib.name
+                            )))?;
+
+                    let file = classifier
+                        .url
+                        .split('/')
+                        .last()
+                        .ok_or(LauncherError::Generic("".to_string()))?;
+                    let temp = std::env::temp_dir();
+                    let path = temp.join(file).normalize();
+
+                    utils::download_file(&classifier.url, &path, None, Some(&classifier.sha1))
+                        .await?;
+
+                    let reader = tokio::io::BufReader::new(File::open(&path).await?);
+                    let mut archive = ZipFileReader::with_tokio(reader).await?;
+
+                    for index in 0..archive.file().entries().len() {
+                        let entry = archive
+                            .file()
+                            .entries()
+                            .get(index)
+                            .ok_or(LauncherError::Generic("".to_string()))?;
+
+                        let native_file = nat_dir
+                            .join(nat_dir.join(sanitize_file_path(entry.filename().as_str()?)))
+                            .normalize();
+
+                        let mut entry_reader = archive.reader_without_entry(index).await?;
+                        let writer = OpenOptions::new()
+                            .write(true)
+                            .create_new(true)
+                            .open(&native_file)
+                            .await?;
+
+                        futures::io::copy(&mut entry_reader, &mut writer.compat_write()).await?;
+                    }
+
+                    fs::remove_file(&path).await?;
+                }
+            }
+
+            Ok(())
+        }
+    }))
+    .buffer_unordered(50)
+    .collect::<Vec<Result<(), LauncherError>>>()
+    .await;
+
+    if installed.iter().any(|e| e.is_err()) {
+        installed.iter().for_each(|e| {
+            if let Err(error) = e {
+                log::error!("{}", error);
+            }
+        });
+        return Err(LauncherError::Generic("".to_string()));
+    }
+
+    Ok(())
+}
+
+async fn download_assets(
+    _event_channel: &mpsc::Sender<ChannelMessage>,
+    runtime_directory: &std::path::Path,
+    assets_index: Option<manifest::File>,
+) -> Result<(), LauncherError> {
+    let assets_index = assets_index.ok_or(LauncherError::NotFound(
+        "Asset Index was not found".to_string(),
+    ))?;
+
+    let assets_objects_directory = runtime_directory.join("assets/objects");
+    let assets_index_path = runtime_directory
+        .join(format!(
+            "assets/objects/{}",
+            assets_index.id.ok_or(LauncherError::NotFound(
+                "Failed to get assets version".to_string()
+            ))?
+        ))
+        .normalize();
+
+    utils::download_file(
+        &assets_index.url,
+        &assets_index_path,
+        None,
+        Some(&assets_index.sha1),
+    )
+    .await?;
+
+    let file = fs::File::open(assets_index_path)
+        .await?
+        .try_into_std()
+        .map_err(|_| LauncherError::Generic("Failed to convert".to_string()))?;
+
+    let mut reader = std::io::BufReader::new(file);
+
+    let assets: AssetIndex = serde_json::from_reader(&mut reader)?;
+
+    let indexs = futures::stream::iter(assets.objects.values().map(|asset| {
+        let root = assets_objects_directory.clone();
+        async move {
+            let hash = format!(
+                "{}/{}",
+                asset
+                    .hash
+                    .get(0..2)
+                    .ok_or(LauncherError::Generic("Failed to get hash id".to_string()))?,
+                asset.hash
+            );
+
+            let file_path = root.join(&hash).normalize();
+
+            let url = format!("https://resources.download.minecraft.net/{}", hash);
+
+            utils::download_file(&url, &file_path, None, Some(&asset.hash)).await?;
+
+            Ok(())
+        }
+    }))
+    .buffer_unordered(50)
+    .collect::<Vec<Result<(), LauncherError>>>()
+    .await;
+
+    if indexs.iter().any(|e| e.is_err()) {
+        indexs.iter().for_each(|e| {
+            if let Err(err) = e {
+                log::error!("{}", err)
+            }
+        });
+        return Err(LauncherError::Generic(
+            "Failed to download assets".to_string(),
+        ));
+    }
 
     Ok(())
 }

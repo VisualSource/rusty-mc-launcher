@@ -142,6 +142,7 @@ pub struct Library {
     pub downloads: Option<LibraryDownloads>,
     pub name: String,
     pub url: Option<String>,
+    pub sha1: Option<String>,
     pub natives: Option<std::collections::HashMap<String, String>>,
     pub extract: Option<Extract>,
     #[serde(default)]
@@ -159,7 +160,7 @@ impl Library {
         }
     }
 
-    fn get_artifact_path(artifact: &str) -> Result<String, LauncherError> {
+    pub fn get_artifact_path(artifact: &str) -> Result<String, LauncherError> {
         let name_items = artifact.split(':').collect::<Vec<&str>>();
 
         let package = name_items.first().ok_or_else(|| {
@@ -240,17 +241,13 @@ impl Library {
             return Ok(None);
         }
 
-        let lib = self
-            .downloads
-            .as_ref()
-            .and_then(|downloads| downloads.artifact.path.clone())
-            .unwrap_or(Library::get_artifact_path(&self.name)?);
+        let lib = Library::get_artifact_path(&self.name)?;
 
-        let mut libs = Vec::with_capacity(2);
+        //let mut libs = Vec::with_capacity(2);
 
-        libs.push(root.join(lib).normalize().to_string_lossy().to_string());
+        //libs.push(root.join(lib).normalize().to_string_lossy().to_string());
 
-        if let Some(natives) = &self.natives {
+        /*if let Some(natives) = &self.natives {
             let os = consts::OS.replace("macos", "osx");
 
             let native = natives.get(&os).ok_or(LauncherError::NotFound(format!(
@@ -288,9 +285,12 @@ impl Library {
                     .to_string_lossy()
                     .to_string(),
             );
-        }
+        }*/
 
-        Ok(Some(libs.join(Library::get_class_sep())))
+        //Ok(Some(libs.join(Library::get_class_sep())))
+        Ok(Some(
+            root.join(lib).normalize().to_string_lossy().to_string(),
+        ))
     }
 }
 

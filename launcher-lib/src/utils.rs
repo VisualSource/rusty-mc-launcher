@@ -232,7 +232,7 @@ pub async fn download_file(
         }
     }
 
-    //https://github.com/seanmonstar/reqwest/issues/1266
+    //https://github.com/seanmonstar/reqwest/issues/1266#issuecomment-1106187437
     let mut response = reqwest::get(url).await?;
     let mut file = File::create(&dir).await?;
     let mut hasher = Sha1::new();
