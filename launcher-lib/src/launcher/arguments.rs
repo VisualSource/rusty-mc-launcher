@@ -18,6 +18,9 @@ pub enum RuleCondition {
         action: String,
         os: std::collections::HashMap<String, String>,
     },
+    Action {
+        action: String,
+    },
 }
 
 impl RuleCondition {
@@ -38,6 +41,7 @@ impl RuleCondition {
 
                 Some((action == "allow" && result) || (action == "disallow" && !result))
             }
+            Self::Action { action } => Some(action == "allow"),
             Self::Os { action, os } => {
                 let allowed = os.iter().all(|(key, value)| match key.as_str() {
                     "name" => value.replace("osx", "macos") == std::env::consts::OS,
@@ -58,6 +62,12 @@ impl RuleCondition {
     }
 }
 
+pub fn parse_rules(config: Option<&super::Config>, rules: &[RuleCondition]) -> bool {
+    rules
+        .iter()
+        .all(|condition| condition.parse(config).unwrap_or_default())
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Arg {
@@ -74,7 +84,7 @@ impl Arg {
             Some((_, target)) => match config.get_replacement(target) {
                 Some(flag_value) => {
                     let key = format!("${{{}}}", target);
-                    flag.replace(&key, &flag_value)
+                    flag.replace(&key, flag_value)
                 }
                 None => flag.to_owned(),
             },
@@ -85,11 +95,7 @@ impl Arg {
         match self {
             Self::Flag(flag) => Some(Self::replace_arg(flag, config)),
             Arg::Rule { rules, value } => {
-                let result = rules
-                    .iter()
-                    .all(|condition| condition.parse(Some(config)).unwrap_or(false));
-
-                if result {
+                if parse_rules(Some(config), rules) {
                     let flag = match value {
                         RuleValue::Item(item) => item.to_owned(),
                         RuleValue::List(items) => items
@@ -126,296 +132,32 @@ impl Arguments {
 
 #[cfg(test)]
 mod tests {
-    use crate::launcher::Config;
-
     use super::*;
-    const MINECRAFT_ARGUMENTS_1_20_6: &str = r#"{
-        "game": [
-          "--username",
-          "${auth_player_name}",
-          "--version",
-          "${version_name}",
-          "--gameDir",
-          "${game_directory}",
-          "--assetsDir",
-          "${assets_root}",
-          "--assetIndex",
-          "${assets_index_name}",
-          "--uuid",
-          "${auth_uuid}",
-          "--accessToken",
-          "${auth_access_token}",
-          "--clientId",
-          "${clientid}",
-          "--xuid",
-          "${auth_xuid}",
-          "--userType",
-          "${user_type}",
-          "--versionType",
-          "${version_type}",
-          {
-            "rules": [
-              {
-                "action": "allow",
-                "features": { "is_demo_user": true, "is_quick_play_realms": null }
-              }
-            ],
-            "value": "--demo"
-          },
-          {
-            "rules": [
-              {
-                "action": "allow",
-                "features": {
-                  "has_custom_resolution": true,
-                  "is_quick_play_realms": null
-                }
-              }
-            ],
-            "value": [
-              "--width",
-              "${resolution_width}",
-              "--height",
-              "${resolution_height}"
-            ]
-          },
-          {
-            "rules": [
-              {
-                "action": "allow",
-                "features": {
-                  "has_quick_plays_support": true,
-                  "is_quick_play_realms": null
-                }
-              }
-            ],
-            "value": ["--quickPlayPath", "${quickPlayPath}"]
-          },
-          {
-            "rules": [
-              {
-                "action": "allow",
-                "features": {
-                  "is_quick_play_singleplayer": true,
-                  "is_quick_play_realms": null
-                }
-              }
-            ],
-            "value": ["--quickPlaySingleplayer", "${quickPlaySingleplayer}"]
-          },
-          {
-            "rules": [
-              {
-                "action": "allow",
-                "features": {
-                  "is_quick_play_multiplayer": true,
-                  "is_quick_play_realms": null
-                }
-              }
-            ],
-            "value": ["--quickPlayMultiplayer", "${quickPlayMultiplayer}"]
-          },
-          {
-            "rules": [
-              { "action": "allow", "features": { "is_quick_play_realms": true } }
-            ],
-            "value": ["--quickPlayRealms", "${quickPlayRealms}"]
-          }
-        ],
-        "jvm": [
-          {
-            "rules": [{ "action": "allow", "os": { "name": "osx" } }],
-            "value": ["-XstartOnFirstThread"]
-          },
-          {
-            "rules": [{ "action": "allow", "os": { "name": "windows" } }],
-            "value": "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump"
-          },
-          {
-            "rules": [{ "action": "allow", "os": { "arch": "x86" } }],
-            "value": "-Xss1M"
-          },
-          "-Djava.library.path=${natives_directory}",
-          "-Djna.tmpdir=${natives_directory}",
-          "-Dorg.lwjgl.system.SharedLibraryExtractPath=${natives_directory}",
-          "-Dio.netty.native.workdir=${natives_directory}",
-          "-Dminecraft.launcher.brand=${launcher_name}",
-          "-Dminecraft.launcher.version=${launcher_version}",
-          "-cp",
-          "${classpath}"
-        ]
-      }
-    "#;
-
-    fn test_value(input: &'static str) -> Arguments {
-        serde_json::from_str(input).expect("Failed to parse arguments")
-    }
-
-    /*#[test]
-    fn test_game_args_parse() {
-        let minecraft_1_20_6 = test_value(MINECRAFT_ARGUMENTS_1_20_6);
-
-        let config = Config {
-            auth_player_name: "TEST_USERNAME".to_string(),
-            auth_access_token: "token".to_string(),
-            version_name: "1.20".to_string(),
-            game_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
-            runtime_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
-            version: "1.20".to_string(),
-            additonal_java_arguments: None,
-            resolution_height: None,
-            resolution_width: None,
-            quick_play_multiplayer: None,
-            quick_play_path: None,
-            quick_play_realms: None,
-            demo: false,
-            quick_play_single_player: None,
-            launcher_name: None,
-            launcher_version: None,
-            assets_index_name: "16".to_string(),
-            auth_uuid: "uuid".to_string(),
-            clientid: "CLIENT_ID".to_string(),
-            auth_xuid: "XUID".to_string(),
-            user_type: "msa".to_string(),
-            version_type: "VERSION".to_string(),
-            classpath: String::new(),
-        };
-
-        println!("{:#?}", minecraft_1_20_6);
-
-        let result = Arguments::parse_args(&minecraft_1_20_6.game, &config);
-
-        assert_eq!(
-            result,
-            vec![
-                "--username",
-                "TEST_USERNAME",
-                "--version",
-                "1.20",
-                "--gameDir",
-                "C://",
-                "--assetsDir",
-                "C://",
-                "--assetIndex",
-                "16",
-                "--uuid",
-                "uuid",
-                "--accessToken",
-                "token",
-                "--clientId",
-                "CLIENT_ID",
-                "--xuid",
-                "XUID",
-                "--userType",
-                "msa",
-                "--versionType",
-                "VERSION",
-            ]
-        )
-    }
 
     #[test]
-    fn test_game_args_parse_with_res() {
-        let minecraft_1_20_6 = test_value(MINECRAFT_ARGUMENTS_1_20_6);
-
-        let config = Config {
-            auth_player_name: "TEST_USERNAME".to_string(),
-            auth_access_token: "token".to_string(),
-            version_name: "1.20".to_string(),
-            game_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
-            runtime_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
-            version: "1.20".to_string(),
-            additonal_java_arguments: None,
-            resolution_height: Some("542".to_string()),
-            resolution_width: Some("854".to_string()),
-            quick_play_multiplayer: None,
-            quick_play_path: None,
-            quick_play_realms: None,
-            demo: false,
-            quick_play_single_player: None,
-            launcher_name: None,
-            launcher_version: None,
-            assets_index_name: "16".to_string(),
-            auth_uuid: "uuid".to_string(),
-            clientid: "CLIENT_ID".to_string(),
-            auth_xuid: "XUID".to_string(),
-            user_type: "msa".to_string(),
-            version_type: "VERSION".to_string(),
-            classpath: String::new(),
-        };
-
-        let result = Arguments::parse_args(&minecraft_1_20_6.game, &config);
-
-        assert_eq!(
-            result,
-            vec![
-                "--username",
-                "TEST_USERNAME",
-                "--version",
-                "1.20",
-                "--gameDir",
-                "C://",
-                "--assetsDir",
-                "C://",
-                "--assetIndex",
-                "16",
-                "--uuid",
-                "uuid",
-                "--accessToken",
-                "token",
-                "--clientId",
-                "CLIENT_ID",
-                "--xuid",
-                "XUID",
-                "--userType",
-                "msa",
-                "--versionType",
-                "VERSION",
-                "--width 854 --height 542",
-            ]
+    fn test_parse_rules() {
+        let rules: Vec<RuleCondition> = serde_json::from_str(
+            r#"
+      [
+        { "action": "allow" },
+        { "action": "disallow", "os": { "name": "osx" } },
+        { "action": "disallow", "os": { "name": "linux-arm64" } },
+        { "action": "disallow", "os": { "name": "linux-arm32" } },
+        { "action": "disallow", "os": { "name": "osx-arm64" } }
+      ]
+      "#,
         )
+        .expect("Failed to parse");
+
+        assert!(parse_rules(None, &rules));
+
+        let rules2: Vec<RuleCondition> = serde_json::from_str(
+            r#"
+        [{ "action": "allow", "os": { "name": "osx" } }]
+        "#,
+        )
+        .expect("Failed to build");
+
+        assert!(!parse_rules(None, &rules2))
     }
-
-    #[test]
-    fn test_java_args_parse() {
-        let minecraft_1_20_6 = test_value(MINECRAFT_ARGUMENTS_1_20_6);
-
-        let config = Config {
-            auth_player_name: "TEST_USERNAME".to_string(),
-            auth_access_token: "token".to_string(),
-            version_name: "1.20".to_string(),
-            game_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
-            runtime_directory: std::path::PathBuf::from_str("C://").expect("Failed to make path"),
-            version: "1.20".to_string(),
-            additonal_java_arguments: None,
-            resolution_height: Some("542".to_string()),
-            resolution_width: Some("854".to_string()),
-            quick_play_multiplayer: None,
-            quick_play_path: None,
-            quick_play_realms: None,
-            demo: false,
-            quick_play_single_player: None,
-            launcher_name: None,
-            launcher_version: None,
-            assets_index_name: "16".to_string(),
-            auth_uuid: "uuid".to_string(),
-            clientid: "CLIENT_ID".to_string(),
-            auth_xuid: "XUID".to_string(),
-            user_type: "msa".to_string(),
-            version_type: "VERSION".to_string(),
-            classpath: String::new(),
-        };
-
-        let result = Arguments::parse_args(&minecraft_1_20_6.jvm, &config);
-
-        assert_eq!(result,vec!["-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
-        "-Djava.library.path=C://natives_directory",
-        "-Djna.tmpdir=C://natives_directory",
-        "-Dorg.lwjgl.system.SharedLibraryExtractPath=C://natives_directory",
-        "-Dio.netty.native.workdir=C://natives_directory",
-        "-Dminecraft.launcher.brand=TEST",
-        "-Dminecraft.launcher.version=0.0.0",
-        "-cp",
-        "C://classpath"])
-    }*/
 }

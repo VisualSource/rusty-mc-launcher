@@ -2,6 +2,7 @@ use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::path::Path;
+use tokio::fs::OpenOptions;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::{
     fs::{create_dir_all, File},
@@ -13,10 +14,17 @@ use crate::errors::LauncherError;
 lazy_static::lazy_static! {
     pub static ref REQUEST_CLIENT: reqwest::Client = {
         let mut headers = reqwest::header::HeaderMap::new();
-        let header = reqwest::header::HeaderValue::from_str(&format!("
-        VisualSource/rusty-mc-launcher/{}",env!("CARGO_PKG_VERSION"))).expect("Failed to construct http client user agent");
+        let header = reqwest::header::HeaderValue::from_str(
+            &format!("VisualSource/rusty-mc-launcher/{}",env!("CARGO_PKG_VERSION"))
+        ).expect("Failed to construct http client user agent");
+
         headers.insert(reqwest::header::USER_AGENT, header);
-        reqwest::Client::builder().tcp_keepalive(Some(std::time::Duration::from_secs(10))).default_headers(headers).build().expect("Request client construct failed.")
+
+        reqwest::Client::builder()
+        .tcp_keepalive(Some(std::time::Duration::from_secs(10)))
+        .default_headers(headers)
+        .build()
+        .expect("Request client construct failed.")
     };
 }
 const FETCH_ATTEMPTS: usize = 3;
@@ -74,26 +82,35 @@ pub async fn download_file(
     auth: Option<&str>,
     sha1: Option<&str>,
 ) -> Result<(), LauncherError> {
-    if !output_directory.exists() {
-        create_dir_all(&output_directory).await?;
+    if let Some(parent) = output_directory.parent() {
+        if !parent.exists() {
+            create_dir_all(&parent).await?;
+        }
     }
 
     if output_directory.exists() && output_directory.is_file() {
         if let Some(hash) = sha1 {
-            let file = File::open(&output_directory).await?;
-            let mut buf_reader = BufReader::new(file);
-            let mut buffer = Vec::new();
+            info!("File exists and has sha1 hash");
+            let mut file = File::open(&output_directory)
+                .await?
+                .try_into_std()
+                .map_err(|_| LauncherError::Generic("".to_string()))?;
+            let mut hasher = Sha1::new();
 
-            let size = buf_reader.read_to_end(&mut buffer).await?;
+            let size = std::io::copy(&mut file, &mut hasher)?;
+
+            let file_hash = hasher.finalize();
+
             info!("Current size of file on disk: {}", size);
-            if hex::encode(Sha1::digest(buffer)) == hash {
+            if hex::encode(file_hash) == hash {
                 return Ok(());
             }
         } else {
             warn!(
-                "No sha hash was provided but file exists! File: {}",
+                "No sha1 hash was provided but file exists! File: {}",
                 output_directory.to_string_lossy()
             );
+            return Ok(());
         }
     }
 
@@ -105,7 +122,7 @@ pub async fn download_file(
         }
         let response = req.send().await;
         match response {
-            Ok(mut result) => match File::open(&output_directory).await {
+            Ok(mut result) => match File::create(&output_directory).await {
                 Ok(mut file) => {
                     let mut hasher = Sha1::new();
                     while let Some(mut chunk) = result.chunk().await? {
@@ -136,4 +153,26 @@ pub async fn download_file(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn init() {
+        let _ = env_logger::builder()
+            .filter_level(log::LevelFilter::max())
+            .is_test(true)
+            .try_init();
+    }
+
+    #[tokio::test]
+    async fn test_download() {
+        init();
+        let dir = std::env::temp_dir().join("test.jar");
+        info!("{}", dir.to_string_lossy());
+        download_file("https://piston-data.mojang.com/v1/objects/05b6f1c6b46a29d6ea82b4e0d42190e42402030f/client.jar", &dir, None, Some("05b6f1c6b46a29d6ea82b4e0d42190e42402030f"))
+            .await
+            .expect("Failed to download");
+    }
 }

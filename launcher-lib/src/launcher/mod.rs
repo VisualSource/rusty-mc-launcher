@@ -6,6 +6,7 @@ use crate::{errors::LauncherError, manifest::Manifest};
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::path::PathBuf;
+use tokio::fs;
 
 #[derive(Debug, Deserialize)]
 pub struct LaunchConfig {
@@ -86,10 +87,7 @@ impl Config {
             .normalize();
 
         if !natives_directory.exists() || !natives_directory.is_dir() {
-            return Err(LauncherError::NotFound(format!(
-                "Natives directory was not found: ({})",
-                natives_directory.to_string_lossy()
-            )));
+            fs::create_dir_all(&natives_directory).await?;
         }
 
         let manifest_directory = launch_config
@@ -219,43 +217,48 @@ pub async fn start_game(
         "Failed to get java runtime.".to_string(),
     ))?;
 
-    let java_exe = system_config
-        .get_java(java_version.major_version)
+    let java_store = system_config.java.read().await;
+
+    let java_exe = java_store
+        .get(java_version.major_version)
         .ok_or(LauncherError::NotFound("Java was not found".to_string()))?;
 
-    let mut output = vec![];
-    output.extend(jvm_args);
+    let mut args = vec![];
+    args.extend(jvm_args);
     if let Some(additonal_java_arguments) = &config.additonal_java_arguments {
-        output.extend(additonal_java_arguments.to_owned());
+        args.extend(additonal_java_arguments.to_owned());
     }
 
-    output.push(manifest.main_class);
-    output.extend(game_args);
+    args.push(manifest.main_class);
+    args.extend(game_args);
 
-    println!("{},{:#?}", java_exe, output);
+    system_config
+        .instances
+        .write()
+        .await
+        .insert_new_process(uuid::Uuid::new_v4(), java_exe, args)
+        .await;
 
     Ok(())
 }
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{path::PathBuf, str::FromStr};
     #[tokio::test]
     async fn test_start() {
+        let runtime_directory = std::env::temp_dir().join("runtime");
+        let game_directory = std::env::temp_dir().join("profiles/g");
+        let java = runtime_directory
+            .join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe")
+            .normalize();
         let settings = LaunchConfig {
-            runtime_directory: PathBuf::from_str(
-                "C:\\Users\\Collin\\AppData\\Roaming\\com.modrinth.theseus\\meta",
-            )
-            .expect("Failed to make path"),
-            game_directory: PathBuf::from_str(
-                "C:\\Users\\Collin\\AppData\\Roaming\\com.modrinth.theseus\\profiles\\g",
-            )
-            .expect("Failed to make path"),
+            runtime_directory,
+            game_directory,
             version: "1.20.6".to_string(),
-            auth_player_name: "USERNAME".to_string(),
-            auth_uuid: "UUID".to_string(),
-            auth_access_token: "ACCESS_TOKEN".to_string(),
-            auth_xuid: "XUID".to_string(),
+            auth_player_name: "VisaulSource".to_string(),
+            auth_uuid: "37f0c4ef71c943e2baafd547302f0c92".to_string(),
+            auth_access_token: "eyJraWQiOiJhYzg0YSIsImFsZyI6IkhTMjU2In0.eyJ4dWlkIjoiMjUzNTQ0MjQ2MjQ1MTk1NCIsImFnZyI6IkFkdWx0Iiwic3ViIjoiZTA2YjU1Y2QtN2FlZi00MDIzLThlNjYtZDM2YmU3ZTZjMjhhIiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsidHdvZmFjdG9yYXV0aCIsIm1zYW1pZ3JhdGlvbl9zdGFnZTQiLCJvcmRlcnNfMjAyMiIsIm11bHRpcGxheWVyIl0sInByb2ZpbGVzIjp7Im1jIjoiMzdmMGM0ZWYtNzFjOS00M2UyLWJhYWYtZDU0NzMwMmYwYzkyIn0sInBsYXRmb3JtIjoiUENfTEFVTkNIRVIiLCJ5dWlkIjoiNmNmMDAyODlkOGEwNDNhMjg2M2ZmMGRmZjNjYjhlNTIiLCJuYmYiOjE3MTU1NjEzNDQsImV4cCI6MTcxNTY0Nzc0NCwiaWF0IjoxNzE1NTYxMzQ0fQ.kFw6wFuIwNP96laDa9o6i2cRGUiGBUyd92acCPxzITA".to_string(),
+            auth_xuid: "0".to_string(),
 
             demo: false,
 
@@ -270,8 +273,8 @@ mod tests {
         };
 
         let mut system = AppState::default();
-        system
-            .insert_java(21, PathBuf::from_str("C:\\Users\\Collin\\AppData\\Roaming\\com.modrinth.theseus\\meta\\java_versions\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe").expect("Failed to make path"))
+        let j = system.java.write().await;
+        j.insert(21, "1.21".to_string(), java)
             .expect("Failed to insert");
 
         start_game(settings, &system)

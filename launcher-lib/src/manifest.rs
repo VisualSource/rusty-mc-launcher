@@ -2,7 +2,7 @@ use std::env::consts;
 use std::path::PathBuf;
 
 use crate::errors::LauncherError;
-use crate::launcher::arguments::{Arguments, RuleCondition};
+use crate::launcher::arguments::{parse_rules, Arguments, RuleCondition};
 use log::info;
 use normalize_path::NormalizePath;
 use serde::{self, Deserialize, Serialize};
@@ -115,7 +115,6 @@ impl Manifest {
             .to_string();
 
         classpath.push(client_jar);
-
         Ok(classpath.join(Library::get_class_sep()))
     }
 }
@@ -230,9 +229,7 @@ impl Library {
 
     fn get_lib(&self, root: &std::path::Path) -> Result<Option<String>, LauncherError> {
         let include = if let Some(rules) = &self.rules {
-            rules
-                .iter()
-                .all(|condition| condition.parse(None).unwrap_or(false))
+            parse_rules(None, rules)
         } else {
             true
         };
@@ -243,51 +240,6 @@ impl Library {
 
         let lib = Library::get_artifact_path(&self.name)?;
 
-        //let mut libs = Vec::with_capacity(2);
-
-        //libs.push(root.join(lib).normalize().to_string_lossy().to_string());
-
-        /*if let Some(natives) = &self.natives {
-            let os = consts::OS.replace("macos", "osx");
-
-            let native = natives.get(&os).ok_or(LauncherError::NotFound(format!(
-                "Failed to find native for os {}",
-                self.name
-            )))?;
-            let downloads = self
-                .downloads
-                .as_ref()
-                .ok_or(LauncherError::NotFound(format!(
-                    "Failed to get downloads for native library {}",
-                    self.name
-                )))?;
-            let classifers = downloads
-                .classifiers
-                .as_ref()
-                .ok_or(LauncherError::NotFound(format!(
-                    "Failed to get classifiers for native library {}",
-                    self.name
-                )))?;
-            let file = classifers
-                .get(native)
-                .ok_or(LauncherError::NotFound(format!(
-                    "Failed to get artifact for native library {}",
-                    self.name
-                )))?;
-            let native_path = file.path.as_ref().ok_or(LauncherError::NotFound(format!(
-                "Failed to get path for native library {}",
-                self.name
-            )))?;
-
-            libs.push(
-                root.join(native_path)
-                    .normalize()
-                    .to_string_lossy()
-                    .to_string(),
-            );
-        }*/
-
-        //Ok(Some(libs.join(Library::get_class_sep())))
         Ok(Some(
             root.join(lib).normalize().to_string_lossy().to_string(),
         ))
