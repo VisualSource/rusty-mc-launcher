@@ -35,6 +35,9 @@ impl RuleCondition {
                         "has_custom_resolution" => *value == config.has_custom_resolution(),
                         "is_quick_play_realms" => *value == config.is_quick_play_realms(),
                         "has_quick_plays_support" => *value == config.has_quick_plays_support(),
+                        "is_quick_play_singleplayer" => {
+                            *value == config.is_quick_play_singleplayer()
+                        }
                         "is_quick_play_multiplayer" => *value == config.is_quick_play_multiplayer(),
                         _ => false,
                     });

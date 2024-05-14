@@ -1,3 +1,4 @@
+mod fabric;
 mod metadata;
 pub mod utils;
 use std::path::PathBuf;
@@ -17,14 +18,31 @@ use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use utils::ChannelMessage;
+
+#[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+enum Loader {
+    Vanilla,
+    Forge,
+    Fabric,
+    Quilt,
+    NeoForge,
+}
+impl Default for Loader {
+    fn default() -> Self {
+        Self::Vanilla
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct InstallConfig {
     app_directory: PathBuf,
     version: String,
+    loader: Loader,
+    loader_version: Option<String>,
 }
 
 pub async fn install_minecraft(
-    app: &mut AppState,
+    app: &AppState,
     config: InstallConfig,
     event_channel: mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherError> {
@@ -54,21 +72,94 @@ pub async fn install_minecraft(
         .ok_or(LauncherError::NotFound("Java not found".to_string()))?
         .major_version;
 
-    let store = app.java.read().await;
+    let found_java = {
+        let store = app.java.read().await;
+        store.has(java_version)
+    };
 
-    /*  if store.get(java_version).is_none() {
+    if !found_java {
         let (build_version, path) =
             download_java(&event_channel, &runtime_directory, java_version).await?;
 
-        let write_store = app.java.write().await;
-        //write_store.insert(java_version, build_version, path)?;
-    }*/
+        let mut store = app.java.write().await;
+
+        store.insert(java_version, build_version, path)?;
+    }
 
     tokio::try_join! {
         download_client(&event_channel, &config.version, &version_directory, manifset.downloads),
         download_assets(&event_channel, &runtime_directory, manifset.asset_index),
         download_libraries(&event_channel,&runtime_directory,&config.version,manifset.libraries)
     }?;
+
+    if config.loader != Loader::Vanilla {
+        let java_exe = {
+            let store = app.java.read().await;
+            store
+                .get(java_version)
+                .ok_or(LauncherError::NotFound(
+                    "Java executable was not found".to_string(),
+                ))?
+                .to_owned()
+        };
+
+        let modded_version = match config.loader {
+            Loader::Vanilla => {
+                return Err(LauncherError::Generic("Should not be here".to_string()))
+            }
+            Loader::Forge => unimplemented!(),
+            Loader::Fabric => {
+                fabric::run_installer(
+                    &event_channel,
+                    &runtime_directory,
+                    &java_exe,
+                    &config.version,
+                    config.loader_version,
+                    false,
+                )
+                .await?
+            }
+            Loader::Quilt => {
+                fabric::run_installer(
+                    &event_channel,
+                    &runtime_directory,
+                    &java_exe,
+                    &config.version,
+                    config.loader_version,
+                    true,
+                )
+                .await?
+            }
+            Loader::NeoForge => unimplemented!(),
+        };
+
+        info!("{}", modded_version);
+
+        let modded_directory = runtime_directory.join("versions").join(&modded_version);
+        let modded_manifest = modded_directory.join(format!("{}.json", modded_version));
+        let modded_jar = modded_directory.join(format!("{}.jar", modded_version));
+        let vanilla_jar = version_directory.join(format!("{}.jar", config.version));
+
+        if modded_jar.exists() && modded_jar.is_file() {
+            fs::remove_file(&modded_jar).await?;
+        }
+        info!(
+            "Copying {} to {}",
+            vanilla_jar.to_string_lossy(),
+            modded_jar.to_string_lossy()
+        );
+        fs::copy(vanilla_jar, modded_jar).await?;
+
+        let mod_manifest = Manifest::read_manifest(&modded_manifest, false).await?;
+
+        download_libraries(
+            &event_channel,
+            &runtime_directory,
+            &modded_version,
+            mod_manifest.libraries,
+        )
+        .await?;
+    }
 
     Ok(())
 }
@@ -447,18 +538,49 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_install() {
+    async fn test_install_modded() {
         init();
         let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
         let runtime_directory = std::env::temp_dir();
+        let runtime_dir = runtime_directory.join("runtime");
+        let java = runtime_dir.join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe");
+        let app = AppState::default();
 
-        let mut app = AppState::default();
+        {
+            let mut store = app.java.write().await;
+            store
+                .insert(21, "".to_string(), java)
+                .expect("Failed to insert");
+        }
         let config = InstallConfig {
             app_directory: runtime_directory,
             version: "1.20.6".to_string(),
+            loader: Loader::Fabric,
+            loader_version: None,
         };
 
-        install_minecraft(&mut app, config, tx)
+        install_minecraft(&app, config, tx)
+            .await
+            .expect("Failed to install minecraft");
+    }
+
+    #[tokio::test]
+    async fn test_install() {
+        init();
+
+        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
+        let runtime_directory = std::env::temp_dir();
+
+        let app = AppState::default();
+
+        let config = InstallConfig {
+            app_directory: runtime_directory,
+            version: "1.20.6".to_string(),
+            loader: Loader::Vanilla,
+            loader_version: None,
+        };
+
+        install_minecraft(&app, config, tx)
             .await
             .expect("Failed to install minecraft");
     }

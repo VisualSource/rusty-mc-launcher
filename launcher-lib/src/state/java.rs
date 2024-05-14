@@ -11,6 +11,11 @@ impl JavaRuntimes {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
+
+    pub fn has(&self, version: usize) -> bool {
+        self.0.contains_key(&format!("JAVA_{}", version))
+    }
+
     pub fn get(&self, version: usize) -> Option<&String> {
         match self.0.get(&format!("JAVA_{}", version)) {
             Some((_, path)) => Some(path),

@@ -7,6 +7,7 @@ use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::fs;
+use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 pub struct LaunchConfig {
@@ -132,10 +133,7 @@ impl Config {
                 clientid: "c4502edb-87c6-40cb-b595-64a280cf8906".to_string(),
                 user_type: "msa".to_string(),
                 assets_root: assets_root.to_string_lossy().to_string(),
-                game_directory: launch_config
-                    .runtime_directory
-                    .to_string_lossy()
-                    .to_string(),
+                game_directory: launch_config.game_directory.to_string_lossy().to_string(),
                 additonal_java_arguments: launch_config.additonal_java_arguments,
                 natives_directory: natives_directory.to_string_lossy().to_string(),
                 quick_play_multiplayer: launch_config.quick_play_multiplayer,
@@ -203,10 +201,7 @@ impl Config {
     }
 }
 
-pub async fn start_game(
-    launch_config: LaunchConfig,
-    system_config: &AppState,
-) -> Result<(), LauncherError> {
+pub async fn start_game(launch_config: LaunchConfig, app: &AppState) -> Result<(), LauncherError> {
     let (config, manifest) = Config::from(launch_config).await?;
 
     let game_args = Arguments::parse_args(&manifest.arguments.game, &config);
@@ -217,9 +212,9 @@ pub async fn start_game(
         "Failed to get java runtime.".to_string(),
     ))?;
 
-    let java_store = system_config.java.read().await;
+    let store = app.java.read().await;
 
-    let java_exe = java_store
+    let java_exe = store
         .get(java_version.major_version)
         .ok_or(LauncherError::NotFound("Java was not found".to_string()))?;
 
@@ -232,12 +227,11 @@ pub async fn start_game(
     args.push(manifest.main_class);
     args.extend(game_args);
 
-    system_config
-        .instances
-        .write()
-        .await
-        .insert_new_process(uuid::Uuid::new_v4(), java_exe, args)
-        .await;
+    let mut store = app.instances.write().await;
+
+    store
+        .insert_new_process(Uuid::new_v4(), java_exe, args)
+        .await?;
 
     Ok(())
 }
@@ -257,7 +251,7 @@ mod tests {
             version: "1.20.6".to_string(),
             auth_player_name: "VisaulSource".to_string(),
             auth_uuid: "37f0c4ef71c943e2baafd547302f0c92".to_string(),
-            auth_access_token: "eyJraWQiOiJhYzg0YSIsImFsZyI6IkhTMjU2In0.eyJ4dWlkIjoiMjUzNTQ0MjQ2MjQ1MTk1NCIsImFnZyI6IkFkdWx0Iiwic3ViIjoiZTA2YjU1Y2QtN2FlZi00MDIzLThlNjYtZDM2YmU3ZTZjMjhhIiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsidHdvZmFjdG9yYXV0aCIsIm1zYW1pZ3JhdGlvbl9zdGFnZTQiLCJvcmRlcnNfMjAyMiIsIm11bHRpcGxheWVyIl0sInByb2ZpbGVzIjp7Im1jIjoiMzdmMGM0ZWYtNzFjOS00M2UyLWJhYWYtZDU0NzMwMmYwYzkyIn0sInBsYXRmb3JtIjoiUENfTEFVTkNIRVIiLCJ5dWlkIjoiNmNmMDAyODlkOGEwNDNhMjg2M2ZmMGRmZjNjYjhlNTIiLCJuYmYiOjE3MTU1NjEzNDQsImV4cCI6MTcxNTY0Nzc0NCwiaWF0IjoxNzE1NTYxMzQ0fQ.kFw6wFuIwNP96laDa9o6i2cRGUiGBUyd92acCPxzITA".to_string(),
+            auth_access_token: "TOKEN".to_string(),
             auth_xuid: "0".to_string(),
 
             demo: false,
@@ -272,12 +266,13 @@ mod tests {
             quick_play_multiplayer: None,
         };
 
-        let mut system = AppState::default();
-        let j = system.java.write().await;
-        j.insert(21, "1.21".to_string(), java)
+        let app = AppState::default();
+        let mut store = app.java.write().await;
+        store
+            .insert(21, "1.21".to_string(), java)
             .expect("Failed to insert");
 
-        start_game(settings, &system)
+        start_game(settings, &app)
             .await
             .expect("Failed to build string");
     }
