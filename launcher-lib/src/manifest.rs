@@ -151,7 +151,7 @@ pub struct Library {
 }
 
 impl Library {
-    fn get_class_sep() -> &'static str {
+    pub fn get_class_sep() -> &'static str {
         if consts::OS == "windows" {
             ";"
         } else {

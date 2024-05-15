@@ -19,7 +19,7 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json"] }
 thiserror = "1.0"
-async_zip = { version = "0.0.17", features = ["tokio","tokio-fs","deflate"] }
+async_zip = { version = "0.0.17", features = ["tokio","tokio-fs","deflate","lzma"] }
 sanitize-filename = "0.5.0"
 hex = "0.4.3"
 #async-compression = { version = "0.4.10", features = ["lzma","tokio"]}
