@@ -104,11 +104,20 @@ pub async fn install_minecraft(
                 .to_owned()
         };
 
-        let modded_version = match config.loader {
+        match config.loader {
             Loader::Vanilla => {
                 return Err(LauncherError::Generic("Should not be here".to_string()))
             }
-            Loader::Forge => unimplemented!(),
+            Loader::Forge => {
+                forge::run_installer(
+                    &event_channel,
+                    &config.version,
+                    config.loader_version,
+                    &runtime_directory,
+                    &java_exe,
+                )
+                .await?
+            }
             Loader::Fabric => {
                 fabric::run_installer(
                     &event_channel,
@@ -133,33 +142,6 @@ pub async fn install_minecraft(
             }
             Loader::NeoForge => unimplemented!(),
         };
-
-        info!("{}", modded_version);
-
-        let modded_directory = runtime_directory.join("versions").join(&modded_version);
-        let modded_manifest = modded_directory.join(format!("{}.json", modded_version));
-        let modded_jar = modded_directory.join(format!("{}.jar", modded_version));
-        let vanilla_jar = version_directory.join(format!("{}.jar", config.version));
-
-        if modded_jar.exists() && modded_jar.is_file() {
-            fs::remove_file(&modded_jar).await?;
-        }
-        info!(
-            "Copying {} to {}",
-            vanilla_jar.to_string_lossy(),
-            modded_jar.to_string_lossy()
-        );
-        fs::copy(vanilla_jar, modded_jar).await?;
-
-        let mod_manifest = Manifest::read_manifest(&modded_manifest, false).await?;
-
-        download_libraries(
-            &event_channel,
-            &runtime_directory,
-            &modded_version,
-            mod_manifest.libraries,
-        )
-        .await?;
     }
 
     Ok(())

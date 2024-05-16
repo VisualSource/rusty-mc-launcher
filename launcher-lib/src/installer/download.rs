@@ -8,6 +8,7 @@ use crate::manifest::Downloads;
 use crate::manifest::Library;
 use futures::StreamExt;
 use log::info;
+use log::warn;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -178,13 +179,20 @@ pub async fn download_libraries(
 
             match &lib.downloads {
                 Some(downloads) => {
-                    utils::download_file(
-                        &downloads.artifact.url,
-                        &path,
-                        None,
-                        Some(&downloads.artifact.sha1),
-                    )
-                    .await?;
+                    if !downloads.artifact.url.is_empty() {
+                        utils::download_file(
+                            &downloads.artifact.url,
+                            &path,
+                            None,
+                            Some(&downloads.artifact.sha1),
+                        )
+                        .await?;
+                    } else {
+                        warn!(
+                            "Lib {} does not have a download url! Most likely a forge library.",
+                            lib.name
+                        );
+                    }
                 }
                 None => {
                     let url = format!(
@@ -295,7 +303,9 @@ pub async fn download_libraries(
                 log::error!("{}", error);
             }
         });
-        return Err(LauncherError::Generic("".to_string()));
+        return Err(LauncherError::Generic(
+            "Failed to download libraries".to_string(),
+        ));
     }
 
     Ok(())

@@ -94,13 +94,14 @@ pub async fn extract_file_to(
             "Failed to get index of file".to_string(),
         ))?;
 
-    extract_file_at(archive, file_index, outdir).await
+    extract_file_at(archive, file_index, outdir, None).await
 }
 
 pub async fn extract_dir(
     archive: &mut Archive,
     dir: &str,
     outdir: &Path,
+    modpath: Option<fn(&str) -> String>,
 ) -> Result<(), LauncherError> {
     for index in 0..archive.file().entries().len() {
         let entry = archive
@@ -112,7 +113,7 @@ pub async fn extract_dir(
         let file_name = entry.filename().as_str()?;
         if file_name.starts_with(dir) {
             info!("Extracting file {}", file_name);
-            extract_file_at(archive, index, outdir).await?;
+            extract_file_at(archive, index, outdir, modpath).await?;
         }
     }
 
@@ -122,7 +123,7 @@ pub async fn extract_dir(
 /// Extract all files from archive
 pub async fn extract_all(archive: &mut Archive, outdir: &Path) -> Result<(), LauncherError> {
     for index in 0..archive.file().entries().len() {
-        extract_file_at(archive, index, outdir).await?;
+        extract_file_at(archive, index, outdir, None).await?;
     }
 
     Ok(())
@@ -132,6 +133,7 @@ async fn extract_file_at(
     archive: &mut Archive,
     index: usize,
     outdir: &Path,
+    modpath: Option<fn(&str) -> String>,
 ) -> Result<u64, LauncherError> {
     let entry = archive
         .file()
@@ -139,9 +141,15 @@ async fn extract_file_at(
         .get(index)
         .ok_or(LauncherError::Generic("Failed to get entry".to_string()))?;
 
-    let file_path = outdir
-        .join(sanitize_file_path(entry.filename().as_str()?))
-        .normalize();
+    let filename = entry.filename().as_str()?;
+
+    let file_path = if let Some(modpath) = modpath {
+        outdir
+            .join(sanitize_file_path(&modpath(filename)))
+            .normalize()
+    } else {
+        outdir.join(sanitize_file_path(filename)).normalize()
+    };
 
     info!("Extracting file to {}", file_path.to_string_lossy());
 
@@ -149,7 +157,6 @@ async fn extract_file_at(
         if !file_path.exists() {
             fs::create_dir_all(&file_path).await?;
         }
-
         Ok(0)
     } else {
         if file_path.exists() && file_path.is_file() {
@@ -193,6 +200,17 @@ mod tests {
     use tokio::fs::File;
 
     #[tokio::test]
+    async fn test_open() {
+        let temp = std::env::temp_dir().join("runtime\\versions\\1.20.6\\1.20.6.jar");
+
+        let file = File::open(temp).await.expect("Failed to open file");
+
+        let archive = open_archive(file).await.expect("Failed to open");
+
+        println!("Files in archive: {}", archive.file().entries().len())
+    }
+
+    #[tokio::test]
     async fn test_get_mainclass() {
         let file = temp_dir().join("forge-1.20.6-50.0.20-installer.jar");
 
@@ -212,7 +230,7 @@ mod tests {
         .await
         .expect("Failed to open archive");
 
-        extract_dir(&mut archive, "maven", &file.join("libraries"))
+        extract_dir(&mut archive, "maven", &file.join("libraries"), None)
             .await
             .expect("Failed to extract");
     }

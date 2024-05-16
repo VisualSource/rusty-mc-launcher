@@ -1,8 +1,9 @@
-use crate::errors::LauncherError;
+use crate::{errors::LauncherError, installer::download::download_libraries, manifest::Manifest};
+use log::info;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::{path::Path, process::Stdio};
-use tokio::{io::AsyncBufReadExt, sync::mpsc::Sender};
+use tokio::{fs, io::AsyncBufReadExt, sync::mpsc::Sender};
 
 use super::utils::{self, ChannelMessage};
 
@@ -43,13 +44,13 @@ pub async fn get_latest_installer(quilt: bool) -> Result<String, LauncherError> 
 }
 
 pub async fn run_installer(
-    _event_channel: &Sender<ChannelMessage>,
+    event_channel: &Sender<ChannelMessage>,
     runtime_directory: &Path,
     java: &str,
     version: &str,
     loader_version: Option<String>,
     quilt: bool,
-) -> Result<String, LauncherError> {
+) -> Result<(), LauncherError> {
     let loader_version = if let Some(version) = loader_version {
         version
     } else {
@@ -165,12 +166,41 @@ pub async fn run_installer(
 
     tokio::fs::remove_file(&installer_path).await?;
 
-    let version = match quilt {
+    let modded_version = match quilt {
         false => format!("fabric-loader-{}-{}", loader_version, version),
         true => format!("quilt-loader{}-{}", loader_version, version),
     };
 
-    Ok(version)
+    let modded_directory = runtime_directory.join("versions").join(&modded_version);
+    let modded_manifest = modded_directory.join(format!("{}.json", &modded_version));
+    let modded_jar = modded_directory.join(format!("{}.jar", modded_version));
+    let vanilla_jar = runtime_directory
+        .join("versions")
+        .join(format!("{}.jar", version));
+
+    if modded_jar.exists() && modded_jar.is_file() {
+        fs::remove_file(&modded_jar).await?;
+    }
+
+    let bytes = fs::copy(&vanilla_jar, &modded_jar).await?;
+    info!(
+        "Copying {} to {} | {} bytes",
+        vanilla_jar.to_string_lossy(),
+        modded_jar.to_string_lossy(),
+        bytes
+    );
+
+    let manifest = Manifest::read_manifest(&modded_manifest, false).await?;
+
+    download_libraries(
+        event_channel,
+        runtime_directory,
+        &modded_version,
+        manifest.libraries,
+    )
+    .await?;
+
+    Ok(())
 }
 
 #[cfg(test)]

@@ -1,12 +1,10 @@
-use super::{
-    compression::extract_file_to,
-    download_libraries,
-    utils::{event_internal, ChannelMessage},
-};
-use futures::TryFutureExt;
-use log::info;
+use super::{download_libraries, utils::ChannelMessage};
+use log::{debug, info};
 use normalize_path::NormalizePath;
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use serde::Deserialize;
 use tokio::{
@@ -26,7 +24,7 @@ use super::{
 #[derive(Debug, Deserialize)]
 struct Mapping {
     client: String,
-    server: String,
+    //server: String,
 }
 impl Mapping {
     fn get_client(&self, libary_path: &Path) -> Result<String, LauncherError> {
@@ -39,7 +37,7 @@ impl Mapping {
                 .to_string_lossy()
                 .to_string())
         } else {
-            Ok(self.client.to_string())
+            Ok(self.client.replace('\'', ""))
         }
     }
 }
@@ -61,20 +59,33 @@ impl Processor {
         }
     }
 
-    pub fn get_args(&self, mappings: &[(String, String)]) -> Result<Vec<String>, LauncherError> {
+    pub fn get_args(
+        &self,
+        mappings: &[(String, String)],
+        library_directory: &Path,
+    ) -> Result<Vec<String>, LauncherError> {
         let mut args = Vec::new();
 
         for arg in &self.args {
             if arg.starts_with('{') && arg.ends_with('}') {
-                let mapping =
-                    mappings
-                        .iter()
-                        .find(|x| &x.0 == arg)
-                        .ok_or(LauncherError::NotFound(format!(
-                            "Failed to find mapping for: {}",
-                            arg
-                        )))?;
+                let mapping = mappings
+                    .iter()
+                    .find(|x| x.0 == arg.replace(['{', '}'], ""))
+                    .ok_or(LauncherError::NotFound(format!(
+                        "Failed to find mapping for: {}",
+                        arg
+                    )))?;
                 args.push(mapping.1.to_owned());
+            } else if arg.starts_with('[') && arg.ends_with(']') {
+                let path = Library::get_artifact_path(&arg.replace(['[', ']'], ""))?;
+
+                args.push(
+                    library_directory
+                        .join(path)
+                        .normalize()
+                        .to_string_lossy()
+                        .to_string(),
+                );
             } else {
                 args.push(arg.to_owned());
             }
@@ -101,6 +112,10 @@ impl InstallProfile {
         let mut mappings = Vec::new();
 
         for (key, mapping) in &self.data {
+            if key == "BINPATCH" {
+                continue;
+            }
+
             let arg = mapping.get_client(library_directory)?;
             mappings.push((key.to_string(), arg))
         }
@@ -114,7 +129,7 @@ impl InstallProfile {
         installer_path: &Path,
         runtime_directory: &Path,
         java: &str,
-    ) -> Result<(), LauncherError> {
+    ) -> Result<PathBuf, LauncherError> {
         let library_directory = runtime_directory.join("libraries");
         let vanilla_jar = runtime_directory
             .join("versions")
@@ -124,19 +139,15 @@ impl InstallProfile {
 
         let mut mappings = self.get_mappings(&library_directory)?;
         mappings.push((
-            "{MINECRAFT_JAR}".to_string(),
+            "MINECRAFT_JAR".to_string(),
             vanilla_jar.to_string_lossy().to_string(),
         ));
         mappings.push((
-            "{INSTALLER}".to_string(),
+            "INSTALLER".to_string(),
             installer_path.to_string_lossy().to_string(),
         ));
-        mappings.push(("{BINPATCH}".to_string(), lzma.to_string_lossy().to_string()));
-        mappings.push((
-            "{ROOT}".to_string(),
-            std::env::temp_dir().to_string_lossy().to_string(),
-        ));
-        mappings.push(("{SIDE}".to_string(), "client".to_string()));
+        mappings.push(("BINPATCH".to_string(), lzma.to_string_lossy().to_string()));
+        mappings.push(("SIDE".to_string(), "client".to_string()));
 
         let processors = self.processors.iter().filter(|x| x.is_client());
 
@@ -164,7 +175,7 @@ impl InstallProfile {
 
             let main_class = compression::get_mainclass(&main_jar).await?;
 
-            let args = processor.get_args(&mappings)?;
+            let args = processor.get_args(&mappings, &library_directory)?;
 
             let command = tokio::process::Command::new(java)
                 .arg("-cp")
@@ -177,7 +188,7 @@ impl InstallProfile {
             info!("{}", String::from_utf8_lossy(&command.stdout));
         }
 
-        Ok(())
+        Ok(vanilla_jar)
     }
 }
 
@@ -219,6 +230,8 @@ pub async fn run_installer(
 
     let forge_version = format!("{}-{}", version, loader_version);
 
+    info!("Using forge version {}", forge_version);
+
     let forge_download_url = format!(
         "https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar",
         forge_version
@@ -228,26 +241,24 @@ pub async fn run_installer(
     let installer_path = temp.join(format!("installer-forge-{}.jar", forge_version));
     // archive life time
     let (profile, modded_manifest_path) = {
+        if installer_path.exists() && installer_path.is_file() {
+            fs::remove_file(&installer_path).await?;
+        }
+
         utils::download_file(&forge_download_url, &installer_path, None, None).await?;
 
+        info!("Extracting and parseing install_profile");
         let mut archive = open_archive(File::open(&installer_path).await?).await?;
         let profile =
             compression::parse_extract::<InstallProfile>(&mut archive, "install_profile.json")
                 .await?;
 
-        download_libraries(
-            event_channel,
-            runtime_directory,
-            &profile.version,
-            profile.libraries.to_owned(),
-        )
-        .await?;
-
         let version_directory = runtime_directory.join("versions").join(&profile.version);
         let modded_manifest_path = version_directory.join(format!("{}.json", &profile.version));
-        let libraries_directory = runtime_directory.join("libraries");
 
-        extract_file_to(&mut archive, "version.json", &version_directory).await?;
+        info!("Extracting version.json");
+        // extract version manifest and rename
+        compression::extract_file_to(&mut archive, "version.json", &version_directory).await?;
 
         fs::rename(
             version_directory.join("version.json"),
@@ -255,29 +266,61 @@ pub async fn run_installer(
         )
         .await?;
 
-        compression::extract_dir(&mut archive, "maven", &libraries_directory).await?;
-        compression::extract_file_to(&mut archive, "client.lzma", &temp).await?;
+        info!("Extracting files from dir");
+        // extract libs in installer jar
+        let libraries_directory = runtime_directory.join("libraries");
+        compression::extract_dir(
+            &mut archive,
+            "maven",
+            &libraries_directory,
+            Some(|filepath| filepath.replace("maven", "")),
+        )
+        .await?;
+
+        info!("Extract file client.lzma");
+        // extract client.lzma
+        compression::extract_file_to(&mut archive, "data/client.lzma", &temp).await?;
 
         (profile, modded_manifest_path)
     };
 
     let manifest = Manifest::read_manifest(&modded_manifest_path, false).await?;
 
-    download_libraries(
-        event_channel,
-        runtime_directory,
-        &manifest.id,
-        manifest.libraries,
-    )
-    .await?;
-
-    // fs::copy(vanilla_jar, &modded_jar).await?;
+    tokio::try_join! {
+        // profile libraries
+        download_libraries(
+            event_channel,
+            runtime_directory,
+            &profile.version,
+            profile.libraries.to_owned(),
+        ),
+        // manifest libraries
+        download_libraries(
+            event_channel,
+            runtime_directory,
+            &manifest.id,
+            manifest.libraries,
+        )
+    }?;
 
     let lzma_path = temp.join("data/client.lzma").normalize();
     // run processors
-    profile
+    let vanilla_jar = profile
         .run_client_processors(&lzma_path, &installer_path, runtime_directory, java)
         .await?;
+
+    let modded_jar = runtime_directory
+        .join("versions")
+        .join(&profile.version)
+        .join(format!("{}.jar", &profile.version));
+    let copyed = fs::copy(&vanilla_jar, &modded_jar).await?;
+
+    info!(
+        "Copyed {} to {} | {} bytes",
+        vanilla_jar.to_string_lossy(),
+        modded_jar.to_string_lossy(),
+        copyed
+    );
 
     fs::remove_file(&installer_path).await?;
     fs::remove_file(&lzma_path).await?;
@@ -293,13 +336,131 @@ pub async fn run_installer(
 mod tests {
     use super::*;
 
+    fn init() {
+        let _ = env_logger::builder()
+            .filter_level(log::LevelFilter::Debug)
+            .is_test(true)
+            .try_init();
+    }
+
     #[tokio::test]
     async fn test_forge_install() {
+        init();
+
         let runtime_dir = std::env::temp_dir().join("runtime");
+        let (tx, _) = tokio::sync::mpsc::channel(2);
+        let java = runtime_dir
+            .join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\java.exe")
+            .to_string_lossy()
+            .to_string();
+        run_installer(&tx, "1.20.6", None, &runtime_dir, &java)
+            .await
+            .expect("Failed to install forge");
 
         /*run_installer("1.20.6", None, &runtime_dir, "")
         .await
         .expect("Failed to install");*/
+    }
+    #[test]
+    fn test_get_processer_args() {
+        let processor = serde_json::from_str::<Processor>(
+            r#"
+        {
+            "jar": "",
+            "classpath": [],
+            "args": [
+                "--task",
+                "MCP_DATA",
+                "--input",
+                "[de.oceanlabs.mcp:mcp_config:1.20.6-20240429.135109@zip]",
+                "--output",
+                "{MAPPINGS}",
+                "--key",
+                "mappings"
+            ],
+        }
+        "#,
+        )
+        .expect("Failed to parse");
+
+        let dir = std::env::temp_dir().join("libraries");
+
+        let mappings = vec![("MAPPINGS".to_string(), "/EXAMPLE_PATH.trg".to_string())];
+
+        let result = processor
+            .get_args(&mappings, &dir)
+            .expect("Failed to parse");
+
+        println!("{:#?}", result);
+    }
+
+    #[test]
+    fn test_get_mappings() {
+        let a = serde_json::from_str::<InstallProfile>(
+            r#"
+        {
+            "path": "net.minecraftforge:forge:1.20.6-50.0.20:shim",
+            "processors": [],
+            "libraries": [],
+            "minecraft": "1.20.6",
+            "version": "1.20.6-forge-50.0.20",
+            "data": {
+                "MAPPINGS": {
+                    "client": "[de.oceanlabs.mcp:mcp_config:1.20.6-20240429.135109:mappings@tsrg]",
+                    "server": "[de.oceanlabs.mcp:mcp_config:1.20.6-20240429.135109:mappings@tsrg]"
+                },
+                "MAPPINGS_SHA": {
+                    "client": "'6f1298ce9eabba35559aab5378a7a9ffb693ba95'",
+                    "server": "'6f1298ce9eabba35559aab5378a7a9ffb693ba95'"
+                },
+                "MOJMAPS": {
+                    "client": "[net.minecraft:client:1.20.6:mappings@tsrg]",
+                    "server": "[net.minecraft:server:1.20.6:mappings@tsrg]"
+                },
+                "MOJMAPS_SHA": {
+                    "client": "'269c6b975e8731ae55c12caddecb257c6fe25a22'",
+                    "server": "'95e69f71484eb41c48d18cd42d2478de4cb78510'"
+                },
+                "MC_UNPACKED": {
+                    "client": "[net.minecraft:client:1.20.6]",
+                    "server": "[net.minecraft:server:1.20.6:unpacked]"
+                },
+                "MC_UNPACKED_SHA": {
+                    "client": "'05b6f1c6b46a29d6ea82b4e0d42190e42402030f'",
+                    "server": "'04b1dd8b5704b0e0baa452f7b411a4b69af44b51'"
+                },
+                "MC_OFF": {
+                    "client": "[net.minecraft:client:1.20.6:official]",
+                    "server": "[net.minecraft:server:1.20.6:official]"
+                },
+                "MC_OFF_SHA": {
+                    "client": "'547664b3b3906f53801eeb78b234431f56512409'",
+                    "server": "'806cda7c01ab8e8d0e90050d7e4a4e7a16945711'"
+                },
+                "BINPATCH": {
+                    "client": "/data/client.lzma",
+                    "server": "/data/server.lzma"
+                },
+                "PATCHED": {
+                    "client": "[net.minecraftforge:forge:1.20.6-50.0.20:client]",
+                    "server": "[net.minecraftforge:forge:1.20.6-50.0.20:server]"
+                },
+                "PATCHED_SHA": {
+                    "client": "'0e34b0d78fdca8747bdda3badb564339491a80c9'",
+                    "server": "'45c82a01b66737bab7d9f40caa9e0a193f22e31c'"
+                }
+            }
+
+        }
+        "#,
+        )
+        .expect("Failed to parse");
+
+        let temp = std::env::temp_dir();
+
+        let mappings = a.get_mappings(&temp).expect("Failed to get mappings");
+
+        println!("{:#?}", mappings);
     }
 
     #[tokio::test]

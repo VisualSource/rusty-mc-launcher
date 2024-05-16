@@ -262,7 +262,7 @@ pub struct Extract {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Logging {
-    pub client: LoggingClient,
+    pub client: Option<LoggingClient>,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]

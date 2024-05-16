@@ -114,6 +114,12 @@ pub async fn download_file(
         }
     }
 
+    if source_url.is_empty() {
+        return Err(LauncherError::NotFound(
+            "No download url was provided".to_string(),
+        ));
+    }
+
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
         let mut req = REQUEST_CLIENT.request(reqwest::Method::GET, source_url);
 
