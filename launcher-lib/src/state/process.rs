@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
-use sha1::digest::typenum::Min;
 use std::{collections::HashMap, sync::Arc};
 use tokio::process::{Child, Command};
-use tokio::{sync::RwLock, task::JoinHandle};
+use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::errors::LauncherError;
@@ -69,7 +68,7 @@ impl Instances {
         unimplemented!()
     }
 
-    pub fn get(&self, uuid: Uuid) -> Option<Arc<RwLock<MinecraftInstance>>> {
+    pub fn get(&self, _uuid: Uuid) -> Option<Arc<RwLock<MinecraftInstance>>> {
         unimplemented!()
     }
 
@@ -77,7 +76,7 @@ impl Instances {
         self.0.keys().cloned().collect()
     }
 
-    pub async fn exit_status(&self, uuid: Uuid) -> Result<Option<i32>, LauncherError> {
+    pub async fn exit_status(&self, _uuid: Uuid) -> Result<Option<i32>, LauncherError> {
         unimplemented!()
     }
 

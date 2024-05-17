@@ -1,5 +1,5 @@
 use super::{download_libraries, utils::ChannelMessage};
-use log::{debug, info};
+use log::info;
 use normalize_path::NormalizePath;
 use std::{
     collections::HashMap,
@@ -194,7 +194,7 @@ impl InstallProfile {
 
 pub async fn get_latest_version(minecraft_version: &str) -> Result<String, LauncherError> {
     let regex = regex::Regex::new(&format!(
-        r"<version>{minecraft_version}-(?<loader_version>\d+\.\d+\.\d+)</version>"
+        r"<version>{minecraft_version}-(?<loader_version>\d+\.\d+\.\d+)<\/version>"
     ))?;
 
     let response = utils::REQUEST_CLIENT

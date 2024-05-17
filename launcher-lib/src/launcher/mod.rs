@@ -1,5 +1,4 @@
 pub mod arguments;
-mod state;
 use self::arguments::Arguments;
 use crate::state::AppState;
 use crate::{errors::LauncherError, manifest::Manifest};

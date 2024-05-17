@@ -3,11 +3,11 @@ mod download;
 mod fabric;
 mod forge;
 mod metadata;
+pub mod pack;
 pub mod utils;
 use std::path::PathBuf;
 
 use download::{download_assets, download_client, download_java, download_libraries};
-use log::info;
 use tokio::sync::mpsc;
 
 use crate::manifest::Manifest;
@@ -16,7 +16,6 @@ use crate::{errors::LauncherError, state::AppState};
 use metadata::get_launcher_manifest;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
-use tokio::fs::{self};
 
 use utils::ChannelMessage;
 
@@ -26,7 +25,6 @@ pub enum Loader {
     Forge,
     Fabric,
     Quilt,
-    NeoForge,
 }
 impl Default for Loader {
     fn default() -> Self {
@@ -140,7 +138,6 @@ pub async fn install_minecraft(
                 )
                 .await?
             }
-            Loader::NeoForge => unimplemented!(),
         };
     }
 
