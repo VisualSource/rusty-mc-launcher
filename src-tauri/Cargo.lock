@@ -96,7 +96,6 @@ dependencies = [
  "tauri-plugin-deep-link",
  "tauri-plugin-log",
  "tauri-plugin-single-instance",
- "tauri-plugin-sqlite",
  "thiserror",
  "time",
  "tokio",
@@ -2278,6 +2277,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha1",
+ "sqlite",
  "thiserror",
  "tokio",
  "tokio-util",
@@ -3777,19 +3777,18 @@ dependencies = [
 
 [[package]]
 name = "sqlite"
-version = "0.26.0"
+version = "0.36.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fb1a534c07ec276fbbe0e55a1c00814d8563da3a2f4d9d9d4c802bd1278db6a"
+checksum = "274e5a9a0968bc9797fd3fe75a544cbcd3e3c2a111cb1c11cb8a0290f9684cb2"
 dependencies = [
- "libc",
  "sqlite3-sys",
 ]
 
 [[package]]
 name = "sqlite3-src"
-version = "0.3.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a260b07ce75a0644c6f5891f34f46db9869e731838e95293469ab17999abcfa3"
+checksum = "174d4a6df77c27db281fb23de1a6d968f3aaaa4807c2a1afa8056b971f947b4a"
 dependencies = [
  "cc",
  "pkg-config",
@@ -3797,11 +3796,10 @@ dependencies = [
 
 [[package]]
 name = "sqlite3-sys"
-version = "0.13.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04d2f028faeb14352df7934b4771806f60d61ce61be1928ec92396d7492e2e54"
+checksum = "3901ada7090c3c3584dc92ec7ef1b7091868d13bfe6d7de9f0bcaffee7d0ade5"
 dependencies = [
- "libc",
  "sqlite3-src",
 ]
 
@@ -4185,18 +4183,6 @@ dependencies = [
  "thiserror",
  "windows-sys 0.52.0",
  "zbus",
-]
-
-[[package]]
-name = "tauri-plugin-sqlite"
-version = "0.1.0"
-source = "git+https://github.com/lzdyes/tauri-plugin-sqlite?tag=v0.1.1#3d09a5a963f96a06debe27b3e37d9337aca18dcc"
-dependencies = [
- "serde",
- "serde_json",
- "sqlite",
- "tauri",
- "thiserror",
 ]
 
 [[package]]

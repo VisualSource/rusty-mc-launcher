@@ -3,6 +3,9 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum LauncherError {
     #[error(transparent)]
+    Sqlite(#[from] sqlite::Error),
+
+    #[error(transparent)]
     Http(#[from] reqwest::Error),
     #[error(transparent)]
     IoError(#[from] std::io::Error),

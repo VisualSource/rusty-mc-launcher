@@ -211,10 +211,9 @@ pub async fn start_game(launch_config: LaunchConfig, app: &AppState) -> Result<(
         "Failed to get java runtime.".to_string(),
     ))?;
 
-    let store = app.java.read().await;
-
-    let java_exe = store
-        .get(java_version.major_version)
+    let java_exe = app
+        .get_java(java_version.major_version)
+        .await?
         .ok_or(LauncherError::NotFound("Java was not found".to_string()))?;
 
     let mut args = vec![];
@@ -229,7 +228,7 @@ pub async fn start_game(launch_config: LaunchConfig, app: &AppState) -> Result<(
     let mut store = app.instances.write().await;
 
     store
-        .insert_new_process(Uuid::new_v4(), java_exe, args)
+        .insert_new_process(Uuid::new_v4(), &java_exe, args)
         .await?;
 
     Ok(())
@@ -265,10 +264,10 @@ mod tests {
             quick_play_multiplayer: None,
         };
 
-        let app = AppState::default();
-        let mut store = app.java.write().await;
-        store
-            .insert(21, "1.21".to_string(), java)
+        let app = AppState::new(":memory:").expect("Failed to build");
+
+        app.insert_java(21, "0.0.0", &java)
+            .await
             .expect("Failed to insert");
 
         start_game(settings, &app)

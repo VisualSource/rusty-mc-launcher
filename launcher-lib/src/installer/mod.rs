@@ -1,9 +1,9 @@
 mod compression;
+pub mod content;
 mod download;
 mod fabric;
 mod forge;
 mod metadata;
-pub mod pack;
 pub mod utils;
 use std::path::PathBuf;
 
@@ -40,6 +40,22 @@ pub struct InstallConfig {
     loader_version: Option<String>,
 }
 
+impl InstallConfig {
+    pub fn new(
+        app_directory: PathBuf,
+        version: String,
+        loader: Loader,
+        loader_version: Option<String>,
+    ) -> Self {
+        Self {
+            app_directory,
+            version,
+            loader,
+            loader_version,
+        }
+    }
+}
+
 pub async fn install_minecraft(
     app: &AppState,
     config: InstallConfig,
@@ -71,18 +87,11 @@ pub async fn install_minecraft(
         .ok_or(LauncherError::NotFound("Java not found".to_string()))?
         .major_version;
 
-    let found_java = {
-        let store = app.java.read().await;
-        store.has(java_version)
-    };
-
-    if !found_java {
+    if app.get_java(java_version).await?.is_none() {
         let (build_version, path) =
             download_java(&event_channel, &runtime_directory, java_version).await?;
 
-        let mut store = app.java.write().await;
-
-        store.insert(java_version, build_version, path)?;
+        app.insert_java(java_version, &build_version, &path).await?;
     }
 
     tokio::try_join! {
@@ -92,15 +101,12 @@ pub async fn install_minecraft(
     }?;
 
     if config.loader != Loader::Vanilla {
-        let java_exe = {
-            let store = app.java.read().await;
-            store
-                .get(java_version)
-                .ok_or(LauncherError::NotFound(
-                    "Java executable was not found".to_string(),
-                ))?
-                .to_owned()
-        };
+        let java_exe = app
+            .get_java(java_version)
+            .await?
+            .ok_or(LauncherError::NotFound(
+                "Java executable was not found".to_string(),
+            ))?;
 
         match config.loader {
             Loader::Vanilla => {
@@ -163,14 +169,12 @@ mod tests {
         let runtime_directory = std::env::temp_dir();
         let runtime_dir = runtime_directory.join("runtime");
         let java = runtime_dir.join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe");
-        let app = AppState::default();
+        let app = AppState::new(":memory:").expect("Failed to make app");
 
-        {
-            let mut store = app.java.write().await;
-            store
-                .insert(21, "".to_string(), java)
-                .expect("Failed to insert");
-        }
+        app.insert_java(21, "0.0.0", &java)
+            .await
+            .expect("Failed to insert");
+
         let config = InstallConfig {
             app_directory: runtime_directory,
             version: "1.20.6".to_string(),
@@ -190,7 +194,7 @@ mod tests {
         let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
         let runtime_directory = std::env::temp_dir();
 
-        let app = AppState::default();
+        let app = AppState::new(":memory:").expect("Failed to make app");
 
         let config = InstallConfig {
             app_directory: runtime_directory,

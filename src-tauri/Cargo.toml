@@ -24,7 +24,7 @@ time = "0.3.36"
 httparse = "1.8.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-sqlite = { git="https://github.com/lzdyes/tauri-plugin-sqlite", tag = "v0.1.1" }
+#tauri-plugin-sqlite = { git="https://github.com/lzdyes/tauri-plugin-sqlite", tag = "v0.1.1" }
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 tauri-plugin-deep-link = { git = "https://github.com/FabianLars/tauri-plugin-deep-link" }
 tauri = { version = "1.6.2", features = [ 
