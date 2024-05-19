@@ -82,7 +82,7 @@ pub async fn install_mrpack(
 
     let profile_id = uuid::Uuid::new_v4();
 
-    let current_profile_dir = app.get_profile_directory().join(profile_id.to_string());
+    let current_profile_dir = app.get_path("key.app").await?.join(profile_id.to_string());
 
     let mods_directory = current_profile_dir.join("mods");
 

@@ -200,7 +200,7 @@ impl Config {
     }
 }
 
-pub async fn start_game(launch_config: LaunchConfig, app: &AppState) -> Result<(), LauncherError> {
+pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(), LauncherError> {
     let (config, manifest) = Config::from(launch_config).await?;
 
     let game_args = Arguments::parse_args(&manifest.arguments.game, &config);
@@ -225,10 +225,8 @@ pub async fn start_game(launch_config: LaunchConfig, app: &AppState) -> Result<(
     args.push(manifest.main_class);
     args.extend(game_args);
 
-    let mut store = app.instances.write().await;
-
-    store
-        .insert_new_process(Uuid::new_v4(), &java_exe, args)
+    app.instances
+        .insert_new_process(app, Uuid::new_v4(), Uuid::new_v4(), &java_exe, args)
         .await?;
 
     Ok(())
@@ -270,7 +268,7 @@ mod tests {
             .await
             .expect("Failed to insert");
 
-        start_game(settings, &app)
+        start_game(&app, settings)
             .await
             .expect("Failed to build string");
     }

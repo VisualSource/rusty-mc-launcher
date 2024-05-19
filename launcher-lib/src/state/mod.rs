@@ -1,31 +1,23 @@
+mod process;
+mod profile;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 use log::warn;
 use normalize_path::NormalizePath;
-use sqlite::{Connection, ConnectionThreadSafe, State};
+use sqlite::{Connection, ConnectionThreadSafe};
 
 use tokio::sync::RwLock;
 
 use crate::errors::LauncherError;
 
-mod java;
-mod process;
-
 pub struct AppState {
-    pub instances: RwLock<process::Instances>,
+    pub instances: process::Instances,
     connection: RwLock<ConnectionThreadSafe>,
 }
-
-/*
-Settings Table
-
-key | metadata | value
-
-
-*/
 
 macro_rules! bind {
     ($statement:expr, $index:expr, $value:expr) => {
@@ -63,20 +55,13 @@ impl AppState {
 
         Ok(Self {
             connection: RwLock::new(connection),
-            instances: RwLock::new(process::Instances::new()),
+            instances: process::Instances::new(),
         })
     }
 
     pub async fn execute(&self, sql: &str) -> Result<(), LauncherError> {
-        let read_opeartion = sql.starts_with("SELECT") || sql.starts_with("select");
-
-        if read_opeartion {
-            let read = self.connection.read().await;
-            read.execute(sql)?;
-        } else {
-            let write = self.connection.write().await;
-            write.execute(sql)?;
-        }
+        let write = self.connection.write().await;
+        write.execute(sql)?;
 
         Ok(())
     }
@@ -84,7 +69,7 @@ impl AppState {
     pub async fn execute_with(
         &self,
         sql: &str,
-        values: Vec<serde_json::Value>,
+        values: &[serde_json::Value],
     ) -> Result<bool, LauncherError> {
         let connection = self.connection.write().await;
 
@@ -121,7 +106,7 @@ impl AppState {
         sql: &str,
         values: Vec<serde_json::Value>,
     ) -> Result<Vec<HashMap<String, serde_json::Value>>, LauncherError> {
-        let connection = self.connection.write().await;
+        let connection = self.connection.read().await;
         let statement = connection.prepare(sql)?;
 
         let names = statement
@@ -192,26 +177,6 @@ impl AppState {
         Ok(rows)
     }
 
-    pub async fn get_java(&self, version: usize) -> Result<Option<String>, LauncherError> {
-        let read = self.connection.read().await;
-
-        let mut statement = read.prepare("SELECT * FROM settings WHERE key = ?")?;
-        let key = format!("java.version.{}", version);
-        statement.bind((1, key.as_str()))?;
-
-        let mut path = String::new();
-
-        while let Ok(State::Row) = statement.next() {
-            path = statement.read::<String, _>("value")?;
-        }
-
-        if path.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(path))
-        }
-    }
-
     pub async fn validate_java_at(path: &Path) -> Result<Option<String>, LauncherError> {
         let bytes = include_bytes!("../../library/JavaInfo.class");
         let temp_dir = std::env::temp_dir();
@@ -260,7 +225,7 @@ impl AppState {
         log::info!("Found java {}", java_version);
 
         let write = self.connection.write().await;
-        let column_key = format!("java.version.{}", version);
+        let column_key = format!("java.{}", version);
         let column_value = path.normalize().to_string_lossy().to_string();
         write.execute(format!(
             "INSERT INTO settings VALUES ('{}', '{}', '{}')",
@@ -270,12 +235,42 @@ impl AppState {
         Ok(())
     }
 
-    pub fn get_app_directory(&self) -> PathBuf {
-        unimplemented!()
+    pub async fn get_java(&self, version: usize) -> Result<Option<String>, LauncherError> {
+        let key = format!("java.{}", version);
+        self.get_setting(&key).await
     }
 
-    pub fn get_profile_directory(&self) -> PathBuf {
-        unimplemented!()
+    pub async fn get_path(&self, key: &str) -> Result<PathBuf, LauncherError> {
+        let settings = self.get_setting(key).await?;
+
+        if settings.is_none() {
+            return Err(LauncherError::NotFound(format!(
+                "No path was found for key: '{}'",
+                key
+            )));
+        }
+
+        PathBuf::from_str(&settings.unwrap())
+            .map_err(|_| LauncherError::Generic("Failed to convert str to path".to_string()))
+    }
+
+    pub async fn get_setting(&self, setting: &str) -> Result<Option<String>, LauncherError> {
+        let read = self.connection.read().await;
+        let mut statement = read.prepare("SELECT value FROM settings WHERE key = ?;")?;
+        statement.bind((1, setting))?;
+        let values: Vec<Result<sqlite::Row, sqlite::Error>> = statement.into_iter().collect();
+
+        if let Some(row) = values.first() {
+            let item = row
+                .as_ref()
+                .map_err(|e| LauncherError::Generic(e.to_string()))?;
+
+            let path = item.read::<&str, _>("value");
+
+            return Ok(Some(path.to_string()));
+        }
+
+        Ok(None)
     }
 }
 
