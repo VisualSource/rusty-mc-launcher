@@ -23,7 +23,10 @@ thiserror = "1.0"
 async_zip = { version = "0.0.17", features = ["tokio","tokio-fs","deflate"] }
 sanitize-filename = "0.5.0"
 hex = "0.4.3"
-sqlite = "0.36.0"
+#sqlite = "0.36.0"
+
+sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite", "macros","chrono", "migrate"]}
+
 chrono = { version = "0.4.38", features = ["serde"] }
 #async-compression = { version = "0.4.10", features = ["lzma","tokio"]}
 normalize-path = "0.2.1"

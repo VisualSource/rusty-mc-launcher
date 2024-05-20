@@ -4,31 +4,16 @@ use crate::state::AppState;
 use crate::{errors::LauncherError, manifest::Manifest};
 use normalize_path::NormalizePath;
 use serde::Deserialize;
-use std::path::PathBuf;
 use tokio::fs;
-use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 pub struct LaunchConfig {
-    runtime_directory: PathBuf,
-    game_directory: PathBuf,
-    version: String,
     auth_player_name: String,
     auth_uuid: String,
     auth_access_token: String,
     auth_xuid: String,
 
-    #[serde(default)]
-    demo: bool,
-
-    additonal_java_arguments: Option<Vec<String>>,
-
-    resolution_width: Option<String>,
-    resolution_height: Option<String>,
-    quick_play_path: Option<String>,
-    quick_play_single_player: Option<String>,
-    quick_play_realms: Option<String>,
-    quick_play_multiplayer: Option<String>,
+    profile_id: String,
 }
 #[derive(Debug)]
 pub struct Config {
@@ -71,78 +56,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub async fn from(launch_config: LaunchConfig) -> Result<(Self, Manifest), LauncherError> {
-        let assets_root = launch_config.runtime_directory.join("assets").normalize();
-        if !assets_root.exists() || !assets_root.is_dir() {
-            return Err(LauncherError::NotFound(format!(
-                "Assets root was not found: ({})",
-                assets_root.to_string_lossy()
-            )));
-        }
-
-        let natives_directory = launch_config
-            .runtime_directory
-            .join("natives")
-            .join(&launch_config.version)
-            .normalize();
-
-        if !natives_directory.exists() || !natives_directory.is_dir() {
-            fs::create_dir_all(&natives_directory).await?;
-        }
-
-        let manifest_directory = launch_config
-            .runtime_directory
-            .join("versions")
-            .join(&launch_config.version)
-            .join(format!("{}.json", &launch_config.version))
-            .normalize();
-        if !manifest_directory.exists() || !manifest_directory.is_file() {
-            return Err(LauncherError::NotFound(format!(
-                "Manifest directory was not found: ({})",
-                manifest_directory.to_string_lossy()
-            )));
-        }
-
-        let manifest = Manifest::read_manifest(&manifest_directory, true).await?;
-
-        let classpath =
-            manifest.libs_as_string(&launch_config.runtime_directory, &launch_config.version)?;
-
-        Ok((
-            Self {
-                auth_player_name: launch_config.auth_player_name,
-                auth_access_token: launch_config.auth_access_token,
-                auth_uuid: launch_config.auth_uuid,
-                auth_xuid: launch_config.auth_xuid,
-                version_name: manifest.id.to_owned(),
-                version_type: manifest.release_type.to_owned(),
-                demo: launch_config.demo,
-                launcher_name: "mcrl".to_string(),
-                launcher_version: env!("CARGO_PKG_VERSION").to_string(),
-                assets_index_name: manifest
-                    .assets
-                    .as_ref()
-                    .ok_or(LauncherError::NotFound(
-                        "Failed to get assets index".to_string(),
-                    ))?
-                    .to_owned(),
-                resolution_height: launch_config.resolution_height,
-                resolution_width: launch_config.resolution_width,
-                classpath,
-                clientid: "c4502edb-87c6-40cb-b595-64a280cf8906".to_string(),
-                user_type: "msa".to_string(),
-                assets_root: assets_root.to_string_lossy().to_string(),
-                game_directory: launch_config.game_directory.to_string_lossy().to_string(),
-                additonal_java_arguments: launch_config.additonal_java_arguments,
-                natives_directory: natives_directory.to_string_lossy().to_string(),
-                quick_play_multiplayer: launch_config.quick_play_multiplayer,
-                quick_play_path: launch_config.quick_play_path,
-                quick_play_realms: launch_config.quick_play_realms,
-                quick_play_single_player: launch_config.quick_play_single_player,
-            },
-            manifest,
-        ))
-    }
     pub fn has_custom_resolution(&self) -> Option<bool> {
         Some(self.resolution_height.is_some() || self.resolution_width.is_some())
     }
@@ -201,7 +114,88 @@ impl Config {
 }
 
 pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(), LauncherError> {
-    let (config, manifest) = Config::from(launch_config).await?;
+    let runtime_directory = app.get_path("path.app").await?;
+
+    let profile = app
+        .get_profile(&launch_config.profile_id)
+        .await?
+        .ok_or_else(|| {
+            LauncherError::NotFound(format!(
+                "No Profile with uuid of {}",
+                launch_config.profile_id
+            ))
+        })?;
+
+    let game_directory = runtime_directory.join("profiles").join(&profile.id);
+
+    let assets_root = runtime_directory.join("assets").normalize();
+    if !assets_root.exists() || !assets_root.is_dir() {
+        return Err(LauncherError::NotFound(format!(
+            "Assets root was not found: ({})",
+            assets_root.to_string_lossy()
+        )));
+    }
+
+    let natives_directory = runtime_directory
+        .join("natives")
+        .join(&profile.version)
+        .normalize();
+
+    if !natives_directory.exists() || !natives_directory.is_dir() {
+        fs::create_dir_all(&natives_directory).await?;
+    }
+
+    let manifest_directory = runtime_directory
+        .join("versions")
+        .join(&profile.version)
+        .join(format!("{}.json", &profile.version))
+        .normalize();
+    if !manifest_directory.exists() || !manifest_directory.is_file() {
+        return Err(LauncherError::NotFound(format!(
+            "Manifest directory was not found: ({})",
+            manifest_directory.to_string_lossy()
+        )));
+    }
+
+    let manifest = Manifest::read_manifest(&manifest_directory, true).await?;
+
+    let classpath = manifest.libs_as_string(&runtime_directory, &profile.version)?;
+
+    let config = Config {
+        auth_player_name: launch_config.auth_player_name,
+        auth_access_token: launch_config.auth_access_token,
+        auth_uuid: launch_config.auth_uuid,
+        auth_xuid: launch_config.auth_xuid,
+        version_name: manifest.id.to_owned(),
+        version_type: manifest.release_type.to_owned(),
+        demo: false,
+        launcher_name: "mcrl".to_string(),
+        launcher_version: env!("CARGO_PKG_VERSION").to_string(),
+        assets_index_name: manifest
+            .assets
+            .as_ref()
+            .ok_or(LauncherError::NotFound(
+                "Failed to get assets index".to_string(),
+            ))?
+            .to_owned(),
+        resolution_height: profile.resolution_height,
+        resolution_width: profile.resolution_width,
+        classpath,
+        clientid: "c4502edb-87c6-40cb-b595-64a280cf8906".to_string(),
+        user_type: "msa".to_string(),
+        assets_root: assets_root.to_string_lossy().to_string(),
+        game_directory: game_directory.to_string_lossy().to_string(),
+        additonal_java_arguments: profile.java_args.map(|args| {
+            args.split_whitespace()
+                .map(|x| x.to_owned())
+                .collect::<Vec<String>>()
+        }),
+        natives_directory: natives_directory.to_string_lossy().to_string(),
+        quick_play_multiplayer: None,
+        quick_play_path: None,
+        quick_play_realms: None,
+        quick_play_single_player: None,
+    };
 
     let game_args = Arguments::parse_args(&manifest.arguments.game, &config);
     let jvm_args = Arguments::parse_args(&manifest.arguments.jvm, &config);
@@ -226,7 +220,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
     args.extend(game_args);
 
     app.instances
-        .insert_new_process(app, Uuid::new_v4(), Uuid::new_v4(), &java_exe, args)
+        .insert_new_process(app, profile.id, &java_exe, args)
         .await?;
 
     Ok(())
@@ -242,24 +236,11 @@ mod tests {
             .join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe")
             .normalize();
         let settings = LaunchConfig {
-            runtime_directory,
-            game_directory,
-            version: "1.20.6".to_string(),
+            profile_id: "AAAA".to_string(),
             auth_player_name: "VisaulSource".to_string(),
             auth_uuid: "37f0c4ef71c943e2baafd547302f0c92".to_string(),
             auth_access_token: "TOKEN".to_string(),
             auth_xuid: "0".to_string(),
-
-            demo: false,
-
-            additonal_java_arguments: Some(vec!["-Xmx2048M".to_string()]),
-
-            resolution_width: None,
-            resolution_height: None,
-            quick_play_path: None,
-            quick_play_single_player: None,
-            quick_play_realms: None,
-            quick_play_multiplayer: None,
         };
 
         let app = AppState::new(":memory:").expect("Failed to build");

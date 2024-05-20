@@ -5,7 +5,7 @@ mod fabric;
 mod forge;
 mod metadata;
 pub mod utils;
-use std::path::PathBuf;
+use crate::state::profile::Loader;
 
 use download::{download_assets, download_client, download_java, download_libraries};
 use tokio::sync::mpsc;
@@ -15,40 +15,19 @@ use crate::{errors::LauncherError, state::AppState};
 
 use metadata::get_launcher_manifest;
 use normalize_path::NormalizePath;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use utils::ChannelMessage;
-
-#[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Loader {
-    Vanilla,
-    Forge,
-    Fabric,
-    Quilt,
-}
-impl Default for Loader {
-    fn default() -> Self {
-        Self::Vanilla
-    }
-}
-
-#[derive(Debug, Deserialize)]
+pub use utils::ChannelMessage;
+#[derive(Debug, Deserialize, Serialize)]
 pub struct InstallConfig {
-    app_directory: PathBuf,
     version: String,
     loader: Loader,
     loader_version: Option<String>,
 }
 
 impl InstallConfig {
-    pub fn new(
-        app_directory: PathBuf,
-        version: String,
-        loader: Loader,
-        loader_version: Option<String>,
-    ) -> Self {
+    pub fn new(version: String, loader: Loader, loader_version: Option<String>) -> Self {
         Self {
-            app_directory,
             version,
             loader,
             loader_version,
@@ -63,7 +42,7 @@ pub async fn install_minecraft(
 ) -> Result<(), LauncherError> {
     // event!(&event_channel, "download", { "type": "status", "payload": { "message": "Starting minecraft install." } });
 
-    let runtime_directory = config.app_directory.join("runtime");
+    let runtime_directory = app.get_path("path.app").await?.join("runtime");
     let version_directory = runtime_directory.join("versions").join(&config.version);
 
     let client_manfiest_file = version_directory
@@ -169,14 +148,19 @@ mod tests {
         let runtime_directory = std::env::temp_dir();
         let runtime_dir = runtime_directory.join("runtime");
         let java = runtime_dir.join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe");
-        let app = AppState::new(":memory:").expect("Failed to make app");
-
+        let app = AppState::new("sqlite::memory:").expect("Failed to make app");
+        app.insert_setting(
+            "path.app",
+            None,
+            runtime_directory.to_string_lossy().to_string(),
+        )
+        .await
+        .expect("Failed to add settings");
         app.insert_java(21, "0.0.0", &java)
             .await
             .expect("Failed to insert");
 
         let config = InstallConfig {
-            app_directory: runtime_directory,
             version: "1.20.6".to_string(),
             loader: Loader::Fabric,
             loader_version: None,
@@ -194,10 +178,18 @@ mod tests {
         let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
         let runtime_directory = std::env::temp_dir();
 
-        let app = AppState::new(":memory:").expect("Failed to make app");
+        let app = AppState::new("sqlite::memory:").expect("Failed to make app");
+
+        app.insert_setting(
+            "path.app",
+            None,
+            runtime_directory.to_string_lossy().to_string(),
+        )
+        .await
+        .expect("Failed to add settings");
 
         let config = InstallConfig {
-            app_directory: runtime_directory,
+            //app_directory: runtime_directory,
             version: "1.20.6".to_string(),
             loader: Loader::Vanilla,
             loader_version: None,

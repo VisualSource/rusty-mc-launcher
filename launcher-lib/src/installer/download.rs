@@ -1,20 +1,12 @@
-use super::compression;
-use super::utils;
-use super::ChannelMessage;
-use crate::errors::LauncherError;
-use crate::manifest;
-use crate::manifest::asset_index::AssetIndex;
-use crate::manifest::Downloads;
-use crate::manifest::Library;
+use super::{compression, utils, ChannelMessage, LauncherError};
+use crate::manifest::{self, asset_index::AssetIndex, Downloads, Library};
 use futures::StreamExt;
-use log::info;
-use log::warn;
+use log::{info, warn};
+
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::path::PathBuf;
-use tokio::fs;
-use tokio::io::AsyncWriteExt;
-use tokio::sync::mpsc;
+use tokio::{fs, io::AsyncWriteExt, sync::mpsc};
 
 #[derive(Debug, Deserialize)]
 struct JavaDownload {
@@ -345,9 +337,9 @@ pub async fn download_assets(
 
     let mut reader = std::io::BufReader::new(file);
 
-    let assets: AssetIndex = serde_json::from_reader(&mut reader)?;
+    let asset_manifest: AssetIndex = serde_json::from_reader(&mut reader)?;
 
-    let indexs = futures::stream::iter(assets.objects.iter().map(|(key, asset)| {
+    let assets = futures::stream::iter(asset_manifest.objects.into_iter().map(|(key, asset)| {
         let root = assets_objects_directory.clone();
         async move {
             info!("Fetching asset: {}", key);
@@ -366,7 +358,6 @@ pub async fn download_assets(
             let url = format!("https://resources.download.minecraft.net/{}", hash);
 
             utils::download_file(&url, &file_path, None, Some(&asset.hash)).await?;
-
             Ok(())
         }
     }))
@@ -374,8 +365,8 @@ pub async fn download_assets(
     .collect::<Vec<Result<(), LauncherError>>>()
     .await;
 
-    if indexs.iter().any(|e| e.is_err()) {
-        indexs.iter().for_each(|e| {
+    if assets.iter().any(|e| e.is_err()) {
+        assets.iter().for_each(|e| {
             if let Err(err) = e {
                 log::error!("{}", err)
             }

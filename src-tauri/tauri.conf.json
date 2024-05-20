@@ -117,7 +117,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["./bin/*"],
+      "resources": ["./migrations/*"],
       "shortDescription": "",
       "targets": "all",
       "windows": {

@@ -1,6 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-use std::str::FromStr;
 use std::{collections::HashMap, sync::Arc};
 use tokio::process::{Child, Command};
 use tokio::sync::RwLock;
@@ -11,68 +9,21 @@ use crate::AppState;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProcessCache {
-    pub pid: u32,
-    pub uuid: Uuid,
+    pub pid: i64,
+    pub uuid: String,
     pub name: String,
     pub exe: String,
-    pub profile_id: Uuid,
+    pub profile_id: String,
 }
 
-impl TryFrom<HashMap<String, serde_json::Value>> for ProcessCache {
-    type Error = LauncherError;
-
-    fn try_from(value: HashMap<String, serde_json::Value>) -> Result<Self, Self::Error> {
-        let pid = value
-            .get("pid")
-            .ok_or(LauncherError::NotFound("Failed to get pid".to_string()))?
-            .as_u64()
-            .ok_or(LauncherError::Generic(
-                "Failed to convernt to u64".to_string(),
-            ))? as u32;
-        let uuid = value
-            .get("uuid")
-            .ok_or_else(|| LauncherError::NotFound("Failed to get pid".to_string()))?
-            .as_str()
-            .ok_or_else(|| LauncherError::Generic("Failed to convernt to u64".to_string()))?;
-
-        let uuid = Uuid::from_str(uuid)
-            .map_err(|e| LauncherError::Generic(format!("Failed to contruct uuid: {}", e)))?;
-
-        let name = value
-            .get("name")
-            .ok_or_else(|| LauncherError::NotFound("Failed to get name".to_string()))?
-            .as_str()
-            .ok_or_else(|| LauncherError::Generic("Failed to convernt to str".to_string()))?
-            .to_string();
-
-        let exe = value
-            .get("exe")
-            .ok_or_else(|| LauncherError::NotFound("Failed to get exe".to_string()))?
-            .as_str()
-            .ok_or_else(|| LauncherError::Generic("Failed to convernt to str".to_string()))?
-            .to_string();
-
-        let profile = value
-            .get("profile")
-            .ok_or_else(|| LauncherError::NotFound("Failed to get profile".to_string()))?
-            .as_str()
-            .ok_or_else(|| LauncherError::Generic("Failed to convernt to profile".to_string()))?;
-
-        let profile = Uuid::from_str(profile)
-            .map_err(|e| LauncherError::Generic(format!("Failed to contruct uuid: {}", e)))?;
-
-        Ok(Self {
-            pid,
-            uuid,
-            name,
-            exe,
-            profile_id: profile,
-        })
+impl ProcessCache {
+    pub fn get_pid(&self) -> u32 {
+        self.pid as u32
     }
 }
 
 #[derive(Debug)]
-pub struct Instances(RwLock<HashMap<Uuid, Arc<RwLock<MinecraftInstance>>>>);
+pub struct Instances(RwLock<HashMap<String, Arc<RwLock<MinecraftInstance>>>>);
 
 impl Default for Instances {
     fn default() -> Self {
@@ -85,22 +36,32 @@ impl Instances {
         Self(RwLock::new(HashMap::new()))
     }
 
+    pub async fn stop_process(&self, app: &AppState, uuid: String) -> Result<(), LauncherError> {
+        if let Some(process) = self.get(&uuid).await {
+            let a = process.write().await;
+            let mut instance = a.current_child.write().await;
+
+            instance.kill().await?;
+            instance.remove_cache(app, &uuid).await?;
+
+            self.0.write().await.remove(&uuid);
+        }
+
+        Ok(())
+    }
+
     pub async fn rescue_cache(&mut self, app: &AppState) -> Result<(), LauncherError> {
-        let processes = app.select("SELECT * FROM processes;", Vec::new()).await?;
-        app.execute("DELETE FROM processes;").await?;
+        let processes: Vec<ProcessCache> = sqlx::query_as!(ProcessCache, "SELECT * FROM processes")
+            .fetch_all(&app.database.0)
+            .await?;
+        sqlx::query("DELETE FROM processes")
+            .execute(&app.database.0)
+            .await?;
 
         for process in processes {
-            match ProcessCache::try_from(process) {
-                Ok(cache) => {
-                    let uuid = cache.uuid.to_owned();
-                    if let Err(err) = self.insert_cached_process(app, cache).await {
-                        log::warn!("Failed to rescue cached process {}: {}", uuid, err);
-                    }
-                }
-                Err(error) => log::warn!(
-                    "Failed to resuce cached process (Row was malformed): {}",
-                    error
-                ),
+            let uuid = process.uuid.to_owned();
+            if let Err(err) = self.insert_cached_process(app, process).await {
+                log::warn!("Failed to rescue cached process {}: {}", uuid, err);
             }
         }
 
@@ -110,24 +71,20 @@ impl Instances {
     pub async fn insert_new_process(
         &self,
         app: &AppState,
-        uuid: Uuid,
-        profile_id: Uuid,
+        profile_id: String,
         exe: &str,
         args: Vec<String>,
     ) -> Result<Arc<RwLock<MinecraftInstance>>, LauncherError> {
+        let uuid = Uuid::new_v4().to_string();
         let proc = Command::new(exe).args(args).spawn()?;
 
         let child = InstanceType::FullChild(proc);
 
-        child.cache_process(app, uuid, profile_id).await?;
+        child.cache_process(app, &uuid, &profile_id).await?;
 
         let current_child = Arc::new(RwLock::new(child));
 
-        let instance = MinecraftInstance {
-            uuid,
-            current_child,
-            profile: profile_id,
-        };
+        let instance = MinecraftInstance::new(uuid.to_owned(), profile_id, current_child);
 
         let i = Arc::new(RwLock::new(instance));
         self.0.write().await.insert(uuid, i.clone());
@@ -142,7 +99,7 @@ impl Instances {
     ) -> Result<Arc<RwLock<MinecraftInstance>>, LauncherError> {
         let system = sysinfo::System::new();
         let process = system
-            .process(sysinfo::Pid::from_u32(cache.pid))
+            .process(sysinfo::Pid::from_u32(cache.get_pid()))
             .ok_or_else(|| {
                 LauncherError::NotFound(format!("Could not find proccess {}", cache.pid))
             })?;
@@ -170,15 +127,15 @@ impl Instances {
             )));
         }
 
-        let child = InstanceType::ResucedPID(cache.pid);
+        let child = InstanceType::ResucedPID(cache.get_pid());
 
         child
-            .cache_process(app, cache.uuid, cache.profile_id)
+            .cache_process(app, &cache.uuid, &cache.profile_id)
             .await?;
 
         let current_child = Arc::new(RwLock::new(child));
 
-        let mchild = MinecraftInstance::new(cache.uuid, cache.profile_id, current_child);
+        let mchild = MinecraftInstance::new(cache.uuid.to_owned(), cache.profile_id, current_child);
 
         let mchild = Arc::new(RwLock::new(mchild));
         self.0.write().await.insert(cache.uuid, mchild.clone());
@@ -186,15 +143,15 @@ impl Instances {
         Ok(mchild)
     }
 
-    pub async fn get(&self, uuid: &Uuid) -> Option<Arc<RwLock<MinecraftInstance>>> {
+    pub async fn get(&self, uuid: &str) -> Option<Arc<RwLock<MinecraftInstance>>> {
         self.0.read().await.get(uuid).cloned()
     }
 
-    pub async fn keys(&self) -> Vec<Uuid> {
+    pub async fn keys(&self) -> Vec<String> {
         self.0.read().await.keys().cloned().collect()
     }
 
-    pub async fn exit_status(&self, uuid: &Uuid) -> Result<Option<i32>, LauncherError> {
+    pub async fn exit_status(&self, uuid: &str) -> Result<Option<i32>, LauncherError> {
         if let Some(child) = self.get(uuid).await {
             let child = child.write().await;
             let status = child.current_child.write().await.try_wait().await?;
@@ -204,7 +161,7 @@ impl Instances {
         }
     }
 
-    pub async fn running_keys(&self) -> Result<Vec<Uuid>, LauncherError> {
+    pub async fn running_keys(&self) -> Result<Vec<String>, LauncherError> {
         let mut keys = Vec::new();
 
         for key in self.keys().await {
@@ -226,10 +183,11 @@ impl Instances {
         Ok(keys)
     }
 
+    /// Gets all PID keys of running children with a given profile path
     pub async fn running_keys_with_profile(
         &self,
-        profile: &Uuid,
-    ) -> Result<Vec<Uuid>, LauncherError> {
+        profile: &str,
+    ) -> Result<Vec<String>, LauncherError> {
         let runnings_keys = self.running_keys().await?;
 
         let mut keys = Vec::new();
@@ -238,7 +196,7 @@ impl Instances {
             if let Some(child) = self.get(&key).await {
                 let child = child.clone();
                 let child = child.read().await;
-                if &child.profile == profile {
+                if child.profile == profile {
                     keys.push(key)
                 }
             }
@@ -246,8 +204,26 @@ impl Instances {
         Ok(keys)
     }
 
-    pub async fn running_profiles(&self) -> Result<Vec<i32>, LauncherError> {
-        unimplemented!()
+    pub async fn running_profiles_ids(&self) -> Result<Vec<String>, LauncherError> {
+        let mut profiles = Vec::new();
+        for key in self.keys().await {
+            if let Some(child) = self.get(&key).await {
+                let child = child.clone();
+                let child = child.write().await;
+                if child
+                    .current_child
+                    .write()
+                    .await
+                    .try_wait()
+                    .await?
+                    .is_none()
+                {
+                    profiles.push(child.profile.to_owned());
+                }
+            }
+        }
+
+        Ok(profiles)
     }
 }
 
@@ -305,8 +281,8 @@ impl InstanceType {
     pub async fn cache_process(
         &self,
         app: &AppState,
-        uuid: uuid::Uuid,
-        profile_id: uuid::Uuid,
+        uuid: &str,
+        profile_id: &str,
     ) -> Result<(), LauncherError> {
         let pid = self.id().unwrap_or(0);
 
@@ -326,13 +302,15 @@ impl InstanceType {
         };
         let exe = path.to_string_lossy().to_string();
 
-        app.execute_with(
-            "INSERT INTO processes VALUES (?,?,?,?,?)",
-            json!([uuid, name, pid, exe, profile_id])
-                .as_array()
-                .ok_or(LauncherError::Generic("Failed to make array".to_string()))?,
-        )
-        .await?;
+        let mut query = sqlx::query("INSERT INTO processes VALUES (?,?,?,?,?)");
+        query = query
+            .bind(uuid)
+            .bind(pid)
+            .bind(name)
+            .bind(exe)
+            .bind(profile_id);
+
+        query.execute(&app.database.0).await?;
 
         Ok(())
     }
@@ -340,15 +318,10 @@ impl InstanceType {
     pub async fn remove_cache(
         &self,
         app: &AppState,
-        process_uuid: uuid::Uuid,
+        process_uuid: &str,
     ) -> Result<(), LauncherError> {
-        app.execute_with(
-            "DELETE FROM processes WHERE id = ?",
-            json!([process_uuid])
-                .as_array()
-                .ok_or(LauncherError::Generic("Failed to make array".to_string()))?,
-        )
-        .await?;
+        let query = sqlx::query("DELETE FROM processes WHERE id = ?").bind(process_uuid);
+        query.execute(&app.database.0).await?;
 
         Ok(())
     }
@@ -356,13 +329,13 @@ impl InstanceType {
 
 #[derive(Debug)]
 pub struct MinecraftInstance {
-    pub uuid: Uuid,
+    pub uuid: String,
     pub current_child: Arc<RwLock<InstanceType>>,
-    pub profile: Uuid,
+    pub profile: String,
 }
 
 impl MinecraftInstance {
-    pub fn new(uuid: Uuid, profile: Uuid, current: Arc<RwLock<InstanceType>>) -> Self {
+    pub fn new(uuid: String, profile: String, current: Arc<RwLock<InstanceType>>) -> Self {
         Self {
             uuid,
             profile,

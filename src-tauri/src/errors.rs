@@ -5,7 +5,7 @@ pub enum Error {
     #[error(transparent)]
     Tauri(#[from] tauri::Error),
     #[error(transparent)]
-    Launcher(#[from] minecraft_launcher_lib::errors::LauncherLibError),
+    Launcher(#[from] minecraft_launcher_lib::errors::LauncherError),
     #[error("{0}")]
     Auth(String),
 }

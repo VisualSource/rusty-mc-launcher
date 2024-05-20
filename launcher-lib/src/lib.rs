@@ -7,6 +7,6 @@ mod manifest;
 mod state;
 //mod utils;
 
-pub use installer::install_minecraft;
+pub use installer::{content, install_minecraft, ChannelMessage, InstallConfig};
 pub use launcher::{start_game, LaunchConfig};
-pub use state::AppState;
+pub use state::{profile, AppState};

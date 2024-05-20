@@ -1,180 +1,45 @@
 mod process;
-mod profile;
+pub mod profile;
+mod sqlite;
 use std::{
-    collections::HashMap,
     path::{Path, PathBuf},
     str::FromStr,
 };
 
-use log::warn;
 use normalize_path::NormalizePath;
-use sqlite::{Connection, ConnectionThreadSafe};
 
-use tokio::sync::RwLock;
+use profile::Profile;
+use serde::{Deserialize, Serialize};
+use sqlx::query_as;
 
 use crate::errors::LauncherError;
 
-pub struct AppState {
-    pub instances: process::Instances,
-    connection: RwLock<ConnectionThreadSafe>,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Setting {
+    value: String,
+    key: String,
+    metadata: Option<String>,
 }
 
-macro_rules! bind {
-    ($statement:expr, $index:expr, $value:expr) => {
-        match $value {
-            serde_json::Value::Null => $statement.bind(($index + 1, ()))?,
-            serde_json::Value::Bool(value) => {
-                $statement.bind(($index + 1, value.to_owned() as i64))?;
-            }
-            serde_json::Value::Number(value) => match value.is_i64() {
-                true => $statement.bind((
-                    $index + 1,
-                    value
-                        .as_i64()
-                        .ok_or(LauncherError::Generic("Failed to get i64".to_string()))?,
-                ))?,
-                false => $statement.bind((
-                    $index + 1,
-                    value
-                        .as_f64()
-                        .ok_or(LauncherError::Generic("Failed to get f64".to_string()))?,
-                ))?,
-            },
-            serde_json::Value::String(value) => $statement.bind(($index + 1, value.as_str()))?,
-            _ => warn!("Failed to bind sql value (Array|Object)"),
-        }
-    };
+pub struct AppState {
+    pub instances: process::Instances,
+    pub database: sqlite::Database,
 }
 
 impl AppState {
-    pub fn new<T>(path: T) -> Result<Self, LauncherError>
-    where
-        T: AsRef<std::path::Path>,
-    {
-        let connection = Connection::open_thread_safe(path)?;
-
+    pub fn new(path: &str) -> Result<Self, LauncherError> {
         Ok(Self {
-            connection: RwLock::new(connection),
+            database: sqlite::Database::new(path)?,
             instances: process::Instances::new(),
         })
     }
 
-    pub async fn execute(&self, sql: &str) -> Result<(), LauncherError> {
-        let write = self.connection.write().await;
-        write.execute(sql)?;
+    pub async fn get_profile(&self, id: &str) -> Result<Option<Profile>, LauncherError> {
+        let query: Option<Profile> = query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
+            .fetch_optional(&self.database.0)
+            .await?;
 
-        Ok(())
-    }
-
-    pub async fn execute_with(
-        &self,
-        sql: &str,
-        values: &[serde_json::Value],
-    ) -> Result<bool, LauncherError> {
-        let connection = self.connection.write().await;
-
-        let mut statement = connection.prepare(sql)?;
-
-        if values.first().is_some_and(|value| value.is_array()) {
-            for value in values {
-                for (i, v) in value
-                    .as_array()
-                    .ok_or(LauncherError::Generic(
-                        "Failed to convert to array".to_string(),
-                    ))?
-                    .iter()
-                    .enumerate()
-                {
-                    bind!(statement, i, v);
-                }
-
-                statement.next()?;
-                statement.reset()?;
-            }
-            return Ok(true);
-        }
-
-        for (i, v) in values.iter().enumerate() {
-            bind!(statement, i, v);
-        }
-        statement.next()?;
-        Ok(true)
-    }
-
-    pub async fn select(
-        &self,
-        sql: &str,
-        values: Vec<serde_json::Value>,
-    ) -> Result<Vec<HashMap<String, serde_json::Value>>, LauncherError> {
-        let connection = self.connection.read().await;
-        let statement = connection.prepare(sql)?;
-
-        let names = statement
-            .column_names()
-            .iter()
-            .map(|name| name.to_owned())
-            .collect::<Vec<String>>();
-
-        let mut params = Vec::new();
-        for (i, value) in values.iter().enumerate() {
-            match value {
-                serde_json::Value::Null => params.push((i + 1, sqlite::Value::Null)),
-                serde_json::Value::Bool(value) => {
-                    params.push((i + 1, sqlite::Value::Integer(value.to_owned() as i64)))
-                }
-                serde_json::Value::Number(num) => match num.is_i64() {
-                    true => params.push((
-                        i + 1,
-                        sqlite::Value::Integer(num.as_i64().ok_or(LauncherError::Generic(
-                            "Failed to convert to i64".to_string(),
-                        ))?),
-                    )),
-                    false => params.push((
-                        i + 1,
-                        sqlite::Value::Float(num.as_f64().ok_or(LauncherError::Generic(
-                            "Failed to convert to f64".to_string(),
-                        ))?),
-                    )),
-                },
-                serde_json::Value::String(value) => {
-                    params.push((i + 1, sqlite::Value::String(value.to_owned())))
-                }
-                _ => warn!("Failed to bind sql value (Array|Object)"),
-            }
-        }
-
-        let cursor = statement.into_iter().bind_iter(params)?;
-
-        let mut rows = Vec::new();
-        for mut item in cursor {
-            let mut row = HashMap::new();
-            for name in &names {
-                let value = item
-                    .as_mut()
-                    .map_err(|_| LauncherError::Generic("Failed get item".to_string()))?
-                    .take(name.as_str());
-
-                let v = match value {
-                    sqlite::Value::Binary(value) => serde_json::json!(value),
-                    sqlite::Value::Float(v) => {
-                        serde_json::Value::Number(serde_json::Number::from_f64(v).ok_or(
-                            LauncherError::Generic("Failed to convert value".to_string()),
-                        )?)
-                    }
-                    sqlite::Value::Integer(v) => {
-                        serde_json::Value::Number(serde_json::Number::from(v))
-                    }
-                    sqlite::Value::String(v) => serde_json::Value::String(v),
-                    sqlite::Value::Null => serde_json::Value::Null,
-                };
-
-                row.insert(name.to_owned(), v);
-            }
-
-            rows.push(row);
-        }
-
-        Ok(rows)
+        Ok(query)
     }
 
     pub async fn validate_java_at(path: &Path) -> Result<Option<String>, LauncherError> {
@@ -224,58 +89,76 @@ impl AppState {
             .ok_or(LauncherError::NotFound("Bad java".to_string()))?;
         log::info!("Found java {}", java_version);
 
-        let write = self.connection.write().await;
         let column_key = format!("java.{}", version);
         let column_value = path.normalize().to_string_lossy().to_string();
-        write.execute(format!(
-            "INSERT INTO settings VALUES ('{}', '{}', '{}')",
-            column_key, build, column_value
-        ))?;
+
+        let mut query = sqlx::query("INSERT INTO settings VALUES (?,? ,?)");
+        query = query.bind(column_key).bind(build).bind(column_value);
+
+        query.execute(&self.database.0).await?;
 
         Ok(())
     }
 
     pub async fn get_java(&self, version: usize) -> Result<Option<String>, LauncherError> {
         let key = format!("java.{}", version);
-        self.get_setting(&key).await
+
+        if let Some(settings) = self.get_setting(&key).await? {
+            Ok(Some(settings.value))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn get_path(&self, key: &str) -> Result<PathBuf, LauncherError> {
-        let settings = self.get_setting(key).await?;
-
-        if settings.is_none() {
-            return Err(LauncherError::NotFound(format!(
+        if let Some(setting) = self.get_setting(key).await? {
+            PathBuf::from_str(&setting.value)
+                .map_err(|_| LauncherError::Generic("Failed to convert str to path".to_string()))
+        } else {
+            Err(LauncherError::NotFound(format!(
                 "No path was found for key: '{}'",
                 key
-            )));
+            )))
         }
-
-        PathBuf::from_str(&settings.unwrap())
-            .map_err(|_| LauncherError::Generic("Failed to convert str to path".to_string()))
     }
 
-    pub async fn get_setting(&self, setting: &str) -> Result<Option<String>, LauncherError> {
-        let read = self.connection.read().await;
-        let mut statement = read.prepare("SELECT value FROM settings WHERE key = ?;")?;
-        statement.bind((1, setting))?;
-        let values: Vec<Result<sqlite::Row, sqlite::Error>> = statement.into_iter().collect();
+    pub async fn get_setting(&self, setting: &str) -> Result<Option<Setting>, LauncherError> {
+        let result = sqlx::query_as!(Setting, "SELECT * FROM settings WHERE key = ?", setting)
+            .fetch_optional(&self.database.0)
+            .await?;
+        Ok(result)
+    }
 
-        if let Some(row) = values.first() {
-            let item = row
-                .as_ref()
-                .map_err(|e| LauncherError::Generic(e.to_string()))?;
+    pub async fn insert_setting(
+        &self,
+        key: &str,
+        metadata: Option<String>,
+        value: String,
+    ) -> Result<(), LauncherError> {
+        let query = sqlx::query("INSERT INTO settings VALUES (?,?,?)")
+            .bind(key)
+            .bind(metadata)
+            .bind(value);
 
-            let path = item.read::<&str, _>("value");
+        query.execute(&self.database.0).await?;
 
-            return Ok(Some(path.to_string()));
-        }
+        Ok(())
+    }
 
-        Ok(None)
+    pub async fn has_setting(&self, setting: &str) -> Result<bool, LauncherError> {
+        let query = sqlx::query("SELECT key FROM settings WHERE key = ?")
+            .bind(setting)
+            .fetch_optional(&self.database.0)
+            .await?;
+
+        Ok(query.is_some())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::*;
 
     fn init() {
@@ -286,57 +169,31 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_select() {
-        let app = AppState::new(":memory:").expect("Failed to build");
-        app.execute("CREATE TABLE settings (key TEXT PRIMARY KEY, metadata TEXT, value TEXT)")
-            .await
-            .expect("Failed to create table");
-
-        app.execute("INSERT INTO settings VALUES ('key.test','metadata','key.value')")
-            .await
-            .expect("Failed to execute");
-
-        let value = app
-            .select(
-                "SELECT * FROM settings WHERE key = ?",
-                vec![serde_json::Value::String("key.test".to_string())],
-            )
-            .await
-            .expect("Failed to query");
-
-        println!("{:#?}", value);
-    }
-
-    #[tokio::test]
-    async fn test_get_java() {
+    async fn test_get_path() {
         init();
-        let app = AppState::new(":memory:").expect("Failed to build");
-        app.execute("CREATE TABLE settings (key TEXT PRIMARY KEY, metadata TEXT, value TEXT)")
+        let p = std::env::current_dir()
+            .expect("Failed to current dir")
+            .join("migrations");
+
+        let app = AppState::new("sqlite::memory:").expect("Failed to create");
+        log::debug!("{}", p.to_string_lossy());
+        app.database
+            .run_migrator(&p)
             .await
-            .expect("Failed to create table");
+            .expect("Failed to run migrations");
 
-        let result = app.get_java(21).await.expect("Failed to lock");
+        let args = json!(["path.app", "Value", "C:\\"])
+            .as_array()
+            .expect("Failed to get array")
+            .to_owned();
 
-        assert_eq!(None, result);
-    }
-
-    #[tokio::test]
-    async fn test_insert_java() {
-        init();
-        let app = AppState::new(":memory:").expect("Failed to build");
-        app.execute("CREATE TABLE settings (key TEXT PRIMARY KEY, metadata TEXT, value TEXT)")
-            .await
-            .expect("Failed to create table");
-
-        let path = std::env::temp_dir()
-            .join("runtime\\java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe");
-
-        app.insert_java(21, "1.21.", &path)
+        app.database
+            .ececute("INSERT INTO settings VALUES (?,?,?)", args)
             .await
             .expect("Failed to insert");
 
-        let result = app.get_java(21).await.expect("Failed to lock");
+        let path = app.get_path("path.app").await.expect("Failed to get path");
 
-        assert_eq!(Some(path.normalize().to_string_lossy().to_string()), result);
+        log::debug!("Get path: {}", path.to_string_lossy());
     }
 }

@@ -1,9 +1,5 @@
-use chrono::{DateTime, Utc};
-use os_info::get;
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-use crate::errors::LauncherError;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Loader {
@@ -19,55 +15,34 @@ impl Default for Loader {
     }
 }
 
-impl TryFrom<&str> for Loader {
-    type Error = LauncherError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Ok(serde_json::from_str::<Loader>(value)?)
+impl From<String> for Loader {
+    fn from(value: String) -> Self {
+        match value.to_lowercase().as_str() {
+            "quilt" => Self::Quilt,
+            "forge" => Self::Forge,
+            "fabric" => Self::Fabric,
+            _ => Self::Vanilla,
+        }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Profile {
-    pub id: Uuid,
+pub struct Profile {
+    pub id: String,
 
     pub name: String,
 
-    pub date_created: DateTime<Utc>,
-    pub last_played: Option<DateTime<Utc>>,
+    pub date_created: NaiveDateTime,
 
-    pub icon: Option<String>,
     pub version: String,
     pub loader: Loader,
+
+    pub last_played: Option<NaiveDateTime>,
+    pub icon: Option<String>,
     pub loader_version: Option<String>,
 
-    pub additonal_java_arguments: Option<String>,
+    pub java_args: Option<String>,
 
     pub resolution_width: Option<String>,
     pub resolution_height: Option<String>,
 }
-
-impl TryFrom<std::collections::HashMap<String, serde_json::Value>> for Profile {
-    type Error = LauncherError;
-
-    fn try_from(
-        value: std::collections::HashMap<String, serde_json::Value>,
-    ) -> Result<Self, Self::Error> {
-        let id = value.get("id");
-        let name = value.get("name");
-        let date_created = value.get("date_crated");
-        let last_played = value.get("last_played");
-        let icon = value.get("icon");
-        let version = value.get("version");
-        let loader = value.get("loader");
-        let loader_version = value.get("loader_version");
-
-        let additonal_java_arguments = value.get("additonal_java_arguments");
-        let resolution_width = value.get("resolution_width");
-        let resolution_height = value.get("resolution_height");
-
-        todo!()
-    }
-}
-
-impl Profile {}

@@ -5,9 +5,9 @@
 mod commands;
 mod errors;
 mod oauth;
-mod state;
 
 use log::LevelFilter;
+use minecraft_launcher_lib::{errors::LauncherError, AppState};
 use tauri::Manager;
 use tauri_plugin_log::{LogTarget, TimezoneStrategy};
 
@@ -65,9 +65,36 @@ fn main() {
                 log::error!("{}", err);
             }
         }))
-        .plugin(tauri_plugin_sqlite::init())
         .plugin(logger)
         .setup(|app| {
+            let app_dir = app
+                .path_resolver()
+                .app_config_dir()
+                .expect("Failed to get app directory");
+
+            let state = tauri::async_runtime::block_on(async {
+                let db_file = format!(
+                    "sqlite:{}",
+                    app_dir.join("database.db").to_string_lossy().to_string()
+                );
+                let state = AppState::new(&db_file)?;
+                state
+                    .database
+                    .run_migrator(&app_dir.join("migrations"))
+                    .await?;
+
+                if !state.has_setting("path.app").await? {
+                    state
+                        .insert_setting("path.app", None, app_dir.to_string_lossy().to_string())
+                        .await?;
+                }
+
+                Ok::<_, LauncherError>(state)
+            })
+            .expect("Failed to init state");
+
+            app.manage(state);
+
             let handle = app.handle();
             tauri_plugin_deep_link::register("rmcl", move |request| {
                 let items = request.split('?').collect::<Vec<&str>>();
@@ -87,22 +114,17 @@ fn main() {
 
             Ok(())
         })
-        .manage(state::TauriState(Default::default()))
         .invoke_handler(tauri::generate_handler![
-            commands::start_auth_server,
-            commands::close_auth_server,
-            commands::play,
-            commands::stop,
-            commands::is_game_running,
-            commands::get_minecraft_dir,
-            commands::validate_game_files,
-            commands::validate_mods_files,
-            commands::validate_modpack_files,
-            commands::validate_pack_files,
-            commands::install_game,
-            commands::install_modpack,
-            commands::install_mods,
-            commands::install_pack,
+            commands::auth::start_auth_server,
+            commands::auth::close_auth_server,
+            commands::query::select,
+            commands::query::execute,
+            commands::game::launch_game,
+            commands::game::is_running,
+            commands::game::stop,
+            commands::game::install_game,
+            commands::game::install_workshop_content,
+            commands::game::install_local_mrpack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

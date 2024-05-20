@@ -3,7 +3,12 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum LauncherError {
     #[error(transparent)]
-    Sqlite(#[from] sqlite::Error),
+    Sqlite(#[from] sqlx::Error),
+    #[error(transparent)]
+    Migrate(#[from] sqlx::migrate::MigrateError),
+
+    #[error(transparent)]
+    Uuid(#[from] uuid::Error),
 
     #[error(transparent)]
     Http(#[from] reqwest::Error),
