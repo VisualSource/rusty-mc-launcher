@@ -1,77 +1,67 @@
 import type { InvokeArgs } from "@tauri-apps/api/tauri";
 import { invoke, } from "@tauri-apps/api";
 import { z } from 'zod';
-import type { FileDownload } from "../api/modrinth";
-import type { LaunchConfig } from "./launch_config";
 
-type CurrentGameState = "NotRunning" | "Running" | { Exited: number };
-type Version = { version: string; game_dir?: string; };
-type ModInstall = {
-  profile_id: string;
-  files: FileDownload[],
-  game_dir?: string;
-}
-type PackInstall = {
-  source: FileDownload,
-  type: "Resource" | "Shader",
-  game_dir?: string,
-}
-type ModPackInstall = {
-  game_dir?: string;
-  profile_id: string;
+
+export const closeAuthServer = (port: number) => invoke<void>("close_auth_server", { port });
+export const startAuthServer = () => invoke<number>("start_auth_server");
+
+type Query<S> = {
+  query: string;
+  args?: unknown[],
+  schema: S
 }
 
-type ValidatePackFileArgs = {}
-type ValidateModPackArgs = {}
-type ValidateModsArgs = {}
-
-const commands = {
-  "start_auth_server": null,
-  "close_auth_server": z.object({ port: z.number().positive() }),
-
-  "play": z.object({}),
-  "stop": null,
-  "is_game_running": null,
-  "get_minecraft_dir": null,
-
-  "validate_game_files": z.object({ version: z.string(), game_dir: z.string().optional() }),
-  "validate_mods_files": z.object({}),
-  "validate_pack_files": z.object({}),
-  "validate_modpack_files": z.object({}),
-
-  "install_game": z.object({ version: z.string(), game_dir: z.string().optional() }),
-  "install_pack": z.object({
-    source: z.object({}),
-    type: z.enum(["Resource", "Shader"]),
-    game_dir: z.string().optional()
-  }),
-  "install_mods": z.object({}),
-  "install_modpack": z.object({})
+export const db = {
+  select: async <S extends z.Schema<any, any>>({ query, args = [], schema }: Query<S>) => {
+    const request = await invoke<unknown[]>("select", { query, args });
+    return request.map(value => schema.parse(value)) as z.infer<S>[];
+  },
+  execute: async ({ query, args }: { query: string, args: unknown[] }) => invoke("execute", { query, args })
 }
 
-const runInvoke = async <T = void>(command: keyof typeof commands, args: InvokeArgs | undefined) => {
-  const schema = commands[command];
-  if (!schema) {
-    return invoke<T>(command, args);
-  }
-  const data = schema.parse(args);
-  return invoke<T>(command, data);
-}
 
-export const closeAuthServer = async (port: number) => runInvoke("close_auth_server", { port });
-export const startAuthServer = () => runInvoke<number>("start_auth_server", undefined);
 
-export const startGame = (settings: LaunchConfig) => runInvoke("play", settings);
-export const stopGame = () => runInvoke("stop", undefined);
-export const isGameRunning = () => runInvoke<CurrentGameState>("is_game_running", undefined);
-export const getDefaultMinecraftDirectory = () => runInvoke<string>("get_minecraft_dir", undefined);
+const uuidSchema = z.string().uuid();
+export const isRunning = (profile: string) => invoke<boolean>("is_running", { profile: uuidSchema.parse(profile) });
+export const stop = (profile: string) => invoke("stop", { profile: uuidSchema.parse(profile) });
 
-export const validateGameFiles = (args: Version) => runInvoke<boolean>("validate_game_files", args);
-export const validatePackFiles = (args: ValidatePackFileArgs) => runInvoke<boolean>("validate_pack_files", args);
-export const validateModsFiles = (args: ValidateModsArgs) => runInvoke<boolean>("validate_mods_files", args);
-export const validateModPackFiles = (args: ValidateModPackArgs) => runInvoke<boolean>("validate_modpack_files", args);
+const launchSchema = z.object({
+  auth_player_name: z.string(),
+  auth_uuid: z.string().uuid(),
+  auth_access_token: z.string(),
+  auth_xuid: z.string(),
 
-export const installGame = (args: Version) => runInvoke("install_game", args);
-export const installPack = (args: PackInstall) => runInvoke("install_pack", args);
-export const installMods = (args: ModInstall) => runInvoke("install_mods", args);
-export const installModPack = (args: ModPackInstall) => runInvoke("install_modpack", args);
+  profile_id: z.string().uuid()
+});
+
+export type LaunchConfig = z.infer<typeof launchSchema>;
+
+export const launchGame = (config: LaunchConfig) => invoke("launch_game", { config: launchSchema.parse(config) });
+
+export const loaderSchema = z.enum(["vanilla", "forge", "fabric", "quilt"]);
+export type Loader = z.infer<typeof loaderSchema>;
+const installSchema = z.object({
+  version: z.string(),
+  loader: loaderSchema,
+  loader_version: z.string().nullable().default(null)
+});
+
+export type InstallConfig = z.infer<typeof installSchema>;
+
+export const installGame = (config: InstallConfig) => invoke("install_game", { config: installSchema.parse(config) });
+
+const installWorkshopContentSchema = z.object({
+  content_type: z.enum(["resource", "shader", "mod", "modpack"]),
+  profile: z.string().optional().nullable(),
+  file: z.object({
+    sha1: z.string(),
+    url: z.string(),
+    size: z.string()
+  })
+});
+export type InstallContentConfig = z.infer<typeof installWorkshopContentSchema>;
+export const installWorkshopContent = (config: InstallContentConfig) => invoke("install_workshop_content", { config: installWorkshopContentSchema.parse(config) });
+
+export const installLocalMrPack = (source: string) => invoke("install_local_mrpack", { file_path: source });
+

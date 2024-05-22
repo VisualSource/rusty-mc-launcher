@@ -1,21 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-//import profiles from "@lib/models/profiles";
+import { profile } from "@/lib/models/profiles";
 import { PROFILES_KEY } from "./keys";
-import logger from "@system/logger";
-
-/*const fetchProfiles = async () => {
-  const data = await profiles.find({});
-  logger.debug("Fetch profiles", data);
-  if (!data) throw new Error("Failed to get minecraft profiles");
-  return data;
-};*/
+import { db } from '@system/commands';
 
 export const useProfiles = () => {
   const { data, error } = useSuspenseQuery({
     queryKey: [PROFILES_KEY],
-    queryFn: async () => {
-      return [];
-    },
+    queryFn: () => db.select({ query: "SELECT * FROM profiles", schema: profile.schema })
   });
 
   if (error) throw error;

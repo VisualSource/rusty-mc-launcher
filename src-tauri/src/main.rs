@@ -7,7 +7,7 @@ mod errors;
 mod oauth;
 
 use log::LevelFilter;
-use minecraft_launcher_lib::{errors::LauncherError, AppState};
+use minecraft_launcher_lib::{errors::LauncherError, AppState, Database};
 use tauri::Manager;
 use tauri_plugin_log::{LogTarget, TimezoneStrategy};
 
@@ -17,6 +17,17 @@ const DEFAULT_TIMEZONE_STRATEGY: TimezoneStrategy = TimezoneStrategy::UseUtc;
 struct Payload {
     args: Vec<String>,
     cwd: String,
+}
+
+fn create_db_path(path: &std::path::Path) -> String {
+    let database_file = path.join("database.db");
+    let db_str = database_file.to_string_lossy().to_string();
+    let no_dive = db_str
+        .split_once(':')
+        .expect("Failed to parse connection string for database!")
+        .1;
+
+    format!("sqlite:{}", no_dive)
 }
 
 fn main() {
@@ -71,17 +82,19 @@ fn main() {
                 .path_resolver()
                 .app_config_dir()
                 .expect("Failed to get app directory");
-
+            log::debug!("App directory {:?}", app_dir);
             let state = tauri::async_runtime::block_on(async {
-                let db_file = format!(
-                    "sqlite:{}",
-                    app_dir.join("database.db").to_string_lossy().to_string()
-                );
-                let state = AppState::new(&db_file)?;
-                state
-                    .database
-                    .run_migrator(&app_dir.join("migrations"))
-                    .await?;
+                let fqdb = create_db_path(&app_dir);
+                log::debug!("Database connection string: {}", fqdb);
+                if !Database::exists(&fqdb).await {
+                    log::info!("Create new database file");
+                    Database::create_db(&fqdb).await?;
+                }
+
+                let state = AppState::new(&fqdb)?;
+
+                let migrations = app_dir.join("migrations");
+                state.database.run_migrator(&migrations).await?;
 
                 if !state.has_setting("path.app").await? {
                     state

@@ -1,19 +1,28 @@
 import type { LoaderFunction } from "react-router-dom";
-import { fromZodError } from "zod-validation-error";
+import { fromZodError, } from "zod-validation-error";
+import { ZodError } from 'zod';
 import { profile } from "@lib/models/profiles";
-import DB from "@lib/api/db";
+import { db } from "@system/commands";
 
 const getProfile: LoaderFunction = async ({ params }) => {
   if (!params.id) return new Error("Invalid profile id");
-  const db = DB.use();
-  const result = await db.select<unknown[]>(`SELECT * FROM ${profile.name} WHERE id = ?`, [params.id]);
-  const data = profile.schema.safeParse(result.at(0));
 
-  if (data.error) {
-    return fromZodError(data.error);
+  try {
+    const result = await db.select<typeof profile.schema>({
+      query: `SELECT * FROM profiles WHERE id = ?`,
+      args: [params.id],
+      schema: profile.schema
+    });
+    const item = result.at(0);
+
+    return item;
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return fromZodError(error);
+    }
+
+    return error;
   }
-
-  return data.data;
 };
 
 export default getProfile;

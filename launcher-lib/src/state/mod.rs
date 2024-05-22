@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::query_as;
 
 use crate::errors::LauncherError;
+pub use sqlite::Database;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Setting {

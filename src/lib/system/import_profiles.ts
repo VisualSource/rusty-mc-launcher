@@ -4,7 +4,7 @@ import { open } from "@tauri-apps/api/dialog";
 import { toast } from "react-toastify";
 
 import { CATEGORIES_KEY, CATEGORY_KEY } from "@hook/keys";
-import { getDefaultMinecraftDirectory } from "./commands";
+//import { getDefaultMinecraftDirectory } from "./commands";
 import { getLoaderType } from "@/utils/versionUtils";
 import { queryClient } from "../config/queryClient";
 //import categories from "../models/categories";
@@ -12,7 +12,7 @@ import { queryClient } from "../config/queryClient";
 import logger from "./logger";
 
 const import_profiles = async () => {
-  const dir = await getDefaultMinecraftDirectory();
+  const dir = "";// await getDefaultMinecraftDirectory();
   const result = await open({
     multiple: false,
     defaultPath: dir,

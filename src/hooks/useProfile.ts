@@ -1,24 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import profiles, { type MinecraftProfile } from "@lib/models/profiles";
 import { useNavigate } from "react-router-dom";
-import logger from "../system/logger";
+import { profile, type MinecraftProfile } from "@lib/models/profiles";
+import { db } from "@system/commands";
+import { KEY_PROFILE } from "./keys";
+import logger from "@system/logger";
 
 type RequestType = { type: "patch"; data: Partial<MinecraftProfile> };
 type RequestDelete = { type: "delete"; data: { id: string } };
 
 const handleMutate = async (ev: RequestType | RequestDelete) => {
   if (ev.type === "patch") {
-    await profiles.update({
-      data: ev.data,
-      where: [{ id: ev.data.id }],
+    const values = Object.entries(ev.data).filter(e => e[0] !== "id").map((key, value) => `${key}='${value.toString()}'`);
+
+    await db.execute({
+      query: `UPDATE profiles SET ${values.join(", ")} WHERE id = ?`,
+      args: [ev.data.id]
     });
+
     return ev.data;
   }
 
   if (ev.type === "delete") {
-    await profiles.delete({
-      where: [{ id: ev.data.id }],
-    });
+    await db.execute({
+      query: "DELETE FROM profiles WHERE id = ?",
+      args: [ev.data.id]
+    })
     return null;
   }
 };
@@ -28,16 +34,14 @@ export const useProfile = (id?: string, load: boolean = true) => {
   const queryClient = useQueryClient();
   const { data, isError, isLoading, error } = useQuery({
     enabled: !!id && load,
-    queryKey: [id, "profile"],
+    queryKey: [KEY_PROFILE, id],
     queryFn: async () => {
       logger.info(`Loading Profile ${id}`);
-      const profile = await profiles.findOne({
-        where: [{ id }],
-      });
-      logger.debug("Profile", profile);
-      if (!profile) throw new Error("Failed to get minecraft profile");
+      const data = await db.select({ query: "SELECT * FROM profiles WHERE id = ?", args: [id], schema: profile.schema })
+      const item = data.at(0);
 
-      return profile;
+      if (!item) throw new Error("Failed to get minecraft profile");
+      return item;
     },
   });
 
@@ -50,9 +54,9 @@ export const useProfile = (id?: string, load: boolean = true) => {
         return;
       }
 
-      await queryClient.cancelQueries({ queryKey: [id, "profile"] });
+      await queryClient.cancelQueries({ queryKey: [KEY_PROFILE, id] });
       queryClient.setQueryData<MinecraftProfile>(
-        [id, "profile"],
+        [KEY_PROFILE, id],
         (old) => data as MinecraftProfile,
       );
     },

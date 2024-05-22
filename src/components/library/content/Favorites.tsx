@@ -2,11 +2,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Book } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CATEGORY_KEY, CATEGORIES_ENUM } from "@hook/keys";
 import { Skeleton } from "@/components/ui/skeleton";
 import { profile } from "@lib/models/profiles";
 import PlayButton from "@/components/ui/play";
-import DB from "@lib/api/db";
+import { CATEGORY_KEY } from "@hook/keys";
+
+import { db } from '@system/commands';
+
+const FAVORITES_GUID = "aa0470a6-89e9-4404-a71c-008ee2025e72";
 
 export const FavoritesLoading: React.FC = () => {
   return (
@@ -28,37 +31,42 @@ export const FavoritesLoading: React.FC = () => {
 
 const Favorites: React.FC = () => {
   const { data, error } = useSuspenseQuery({
-    queryKey: [CATEGORY_KEY, CATEGORIES_ENUM.Favorites],
-    queryFn: async () => {
-      const db = DB.use();
-      const result = await db.select<unknown[]>(`SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = ?`, [CATEGORIES_ENUM.Favorites]);
-      return result.map(item => profile.schema.parse(item));
-    },
+    queryKey: [CATEGORY_KEY, FAVORITES_GUID],
+    queryFn: () =>
+      db.select<typeof profile.schema>({
+        query: "SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?",
+        args: [FAVORITES_GUID],
+        schema: profile.schema
+      })
   });
 
   if (error) throw error;
 
   return (
     <>
-      {data.map((value) => (
-        <Card className="relative w-80" key={value.id}>
-          <CardHeader>
-            <CardTitle>{value.name}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Avatar className="aspect-square h-36 w-full rounded-none">
-              <AvatarImage
-                src={value.icon ?? undefined}
-                className="rounded-none"
-              />
-              <AvatarFallback className="rounded-none">
-                <Book />
-              </AvatarFallback>
-            </Avatar>
-            <PlayButton profile={value} />
-          </CardContent>
-        </Card>
-      ))}
+      {data.length === 0 ? (
+        <div className="h-full w-full flex items-center justify-center">No Favorites Yet!</div>
+      ) : (
+        data.map((value) => (
+          <Card className="relative w-80" key={value.id}>
+            <CardHeader>
+              <CardTitle>{value.name}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <Avatar className="aspect-square h-36 w-full rounded-none">
+                <AvatarImage
+                  src={value.icon ?? undefined}
+                  className="rounded-none"
+                />
+                <AvatarFallback className="rounded-none">
+                  <Book />
+                </AvatarFallback>
+              </Avatar>
+              <PlayButton profile={value} />
+            </CardContent>
+          </Card>
+        ))
+      )}
     </>
   );
 };

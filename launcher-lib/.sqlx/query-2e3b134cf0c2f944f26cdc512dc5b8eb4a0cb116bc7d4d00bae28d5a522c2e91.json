@@ -1,0 +1,80 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM profiles WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "icon",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_created",
+        "ordinal": 3,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "last_played",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "version",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "loader",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "loader_version",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "java_args",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "resolution_width",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "resolution_height",
+        "ordinal": 10,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "2e3b134cf0c2f944f26cdc512dc5b8eb4a0cb116bc7d4d00bae28d5a522c2e91"
+}

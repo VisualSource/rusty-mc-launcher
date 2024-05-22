@@ -1,14 +1,17 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CATEGORIES_KEY } from "./keys";
-import DB from "@lib/api/db";
+import { settings } from '@lib/models/settings';
+import { db } from '@lib/system/commands';
+
+
 
 const useCategories = () => {
   const { data, error } = useSuspenseQuery({
     queryKey: [CATEGORIES_KEY],
-    queryFn: () => {
-      const db = DB.use();
-      return db.select<{ name: string; group_id: number; count: number }[]>("SELECT name, group_id, COUNT(group_id) as count FROM categories GROUP BY group_id;");
-    },
+    queryFn: () => db.select({
+      query: "SELECT * FROM settings WHERE key LIKE 'category.%';",
+      schema: settings.schema
+    })
   });
   if (error) throw error;
   return data;

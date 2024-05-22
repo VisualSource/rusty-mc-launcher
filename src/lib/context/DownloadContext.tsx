@@ -3,22 +3,22 @@ import Queue, { QueueEvent, type QueueWorker } from "queue";
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-import {
+/*import {
   validateGameFiles,
   installGame,
   validateModsFiles,
   installMods,
   installPack,
-} from "@system/commands";
-import modrinth, { type FileDownload } from "../api/modrinth";
+} from "@system/commands";*/
+//import modrinth, { type FileDownload } from "../api/modrinth";
 import useExternalQueue from "@hook/useExternalQueue";
 import { getLoaderType } from "@/utils/versionUtils";
-import type ToastData from "@/types/toastData";
+//import type ToastData from "@/types/toastData";
 import { queueFactory } from "@/utils/queue";
 import { profile } from "../models/profiles";
 import logger from "@system/logger";
 
-export type ModsMetadata = {
+/*export type ModsMetadata = {
   type: "mods";
   mods: FileDownload[];
   profile: string;
@@ -44,7 +44,7 @@ export type ModsValidationMetadata = {
   game_dir?: string;
   id: string;
   files: FileDownload[];
-};
+};*/
 
 export type QueueItem = {
   ammount: number;
@@ -55,11 +55,11 @@ export type QueueItem = {
   msg: string;
   download: DownloadEvent | null;
   key: `${string}-${string}-${string}-${string}-${string}`;
-  metadata:
-  | ModsMetadata
-  | ClientMetadata
-  | PackMetadata
-  | ModsValidationMetadata;
+  metadata: unknown
+  //| ModsMetadata
+  // | ClientMetadata
+  // | PackMetadata
+  //| ModsValidationMetadata;
 };
 
 type FetchEvent = {
@@ -305,59 +305,59 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
 
         async installPack(packId, type) {
           try {
-            const file = await modrinth.GetPackFile(packId);
-            const id = crypto.randomUUID();
-
-            queues.next.queue.enqueue({
-              ammount: 1,
-              ammount_current: 0,
-              download: null,
-              key: id,
-              msg: `Install ${type} pack`,
-              size: file.download.size,
-              size_current: 0,
-              type: "pack",
-              metadata: {
-                type: "pack",
-                name: file.name,
-                file,
-                packType: type,
-                requiredMods: false,
-              },
-            });
-
-            install_queue.push(async (cb) => {
-              if (!cb)
-                throw new Error("Callback handler not avaliable", {
-                  cause: "NO_CALLBACK_HANDLER",
-                });
-
-              const data = queues.next.queue.dequeueItem(id);
-
-              try {
-                if (!data)
-                  throw new Error("Failed to get queue data", {
-                    cause: "MISSING_QUEUE_METADATA",
-                  });
-                if (data.metadata.type !== "pack")
-                  throw new Error("Unable to process, non pack metadata");
-
-                setCurrentItem(data);
-
-                await installPack({
-                  source: data.metadata.file,
-                  game_dir: data.metadata.game_dir,
-                  type: data.metadata.packType.replace(/^\w/, (c) =>
-                    c.toUpperCase(),
-                  ) as "Resource" | "Shader",
-                });
-
-                cb(undefined, data);
-              } catch (error) {
-                logger.error(error);
-                cb(new QueueError(error as Error, data));
-              }
-            });
+            //const file = await modrinth.GetPackFile(packId);
+            /* const id = crypto.randomUUID();
+ 
+             queues.next.queue.enqueue({
+               ammount: 1,
+               ammount_current: 0,
+               download: null,
+               key: id,
+               msg: `Install ${type} pack`,
+               size: file.download.size,
+               size_current: 0,
+               type: "pack",
+               metadata: {
+                 type: "pack",
+                 name: file.name,
+                 file,
+                 packType: type,
+                 requiredMods: false,
+               },
+             });
+ 
+             install_queue.push(async (cb) => {
+               if (!cb)
+                 throw new Error("Callback handler not avaliable", {
+                   cause: "NO_CALLBACK_HANDLER",
+                 });
+ 
+               const data = queues.next.queue.dequeueItem(id);
+ 
+               try {
+                 if (!data)
+                   throw new Error("Failed to get queue data", {
+                     cause: "MISSING_QUEUE_METADATA",
+                   });
+                 if (data.metadata.type !== "pack")
+                   throw new Error("Unable to process, non pack metadata");
+ 
+                 setCurrentItem(data);
+ 
+                 await installPack({
+                   source: data.metadata.file,
+                   game_dir: data.metadata.game_dir,
+                   type: data.metadata.packType.replace(/^\w/, (c) =>
+                     c.toUpperCase(),
+                   ) as "Resource" | "Shader",
+                 });
+ 
+                 cb(undefined, data);
+               } catch (error) {
+                 logger.error(error);
+                 cb(new QueueError(error as Error, data));
+               }
+             });*/
           } catch (error) {
             logger.error(error);
             toast.error(
@@ -372,16 +372,16 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
         },
         async install(version, game_dir, forceDownload) {
           try {
-            const isInstalled = await validateGameFiles({ version, game_dir });
+            // const isInstalled = await validateGameFiles({ version, game_dir });
 
-            if (isInstalled && !forceDownload) {
-              window.dispatchEvent(
-                new CustomEvent("mcl::install_ready", {
-                  detail: { vaild: true },
-                }),
-              );
-              return;
-            }
+            /*  if (isInstalled && !forceDownload) {
+                window.dispatchEvent(
+                  new CustomEvent("mcl::install_ready", {
+                    detail: { vaild: true },
+                  }),
+                );
+                return;
+              }*/
 
             const id = crypto.randomUUID();
 
@@ -414,13 +414,13 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
                   throw new Error("Failed to get queue data", {
                     cause: "MISSING_QUEUE_METADATA",
                   });
-                if (data.metadata.type !== "client")
-                  throw new Error("Unable to process, non client metadata");
-
-                setCurrentItem(data);
-
-                await installGame(data.metadata);
-
+                /* if (data.metadata.type !== "client")
+                   throw new Error("Unable to process, non client metadata");
+ 
+                 setCurrentItem(data);
+ 
+                 await installGame(data.metadata);
+ */
                 document.dispatchEvent(
                   new CustomEvent("mcl::install_ready", {
                     detail: { vaild: true },

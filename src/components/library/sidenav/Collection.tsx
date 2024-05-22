@@ -3,15 +3,14 @@ import useCategoryGroup from "@hook/useCategoryGroup";
 import CollectionItem from "./CollectionItem";
 
 const Collection: React.FC<{
-  id: number;
+  id: string;
   name: string;
-  count: number;
-}> = ({ id, name, count = 0 }) => {
+}> = ({ id, name }) => {
   const collections = useCategoryGroup(id);
 
   return (
     <AccordionItem value={name} className="border-none">
-      <AccordionTrigger className="flex w-full items-center bg-gradient-to-r from-zinc-700/95 from-10% to-zinc-800 px-1 py-0.5 text-zinc-50">{name} ({count})</AccordionTrigger>
+      <AccordionTrigger className="flex w-full items-center bg-gradient-to-r from-zinc-700/95 from-10% to-zinc-800 px-1 py-0.5 text-zinc-50">{name} ({collections.length})</AccordionTrigger>
       <AccordionContent>
         <ul>
           {collections.map((value) => (

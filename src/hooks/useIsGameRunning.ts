@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { isGameRunning } from "@system/commands";
+//import { isGameRunning } from "@system/commands";
 
 export const QUERY_KEY = "GAME_STATE" as const;
 
@@ -7,9 +7,9 @@ const useIsGameRunning = () => {
   const { data: state, isLoading } = useQuery({
     queryKey: [QUERY_KEY],
     queryFn: async () => {
-      const result = await isGameRunning();
+      //const result = await isGameRunning();
 
-      if (typeof result === "string") return result;
+      /*if (typeof result === "string") return result;
 
       if (result.Exited !== 0) {
         window.dispatchEvent(
@@ -17,7 +17,7 @@ const useIsGameRunning = () => {
             detail: { exitCode: result.Exited },
           }),
         );
-      }
+      }*/
 
       return "NotRunning";
     },

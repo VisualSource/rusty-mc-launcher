@@ -16,16 +16,12 @@ import { queryClient } from "./lib/config/queryClient";
 import { attachLogger } from "./lib/system/logger";
 import { getPCA } from "@auth/msal";
 import router from "@/router";
-import DB from "@lib/api/db";
 import "./index.css";
 
 async function init() {
   await attachLogger();
-  await DB.init();
-
   const modrith = new ModrinthClientApplication();
   const pca = await getPCA();
-
   return { pca, modrith }
 }
 

@@ -1,16 +1,17 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { profile } from "@lib/models/profiles";
 import { CATEGORY_KEY } from "./keys";
-import DB from "@lib/api/db";
+import { db } from '@lib/system/commands';
+import { settings } from '@lib/models/settings';
+import { profile } from "@/lib/models/profiles";
 
-const useCategoryGroup = (group_id: number) => {
+const useCategoryGroup = (category: string) => {
   const { data, error } = useSuspenseQuery({
-    queryKey: [CATEGORY_KEY, group_id],
-    queryFn: async () => {
-      const db = DB.use();
-      const result = await db.select<unknown[]>(`SELECT profile.* FROM profile LEFT JOIN categories on profile.id = categories.profile_id WHERE categories.profile_id NOT NULL AND categories.group_id = ${group_id};`)
-      return result.map(e => profile.schema.parse(e));
-    },
+    queryKey: [CATEGORY_KEY, category],
+    queryFn: async () => db.select({
+      query: `SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?;`,
+      args: [category],
+      schema: profile.schema
+    })
   });
 
   if (error) throw error;

@@ -1,16 +1,18 @@
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { AlertTriangle, RefreshCcw } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
-import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { Suspense } from "react";
 
 import { CollectionLoading, CollectionError } from "./CollectionStatus";
+import { TypographyH4, } from "@/components/ui/typography";
 import { Accordion } from "@/components/ui/accordion"
 import useCategories from "@hook/useCategories";
 import Collection from "./Collection";
-import { TypographyH4, } from "@/components/ui/typography";
-import { AlertTriangle, RefreshCcw } from "lucide-react";
+
+
 import { Button } from "@/components/ui/button";
 
-const EMPTY_DATA = [{ id: 0, name: "Favorites", count: 0 }, { id: 1, name: "Uncategorized", count: 0 }];
+const EMPTY_DATA = [{ id: "aa0470a6-89e9-4404-a71c-008ee2025e72", name: "Favorites", }, { id: "40b8bf8c-5768-4c0d-82ba-8c00bb181cd8", name: "Uncategorized" }];
 
 export const SidebarError: React.FC<{ error: Error, resetErrorBoundary: () => void }> = ({ error, resetErrorBoundary }) => {
   return (
@@ -32,11 +34,11 @@ const Sidebar = () => {
   return (
     <Accordion type="multiple">
       {collections.length ? collections.map(category => (
-        <QueryErrorResetBoundary key={category.group_id}>
+        <QueryErrorResetBoundary key={category.metadata}>
           {({ reset }) => (
-            <ErrorBoundary onReset={reset} fallback={<CollectionError name={category?.name ?? ""} />}>
+            <ErrorBoundary onReset={reset} fallback={<CollectionError name={category?.value ?? ""} />}>
               <Suspense fallback={<CollectionLoading />}>
-                <Collection name={category.name ?? "Unknown Name"} count={(category as { count: number }).count - 1} id={category.group_id} />
+                <Collection name={category.value ?? "Unknown Name"} id={category.metadata!} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -47,7 +49,7 @@ const Sidebar = () => {
             {({ reset }) => (
               <ErrorBoundary onReset={reset} fallback={<CollectionError name={item.name} />}>
                 <Suspense fallback={<CollectionLoading />}>
-                  <Collection id={item.id} name={item.name} count={item.count} />
+                  <Collection id={item.name} name={item.name} />
                 </Suspense>
               </ErrorBoundary>
             )}

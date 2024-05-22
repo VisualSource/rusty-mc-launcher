@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import categories from "../models/categories";
+import { categories } from "@lib/models/categories";
 import { CATEGORIES_KEY, CATEGORY_KEY } from "./keys";
 import { toast } from "react-toastify";
-import logger from "../system/logger";
+import logger from "@system/logger";
+import { db } from "@system/commands";
 
 type Query =
-  | { type: "create"; group: number; profile: string }
-  | { type: "delete"; profile: string; group: number };
+  | { type: "create"; group: string; profile: string }
+  | { type: "delete"; profile: string; group: string };
 
 const useCategoryMutation = () => {
   const client = useQueryClient();
@@ -30,24 +31,19 @@ const useCategoryMutation = () => {
       switch (data.type) {
         case "create": {
           try {
-            const exists = await categories.execute<{ count: number }>(
-              `SELECT COUNT(*) as count FROM %table% WHERE group_id=${data.group} AND profile_id="${data.profile}";`,
-            );
-
-            if (exists && (exists.at(0) as { count: number })?.count === 0) {
-              await categories.execute(
-                `INSERT INTO %table% (id,group_id,profile_id) VALUES ("${crypto.randomUUID()}",${data.group
-                },"${data.profile}");`,
-              );
-            }
+            await db.execute({
+              query: "INSERT INTO categories ('profile','category') VALUES (?,?)",
+              args: [data.profile, data.group]
+            })
           } catch (error) {
             logger.error(error);
           }
           break;
         }
         case "delete": {
-          await categories.delete({
-            where: [{ profile_id: data.profile, group_id: data.group }],
+          await db.execute({
+            query: "DELETE FROM categories WHERE profile = ? AND category = ?",
+            args: [data.profile, data.group]
           });
           break;
         }

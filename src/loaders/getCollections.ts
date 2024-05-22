@@ -1,11 +1,10 @@
 import { json, type LoaderFunction } from "react-router-dom";
-import DB from "@lib/api/db";
-import { categories } from "@/lib/models/categories";
+import { settings } from '@lib/models/settings';
+import { db } from '@system/commands';
 
 const getCollections: LoaderFunction = async () => {
-  const db = DB.use();
-  const result = await db.select(`SELECT name, id, group_id FROM ${categories.name} WHERE profile_id IS NULL`)
-  return json(categories.schema.parse(result), { status: 200 });
+  const result = await db.select({ query: `SELECT * FROM settings WHERE key LIKE 'category.%';`, schema: settings.schema });
+  return json(result, { status: 200 });
 };
 
 export default getCollections;

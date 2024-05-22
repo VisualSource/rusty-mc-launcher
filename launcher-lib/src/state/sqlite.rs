@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use chrono::Utc;
+use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions, SqliteValueRef};
 use sqlx::{migrate::Migrator, Column, Row, TypeInfo, Value, ValueRef};
 
@@ -9,6 +10,18 @@ use crate::errors::LauncherError;
 pub struct Database(pub SqlitePool);
 
 impl Database {
+    pub async fn exists(path: &str) -> bool {
+        sqlx::sqlite::Sqlite::database_exists(path)
+            .await
+            .unwrap_or(false)
+    }
+
+    pub async fn create_db(path: &str) -> Result<(), LauncherError> {
+        sqlx::sqlite::Sqlite::create_database(path)
+            .await
+            .map_err(LauncherError::Sqlite)
+    }
+
     pub fn new(url: &str) -> Result<Self, LauncherError> {
         let opts = SqlitePoolOptions::new().connect_lazy(url)?;
 

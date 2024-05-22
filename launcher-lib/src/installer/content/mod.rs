@@ -10,7 +10,6 @@ use crate::{
 
 pub use mrpack::install_mrpack;
 use serde::Deserialize;
-use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 pub enum ContentType {
@@ -22,8 +21,8 @@ pub enum ContentType {
 
 #[derive(Debug, Deserialize)]
 pub struct InstallContent {
-    pack_type: ContentType,
-    profile: String,
+    content_type: ContentType,
+    profile: Option<String>,
     file: manifest::File,
 }
 
@@ -32,7 +31,8 @@ pub async fn install_content(
     config: InstallContent,
     _event_channel: tokio::sync::mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherError> {
-    let outdir = app
+    unimplemented!()
+    /*  let outdir = app
         .get_path("path.app")
         .await?
         .join("profiles")
@@ -45,5 +45,5 @@ pub async fn install_content(
         ContentType::ModPack => outdir,
     };
     utils::download_file(&config.file.url, &path, None, Some(&config.file.sha1)).await?;
-    Ok(())
+    Ok(())*/
 }
