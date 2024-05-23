@@ -137,7 +137,8 @@ fn main() {
             commands::game::stop,
             commands::game::install_game,
             commands::game::install_workshop_content,
-            commands::game::install_local_mrpack
+            commands::game::install_local_mrpack,
+            commands::show_in_folder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

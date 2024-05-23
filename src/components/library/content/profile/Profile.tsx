@@ -1,17 +1,15 @@
 import { Link, Outlet, useLoaderData, useParams } from "react-router-dom";
-import { BookCopy, Box, Images, Package, Play, Settings, Star } from "lucide-react";
+import { Box, Images, Package, Play, Settings } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { parseLastVersionId } from "@/lib/parseLastVersionId";
 import { MinecraftProfile } from "@lib/models/profiles";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@component/ui/button";
+import PlayButton from "@/components/ui/play";
 
 const Profile: React.FC = () => {
   const data = useLoaderData() as MinecraftProfile;
   const { id } = useParams()
-
-  const version = parseLastVersionId(data.lastVersionId);
 
   return (
     <div className="grid grid-cols-12 h-full p-2">
@@ -31,25 +29,23 @@ const Profile: React.FC = () => {
         <div>
           <h1 className="font-bold text-wrap text-lg line-clamp-2">{data.name}</h1>
           <p className="text-sm flex">
-            {version.loader.replace(/^./, version.loader[0].toUpperCase())} {version.game_version}
+            {data.loader.replace(/^./, data.loader[0].toUpperCase())} {data.version}
           </p>
         </div>
         <div className="flex gap-1 justify-evenly">
-          <Button size="sm"> <Play className="h-5 w-5 mr-1" /> Play</Button>
-          <Button size="sm" className="w-ful"><Star className="h-5 w-5" /></Button>
-          <Button size="sm" className="w-ful"><BookCopy className="h-5 w-5" /></Button>
+          <PlayButton className="w-full" profile={{ id: data.id, state: data.state }} />
         </div>
 
         <Separator />
         <ul className="space-y-2 px-4">
           <li>
             <Button className="w-full" variant="secondary" size="sm" asChild>
-              <Link to=""><Package className="mr-1 h-5 w-5" /> Content</Link>
+              <Link to={`/profile/${id}`}><Package className="mr-1 h-5 w-5" /> Content</Link>
             </Button>
           </li>
           <li>
             <Button className="w-full" variant="secondary" size="sm" asChild>
-              <Link to=""><Images className="mr-1 h-5 w-5" /> Screenshots</Link>
+              <Link to={`/profile/${id}/screenshots`}><Images className="mr-1 h-5 w-5" /> Screenshots</Link>
             </Button>
           </li>
           <li>

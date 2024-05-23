@@ -65,3 +65,4 @@ export const installWorkshopContent = (config: InstallContentConfig) => invoke("
 
 export const installLocalMrPack = (source: string) => invoke("install_local_mrpack", { file_path: source });
 
+export const showInFolder = (path: string) => invoke("show_in_folder", { path });

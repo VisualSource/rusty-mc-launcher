@@ -1,15 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Book } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FAVORITES_GUID } from "@/lib/models/categories";
 import { Skeleton } from "@/components/ui/skeleton";
 import { profile } from "@lib/models/profiles";
 import PlayButton from "@/components/ui/play";
 import { CATEGORY_KEY } from "@hook/keys";
-
 import { db } from '@system/commands';
-
-const FAVORITES_GUID = "aa0470a6-89e9-4404-a71c-008ee2025e72";
 
 export const FavoritesLoading: React.FC = () => {
   return (

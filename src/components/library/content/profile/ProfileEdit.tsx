@@ -1,42 +1,64 @@
-import { useOutletContext, useSubmit, } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
+import { join } from '@tauri-apps/api/path';
+import { EventType, useForm } from "react-hook-form";
+import debounce from "lodash.debounce";
 
-import { resolver } from "./ProfileModifyRoot";
-import type { MinecraftProfile } from "@lib/models/profiles";
-import { ScrollArea } from "@component/ui/scroll-area";
+import { queryClient } from "@lib/config/queryClient";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { TypographyH3 } from "@/components/ui/typography";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-import { Switch } from "@component/ui/switch";
-
-
-import { ProfileVersionSelector } from "./ProfileVersionSelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Book } from "lucide-react";
+import { ProfileVersionSelector } from "./ProfileVersionSelector";
+import type { MinecraftProfile } from "@lib/models/profiles";
+import { TypographyH3 } from "@/components/ui/typography";
+import { ScrollArea } from "@component/ui/scroll-area";
+import { db, showInFolder } from "@system/commands"
+import { settings } from "@/lib/models/settings";
+import CategorySelect from "./CategorySelector";
+import { Button } from "@/components/ui/button";
+import { resolver } from "./ProfileModifyRoot";
+import { Input } from "@/components/ui/input";
+import { KEY_PROFILE } from "@/hooks/keys";
+
+
+const handleChange = debounce(async (ev: {
+  name?: "id" | "name" | "date_created" | "version" |
+  "loader" | "last_played" | "icon" | "loader_version" |
+  "java_args" | "resolution_width" | "resolution_height" | "state",
+  type?: EventType,
+  values?: MinecraftProfile
+}) => {
+  let value = ev.values![ev.name!]?.toString() ?? null;
+  let id = ev.values!["id"];
+  if (value) {
+    value = "'" + value + "'";
+  } else {
+    value = "NULL";
+  }
+
+  await db.execute({
+    query: `UPDATE profiles SET ${ev.name}=${value} WHERE id = ?`,
+    args: [id]
+  });
+  await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, id] })
+}, 1000);
+
 const ProfileEdit: React.FC = () => {
   const data = useOutletContext() as MinecraftProfile;
-
-  const submit = useSubmit();
   const form = useForm<MinecraftProfile>({
+    mode: "onChange",
     resolver,
     defaultValues: data,
   });
 
-  const onSubmit = (ev: MinecraftProfile) => {
-    submit(ev as never as Record<string, string>, {
-      method: "PATCH",
-      encType: "application/json",
-    });
-  };
-
+  form.watch((_, ev) => handleChange(ev));
 
   return (
     <ScrollArea>
       <Form {...form}>
         <form className="space-y-4">
-          <section className="bg-zinc-900 rounded-md shadow-lg px-4 py-2 space-y-4">
+
+          <section className="bg-zinc-900 rounded-md shadow-lg px-4 py-2 space-y-4 ">
             <TypographyH3>Profile Settings</TypographyH3>
 
             <FormField control={form.control} name="name" render={({ field }) => (
@@ -75,23 +97,7 @@ const ProfileEdit: React.FC = () => {
               )}
             />
 
-            <FormField
-              defaultValue="latest-release"
-              control={form.control}
-              name="lastVersionId"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Minecraft Version</FormLabel>
-                  <FormControl>
-                    <ProfileVersionSelector onChange={(e) => field.onChange(e)} lastVersionId={field.value} />
-                  </FormControl>
-                  <FormDescription>
-                    This is the version of that game that will be used.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <ProfileVersionSelector form={form} />
 
           </section>
 
@@ -100,8 +106,7 @@ const ProfileEdit: React.FC = () => {
 
             <div>
               <FormField
-                name="resolution.width"
-                defaultValue={854}
+                name="resolution_width"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between p-3 shadow-sm">
@@ -110,14 +115,13 @@ const ProfileEdit: React.FC = () => {
                       <FormDescription>The width of the game window when launched.</FormDescription>
                     </div>
                     <FormControl>
-                      <Input placeholder="854" />
+                      <Input value={field.value ?? undefined} onChange={(ev) => field.onChange(ev.target.value)} placeholder="854" />
                     </FormControl>
                   </FormItem>
                 )}
               />
               <FormField
-                name="resolution.height"
-                defaultValue={480}
+                name="resolution_height"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between p-3 shadow-sm">
@@ -126,37 +130,13 @@ const ProfileEdit: React.FC = () => {
                       <FormDescription>The height of the game window when launched.</FormDescription>
                     </div>
                     <FormControl>
-                      <Input placeholder="480" />
+                      <Input value={field.value ?? undefined} onChange={(ev) => field.onChange(ev.target.value)} placeholder="480" />
                     </FormControl>
                   </FormItem>
                 )}
               />
-              <FormField
-                name="console"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>Console</FormLabel>
-                      <FormDescription>Display java terminal.</FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField control={form.control} name="javaDir" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Java</FormLabel>
-                  <FormControl>
-                    <Input autoComplete="false" placeholder="Java" value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value)} />
-                  </FormControl>
-                  <FormDescription>Java installation directory</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="javaArgs" render={({ field }) => (
+
+              <FormField control={form.control} name="java_args" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Java Args</FormLabel>
                   <FormControl>
@@ -169,15 +149,43 @@ const ProfileEdit: React.FC = () => {
             </div>
           </section>
 
+
+          <section className="bg-zinc-900 rounded-md shadow-lg px-4 py-2 space-y-4">
+            <TypographyH3>Organiztion</TypographyH3>
+
+            <CategorySelect profile={form.getValues("id")} />
+          </section>
+
+
           <section className="bg-zinc-900 rounded-md shadow-lg px-4 py-2 space-y-4">
             <TypographyH3>Installation Management</TypographyH3>
+
+            <div className="flex items-center gap-4 justify-between">
+              <div>
+                <FormLabel>Profile Folder</FormLabel>
+                <FormDescription>Open profile Folder</FormDescription>
+              </div>
+              <Button onClick={async () => {
+                const setting = await db.select({ query: "SELECT * FROM settings WHERE key = 'path.app'", schema: settings.schema });
+                const item = setting.at(0)
+                if (!item) return;
+                const path = await join(item?.value, "profiles", data.id, "/");
+                await showInFolder(path)
+              }} type="button" variant="secondary">
+                <FolderOpen className="mr-2 h-5 w-5" />
+                Open
+              </Button>
+            </div>
 
             <div className="flex items-center gap-4 justify-between">
               <div>
                 <FormLabel>Duplicate Profile</FormLabel>
                 <FormDescription>Creates a copy of this profile.</FormDescription>
               </div>
-              <Button variant="secondary">Duplicate</Button>
+              <Button type="button" variant="secondary">
+                <Copy className="mr-2 h-5 w-5" />
+                Duplicate
+              </Button>
             </div>
 
             <div className="flex items-center gap-4 justify-between">
@@ -186,7 +194,10 @@ const ProfileEdit: React.FC = () => {
                 <FormDescription>Validates all downloaded content for this profile.</FormDescription>
               </div>
 
-              <Button>Validate</Button>
+              <Button type="button">
+                <FolderCheck className="mr-2 h-5 w-5" />
+                Validate
+              </Button>
             </div>
 
             <div className="flex items-center gap-4 justify-between">
@@ -195,7 +206,26 @@ const ProfileEdit: React.FC = () => {
                 <FormDescription>Fully removes a instance from the disk. Be careful, as once you delete a instance there is no way to recover it.</FormDescription>
               </div>
 
-              <Button variant="destructive">Delete</Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" type="button">
+                    <Trash2 className="mr-2 h-5 w-5" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="text-white">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Profile</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot undone. This will permanently delete everything in this profile.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction>Ok</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </section>
         </form>

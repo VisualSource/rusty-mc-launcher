@@ -6,9 +6,7 @@ export const profile = {
   schema: z.object({
     id: z.string().uuid(),
     name: z.string(),
-
     date_created: z.string().datetime(),
-
     version: z.string(),
     loader: loaderSchema,
 
@@ -20,6 +18,8 @@ export const profile = {
 
     resolution_width: z.string().nullable(),
     resolution_height: z.string().nullable(),
+
+    state: z.enum(["UNINSTALLED", "INSTALLING", "INSTALLED"])
   })
 }
 

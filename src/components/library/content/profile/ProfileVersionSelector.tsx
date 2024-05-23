@@ -1,59 +1,78 @@
-import { useState, useReducer, useEffect } from "react";
+import { type UseFormReturn, useFormContext } from "react-hook-form";
+import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FabricLoaderVersionSelector } from "@/components/ui/FabricLoaderSelector";
 
 import { VersionSelector } from "@/components/ui/VersionSelector";
 import { Checkbox } from "@/components/ui/checkbox";
-import { parseLastVersionId } from "@/lib/parseLastVersionId";
 import { Label } from "@/components/ui/label";
-import { buildLastVersionId } from "@/lib/buildLastVerseionId";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-const reducer = (state: ReturnType<typeof parseLastVersionId>, action: { type: string, value: string }) => {
-    switch (action.type) {
-        case "loader":
-            return { ...state, loader: action.value }
-        case "loader_version":
-            return { ...state, loader_version: action.value === "" ? null : action.value }
-        case "game_version":
-            return { ...state, game_version: action.value }
-        default:
-            return state;
-    }
-}
+import { MinecraftProfile } from "@/lib/models/profiles";
 
-export const ProfileVersionSelector: React.FC<{ lastVersionId: string, onChange?: (value: string) => void }> = ({ onChange, lastVersionId }) => {
-    const [state, dispatch] = useReducer(reducer, parseLastVersionId(lastVersionId));
+export const ProfileVersionSelector: React.FC<{ form: UseFormReturn<MinecraftProfile, any, undefined> }> = ({ form }) => {
     const [showSnapshots, setShowSnapshots] = useState(false);
+    const method = useFormContext();
+    const currentLoader = method.watch("loader");
 
-    useEffect(() => {
-        try {
-            const value = buildLastVersionId(state);
-            if (lastVersionId !== value) onChange?.call(undefined, value);
-        } catch (error) { }
-    }, [onChange, state]);
 
     return (
         <div className="flex flex-col space-y-2">
-            <VersionSelector defaultValue={state.game_version} type={showSnapshots ? "both" : "release"} />
-            <div className="flex gap-2 items-center">
-                <Checkbox checked={showSnapshots} onCheckedChange={(e) => setShowSnapshots(e as boolean)} />
-                <Label>Show Snapshots</Label>
-            </div>
+            <FormField control={form.control} name="version" render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>Minecraft Version</FormLabel>
+                    <FormControl className="w-full">
+                        <div className="w-full flex flex-col space-y-2">
+                            <VersionSelector onChange={field.onChange} defaultValue={field.value} type={showSnapshots ? "both" : "release"} />
+                            <div className="flex gap-2 items-center justify-end">
+                                <Checkbox checked={showSnapshots} onCheckedChange={(e) => setShowSnapshots(e as boolean)} />
+                                <Label>Show Snapshots</Label>
+                            </div>
+                        </div>
+                    </FormControl>
+                    <FormDescription>
+                        The version of the game.
+                    </FormDescription>
+                    <FormMessage />
+                </FormItem>
+            )} />
 
-            <Select value={state.loader} onValueChange={(e) => dispatch({ type: "loader", value: e })}>
-                <SelectTrigger>
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="vanilla">Vanilla</SelectItem>
-                    <SelectItem value="fabric">Fabric</SelectItem>
-                    <SelectItem value="forge">Forge</SelectItem>
-                    <SelectItem value="newforge">NeoForge</SelectItem>
-                </SelectContent>
-            </Select>
 
-            {state.loader !== "vanilla" ? (
-                <FabricLoaderVersionSelector defaultValue={state.loader_version ?? ""} onChange={(e) => dispatch({ type: "loader_version", value: e })} />
+            <FormField control={form.control} name="loader" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Mod Loader</FormLabel>
+                    <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="vanilla">Vanilla</SelectItem>
+                                <SelectItem value="fabric">Fabric</SelectItem>
+                                <SelectItem value="forge">Forge</SelectItem>
+                                <SelectItem value="quilt">Quilt</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FormControl>
+                    <FormDescription>
+                        The loader that will be used to load mods. Note: vanilla does not support loading mods.
+                    </FormDescription>
+                    <FormMessage />
+                </FormItem>
+            )} />
+            {currentLoader !== "vanilla" ? (
+                <FormField control={form.control} name="loader_version" render={() => (
+                    <FormItem>
+                        <FormLabel>Loader Version</FormLabel>
+                        <FormControl>
+
+                        </FormControl>
+                        <FormDescription>
+                            The loader version to use.
+                        </FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )} />
             ) : null}
         </div>
     );

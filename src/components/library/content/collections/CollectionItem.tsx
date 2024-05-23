@@ -10,13 +10,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { FAVORITES_GUID, UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
 import { TypographyH4, TypographyMuted } from "@/components/ui/typography";
+import type { Setting } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const DEFAULT_GROUP = [FAVORITES_GUID, UNCATEGORIZEDP_GUID];
+
 const CollectionItem: React.FC<{
-  collection: { name: string; group_id: number; id: string };
+  collection: Setting;
 }> = ({ collection }) => {
   const [open, setOpen] = useState(false);
   const submit = useSubmit();
@@ -25,8 +29,8 @@ const CollectionItem: React.FC<{
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800">
-          <TypographyH4 className="line-clamp-1 text-lg text-zinc-50">
-            {collection.name}
+          <TypographyH4 className="line-clamp-3 text-wrap text-lg text-zinc-50">
+            {collection.value}
           </TypographyH4>
         </button>
       </DialogTrigger>
@@ -39,24 +43,24 @@ const CollectionItem: React.FC<{
           action="/collections"
           method="PATCH"
         >
-          {collection.group_id === 0 || collection.group_id === 1 ? (
+          {DEFAULT_GROUP.includes(collection.metadata!) ? (
             <div className="mb-4">
-              <TypographyMuted>Unable to edit this collection.</TypographyMuted>
+              <TypographyMuted>This colletion is not editable.</TypographyMuted>
             </div>
           ) : (
             <div className="mb-4 grid w-full items-center gap-1.5">
               <input
                 name="id"
-                defaultValue={collection.id}
+                defaultValue={collection.metadata!}
                 className="hidden"
                 readOnly
               />
-              <Label htmlFor="collection-name">Collection name</Label>
+              <Label htmlFor="name">Collection name</Label>
               <Input
                 autoComplete="false"
-                defaultValue={collection.name}
-                id="collection-name"
-                name="collection-name"
+                defaultValue={collection.value}
+                id="name"
+                name="name"
                 placeholder="Collection name"
                 required
                 min={1}
@@ -64,10 +68,10 @@ const CollectionItem: React.FC<{
               />
             </div>
           )}
+          {DEFAULT_GROUP.includes(collection.metadata!) ? null : (
+            <DialogFooter>
+              <div className="flex w-full justify-between">
 
-          <DialogFooter>
-            <div className="flex w-full justify-between">
-              {collection.group_id === 0 || collection.group_id === 1 ? null : (
                 <Button
                   onClick={() => {
                     submit(collection, { method: "DELETE" });
@@ -80,10 +84,10 @@ const CollectionItem: React.FC<{
                 >
                   <Trash2 />
                 </Button>
-              )}
-              <Button type="submit">Save</Button>
-            </div>
-          </DialogFooter>
+                <Button type="submit">Save</Button>
+              </div>
+            </DialogFooter>
+          )}
         </Form>
       </DialogContent>
     </Dialog>

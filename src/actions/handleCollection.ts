@@ -2,75 +2,75 @@ import type { ActionFunction } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { queryClient } from "@/lib/config/queryClient";
+import { db } from "@system/commands";
 import { CATEGORIES_KEY } from "@hook/keys";
-//import categories from "@/lib/models/categories";
 
 const handleCollections: ActionFunction = async ({ request }) => {
   const data = await request.formData();
-  console.log(Object.fromEntries(data.entries()));
+
   switch (request.method) {
     case "PATCH": {
       const id = data.get("id")?.toString();
-      const name = data.get("collection-name")?.toString();
+      const name = data.get("name")?.toString();
 
       if (!id || !name) {
         toast.error("Failed to update collection!", {
-          data: { event: "update-collection", type: "Invaild id or name" },
+          data: { event: "update-collection" },
         });
         return new Response(null, { status: 400 });
       }
 
-      /* await categories.execute("UPDATE %table% Set name = ? WHERE id = ?", [
-         name,
-         id,
-       ]);*/
+      await db.execute({
+        query: "UPDATE settings SET value = ? WHERE key = ?",
+        args: [name, `category.${id}`]
+      })
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
-      break;
+
+      return new Response(null, { status: 200 });
     }
     case "DELETE": {
-      const id = data.get("id")?.toString();
-      const group_id = parseInt(data.get("group_id")?.toString() ?? "");
+      const id = data.get("metadata")?.toString();
 
-      if (!id || !Number.isInteger(group_id)) {
+      if (!id) {
         toast.error("Failed to delete collection!", {
-          data: { event: "delete-collection", type: "Invaild id or group_id" },
+          data: { event: "delete-collection" },
         });
         return new Response(null, { status: 400 });
       }
 
-      /*await categories.execute("DELETE FROM %table% WHERE id = ?;", [id]);
-      await categories.execute("DELETE FROM %table% WHERE group_id = ?;", [
-        group_id,
-      ]);*/
+      await db.execute({
+        query: "DELETE FROM categories WHERE category = ?",
+        args: [id]
+      })
+
+      await db.execute({
+        query: "DELETE FROM settings WHERE key = ?",
+        args: [`category.${id}`]
+      });
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
 
-      break;
+      return new Response(null, { status: 200 });
     }
     case "POST": {
-      const name = data.get("collection-name")?.toString();
+      const name = data.get("name")?.toString();
       if (!name) return new Response(null, { status: 400 });
 
-      /*const result = await categories.execute<{ max: number }>(
-        "SELECT MAX(group_id) as max FROM %table%;",
-      );
-      const group_id = ((result?.at(0) as { max: number })?.max ?? 1) + 1;
+      const id = crypto.randomUUID();
 
-      await categories.execute("INSERT INTO %table% VALUES (?,?,?, NULL)", [
-        crypto.randomUUID(),
-        group_id,
-        name,
-      ]);*/
+      await db.execute({
+        query: "INSERT INTO settings VALUES (?,?,?)",
+        args: [`category.${id}`, id, name]
+      });
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
-      break;
+      return new Response(null, { status: 200 });
     }
     default:
-      break;
+      return new Response(null, { status: 200 });
   }
 
-  return new Response(null, { status: 200 });
 };
 
 export default handleCollections;

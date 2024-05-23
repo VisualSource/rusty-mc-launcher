@@ -3,16 +3,15 @@ import { AlertTriangle, RefreshCcw } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Suspense } from "react";
 
+import { FAVORITES_GUID, UNCATEGORIZEDP_GUID } from '@/lib/models/categories';
 import { CollectionLoading, CollectionError } from "./CollectionStatus";
 import { TypographyH4, } from "@/components/ui/typography";
 import { Accordion } from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button";
 import useCategories from "@hook/useCategories";
 import Collection from "./Collection";
 
-
-import { Button } from "@/components/ui/button";
-
-const EMPTY_DATA = [{ id: "aa0470a6-89e9-4404-a71c-008ee2025e72", name: "Favorites", }, { id: "40b8bf8c-5768-4c0d-82ba-8c00bb181cd8", name: "Uncategorized" }];
+const EMPTY_DATA = [{ id: FAVORITES_GUID, name: "Favorites", }, { id: UNCATEGORIZEDP_GUID, name: "Uncategorized" }];
 
 export const SidebarError: React.FC<{ error: Error, resetErrorBoundary: () => void }> = ({ error, resetErrorBoundary }) => {
   return (

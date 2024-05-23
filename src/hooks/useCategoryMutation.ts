@@ -1,55 +1,48 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { categories } from "@lib/models/categories";
-import { CATEGORIES_KEY, CATEGORY_KEY } from "./keys";
-import { toast } from "react-toastify";
-import logger from "@system/logger";
+import { CATEGORIES_KEY, CATEGORY_KEY, KEY_PROFILE_COLLECTION } from "./keys";
+import { Category, } from "@lib/models/categories";
 import { db } from "@system/commands";
+import logger from "@system/logger";
 
-type Query =
-  | { type: "create"; group: string; profile: string }
-  | { type: "delete"; profile: string; group: string };
+type Query = { type: "add" | "remove"; category: string, profile: string }
 
 const useCategoryMutation = () => {
   const client = useQueryClient();
   const mutate = useMutation({
-    onSuccess(_, variables) {
+    onSettled(_data, _error, variables) {
       client.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
-      client.invalidateQueries({ queryKey: [CATEGORY_KEY, variables.group] });
-      client.invalidateQueries({ queryKey: [1, variables.profile] });
+      client.invalidateQueries({ queryKey: [CATEGORY_KEY, variables.category] });
+      client.invalidateQueries({ queryKey: [KEY_PROFILE_COLLECTION, variables.profile] });
     },
-    onError(error, variables) {
+    onError(error, variables, context) {
       logger.error(error);
-      toast.error("Failed to profile to category", {
-        data: {
-          event: "profile-category",
-          type: variables.type,
-          time: new Date(),
-        },
-      });
+      client.setQueryData([KEY_PROFILE_COLLECTION, variables.profile], (context as { previous: Category[] }).previous);
     },
     mutationFn: async (data: Query) => {
+      await client.cancelQueries({ queryKey: [KEY_PROFILE_COLLECTION, data.profile] });
+
+      const previous = client.getQueryData([KEY_PROFILE_COLLECTION, data.profile]);
+
       switch (data.type) {
-        case "create": {
-          try {
-            await db.execute({
-              query: "INSERT INTO categories ('profile','category') VALUES (?,?)",
-              args: [data.profile, data.group]
-            })
-          } catch (error) {
-            logger.error(error);
-          }
-          break;
-        }
-        case "delete": {
+        case "add": {
+          client.setQueryData([KEY_PROFILE_COLLECTION, data.profile], (old: Category[]) => [...old, { id: "", category: data.category, profile: data.profile }]);
           await db.execute({
-            query: "DELETE FROM categories WHERE profile = ? AND category = ?",
-            args: [data.profile, data.group]
+            query: "INSERT INTO categories ('profile','category') VALUES (?,?);",
+            args: [data.profile, data.category]
           });
           break;
         }
-        default:
+        case "remove": {
+          client.setQueryData([KEY_PROFILE_COLLECTION, data.profile], (old: Category[]) => old.filter(e => e.category !== data.category));
+          await db.execute({
+            query: "DELETE FROM categories WHERE profile = ? AND category = ?",
+            args: [data.profile, data.category]
+          });
           break;
+        }
       }
+
+      return { previous };
     },
   });
 

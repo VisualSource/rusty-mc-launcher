@@ -18,8 +18,8 @@ export const useMinecraftVersions = (type: ReleaseType) => {
 
             const manifest = await resposne.json() as VersionManifestV2;
 
-            const mc1_12 = manifest.versions.findIndex(e => e.id === "1.12");
-            if (mc1_12 === -1) throw new Error("Failed to find mc 1.12");
+            const mc1_12 = manifest.versions.findIndex(e => e.id === "1.13");
+            if (mc1_12 === -1) throw new Error("Failed to find mc 1.13s");
 
             const versions = manifest.versions.slice(0, mc1_12 + 1);
             if (select === "both") {

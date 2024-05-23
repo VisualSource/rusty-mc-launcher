@@ -1,9 +1,9 @@
+import { Check, ChevronsUpDown } from "lucide-react";
+import { useState } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandLoading } from "./command";
 import { useMinecraftVersions, type ReleaseType } from "@/hooks/useMinecraftVersions";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Button } from "./button";
-import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const VersionSelector: React.FC<{ type?: ReleaseType, defaultValue?: string, onChange?: (value: string) => void }> = ({ onChange, defaultValue, type = "release" }) => {
@@ -15,7 +15,7 @@ export const VersionSelector: React.FC<{ type?: ReleaseType, defaultValue?: stri
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button disabled={isLoading} aria-expanded={open} type="button" role="combobox" variant="outline">
-                    {isLoading ? "Loading Versions..." : value ? `Minecraft ${data?.find(version => version.id === value)?.id}` : "Select Version"}
+                    {isLoading ? "Loading Versions..." : value ? `Minecraft ${data?.find(version => version.id === value)?.id ?? value}` : "Select Version"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>

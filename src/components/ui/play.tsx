@@ -1,40 +1,36 @@
+import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
+
 import type { MinecraftProfile } from "@/lib/models/profiles";
 import useIsGameRunning from "@hook/useIsGameRunning";
-import useRunGame from "@hook/useRunGame";
 import { Button, type ButtonProps } from "./button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
-const PlayButton: React.FC<ButtonProps & { profile: MinecraftProfile }> = ({
+const PlayButton: React.FC<ButtonProps & { profile: Pick<MinecraftProfile, "id" | "state"> }> = ({
   profile,
   className,
   ...props
 }) => {
-  const [isPreparing, setIsPreparing] = useState(false);
-  const { isLoading, state: isRunning } = useIsGameRunning();
-  const run = useRunGame();
-
-  const running = isRunning === "Running";
+  const { isLoading, state: isRunning } = useIsGameRunning({ profile: profile.id });
 
   return (
     <Button
       {...props}
-      onClick={() => {
-        setIsPreparing(true);
-        run(profile).finally(() => setIsPreparing(false));
-      }}
-      disabled={isLoading || running || isPreparing}
+      onClick={() => { }}
+      disabled={isLoading || isRunning || profile.state === "INSTALLING"}
       className={cn(
         {
           "bg-blue-500 hover:bg-blue-500/90 dark:bg-blue-900 dark:text-zinc-50 dark:hover:bg-blue-900/90":
-            isPreparing,
-          "bg-orange-500 hover:bg-orange-500/90 dark:bg-orange-900 dark:text-zinc-50 dark:hover:bg-orange-900/90":
-            running,
+            isRunning,
+          "bg-green-500 hover:bg-green-500/90 dark:bg-green-900 dark:text-zinc-50 dark:hover:bg-green-900/90":
+            profile.state === "INSTALLING"
         },
         className,
       )}
     >
-      {isPreparing ? "Preparing" : running ? "Running" : "Play"}
+      {profile.state === "INSTALLED" && !isRunning ? (<> <Play className="h-5 w-5 mr-1" /> Play</>) : null}
+      {profile.state === "INSTALLED" && isRunning ? (<> <StopCircle className="h-5 w-5 mr-1" /> Stop</>) : null}
+      {profile.state === "INSTALLING" ? (<span className="animate-pulse inline-flex"><DatabaseZap className="h-5 w-5 mr-1 animate-bounce" /> Installing...</span>) : null}
+      {profile.state === "UNINSTALLED" ? (<><Download className="h-5 w-5 mr-1" /> Install</>) : null}
     </Button>
   );
 };

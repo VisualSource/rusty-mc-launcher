@@ -1,27 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-//import { isGameRunning } from "@system/commands";
+import { isRunning } from "@system/commands";
 
 export const QUERY_KEY = "GAME_STATE" as const;
 
-const useIsGameRunning = () => {
+const useIsGameRunning = ({ profile }: { profile: string }) => {
   const { data: state, isLoading } = useQuery({
-    queryKey: [QUERY_KEY],
+    queryKey: [QUERY_KEY, profile],
     queryFn: async () => {
-      //const result = await isGameRunning();
-
-      /*if (typeof result === "string") return result;
-
-      if (result.Exited !== 0) {
-        window.dispatchEvent(
-          new CustomEvent("mcl::game-exit-status", {
-            detail: { exitCode: result.Exited },
-          }),
-        );
-      }*/
-
-      return "NotRunning";
+      return isRunning(profile);
     },
-    initialData: "NotRunning",
+    initialData: false,
     refetchInterval: 2_000,
   });
 

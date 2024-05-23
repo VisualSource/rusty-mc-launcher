@@ -2,7 +2,6 @@ import { useFetcher, useLoaderData } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogHeader,
@@ -11,24 +10,22 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Setting } from "@/lib/models/settings";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CollectionItem from "./CollectionItem";
 
 const CollectionsRoot: React.FC = () => {
   const [addCollectionOpen, setAddCollectionsOpen] = useState(false);
-  const data = useLoaderData() as {
-    group_id: number;
-    id: string;
-    name: string;
-  }[];
+  const data = useLoaderData() as Setting[];
   const fetcher = useFetcher();
 
   return (
     <ScrollArea>
       <div className="flex flex-wrap gap-4 p-2">
         {data.map((collection) => (
-          <CollectionItem key={collection.id} collection={collection} />
+          <CollectionItem key={collection.metadata} collection={collection} />
         ))}
         <Dialog onOpenChange={setAddCollectionsOpen} open={addCollectionOpen}>
           <DialogTrigger asChild>
@@ -49,11 +46,11 @@ const CollectionsRoot: React.FC = () => {
               method="POST"
             >
               <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="collection-name">Collection name</Label>
+                <Label htmlFor="name">Collection name</Label>
                 <Input
                   autoComplete="false"
-                  id="collection-name"
-                  name="collection-name"
+                  id="name"
+                  name="name"
                   placeholder="Collection name"
                   required
                   min={1}

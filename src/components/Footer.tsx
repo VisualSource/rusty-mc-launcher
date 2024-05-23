@@ -41,6 +41,9 @@ const Footer = () => {
             <DropdownMenuItem onClick={import_profiles}>
               Import Profile
             </DropdownMenuItem>
+            <DropdownMenuItem>
+              Import Mrpack
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

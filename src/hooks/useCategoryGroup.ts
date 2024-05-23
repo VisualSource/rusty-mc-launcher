@@ -1,8 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { CATEGORY_KEY } from "./keys";
-import { db } from '@lib/system/commands';
-import { settings } from '@lib/models/settings';
 import { profile } from "@/lib/models/profiles";
+import { db } from '@lib/system/commands';
+import { CATEGORY_KEY } from "./keys";
 
 const useCategoryGroup = (category: string) => {
   const { data, error } = useSuspenseQuery({
