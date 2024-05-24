@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useSubmit } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Book } from "lucide-react";
@@ -9,8 +10,10 @@ import type { MinecraftProfile } from "@lib/models/profiles";
 import { TypographyH3 } from "@/components/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { resolver } from "./ProfileModifyRoot";
+import { profile } from '@lib/models/profiles';
 import { Input } from "@/components/ui/input";
+
+const resolver = zodResolver(profile.schema);
 
 const ProfileCreate: React.FC = () => {
   const submit = useSubmit();
@@ -53,7 +56,6 @@ const ProfileCreate: React.FC = () => {
               </FormItem>
             )} />
 
-
             <FormField
               name="icon"
               control={form.control}
@@ -79,14 +81,12 @@ const ProfileCreate: React.FC = () => {
               )}
             />
 
-
             <ProfileVersionSelector form={form} />
 
           </section>
 
           <section className="bg-zinc-900 rounded-md shadow-lg px-4 py-2 space-y-4">
             <TypographyH3>Game Settings</TypographyH3>
-
 
             <FormField
               name="resolution_width"
@@ -100,6 +100,7 @@ const ProfileCreate: React.FC = () => {
                   <FormControl>
                     <Input placeholder="854" value={field.value ?? undefined} onChange={(e) => field.onChange(e.target.value)} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -115,10 +116,10 @@ const ProfileCreate: React.FC = () => {
                   <FormControl>
                     <Input placeholder="480" value={field.value ?? undefined} onChange={(e) => field.onChange(e.target.value)} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
-
 
             <FormField control={form.control} name="java_args" render={({ field }) => (
               <FormItem>
@@ -131,7 +132,6 @@ const ProfileCreate: React.FC = () => {
               </FormItem>
             )} />
           </section>
-
 
           <div className="absolute bottom-4 right-4">
             <Button type="submit">Create</Button>

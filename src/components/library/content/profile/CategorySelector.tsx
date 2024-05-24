@@ -1,16 +1,16 @@
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandLoading } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import React, { Suspense, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { db } from '@system/commands';
-import { type Category, categories } from "@/lib/models/categories";
-import useCategories from "@/hooks/useCategories";
+import { useQuery } from "@tanstack/react-query";
+import { Suspense, useState } from "react";
 import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import useCategoryMutation from "@/hooks/useCategoryMutation";
-import { Badge } from "@/components/ui/badge";
 
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandLoading } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import useCategoryMutation from "@/hooks/useCategoryMutation";
+import { categories } from "@/lib/models/categories";
+import useCategories from "@/hooks/useCategories";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { db } from '@system/commands';
+import { cn } from "@/lib/utils";
 
 const CategorySelect: React.FC<{ profile: string }> = ({ profile }) => {
     return (
@@ -52,7 +52,7 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
                     <CommandInput placeholder="Add to collection" />
                     <CommandList>
                         <CommandEmpty>No collection found</CommandEmpty>
-                        {/* <CommandLoading>Loading collections...</CommandLoading> */}
+                        {isLoading ? <CommandLoading>Loading collections...</CommandLoading> : null}
                         <CommandGroup>
                             {categoryList.map((category) => (
                                 <CommandItem value={category.metadata!} onSelect={(currentValue) => {

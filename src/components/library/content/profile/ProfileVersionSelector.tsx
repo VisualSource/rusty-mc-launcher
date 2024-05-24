@@ -1,20 +1,17 @@
 import { type UseFormReturn, useFormContext } from "react-hook-form";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FabricLoaderVersionSelector } from "@/components/ui/FabricLoaderSelector";
 
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VersionSelector } from "@/components/ui/VersionSelector";
+import { MinecraftProfile } from "@/lib/models/profiles";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-
-import { MinecraftProfile } from "@/lib/models/profiles";
 
 export const ProfileVersionSelector: React.FC<{ form: UseFormReturn<MinecraftProfile, any, undefined> }> = ({ form }) => {
     const [showSnapshots, setShowSnapshots] = useState(false);
     const method = useFormContext();
     const currentLoader = method.watch("loader");
-
 
     return (
         <div className="flex flex-col space-y-2">

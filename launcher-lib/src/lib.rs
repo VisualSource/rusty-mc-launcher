@@ -9,4 +9,4 @@ mod state;
 
 pub use installer::{content, install_minecraft, ChannelMessage, InstallConfig};
 pub use launcher::{start_game, LaunchConfig};
-pub use state::{profile, AppState, Database};
+pub use state::{models, profile, AppState, Database};

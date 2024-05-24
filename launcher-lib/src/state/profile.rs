@@ -45,4 +45,6 @@ pub struct Profile {
 
     pub resolution_width: Option<String>,
     pub resolution_height: Option<String>,
+
+    pub state: String,
 }

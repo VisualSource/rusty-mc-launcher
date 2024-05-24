@@ -10,16 +10,16 @@ export const profile = {
     version: z.string(),
     loader: loaderSchema,
 
-    last_played: z.string().datetime().nullable(),
-    icon: z.string().nullable(),
-    loader_version: z.string().nullable(),
+    last_played: z.string().datetime().optional().nullable().default(null),
+    icon: z.ostring().nullable().default(null),
+    loader_version: z.ostring().nullable().default(null),
 
-    java_args: z.string().nullable(),
+    java_args: z.ostring().nullable().default(null),
 
-    resolution_width: z.string().nullable(),
-    resolution_height: z.string().nullable(),
+    resolution_width: z.ostring().nullable().default(null),
+    resolution_height: z.ostring().nullable().default(null),
 
-    state: z.enum(["UNINSTALLED", "INSTALLING", "INSTALLED"])
+    state: z.enum(["UNINSTALLED", "INSTALLING", "INSTALLED"]).default("UNINSTALLED")
   })
 }
 

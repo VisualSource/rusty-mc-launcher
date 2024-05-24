@@ -19,9 +19,17 @@ import import_profiles from "@/lib/system/import_profiles";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
+import { download_queue } from "@/lib/models/download_queue";
+import { useQuery } from "@tanstack/react-query";
+import { db } from "@/lib/system/commands";
 
 const Footer = () => {
-  const { queueCurrent } = useDownload();
+  const queueCurrent = useQuery({
+    queryKey: ["DOWNLOAD_QUEUE_CURRENT"],
+    initialData: null,
+    refetchInterval: 60_000,
+    queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;", args: [] }).then(e => e.at(0) ?? null)
+  });
   return (
     <footer className="flex h-16 bg-zinc-950 text-zinc-400 shadow flex-shrink-0 flex-grow-0">
       <div className="flex h-full w-full shrink items-center justify-start">
@@ -55,13 +63,13 @@ const Footer = () => {
           asChild
         >
           <Link to="downloads" className="group">
-            {queueCurrent ? (
+            {queueCurrent.data ? (
               <div className="flex items-end gap-3">
                 <Avatar className="rounded-none">
                   <AvatarFallback className="rounded-lg">
-                    {queueCurrent.type === "client" ? (
+                    {queueCurrent.data.content_type === "client" ? (
                       <Monitor />
-                    ) : queueCurrent.type === "mods" ? (
+                    ) : queueCurrent.data.content_type === "mod" ? (
                       <PackagePlus />
                     ) : (
                       <FileDiff />
@@ -72,14 +80,14 @@ const Footer = () => {
                 <div className="w-96">
                   <div className="flex w-full justify-between">
                     <TypographyMuted asChild className="line-clamp-1">
-                      <span>{queueCurrent.msg}</span>
+                      <span>{queueCurrent.data.display_name}</span>
                     </TypographyMuted>
                     <TypographyMuted asChild>
                       <span>
                         {Math.floor(
                           100 *
-                          (queueCurrent.ammount_current /
-                            queueCurrent.ammount),
+                          (0 /
+                            10),
                         )}
                         %
                       </span>
@@ -88,7 +96,7 @@ const Footer = () => {
                   <Progress
                     value={Math.floor(
                       100 *
-                      (queueCurrent.ammount_current / queueCurrent.ammount),
+                      (0 / 10),
                     )}
                   />
                 </div>

@@ -1,8 +1,8 @@
-import { queryClient } from "@/lib/config/queryClient";
-import { CATEGORIES_KEY, CATEGORY_KEY } from "@hook/keys";
-//import categories from "@/lib/models/categories";
 import type { ActionFunction } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import { CATEGORIES_KEY, CATEGORY_KEY } from "@hook/keys";
+import { queryClient } from "@/lib/config/queryClient";
 
 const updateCollection: ActionFunction = async ({ request }) => {
   const data = await request.formData();

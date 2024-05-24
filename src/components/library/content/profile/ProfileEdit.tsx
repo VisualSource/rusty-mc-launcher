@@ -1,25 +1,29 @@
 import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
-import { join } from '@tauri-apps/api/path';
+import { zodResolver } from "@hookform/resolvers/zod";
 import { EventType, useForm } from "react-hook-form";
+import { NavigateFunction, useNavigate, useOutletContext } from "react-router-dom";
+import { join } from '@tauri-apps/api/path';
 import debounce from "lodash.debounce";
 
-import { queryClient } from "@lib/config/queryClient";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CATEGORIES_KEY, CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
+import { db, deleteProfile, showInFolder } from "@system/commands";
 import { ProfileVersionSelector } from "./ProfileVersionSelector";
 import type { MinecraftProfile } from "@lib/models/profiles";
 import { TypographyH3 } from "@/components/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
-import { db, showInFolder } from "@system/commands"
+import { queryClient } from "@lib/config/queryClient";
+import { categories } from "@/lib/models/categories";
 import { settings } from "@/lib/models/settings";
 import CategorySelect from "./CategorySelector";
 import { Button } from "@/components/ui/button";
-import { resolver } from "./ProfileModifyRoot";
+import { profile } from '@lib/models/profiles';
 import { Input } from "@/components/ui/input";
-import { KEY_PROFILE } from "@/hooks/keys";
 
+
+const resolver = zodResolver(profile.schema);
 
 const handleChange = debounce(async (ev: {
   name?: "id" | "name" | "date_created" | "version" |
@@ -27,7 +31,7 @@ const handleChange = debounce(async (ev: {
   "java_args" | "resolution_width" | "resolution_height" | "state",
   type?: EventType,
   values?: MinecraftProfile
-}) => {
+}, navigate: NavigateFunction) => {
   let value = ev.values![ev.name!]?.toString() ?? null;
   let id = ev.values!["id"];
   if (value) {
@@ -40,10 +44,16 @@ const handleChange = debounce(async (ev: {
     query: `UPDATE profiles SET ${ev.name}=${value} WHERE id = ?`,
     args: [id]
   });
-  await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, id] })
+  await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, id] });
+
+
+  navigate({
+    pathname: `/profile/${id}/edit`
+  })
 }, 1000);
 
 const ProfileEdit: React.FC = () => {
+  const navigate = useNavigate();
   const data = useOutletContext() as MinecraftProfile;
   const form = useForm<MinecraftProfile>({
     mode: "onChange",
@@ -51,7 +61,7 @@ const ProfileEdit: React.FC = () => {
     defaultValues: data,
   });
 
-  form.watch((_, ev) => handleChange(ev));
+  form.watch((_, ev) => handleChange(ev, navigate));
 
   return (
     <ScrollArea>
@@ -222,7 +232,26 @@ const ProfileEdit: React.FC = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction>Ok</AlertDialogAction>
+                    <AlertDialogAction onClick={async () => {
+                      navigate("/");
+
+                      const cats = await db.select({ query: "SELECT * FROM categories WHERE profile = ?", args: [data.id], schema: categories.schema });
+
+                      await db.execute({
+                        query: `BEGIN;
+                                  DELETE FROM categories WHERE profile = $1;
+                                  DELETE FROM profiles WHERE id = $1;
+                                  DELETE FROM download_queue WHERE profile_id = $1;
+                                COMMIT;
+                      `, args: [data.id]
+                      })
+
+                      for (const cat of cats) {
+                        await queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, cat.category] });
+                      }
+
+                      await deleteProfile(data.id);
+                    }}>Ok</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

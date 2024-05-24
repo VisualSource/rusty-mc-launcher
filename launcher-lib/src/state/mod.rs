@@ -1,3 +1,4 @@
+pub mod models;
 mod process;
 pub mod profile;
 mod sqlite;
@@ -6,21 +7,13 @@ use std::{
     str::FromStr,
 };
 
+use models::{QueueItem, Setting};
 use normalize_path::NormalizePath;
 
 use profile::Profile;
-use serde::{Deserialize, Serialize};
-use sqlx::query_as;
 
 use crate::errors::LauncherError;
 pub use sqlite::Database;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Setting {
-    value: String,
-    key: String,
-    metadata: Option<String>,
-}
 
 pub struct AppState {
     pub instances: process::Instances,
@@ -36,11 +29,42 @@ impl AppState {
     }
 
     pub async fn get_profile(&self, id: &str) -> Result<Option<Profile>, LauncherError> {
-        let query: Option<Profile> = query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
-            .fetch_optional(&self.database.0)
-            .await?;
+        let query: Option<Profile> =
+            sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
+                .fetch_optional(&self.database.0)
+                .await?;
 
         Ok(query)
+    }
+
+    pub async fn get_next_item(&self) -> Result<Option<QueueItem>, LauncherError> {
+        let has_current = sqlx::query_scalar!(
+            "SELECT COUNT(*) as count FROM download_queue WHERE state = 'CURRENT';"
+        )
+        .fetch_one(&self.database.0)
+        .await?;
+
+        if has_current >= 1 {
+            return Ok(None);
+        }
+
+        let pending: Option<QueueItem> = sqlx::query_as!(
+            QueueItem,
+            "SELECT * FROM download_queue WHERE state = 'PENDING' ORDER BY install_order DESC LIMIT 1;",
+        )
+        .fetch_optional(&self.database.0)
+        .await?;
+
+        if let Some(item) = pending {
+            sqlx::query("UPDATE download_queue SET state = 'CURRENT' WHERE id = ?;")
+                .bind(&item.id)
+                .execute(&self.database.0)
+                .await?;
+
+            Ok(Some(item))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn validate_java_at(path: &Path) -> Result<Option<String>, LauncherError> {

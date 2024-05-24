@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 pub mod auth;
 pub mod game;
+pub mod profile;
 pub mod query;
 
 #[tauri::command]

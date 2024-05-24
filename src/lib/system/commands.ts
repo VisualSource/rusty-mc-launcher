@@ -1,7 +1,5 @@
-import type { InvokeArgs } from "@tauri-apps/api/tauri";
 import { invoke, } from "@tauri-apps/api";
 import { z } from 'zod';
-
 
 export const closeAuthServer = (port: number) => invoke<void>("close_auth_server", { port });
 export const startAuthServer = () => invoke<number>("start_auth_server");
@@ -17,10 +15,8 @@ export const db = {
     const request = await invoke<unknown[]>("select", { query, args });
     return request.map(value => schema.parse(value)) as z.infer<S>[];
   },
-  execute: async ({ query, args }: { query: string, args: unknown[] }) => invoke("execute", { query, args })
+  execute: async ({ query, args = [] }: { query: string, args?: unknown[] }) => invoke("execute", { query, args })
 }
-
-
 
 const uuidSchema = z.string().uuid();
 export const isRunning = (profile: string) => invoke<boolean>("is_running", { profile: uuidSchema.parse(profile) });
@@ -66,3 +62,6 @@ export const installWorkshopContent = (config: InstallContentConfig) => invoke("
 export const installLocalMrPack = (source: string) => invoke("install_local_mrpack", { file_path: source });
 
 export const showInFolder = (path: string) => invoke("show_in_folder", { path });
+
+export const deleteProfile = (profile: string) => invoke("delete_profile", { profile });
+export const createProfile = (profile: string) => invoke("create_profile", { profile });

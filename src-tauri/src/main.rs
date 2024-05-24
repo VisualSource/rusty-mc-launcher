@@ -6,6 +6,8 @@ mod commands;
 mod errors;
 mod oauth;
 
+use std::time::Duration;
+
 use log::LevelFilter;
 use minecraft_launcher_lib::{errors::LauncherError, AppState, Database};
 use tauri::Manager;
@@ -125,6 +127,24 @@ fn main() {
             })
             .expect("Failed to register deep linker");
 
+            let dlq = app.handle();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(Duration::from_secs(4)).await;
+
+                    let state = dlq.state::<AppState>();
+
+                    match state.get_next_item().await {
+                        Ok(Some(item)) => {
+                            log::debug!("PROCESSING ITEM: {:#?}", item);
+                            tokio::time::sleep(Duration::from_secs(60)).await;
+                        }
+                        Ok(None) => {}
+                        Err(err) => log::error!("{}", err),
+                    }
+                }
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -139,6 +159,8 @@ fn main() {
             commands::game::install_workshop_content,
             commands::game::install_local_mrpack,
             commands::show_in_folder,
+            commands::profile::delete_profile,
+            commands::profile::create_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

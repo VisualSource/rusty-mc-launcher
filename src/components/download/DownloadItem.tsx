@@ -1,23 +1,19 @@
 import { formatSize } from "@lib/size_format";
 import { FileDiff, Monitor, PackagePlus } from "lucide-react";
 
-import type {
-  ClientMetadata,
-  ModsMetadata,
-  PackMetadata,
-  QueueItem,
-} from "@lib/context/DownloadContext";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { TypographyH4, TypographyMuted } from "@component/ui/typography";
+import { QueueItem } from "@/lib/models/download_queue";
 
-const DownloadItem: React.FC<QueueItem> = ({ type, metadata, size }) => {
+const DownloadItem: React.FC<QueueItem> = ({ display_name, content_type, metadata }) => {
   return (
     <div className="flex gap-2">
       <Avatar className="rounded-none">
         <AvatarFallback className="rounded-lg">
-          {type === "client" ? (
+          {content_type === "client" ? (
             <Monitor />
-          ) : type === "mods" ? (
+          ) : content_type === "mod" ? (
             <PackagePlus />
           ) : (
             <FileDiff />
@@ -26,31 +22,21 @@ const DownloadItem: React.FC<QueueItem> = ({ type, metadata, size }) => {
         <AvatarImage />
       </Avatar>
       <div>
-        {type === "client" ? (
-          <div>
-            <TypographyH4>
-              Minecraft {(metadata as ClientMetadata).version}
-            </TypographyH4>
-          </div>
-        ) : null}
-        {type === "pack" ? (
-          <div>
-            <TypographyH4>
-              Minecraft {(metadata as PackMetadata).name}
-            </TypographyH4>
+        <div>
+          <TypographyH4>
+            {display_name}
+          </TypographyH4>
+          {content_type === "resource" || content_type === "shader" ? (
             <TypographyMuted>
-              {formatSize(size, { space: true })}
+              {formatSize(metadata.size as number ?? 0, { space: true })}
             </TypographyMuted>
-          </div>
-        ) : null}
-        {type === "mods" ? (
-          <div>
-            <TypographyH4>Mods</TypographyH4>
+          ) : null}
+          {content_type === "mod" ? (
             <TypographyMuted>
-              {(metadata as ModsMetadata).mods.length} Mods
+              {metadata?.name as string}
             </TypographyMuted>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );
