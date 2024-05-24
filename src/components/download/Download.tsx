@@ -13,42 +13,34 @@ import { db } from "@/lib/system/commands";
 import { download_queue } from "@/lib/models/download_queue";
 import { queryClient } from "@/lib/config/queryClient";
 
-const size = (size: number) => formatSize(size, { space: true });
-
 const DOWNLOAD_QUEUE_COMPLETED = "DOWNLOAD_QUEUE_COMPLETED";
 
+function useQueue(queue: string, order: "ASC" | "DESC" = "DESC") {
+  return useQuery({
+    queryKey: ["DOWNLOAD_QUEUE", queue],
+    refetchInterval: 60_000,
+    queryFn: () => db.select({ schema: download_queue.schema, query: `SELECT * FROM download_queue WHERE state = ? AND display = TRUE ORDER BY install_order ${order};`, args: [queue] })
+  });
+}
+
 const Download: React.FC = () => {
+  const { progress } = useDownload();
+
   const queueCurrent = useQuery({
     queryKey: ["DOWNLOAD_QUEUE_CURRENT"],
     initialData: null,
     refetchInterval: 60_000,
     queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;", args: [] }).then(e => e.at(0) ?? null)
   });
-  const queueNext = useQuery({
-    queryKey: ["DOWNLOAD_QUEUE_PENDING"],
-    refetchInterval: 60_000,
-    queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'PENDING' AND display = TRUE ORDER BY install_order DESC;", args: [] })
-  });
-  const queueCompleted = useQuery({
-    queryKey: [DOWNLOAD_QUEUE_COMPLETED],
-    refetchInterval: 60_000,
-    queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'COMPLETED' AND display = TRUE ORDER BY install_order ASC;", args: [] })
-  });
-  const queueErrored = useQuery({
-    queryKey: ["DOWNLOAD_QUEUE_ERRORED"],
-    refetchInterval: 60_000,
-    queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'ERRORED' AND display = TRUE ORDER BY install_order ASC;", args: [] })
-  })
-  const queuePostponed = useQuery({
-    queryKey: ["DOWNLOAD_QUEUE_POSTPONED"],
-    refetchInterval: 60_000,
-    queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'POSTPONED' AND display = TRUE ORDER BY install_order ASC;", args: [] })
-  })
+  const queueNext = useQueue("PENDING");
+  const queueCompleted = useQueue("COMPLETED", "ASC");
+  const queueErrored = useQueue("ERRORED", "ASC");
+  const queuePostponed = useQueue("POSTPONED");
 
   return (
     <div className="grid h-full grid-cols-1 grid-rows-6 text-zinc-50 w-full">
       <div className="row-span-2 border-b border-b-blue-300 bg-blue-900/20 p-2">
-        {queueCurrent.data ? (
+        {queueCurrent.data && progress ? (
           <div className="flex gap-4">
             <Avatar className="h-32 w-32 rounded-none xl:h-60 xl:w-60">
               <AvatarFallback className="h-32 w-32 rounded-lg xl:h-60 xl:w-60">
@@ -64,16 +56,10 @@ const Download: React.FC = () => {
             </Avatar>
 
             <div>
+              <h1>{queueCurrent.data.display_name}</h1>
+              <div>{progress.message}</div>
               <div>
-                {"C://"}:{" "}
-                {size(1)}
-              </div>
-              <div>{"NO MSG"}</div>
-              <div>
-                {size(1)} of {size(1)}
-              </div>
-              <div>
-                {0} of {0}
+                {progress.progress} of {progress.max_progress}
               </div>
             </div>
           </div>

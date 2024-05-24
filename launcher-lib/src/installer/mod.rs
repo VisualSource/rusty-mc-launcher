@@ -17,6 +17,7 @@ use metadata::get_launcher_manifest;
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
 
+use crate::event;
 pub use utils::ChannelMessage;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct InstallConfig {
@@ -40,11 +41,11 @@ pub async fn install_minecraft(
     config: InstallConfig,
     event_channel: &mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherError> {
-    // event!(&event_channel, "download", { "type": "status", "payload": { "message": "Starting minecraft install." } });
+    event!(&event_channel, "group", { "progress": 0, "max_progress": 9, "message": "Starting minecraft install." });
 
     let runtime_directory = app.get_path("path.app").await?.join("runtime");
     let version_directory = runtime_directory.join("versions").join(&config.version);
-
+    event!(&event_channel,"update",{ "message": "Loading manifest" });
     let client_manfiest_file = version_directory
         .join(format!("{}.json", config.version))
         .normalize();
@@ -61,18 +62,22 @@ pub async fn install_minecraft(
     }
 
     let manifset = Manifest::read_manifest(&client_manfiest_file, false).await?;
+    event!(&event_channel,"update",{ "progress": 1 });
+
     let java_version = manifset
         .java_version
         .ok_or(LauncherError::NotFound("Java not found".to_string()))?
         .major_version;
 
     if app.get_java(java_version).await?.is_none() {
+        event!(&event_channel,"update",{ "message": "Installing Java" });
         let (build_version, path) =
             download_java(event_channel, &runtime_directory, java_version).await?;
 
         app.insert_java(java_version, &build_version, &path).await?;
     }
 
+    event!(&event_channel,"update",{ "progress": 1, "message": "Downloading client" });
     tokio::try_join! {
         download_client(event_channel, &config.version, &version_directory, manifset.downloads),
         download_assets(event_channel, &runtime_directory, manifset.asset_index),
@@ -80,6 +85,7 @@ pub async fn install_minecraft(
     }?;
 
     if config.loader != Loader::Vanilla {
+        event!(&event_channel,"update",{ "message": "Installing Mod loader" });
         let java_exe = app
             .get_java(java_version)
             .await?
@@ -124,6 +130,8 @@ pub async fn install_minecraft(
                 .await?
             }
         };
+    } else {
+        event!(&event_channel,"update",{ "progress": 4 });
     }
 
     Ok(())

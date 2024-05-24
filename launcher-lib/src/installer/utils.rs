@@ -2,12 +2,8 @@ use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::path::Path;
-use tokio::fs::OpenOptions;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::{
-    fs::{create_dir_all, File},
-    io::BufReader,
-};
+use tokio::fs::{create_dir_all, File};
+use tokio::io::AsyncWriteExt;
 
 use crate::errors::LauncherError;
 

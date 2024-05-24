@@ -12,14 +12,14 @@ use tokio::{
     sync::mpsc,
 };
 
-use crate::{
-    errors::LauncherError,
-    manifest::{Library, Manifest},
-};
-
 use super::{
     compression::{self, open_archive},
     utils,
+};
+use crate::event;
+use crate::{
+    errors::LauncherError,
+    manifest::{Library, Manifest},
 };
 #[derive(Debug, Deserialize)]
 struct Mapping {
@@ -222,6 +222,7 @@ pub async fn run_installer(
     runtime_directory: &Path,
     java: &str,
 ) -> Result<(), LauncherError> {
+    event!(&event_channel,"update",{ "message":"Fetching mod manifest" });
     let loader_version = if let Some(loader) = loader_verison {
         loader
     } else {
@@ -286,6 +287,8 @@ pub async fn run_installer(
 
     let manifest = Manifest::read_manifest(&modded_manifest_path, false).await?;
 
+    event!(&event_channel,"update",{ "progress": 1, "message": "Installing Libraries" });
+
     tokio::try_join! {
         // profile libraries
         download_libraries(
@@ -302,6 +305,8 @@ pub async fn run_installer(
             manifest.libraries,
         )
     }?;
+
+    event!(&event_channel,"update",{ "progress": 1, "message": "Running Processors" });
 
     let lzma_path = temp.join("data/client.lzma").normalize();
     // run processors
@@ -322,12 +327,16 @@ pub async fn run_installer(
         copyed
     );
 
+    event!(&event_channel,"update",{ "progress": 1, "message": "Cleanup" });
+
     fs::remove_file(&installer_path).await?;
     fs::remove_file(&lzma_path).await?;
 
     if let Some(parent) = lzma_path.parent() {
         fs::remove_dir(parent).await?;
     }
+
+    event!(&event_channel,"update",{ "progress": 1 });
 
     Ok(())
 }

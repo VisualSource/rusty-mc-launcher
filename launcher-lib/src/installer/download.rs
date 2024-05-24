@@ -8,6 +8,8 @@ use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::{fs, io::AsyncWriteExt, sync::mpsc};
 
+use crate::event;
+
 #[derive(Debug, Deserialize)]
 struct JavaDownload {
     download_url: String,
@@ -119,7 +121,7 @@ pub async fn download_java(
 }
 
 pub async fn download_client(
-    _event_channel: &mpsc::Sender<ChannelMessage>,
+    event_channel: &mpsc::Sender<ChannelMessage>,
     version: &str,
     versions_directory: &std::path::Path,
     downloads: Option<Downloads>,
@@ -141,11 +143,13 @@ pub async fn download_client(
     )
     .await?;
 
+    event!(&event_channel,"update",{ "progress": 1 });
+
     Ok(())
 }
 
 pub async fn download_libraries(
-    _event_channel: &mpsc::Sender<ChannelMessage>,
+    event_channel: &mpsc::Sender<ChannelMessage>,
     runtime_directory: &std::path::Path,
     version: &str,
     libraries: Vec<Library>,
@@ -300,11 +304,13 @@ pub async fn download_libraries(
         ));
     }
 
+    event!(&event_channel,"update",{ "progress": 1 });
+
     Ok(())
 }
 
 pub async fn download_assets(
-    _event_channel: &mpsc::Sender<ChannelMessage>,
+    event_channel: &mpsc::Sender<ChannelMessage>,
     runtime_directory: &std::path::Path,
     assets_index: Option<manifest::File>,
 ) -> Result<(), LauncherError> {
@@ -375,6 +381,8 @@ pub async fn download_assets(
             "Failed to download assets".to_string(),
         ));
     }
+
+    event!(&event_channel,"update",{ "progress": 1 });
 
     Ok(())
 }

@@ -1,72 +1,49 @@
 import { type UnlistenFn, listen } from "@tauri-apps/api/event";
-import Queue, { QueueEvent, type QueueWorker } from "queue";
-import { createContext, useEffect, useState, useSyncExternalStore } from "react";
-import { toast } from "react-toastify";
-
-/*import {
-  validateGameFiles,
-  installGame,
-  validateModsFiles,
-  installMods,
-  installPack,
-} from "@system/commands";*/
-//import modrinth, { type FileDownload } from "../api/modrinth";
-import useExternalQueue from "@hook/useExternalQueue";
-import { getLoaderType } from "@/utils/versionUtils";
-//import type ToastData from "@/types/toastData";
-import { queueFactory } from "@/utils/queue";
-import { profile } from "../models/profiles";
+import { createContext, useSyncExternalStore } from "react";
 import logger from "@system/logger";
-
-import Worker from "./DownloadWorker?worker"
-
-type FetchEvent = {
-  msg: string;
-  ammount: number;
-  size: number;
-};
-
-type StartEvent = {
-  key: string;
-  msg: string;
-};
-
-type DownloadEvent = {
-  file: string;
-  size: number;
-};
 
 type Progress = {
   message: string;
-  amount: number,
-  current_ammount: number;
-  size: number;
+  max_progress: number;
+  progress: number;
+
   file: string;
 }
 
 class DownloadManager extends EventTarget {
-  //unsubscribe: Promise<UnlistenFn>;
-
-  current_progress: null | Progress = null;
-
-  worker: Worker;
+  private unsubscribe: Promise<UnlistenFn>;
+  private current_progress: null | Progress = null;
 
   constructor() {
     super();
+    this.unsubscribe = listen<{ event: "group" | "update", value: string }>("rmcl://download", (ev) => {
+      const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
 
-    this.worker = new Worker({ name: "Queue Processer" });
-
-    this.worker.onmessage = (ev) => console.log(ev);
-
-    // this.unsubscribe = listen("rmcl://download", (ev) => { });
+      switch (ev.payload.event) {
+        case "group":
+          this.current_progress = {
+            message: data["message"] as string ?? "",
+            progress: data["progress"] as number ?? 0,
+            max_progress: data["max_progress"] as number ?? 0,
+            file: data["file"] as string ?? ""
+          };
+          break;
+        case "update": {
+          if (!this.current_progress) break;
+          this.current_progress.message = data["message"] as string ?? this.current_progress.message;
+          this.current_progress.progress = this.current_progress.progress + (data["progress"] as number ?? 0);
+          this.current_progress.file = data["file"] as string ?? this.current_progress.file;
+          break;
+        }
+      }
+      this.dispatchEvent(new Event("update"))
+    });
   }
 
   public getSnapshot = () => {
     return this.current_progress;
   }
 }
-
-
 
 /// 1. load queue info from localstorage
 /// 2. proccess queue
@@ -77,9 +54,9 @@ export const DownloadContext = createContext<{ progress: Progress | null } | nul
 const download_manager = new DownloadManager();
 
 function subscribe(callback: () => void) {
-  download_manager.addEventListener("event", callback);
+  download_manager.addEventListener("update", callback);
   return () => {
-    download_manager.removeEventListener("event", callback);
+    download_manager.removeEventListener("update", callback);
   }
 }
 

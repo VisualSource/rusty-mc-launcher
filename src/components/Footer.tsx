@@ -24,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/system/commands";
 
 const Footer = () => {
+  const { progress } = useDownload();
   const queueCurrent = useQuery({
     queryKey: ["DOWNLOAD_QUEUE_CURRENT"],
     initialData: null,
@@ -63,7 +64,7 @@ const Footer = () => {
           asChild
         >
           <Link to="downloads" className="group">
-            {queueCurrent.data ? (
+            {queueCurrent.data && progress ? (
               <div className="flex items-end gap-3">
                 <Avatar className="rounded-none">
                   <AvatarFallback className="rounded-lg">
@@ -80,14 +81,14 @@ const Footer = () => {
                 <div className="w-96">
                   <div className="flex w-full justify-between">
                     <TypographyMuted asChild className="line-clamp-1">
-                      <span>{queueCurrent.data.display_name}</span>
+                      <span>{progress.message}</span>
                     </TypographyMuted>
                     <TypographyMuted asChild>
                       <span>
                         {Math.floor(
                           100 *
-                          (0 /
-                            10),
+                          (progress.progress /
+                            progress.max_progress),
                         )}
                         %
                       </span>
@@ -96,7 +97,7 @@ const Footer = () => {
                   <Progress
                     value={Math.floor(
                       100 *
-                      (0 / 10),
+                      (progress.progress / progress.max_progress),
                     )}
                   />
                 </div>

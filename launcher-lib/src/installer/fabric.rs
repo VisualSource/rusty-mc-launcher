@@ -6,6 +6,7 @@ use std::{path::Path, process::Stdio};
 use tokio::{fs, io::AsyncBufReadExt, sync::mpsc::Sender};
 
 use super::utils::{self, ChannelMessage};
+use crate::event;
 
 #[derive(Debug, Deserialize)]
 struct LoaderVersion {
@@ -51,6 +52,7 @@ pub async fn run_installer(
     loader_version: Option<String>,
     quilt: bool,
 ) -> Result<(), LauncherError> {
+    event!(&event_channel,"update",{ "message": "Fetching mod manifest" });
     let loader_version = if let Some(version) = loader_version {
         version
     } else {
@@ -75,6 +77,7 @@ pub async fn run_installer(
         .normalize();
 
     utils::download_file(&installer_url, &installer_path, None, None).await?;
+    event!(&event_channel,"update",{ "progress": 1, "message": "Running installer" });
 
     let mut child = match quilt {
         false => tokio::process::Command::new(java)
@@ -163,7 +166,7 @@ pub async fn run_installer(
         stdout.consume(stdout_bytes);
         stderr.consume(stderr_bytes);
     }
-
+    event!(&event_channel,"update",{ "progress": 1, "message": "Copying jar" });
     tokio::fs::remove_file(&installer_path).await?;
 
     let modded_version = match quilt {
@@ -190,6 +193,8 @@ pub async fn run_installer(
         bytes
     );
 
+    event!(&event_channel,"update",{ "progress": 1, "message": "Install Libraries" });
+
     let manifest = Manifest::read_manifest(&modded_manifest, false).await?;
 
     download_libraries(
@@ -200,6 +205,7 @@ pub async fn run_installer(
     )
     .await?;
 
+    event!(&event_channel,"update",{ "progress": 1 });
     Ok(())
 }
 
