@@ -234,22 +234,13 @@ const ProfileEdit: React.FC = () => {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={async () => {
                       navigate("/");
-
                       const cats = await db.select({ query: "SELECT * FROM categories WHERE profile = ?", args: [data.id], schema: categories.schema });
-
                       await db.execute({
-                        query: `BEGIN;
-                                  DELETE FROM categories WHERE profile = $1;
-                                  DELETE FROM profiles WHERE id = $1;
-                                  DELETE FROM download_queue WHERE profile_id = $1;
-                                COMMIT;
-                      `, args: [data.id]
-                      })
-
+                        query: `DELETE FROM profiles WHERE id = $1;`, args: [data.id]
+                      });
                       for (const cat of cats) {
                         await queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, cat.category] });
                       }
-
                       await deleteProfile(data.id);
                     }}>Ok</AlertDialogAction>
                   </AlertDialogFooter>
