@@ -11,6 +11,7 @@ use models::{QueueItem, Setting};
 use normalize_path::NormalizePath;
 
 use profile::Profile;
+use sqlx::query;
 
 use crate::errors::LauncherError;
 pub use sqlite::Database;
@@ -37,7 +38,31 @@ impl AppState {
         Ok(query)
     }
 
-    pub async fn get_next_item(&self) -> Result<Option<QueueItem>, LauncherError> {
+    pub async fn set_profile_state(&self, profile: &str, state: &str) -> Result<(), LauncherError> {
+        sqlx::query("UPDATE profiles SET state = ? WHERE id = ?")
+            .bind(state)
+            .bind(profile)
+            .execute(&self.database.0)
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn set_queue_item_state(
+        &self,
+        item_id: &str,
+        state: &str,
+    ) -> Result<(), LauncherError> {
+        sqlx::query("UPDATE download_queue SET state = ? WHERE id = ?")
+            .bind(state)
+            .bind(item_id)
+            .execute(&self.database.0)
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_next_item(&self, running: bool) -> Result<Option<QueueItem>, LauncherError> {
         let has_current = sqlx::query_scalar!(
             "SELECT COUNT(*) as count FROM download_queue WHERE state = 'CURRENT';"
         )
@@ -45,6 +70,18 @@ impl AppState {
         .await?;
 
         if has_current >= 1 {
+            if !running {
+                log::debug!("There is a current item that has not yet been processed");
+                let item = sqlx::query_as!(
+                    QueueItem,
+                    "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;"
+                )
+                .fetch_one(&self.database.0)
+                .await?;
+
+                return Ok(Some(item));
+            }
+
             return Ok(None);
         }
 

@@ -3,9 +3,7 @@ use std::path::PathBuf;
 use crate::errors::Error;
 use log::{debug, error};
 use minecraft_launcher_lib::{
-    install_minecraft,
-    installer::content::{install_content, install_mrpack, InstallContent},
-    start_game, AppState, ChannelMessage, InstallConfig, LaunchConfig,
+    installer::content::install_mrpack, start_game, AppState, ChannelMessage, LaunchConfig,
 };
 use tokio::sync::mpsc;
 
@@ -55,38 +53,6 @@ pub async fn stop(state: tauri::State<'_, AppState>, profile: String) -> Result<
     }
 
     Ok(())
-}
-
-#[tauri::command]
-pub async fn install_game(
-    window: tauri::Window,
-    state: tauri::State<'_, AppState>,
-    config: InstallConfig,
-) -> Result<(), Error> {
-    let (handler, tx) = message_bridge!(window);
-
-    let result = install_minecraft(&state, config, tx).await;
-
-    if let Err(err) = handler.await {
-        error!("Failed to exit event manager: {}", err);
-    };
-    result.map_err(Error::from)
-}
-
-#[tauri::command]
-pub async fn install_workshop_content(
-    window: tauri::Window,
-    state: tauri::State<'_, AppState>,
-    config: InstallContent,
-) -> Result<(), Error> {
-    let (handler, tx) = message_bridge!(window);
-
-    let result = install_content(&state, config, tx).await;
-    if let Err(err) = handler.await {
-        error!("Failed to exit event manager: {}", err);
-    };
-
-    result.map_err(Error::from)
 }
 
 // remember to call `.manage(MyState::default())`

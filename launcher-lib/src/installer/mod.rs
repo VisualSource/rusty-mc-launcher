@@ -38,7 +38,7 @@ impl InstallConfig {
 pub async fn install_minecraft(
     app: &AppState,
     config: InstallConfig,
-    event_channel: mpsc::Sender<ChannelMessage>,
+    event_channel: &mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherError> {
     // event!(&event_channel, "download", { "type": "status", "payload": { "message": "Starting minecraft install." } });
 
@@ -68,15 +68,15 @@ pub async fn install_minecraft(
 
     if app.get_java(java_version).await?.is_none() {
         let (build_version, path) =
-            download_java(&event_channel, &runtime_directory, java_version).await?;
+            download_java(event_channel, &runtime_directory, java_version).await?;
 
         app.insert_java(java_version, &build_version, &path).await?;
     }
 
     tokio::try_join! {
-        download_client(&event_channel, &config.version, &version_directory, manifset.downloads),
-        download_assets(&event_channel, &runtime_directory, manifset.asset_index),
-        download_libraries(&event_channel,&runtime_directory,&config.version,manifset.libraries)
+        download_client(event_channel, &config.version, &version_directory, manifset.downloads),
+        download_assets(event_channel, &runtime_directory, manifset.asset_index),
+        download_libraries(event_channel,&runtime_directory,&config.version,manifset.libraries)
     }?;
 
     if config.loader != Loader::Vanilla {
@@ -93,7 +93,7 @@ pub async fn install_minecraft(
             }
             Loader::Forge => {
                 forge::run_installer(
-                    &event_channel,
+                    event_channel,
                     &config.version,
                     config.loader_version,
                     &runtime_directory,
@@ -103,7 +103,7 @@ pub async fn install_minecraft(
             }
             Loader::Fabric => {
                 fabric::run_installer(
-                    &event_channel,
+                    event_channel,
                     &runtime_directory,
                     &java_exe,
                     &config.version,
@@ -114,7 +114,7 @@ pub async fn install_minecraft(
             }
             Loader::Quilt => {
                 fabric::run_installer(
-                    &event_channel,
+                    event_channel,
                     &runtime_directory,
                     &java_exe,
                     &config.version,
@@ -166,7 +166,7 @@ mod tests {
             loader_version: None,
         };
 
-        install_minecraft(&app, config, tx)
+        install_minecraft(&app, config, &tx)
             .await
             .expect("Failed to install minecraft");
     }
@@ -195,7 +195,7 @@ mod tests {
             loader_version: None,
         };
 
-        install_minecraft(&app, config, tx)
+        install_minecraft(&app, config, &tx)
             .await
             .expect("Failed to install minecraft");
     }

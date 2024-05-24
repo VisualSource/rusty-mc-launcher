@@ -68,7 +68,7 @@ pub struct QueueItem {
     pub icon: Option<String>,
     pub profile_id: String,
     pub created: NaiveDateTime,
-    pub content_type: String,
+    pub content_type: QueueType,
     pub metadata: Option<String>,
     pub state: QueueState,
 }

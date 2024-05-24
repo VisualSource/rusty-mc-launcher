@@ -29,7 +29,7 @@ pub struct InstallContent {
 pub async fn install_content(
     app: &AppState,
     config: InstallContent,
-    _event_channel: tokio::sync::mpsc::Sender<ChannelMessage>,
+    _event_channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherError> {
     unimplemented!()
     /*  let outdir = app
