@@ -7,7 +7,7 @@ const levels = [
   { name: "info", color: "blue", logger: info },
   { name: "debug", color: "green", logger: debug },
   { name: "trace", color: "green", logger: debug },
-  { name: "verbose", color: "green", logger: debug, }
+  { name: "verbose", color: "green", logger: debug },
 ] as const;
 
 const namespaces = ["app", "auth"] as const;

@@ -26,7 +26,7 @@ const useUser = () => {
       const id = args.queryKey.at(1);
       if (!id) throw new Error("Failed to get userid");
       return getMinecraftAccount(id, accessToken);
-    }
+    },
   });
 
   const login = useCallback(async () => {
@@ -45,20 +45,23 @@ const useUser = () => {
     }
   }, [instance]);
 
-  const logout = useCallback(async (account: AccountInfo | null) => {
-    if (!account) return;
-    let port = null;
-    try {
-      port = await startAuthServer();
-      auth.trace("Watching logout port at: %d", port);
-      await instance.logoutPopup({
-        postLogoutRedirectUri: `http://localhost:${port}`,
-        account
-      });
-    } finally {
-      if (port !== null) closeAuthServer(port);
-    }
-  }, [instance]);
+  const logout = useCallback(
+    async (account: AccountInfo | null) => {
+      if (!account) return;
+      let port = null;
+      try {
+        port = await startAuthServer();
+        auth.trace("Watching logout port at: %d", port);
+        await instance.logoutPopup({
+          postLogoutRedirectUri: `http://localhost:${port}`,
+          account,
+        });
+      } finally {
+        if (port !== null) closeAuthServer(port);
+      }
+    },
+    [instance],
+  );
 
   const refresh = useCallback(async () => {
     if (!msAccount) throw new Error("Invalid userid");
@@ -70,8 +73,7 @@ const useUser = () => {
       },
     });
     return getMinecraftAccount(msAccount.homeAccountId, accessToken);
-
-  }, [msAccount?.homeAccountId, instance])
+  }, [msAccount?.homeAccountId, instance]);
 
   return {
     account: mcAccount.data,

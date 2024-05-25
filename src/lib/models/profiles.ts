@@ -19,9 +19,10 @@ export const profile = {
     resolution_width: z.ostring().nullable().default(null),
     resolution_height: z.ostring().nullable().default(null),
 
-    state: z.enum(["UNINSTALLED", "INSTALLING", "INSTALLED"]).default("UNINSTALLED")
-  })
-}
-
+    state: z
+      .enum(["UNINSTALLED", "INSTALLING", "INSTALLED"])
+      .default("UNINSTALLED"),
+  }),
+};
 
 export type MinecraftProfile = z.infer<typeof profile.schema>;

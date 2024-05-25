@@ -8,11 +8,9 @@ const ProfileError: React.FC<{ message?: string }> = ({ message }) => {
 
   return (
     <div className="flex h-full flex-col items-center justify-center text-zinc-50">
-
       <AlertTriangle />
       <TypographyH3>Something went wrong:</TypographyH3>
       <pre className="text-red-300">{(error as Error)?.message ?? message}</pre>
-
     </div>
   );
 };

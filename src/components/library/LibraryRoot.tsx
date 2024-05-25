@@ -1,8 +1,8 @@
 import { ErrorBoundary } from "react-error-boundary";
 import { Suspense } from "react";
 
-import { PatchNotesLoading, } from "./content/patchnotes/patchNotesFallback";
-import Favorites, { FavoritesLoading, } from "./content/Favorites";
+import { PatchNotesLoading } from "./content/patchnotes/patchNotesFallback";
+import Favorites, { FavoritesLoading } from "./content/Favorites";
 import { ScrollArea, ScrollBar } from "@component/ui/scroll-area";
 import PatchNotes from "./content/patchnotes/PatchNotes";
 import { ErrorFallback } from "./content/ErrorFallback";
@@ -12,8 +12,7 @@ import ModPacks from "./content/ModPacks";
 
 const LibraryRoot: React.FC = () => {
   return (
-    <div className="container py-4 text-zinc-50 scrollbar overflow-y-scroll overflow-x-hidden w-full">
-
+    <div className="scrollbar container w-full overflow-x-hidden overflow-y-scroll py-4 text-zinc-50">
       <section className="flex flex-col">
         <div className="flex items-center gap-4 pb-2 pt-4">
           <TypographyH3>Favorites</TypographyH3>
@@ -31,8 +30,7 @@ const LibraryRoot: React.FC = () => {
         </ErrorBoundary>
       </section>
 
-
-      <section className="flex flex-col w-full">
+      <section className="flex w-full flex-col">
         <div className="flex items-center gap-4 whitespace-nowrap pb-2 pt-4">
           <TypographyH3>Patch Notes</TypographyH3>
           <Separator className="dark:bg-zinc-50" />
@@ -49,7 +47,7 @@ const LibraryRoot: React.FC = () => {
         </ErrorBoundary>
       </section>
 
-      <section className="flex flex-col w-full">
+      <section className="flex w-full flex-col">
         <div className="flex items-center gap-4 whitespace-nowrap pb-2 pt-4">
           <TypographyH3>Popular modpacks</TypographyH3>
           <Separator className="dark:bg-zinc-50" />
@@ -66,7 +64,6 @@ const LibraryRoot: React.FC = () => {
         </ErrorBoundary>
       </section>
     </div>
-
   );
 };
 

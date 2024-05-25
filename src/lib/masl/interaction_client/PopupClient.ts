@@ -764,8 +764,9 @@ export class PopupClient extends StandardInteractionClient {
    * @param request
    */
   generatePopupName(scopes: Array<string>, authority: string): string {
-    return `${BrowserConstants.POPUP_NAME_PREFIX}.${this.config.auth.clientId
-      }.${scopes.join("-")}.${authority}.${this.correlationId}`;
+    return `${BrowserConstants.POPUP_NAME_PREFIX}.${
+      this.config.auth.clientId
+    }.${scopes.join("-")}.${authority}.${this.correlationId}`;
   }
 
   /**

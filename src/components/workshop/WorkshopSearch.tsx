@@ -1,8 +1,4 @@
-import {
-  Await,
-  ScrollRestoration,
-  useLoaderData,
-} from "react-router-dom";
+import { Await, ScrollRestoration, useLoaderData } from "react-router-dom";
 import { Suspense } from "react";
 
 import WorkshopSearchResults from "./WorkshopSearchResults";
@@ -17,7 +13,7 @@ const WorkshopSearch: React.FC = () => {
       <ScrollRestoration />
       <SearchBar />
       <ScrollArea>
-        <div className="bg-zinc-900 h-full py-2">
+        <div className="h-full bg-zinc-900 py-2">
           <Suspense fallback={<>Loading...</>}>
             <Await resolve={data}>
               <WorkshopSearchResults />

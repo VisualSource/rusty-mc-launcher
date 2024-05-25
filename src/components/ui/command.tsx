@@ -6,15 +6,12 @@ import { Command as CommandPrimitive } from "cmdk";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-
 const CommandLoading = forwardRef<
   React.ElementRef<typeof CommandPrimitive.Loading>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Loading>>(({ className, ...props }, ref) => {
-    return (
-      <CommandPrimitive.Loading className={cn("", className)} {...props} />
-    );
-
-  })
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Loading>
+>(({ className, ...props }, ref) => {
+  return <CommandPrimitive.Loading className={cn("", className)} {...props} />;
+});
 
 const Command = forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -31,7 +28,7 @@ const Command = forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
-interface CommandDialogProps extends DialogProps { }
+interface CommandDialogProps extends DialogProps {}
 
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   return (
@@ -125,12 +122,12 @@ const CommandItem = forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50",
-      className
+      "aria-selected:bg-accent aria-selected:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50",
+      className,
     )}
     {...props}
   />
-))
+));
 
 CommandItem.displayName = CommandPrimitive.Item.displayName;
 

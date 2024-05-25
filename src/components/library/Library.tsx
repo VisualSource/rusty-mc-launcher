@@ -10,8 +10,8 @@ import { Spinner } from "@component/ui/spinner";
 
 const Library: React.FC = () => {
   return (
-    <div className="grid h-full grid-cols-12 grid-rows-6 bg-zinc-900 w-full">
-      <section className="col-span-3 row-span-full border-r-4 border-zinc-900 xl:col-span-2 flex flex-col">
+    <div className="grid h-full w-full grid-cols-12 grid-rows-6 bg-zinc-900">
+      <section className="col-span-3 row-span-full flex flex-col border-r-4 border-zinc-900 xl:col-span-2">
         <div className="flex gap-1 bg-zinc-950 p-2 shadow-lg">
           <Button
             size="sm"
@@ -33,7 +33,13 @@ const Library: React.FC = () => {
           </Button>
         </div>
         <ErrorBoundary fallbackRender={SidebarError}>
-          <Suspense fallback={<div className="h-full flex flex-col justify-center items-center">< Spinner /></div>}>
+          <Suspense
+            fallback={
+              <div className="flex h-full flex-col items-center justify-center">
+                <Spinner />
+              </div>
+            }
+          >
             <ScrollArea>
               <Sidebar />
             </ScrollArea>

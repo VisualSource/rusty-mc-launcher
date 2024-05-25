@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { profile } from "@lib/models/profiles";
 import PlayButton from "@/components/ui/play";
 import { CATEGORY_KEY } from "@hook/keys";
-import { db } from '@system/commands';
+import { db } from "@system/commands";
 
 export const FavoritesLoading: React.FC = () => {
   return (
@@ -33,10 +33,11 @@ const Favorites: React.FC = () => {
     queryKey: [CATEGORY_KEY, FAVORITES_GUID],
     queryFn: () =>
       db.select<typeof profile.schema>({
-        query: "SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?",
+        query:
+          "SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?",
         args: [FAVORITES_GUID],
-        schema: profile.schema
-      })
+        schema: profile.schema,
+      }),
   });
 
   if (error) throw error;
@@ -44,7 +45,9 @@ const Favorites: React.FC = () => {
   return (
     <>
       {data.length === 0 ? (
-        <div className="h-full w-full flex items-center justify-center">No Favorites Yet!</div>
+        <div className="flex h-full w-full items-center justify-center">
+          No Favorites Yet!
+        </div>
       ) : (
         data.map((value) => (
           <Card className="relative w-80" key={value.id}>

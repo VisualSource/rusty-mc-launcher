@@ -25,7 +25,6 @@ const import_profiles = async () => {
 
   try {
     const content = await readTextFile(result, { dir: BaseDirectory.AppData });
-
   } catch (error) {
     logger.error(error);
     toast.error("Import profile error!");

@@ -1,15 +1,15 @@
 import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
 import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
-import { auth } from '@system/logger';
+import { auth } from "@system/logger";
 
 const MINECRAFT_LOGIN =
   "https://api.minecraftservices.com/authentication/login_with_xbox";
 const MINECRAFT_PROFILE = "https://api.minecraftservices.com/minecraft/profile";
 const XBOX_AUTHENTICATE = "https://user.auth.xboxlive.com/user/authenticate";
 const LIVE_AUTHENTICATE = "https://xsts.auth.xboxlive.com/xsts/authorize";
-const MC_LOGIN_RELAY = "rp://api.minecraftservices.com/"
-const XBOX_LIVE_RELAY = "http://auth.xboxlive.com"
+const MC_LOGIN_RELAY = "rp://api.minecraftservices.com/";
+const XBOX_LIVE_RELAY = "http://auth.xboxlive.com";
 const UNIX_EPOCH_DATE = new Date("1970-01-01T00:00:00Z");
 
 export type MinecraftAccount = {
@@ -53,7 +53,7 @@ export async function getMinecraftAccount(
   const http = await getClient();
 
   // #region Authenticate with Xbox Live.
-  auth.info("Authenticate With Xbox Live")
+  auth.info("Authenticate With Xbox Live");
   const authRequest = await http.post<{
     Token: string;
     DisplayClaims: { xui: { uhs: string }[] };
@@ -133,5 +133,3 @@ export async function getMinecraftAccount(
 
   return profile;
 }
-
-

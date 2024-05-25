@@ -8,11 +8,10 @@ import logger from "@lib/system/logger";
 import { db } from "@system/commands";
 
 const updateProfile: ActionFunction = async ({ request }) => {
-  const data = await request.json() as MinecraftProfile;
+  const data = (await request.json()) as MinecraftProfile;
 
   switch (request.method.toUpperCase()) {
     case "POST": {
-
       try {
         const queue_id = crypto.randomUUID();
         await db.execute({
@@ -23,7 +22,8 @@ const updateProfile: ActionFunction = async ({ request }) => {
               (SELECT COUNT(*) as count FROM download_queue WHERE state = 'PENDING'),
               ?,?,?,?,?,?,?);
           COMMIT;
-        `, args: [
+        `,
+          args: [
             data.id,
             data.name,
             data.icon ?? null,
@@ -41,18 +41,20 @@ const updateProfile: ActionFunction = async ({ request }) => {
             `Minecraft ${data.version} ${data.loader}`,
             null,
             data.id,
-            (new Date()).toISOString(),
+            new Date().toISOString(),
             "client",
             JSON.stringify({
               version: data.version,
               loader: data.loader.replace(/^\w/, data.loader[0].toUpperCase()),
-              loader_version: data.loader_version
+              loader_version: data.loader_version,
             }),
-            "PENDING"
-          ]
+            "PENDING",
+          ],
         });
 
-        await queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID] });
+        await queryClient.invalidateQueries({
+          queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
+        });
       } catch (error) {
         logger.error(error);
       }

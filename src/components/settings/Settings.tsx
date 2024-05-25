@@ -31,7 +31,7 @@ const Settings = () => {
 
   return (
     <Tabs
-      className="grid h-full grid-cols-12 bg-blue-900/20 text-zinc-50 w-full"
+      className="grid h-full w-full grid-cols-12 bg-blue-900/20 text-zinc-50"
       defaultValue="about"
       orientation="vertical"
     >

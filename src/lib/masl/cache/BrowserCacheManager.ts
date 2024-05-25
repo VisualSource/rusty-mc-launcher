@@ -1574,7 +1574,9 @@ export class BrowserCacheManager extends CacheManager {
 
     let parsedRequest: CommonAuthorizationCodeRequest;
     try {
-      parsedRequest = JSON.parse(base64Decode(encodedTokenRequest)) as CommonAuthorizationCodeRequest;
+      parsedRequest = JSON.parse(
+        base64Decode(encodedTokenRequest),
+      ) as CommonAuthorizationCodeRequest;
     } catch (e) {
       this.logger.errorPii(`Attempted to parse: ${encodedTokenRequest}`);
       this.logger.error(`Parsing cached token request threw with error: ${e}`);
@@ -1818,7 +1820,7 @@ export class BrowserCacheManager extends CacheManager {
             },
             correlationId,
           );
-        } catch (e) { }
+        } catch (e) {}
       }
 
       throw e;

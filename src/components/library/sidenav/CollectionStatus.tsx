@@ -3,9 +3,7 @@ import { AlertTriangle } from "lucide-react";
 import { Skeleton } from "@component/ui/skeleton";
 
 export const CollectionLoading: React.FC = () => {
-  return (
-    <Skeleton className="h-7 w-full rounded-none" />
-  );
+  return <Skeleton className="h-7 w-full rounded-none" />;
 };
 
 export const CollectionError: React.FC<{ name: string }> = ({ name }) => {
@@ -18,4 +16,4 @@ export const CollectionError: React.FC<{ name: string }> = ({ name }) => {
       </div>
     </div>
   );
-}
+};

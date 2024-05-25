@@ -4,9 +4,9 @@ import Footer from "./Footer";
 
 function App() {
   return (
-    <div className="flex flex-col text-zinc-50 flex-1 overflow-hidden bg-zinc-950">
+    <div className="flex flex-1 flex-col overflow-hidden bg-zinc-950 text-zinc-50">
       <Navbar />
-      <main className="flex overflow-hidden basis-full">
+      <main className="flex basis-full overflow-hidden">
         <Outlet />
       </main>
       <Footer />

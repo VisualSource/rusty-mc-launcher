@@ -1,4 +1,14 @@
-import { Bug, Calendar, Code, DollarSign, Download, Globe, Heart, Plus, RefreshCcw } from "lucide-react";
+import {
+  Bug,
+  Calendar,
+  Code,
+  DollarSign,
+  Download,
+  Globe,
+  Heart,
+  Plus,
+  RefreshCcw,
+} from "lucide-react";
 import { Link, type To, useAsyncValue } from "react-router-dom";
 import { formatRelative } from "date-fns/formatRelative";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -29,31 +39,37 @@ import { Badge } from "@component/ui/badge";
 const Team: React.FC<{ id: string }> = ({ id }) => {
   const { data } = useSuspenseQuery({
     queryKey: ["modrinth", "team", id],
-    queryFn: () => TeamsService.getTeamMembers({ id })
-  })
+    queryFn: () => TeamsService.getTeamMembers({ id }),
+  });
 
   return (
     <ul className="space-y-2">
-      {data.toSorted((a, b) => (b.ordering ?? 0) - (a.ordering ?? 0)).map(e => (
-        <div key={e.user.id} className="flex items-center gap-2">
-          <Avatar>
-            <AvatarFallback></AvatarFallback>
-            <AvatarImage src={e.user.avatar_url} />
-          </Avatar>
-          <div>
-            <h5 className="line-clamp-1 font-bold">{e.user.username}</h5>
-            <p className="line-clamp-1 italic text-sm">{e.role}</p>
+      {data
+        .toSorted((a, b) => (b.ordering ?? 0) - (a.ordering ?? 0))
+        .map((e) => (
+          <div key={e.user.id} className="flex items-center gap-2">
+            <Avatar>
+              <AvatarFallback></AvatarFallback>
+              <AvatarImage src={e.user.avatar_url} />
+            </Avatar>
+            <div>
+              <h5 className="line-clamp-1 font-bold">{e.user.username}</h5>
+              <p className="line-clamp-1 text-sm italic">{e.role}</p>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
     </ul>
   );
-}
+};
 
-const Gallery: React.FC<{ gallery: NonNullable<Project["gallery"]> }> = ({ gallery }) => {
+const Gallery: React.FC<{ gallery: NonNullable<Project["gallery"]> }> = ({
+  gallery,
+}) => {
   const [api, setApi] = useState<CarouselApi>();
 
-  const images = gallery.toSorted((a, b) => (b?.ordering ?? 0) - (a?.ordering ?? 0));
+  const images = gallery.toSorted(
+    (a, b) => (b?.ordering ?? 0) - (a?.ordering ?? 0),
+  );
 
   return (
     <Carousel setApi={setApi}>
@@ -61,32 +77,38 @@ const Gallery: React.FC<{ gallery: NonNullable<Project["gallery"]> }> = ({ galle
         {images.map((item, i) => (
           <CarouselItem key={i}>
             <div className="h-96">
-              <img className="w-full h-full object-contain object-center" src={item?.url} alt={item?.title ?? `Gallery Image ${i}`} />
+              <img
+                className="h-full w-full object-contain object-center"
+                src={item?.url}
+                alt={item?.title ?? `Gallery Image ${i}`}
+              />
             </div>
           </CarouselItem>
-
         ))}
       </CarouselContent>
 
       <Separator className="my-4" />
 
-      <div className="relative flex justify-between items-center px-6">
-        <CarouselPrevious className="relative top-0 left-0 right-0 bottom-0 translate-y-0" />
+      <div className="relative flex items-center justify-between px-6">
+        <CarouselPrevious className="relative bottom-0 left-0 right-0 top-0 translate-y-0" />
 
         <div className="flex gap-4 overflow-hidden">
           {images.slice(0, 6).map((item, i) => (
             <button onClick={() => api?.scrollTo(i)} className="h-28 w-28">
-              <img className="w-full h-full object-contain object-center" src={item?.url} alt={item?.title ?? `Gallery Image ${i}`} />
+              <img
+                className="h-full w-full object-contain object-center"
+                src={item?.url}
+                alt={item?.title ?? `Gallery Image ${i}`}
+              />
             </button>
           ))}
         </div>
-        <CarouselNext className="relative top-0 left-0 right-0 bottom-0 translate-y-0" />
+        <CarouselNext className="relative bottom-0 left-0 right-0 top-0 translate-y-0" />
       </div>
       <Separator className="my-4" />
-
     </Carousel>
   );
-}
+};
 
 const ModrinthProject: React.FC = () => {
   const data = useAsyncValue() as Project;
@@ -105,9 +127,8 @@ const ModrinthProject: React.FC = () => {
           <TypographyH1>{data.title}</TypographyH1>
         </div>
 
-
         <section className="rounded-md bg-blue-900/10 p-2 shadow-2xl">
-          {data.gallery ? (<Gallery gallery={data.gallery} />) : null}
+          {data.gallery ? <Gallery gallery={data.gallery} /> : null}
 
           <div className="flex flex-wrap gap-2 p-4">
             {data.source_url ? (
@@ -156,19 +177,23 @@ const ModrinthProject: React.FC = () => {
             ) : null}
             {data.donation_urls
               ? data.donation_urls.map((value) => (
-                <a
-                  href={value.url}
-                  target="_blank"
-                  key={value.id}
-                  className="flex items-center"
-                  rel="noopener noreferrer"
-                >
-                  <DollarSign className="pr-2" />
-                  <span className="text-blue-600 underline">
-                    {value.platform ? "Donate" : value.platform === "Other" ? "Donate" : value.platform}
-                  </span>
-                </a>
-              ))
+                  <a
+                    href={value.url}
+                    target="_blank"
+                    key={value.id}
+                    className="flex items-center"
+                    rel="noopener noreferrer"
+                  >
+                    <DollarSign className="pr-2" />
+                    <span className="text-blue-600 underline">
+                      {value.platform
+                        ? "Donate"
+                        : value.platform === "Other"
+                          ? "Donate"
+                          : value.platform}
+                    </span>
+                  </a>
+                ))
               : null}
           </div>
         </section>
@@ -179,9 +204,8 @@ const ModrinthProject: React.FC = () => {
               <TypographyH4>{data.title}</TypographyH4>
 
               <div className="flex items-center gap-2">
-
-                <Button variant='secondary'>
-                  <Heart className="h-5 w-5 mr-1" /> Follow
+                <Button variant="secondary">
+                  <Heart className="mr-1 h-5 w-5" /> Follow
                 </Button>
                 <Button
                   onClick={() =>
@@ -195,13 +219,15 @@ const ModrinthProject: React.FC = () => {
                   <Plus className="mr-1" /> Install
                 </Button>
               </div>
-
-
             </section>
             <article className="prose prose-invert mb-4 max-w-none">
               <ReactMarkdown
                 components={{
-                  a: ({ children, href }) => (<a target="_blank" rel="noopener noreferrer" href={href}>{children}</a>)
+                  a: ({ children, href }) => (
+                    <a target="_blank" rel="noopener noreferrer" href={href}>
+                      {children}
+                    </a>
+                  ),
                 }}
                 rehypePlugins={[rehypeRaw]}
                 remarkPlugins={[remarkGfm]}
@@ -212,40 +238,45 @@ const ModrinthProject: React.FC = () => {
           </div>
 
           <div className="col-span-1 flex flex-col gap-2">
-
             <section className="space-y-2">
               <TypographyH4>Details</TypographyH4>
               <div className="flex items-center gap-1">
                 <Download className="h-5 w-5" />
-                <span className="font-bold">{data.downloads.toLocaleString(undefined, {
-                  notation: "compact",
-                  maximumFractionDigits: 2
-                })}</span>
+                <span className="font-bold">
+                  {data.downloads.toLocaleString(undefined, {
+                    notation: "compact",
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
                 Downloads
               </div>
               <div className="flex items-center gap-1">
                 <Heart className="h-5 w-5" />
-                <span className="font-bold">{data.followers.toLocaleString(undefined, {
-                  notation: "compact",
-                  maximumFractionDigits: 1
-                })}</span>
+                <span className="font-bold">
+                  {data.followers.toLocaleString(undefined, {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                  })}
+                </span>
                 followers
               </div>
 
-              <div className="flex gap-1 items-center">
+              <div className="flex items-center gap-1">
                 <Calendar className="h-5 w-5" />
                 <span className="font-bold">Created</span>
                 {formatRelative(data.published, new Date())}
               </div>
-              <div className="flex gap-1 items-center">
+              <div className="flex items-center gap-1">
                 <RefreshCcw className="h-5 w-5" />
                 <span className="font-bold">Updated</span>
                 {formatRelative(data.updated, new Date())}
               </div>
 
-              <div className="flex gap-1 items-center">
+              <div className="flex items-center gap-1">
                 <span className="font-bold">Project Id:</span>
-                <span className="italic text-sm bg-zinc-600 rounded-md px-2">{data.id}</span>
+                <span className="rounded-md bg-zinc-600 px-2 text-sm italic">
+                  {data.id}
+                </span>
               </div>
             </section>
 
@@ -262,7 +293,7 @@ const ModrinthProject: React.FC = () => {
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 underline text-sm"
+                  className="text-sm text-blue-600 underline"
                   href={data.license.url ?? ""}
                 >
                   {data.license.name}
@@ -287,21 +318,20 @@ const ModrinthProject: React.FC = () => {
               </section>
             ) : null}
 
-            {data.game_versions ? (<section>
-              <TypographyH4>Versions</TypographyH4>
-              {data.game_versions.slice(0, 6).map((value, i) => (
-                <Badge key={i}>{value}</Badge>
-              ))}
-              <details>
-                <summary>
-                  View More
-                </summary>
-                {data.game_versions.slice(6).map((value, i) => (
+            {data.game_versions ? (
+              <section>
+                <TypographyH4>Versions</TypographyH4>
+                {data.game_versions.slice(0, 6).map((value, i) => (
                   <Badge key={i}>{value}</Badge>
                 ))}
-              </details>
-            </section>) : null}
-
+                <details>
+                  <summary>View More</summary>
+                  {data.game_versions.slice(6).map((value, i) => (
+                    <Badge key={i}>{value}</Badge>
+                  ))}
+                </details>
+              </section>
+            ) : null}
           </div>
         </div>
       </div>

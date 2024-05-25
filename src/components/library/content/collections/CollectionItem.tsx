@@ -71,7 +71,6 @@ const CollectionItem: React.FC<{
           {DEFAULT_GROUP.includes(collection.metadata!) ? null : (
             <DialogFooter>
               <div className="flex w-full justify-between">
-
                 <Button
                   onClick={() => {
                     submit(collection, { method: "DELETE" });

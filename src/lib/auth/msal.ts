@@ -12,7 +12,7 @@ const configuration: Configuration = {
     clientId: import.meta.env.PUBLIC_VITE_CLIENT_ID,
     authority: "https://login.microsoftonline.com/consumers/",
     redirectUri: "http://localhost",
-    postLogoutRedirectUri: "http://localhost"
+    postLogoutRedirectUri: "http://localhost",
   },
   cache: {
     temporaryCacheLocation: "sessionStorage",
@@ -48,7 +48,8 @@ const configuration: Configuration = {
 };
 
 export const getPCA = async () => {
-  const pca = await PublicClientApplication.createPublicClientApplication(configuration);
+  const pca =
+    await PublicClientApplication.createPublicClientApplication(configuration);
 
   pca.addEventCallback((ev) => {
     switch (ev.eventType) {

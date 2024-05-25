@@ -1,4 +1,9 @@
-import { type UnlistenFn, listen, emit, EventCallback } from "@tauri-apps/api/event";
+import {
+  type UnlistenFn,
+  listen,
+  emit,
+  EventCallback,
+} from "@tauri-apps/api/event";
 import { createContext, useSyncExternalStore } from "react";
 import logger from "@system/logger";
 import { toast } from "react-toastify";
@@ -10,12 +15,12 @@ type Progress = {
   progress: number;
 
   file: string;
-}
+};
 
 type DownloadEvent = {
-  event: "group" | "update" | "notify" | "refresh" | "reset",
-  value: string
-}
+  event: "group" | "update" | "notify" | "refresh" | "reset";
+  value: string;
+};
 
 class DownloadManager extends EventTarget {
   private unsubscribe: Promise<UnlistenFn>;
@@ -32,28 +37,40 @@ class DownloadManager extends EventTarget {
     switch (ev.payload.event) {
       case "group":
         this.current_progress = {
-          message: data["message"] as string ?? "",
-          progress: data["progress"] as number ?? 0,
-          max_progress: data["max_progress"] as number ?? 0,
-          file: data["file"] as string ?? ""
+          message: (data["message"] as string) ?? "",
+          progress: (data["progress"] as number) ?? 0,
+          max_progress: (data["max_progress"] as number) ?? 0,
+          file: (data["file"] as string) ?? "",
         };
         break;
       case "update": {
         if (!this.current_progress) break;
         this.current_progress = {
-          message: data["message"] as string ?? this.current_progress.message,
-          file: data["file"] as string ?? this.current_progress.file,
+          message: (data["message"] as string) ?? this.current_progress.message,
+          file: (data["file"] as string) ?? this.current_progress.file,
           max_progress: this.current_progress.max_progress,
-          progress: this.current_progress.progress + (data["progress"] as number ?? 0)
+          progress:
+            this.current_progress.progress +
+            ((data["progress"] as number) ?? 0),
         };
         break;
       }
       case "refresh": {
-        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "PENDING"] });
-        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "ERRORED"] });
-        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "COMPLETED"] });
-        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "POSTPONED"] });
-        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "CURRENT"] });
+        queryClient.invalidateQueries({
+          queryKey: ["DOWNLOAD_QUEUE", "PENDING"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["DOWNLOAD_QUEUE", "ERRORED"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["DOWNLOAD_QUEUE", "COMPLETED"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["DOWNLOAD_QUEUE", "POSTPONED"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["DOWNLOAD_QUEUE", "CURRENT"],
+        });
         break;
       }
       case "notify": {
@@ -64,8 +81,8 @@ class DownloadManager extends EventTarget {
           }
           case "error": {
             toast.error(data["message"] as string, {
-              data: { error: data["error"] ?? "Unknown Error" }
-            })
+              data: { error: data["error"] ?? "Unknown Error" },
+            });
             break;
           }
           default:
@@ -78,19 +95,21 @@ class DownloadManager extends EventTarget {
         this.current_progress = null;
       }
     }
-    this.dispatchEvent(new Event("update"))
-  }
+    this.dispatchEvent(new Event("update"));
+  };
 
   public getSnapshot = () => {
     return this.current_progress;
-  }
+  };
 }
 
 /// 1. load queue info from localstorage
 /// 2. proccess queue
 /// 3. on shunt download save to localstorage
 
-export const DownloadContext = createContext<{ progress: Progress | null } | null>(null);
+export const DownloadContext = createContext<{
+  progress: Progress | null;
+} | null>(null);
 
 const download_manager = new DownloadManager();
 
@@ -98,11 +117,14 @@ function subscribe(callback: () => void) {
   download_manager.addEventListener("update", callback);
   return () => {
     download_manager.removeEventListener("update", callback);
-  }
+  };
 }
 
 export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
-  const progress = useSyncExternalStore(subscribe, download_manager.getSnapshot)
+  const progress = useSyncExternalStore(
+    subscribe,
+    download_manager.getSnapshot,
+  );
 
   return (
     <DownloadContext.Provider value={{ progress }}>

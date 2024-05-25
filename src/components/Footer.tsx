@@ -5,7 +5,7 @@ import {
   PackagePlus,
   PlusSquare,
 } from "lucide-react";
-import { downloadDir } from '@tauri-apps/api/path';
+import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/api/dialog";
 import { Link } from "react-router-dom";
 
@@ -24,7 +24,6 @@ import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
 
 async function import_mrpack() {
-
   const result = await open({
     multiple: false,
     defaultPath: await downloadDir(),
@@ -38,15 +37,13 @@ async function import_mrpack() {
   });
 
   console.log(result);
-
-
 }
 
 const Footer = () => {
   const { progress } = useDownload();
   const queueCurrent = useCurrentQueue();
   return (
-    <footer className="flex h-16 bg-zinc-950 text-zinc-400 shadow flex-shrink-0 flex-grow-0">
+    <footer className="flex h-16 flex-shrink-0 flex-grow-0 bg-zinc-950 text-zinc-400 shadow">
       <div className="flex h-full w-full shrink items-center justify-start">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -79,7 +76,7 @@ const Footer = () => {
         >
           <Link to="downloads" className="group">
             {queueCurrent.data && progress ? (
-              <div className="flex gap-3 items-center">
+              <div className="flex items-center gap-3">
                 <Avatar className="rounded-none">
                   <AvatarFallback className="rounded-lg">
                     {queueCurrent.data?.content_type === "client" ? (
@@ -94,15 +91,13 @@ const Footer = () => {
                 </Avatar>
                 <div className="w-96">
                   <div className="flex w-full justify-between">
-                    <TypographyMuted asChild className="line-clamp-1 mb-1">
+                    <TypographyMuted asChild className="mb-1 line-clamp-1">
                       <span>{progress.message}</span>
                     </TypographyMuted>
                     <TypographyMuted asChild>
                       <span>
                         {Math.floor(
-                          100 *
-                          (progress.progress /
-                            progress.max_progress),
+                          100 * (progress.progress / progress.max_progress),
                         )}
                         %
                       </span>
@@ -110,8 +105,7 @@ const Footer = () => {
                   </div>
                   <Progress
                     value={Math.floor(
-                      100 *
-                      (progress.progress / progress.max_progress),
+                      100 * (progress.progress / progress.max_progress),
                     )}
                   />
                 </div>

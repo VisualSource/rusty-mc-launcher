@@ -1,6 +1,6 @@
 import type { LoaderFunction } from "react-router-dom";
-import { fromZodError, } from "zod-validation-error";
-import { ZodError } from 'zod';
+import { fromZodError } from "zod-validation-error";
+import { ZodError } from "zod";
 import { profile } from "@lib/models/profiles";
 import { db } from "@system/commands";
 
@@ -11,7 +11,7 @@ const getProfile: LoaderFunction = async ({ params }) => {
     const result = await db.select<typeof profile.schema>({
       query: `SELECT * FROM profiles WHERE id = ?`,
       args: [params.id],
-      schema: profile.schema
+      schema: profile.schema,
     });
     const item = result.at(0);
 

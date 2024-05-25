@@ -10,11 +10,13 @@ type RequestDelete = { type: "delete"; data: { id: string } };
 
 const handleMutate = async (ev: RequestType | RequestDelete) => {
   if (ev.type === "patch") {
-    const values = Object.entries(ev.data).filter(e => e[0] !== "id").map((key, value) => `${key}='${value.toString()}'`);
+    const values = Object.entries(ev.data)
+      .filter((e) => e[0] !== "id")
+      .map((key, value) => `${key}='${value.toString()}'`);
 
     await db.execute({
       query: `UPDATE profiles SET ${values.join(", ")} WHERE id = ?`,
-      args: [ev.data.id]
+      args: [ev.data.id],
     });
 
     return ev.data;
@@ -23,8 +25,8 @@ const handleMutate = async (ev: RequestType | RequestDelete) => {
   if (ev.type === "delete") {
     await db.execute({
       query: "DELETE FROM profiles WHERE id = ?",
-      args: [ev.data.id]
-    })
+      args: [ev.data.id],
+    });
     return null;
   }
 };
@@ -37,7 +39,11 @@ export const useProfile = (id?: string, load: boolean = true) => {
     queryKey: [KEY_PROFILE, id],
     queryFn: async () => {
       logger.info(`Loading Profile ${id}`);
-      const data = await db.select({ query: "SELECT * FROM profiles WHERE id = ?", args: [id], schema: profile.schema })
+      const data = await db.select({
+        query: "SELECT * FROM profiles WHERE id = ?",
+        args: [id],
+        schema: profile.schema,
+      });
       const item = data.at(0);
 
       if (!item) throw new Error("Failed to get minecraft profile");

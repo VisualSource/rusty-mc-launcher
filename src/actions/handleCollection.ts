@@ -22,8 +22,8 @@ const handleCollections: ActionFunction = async ({ request }) => {
 
       await db.execute({
         query: "UPDATE settings SET value = ? WHERE key = ?",
-        args: [name, `category.${id}`]
-      })
+        args: [name, `category.${id}`],
+      });
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
 
@@ -41,12 +41,12 @@ const handleCollections: ActionFunction = async ({ request }) => {
 
       await db.execute({
         query: "DELETE FROM categories WHERE category = ?",
-        args: [id]
-      })
+        args: [id],
+      });
 
       await db.execute({
         query: "DELETE FROM settings WHERE key = ?",
-        args: [`category.${id}`]
+        args: [`category.${id}`],
       });
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
@@ -61,7 +61,7 @@ const handleCollections: ActionFunction = async ({ request }) => {
 
       await db.execute({
         query: "INSERT INTO settings VALUES (?,?,?)",
-        args: [`category.${id}`, id, name]
+        args: [`category.${id}`, id, name],
       });
 
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
@@ -70,7 +70,6 @@ const handleCollections: ActionFunction = async ({ request }) => {
     default:
       return new Response(null, { status: 200 });
   }
-
 };
 
 export default handleCollections;

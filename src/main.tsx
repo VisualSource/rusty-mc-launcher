@@ -22,7 +22,7 @@ async function init() {
   await attachLogger();
   const modrith = new ModrinthClientApplication();
   const pca = await getPCA();
-  return { pca, modrith }
+  return { pca, modrith };
 }
 
 /*
