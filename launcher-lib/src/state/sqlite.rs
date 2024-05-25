@@ -159,7 +159,7 @@ fn decode_to_json(v: SqliteValueRef) -> Result<serde_json::Value, LauncherError>
         _ => {
             return Err(LauncherError::Generic(format!(
                 "Unspported datatype: {}",
-                v.type_info().name().to_string()
+                v.type_info().name()
             )))
         }
     };

@@ -11,7 +11,6 @@ use models::{QueueItem, Setting};
 use normalize_path::NormalizePath;
 
 use profile::Profile;
-use sqlx::query;
 
 use crate::errors::LauncherError;
 pub use sqlite::Database;

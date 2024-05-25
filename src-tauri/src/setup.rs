@@ -108,7 +108,7 @@ async fn handle_client_install(
         ));
     };
 
-    minecraft_launcher_lib::install_minecraft(&app, config, &tx).await?;
+    minecraft_launcher_lib::install_minecraft(app, config, tx).await?;
 
     app.set_profile_state(&item.profile_id, "INSTALLED").await?;
     app.set_queue_item_state(&item.id, "COMPLETED").await?;

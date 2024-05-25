@@ -231,7 +231,6 @@ mod tests {
     #[tokio::test]
     async fn test_start() {
         let runtime_directory = std::env::temp_dir().join("runtime");
-        let game_directory = std::env::temp_dir().join("profiles/g");
         let java = runtime_directory
             .join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe")
             .normalize();

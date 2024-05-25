@@ -1,12 +1,5 @@
 mod mrpack;
-use crate::{
-    errors::LauncherError,
-    //install_minecraft,
-    installer::utils,
-    manifest,
-    AppState,
-    ChannelMessage,
-};
+use crate::{errors::LauncherError, manifest, AppState, ChannelMessage};
 
 pub use mrpack::install_mrpack;
 use serde::Deserialize;

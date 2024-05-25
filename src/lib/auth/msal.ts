@@ -48,7 +48,7 @@ const configuration: Configuration = {
 };
 
 export const getPCA = async () => {
-  const pca = new PublicClientApplication(configuration);
+  const pca = await PublicClientApplication.createPublicClientApplication(configuration);
 
   pca.addEventCallback((ev) => {
     switch (ev.eventType) {
