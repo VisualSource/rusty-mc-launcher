@@ -1,41 +1,24 @@
 import { FileDiff, Monitor, PackagePlus } from "lucide-react";
-import { formatSize } from "@lib/size_format";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import SectionDivider from "@component/download/SectionDivider";
+import { useQueue, useCurrentQueue } from '@hook/useQueue';
 import { TypographyMuted } from "@component/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
+import { queryClient } from "@/lib/config/queryClient";
+import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
-import DownloadItem from "./DownloadItem";
-import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/system/commands";
-import { download_queue } from "@/lib/models/download_queue";
-import { queryClient } from "@/lib/config/queryClient";
-
-const DOWNLOAD_QUEUE_COMPLETED = "DOWNLOAD_QUEUE_COMPLETED";
-
-function useQueue(queue: string, order: "ASC" | "DESC" = "DESC") {
-  return useQuery({
-    queryKey: ["DOWNLOAD_QUEUE", queue],
-    refetchInterval: 60_000,
-    queryFn: () => db.select({ schema: download_queue.schema, query: `SELECT * FROM download_queue WHERE state = ? AND display = TRUE ORDER BY install_order ${order};`, args: [queue] })
-  });
-}
+import DownloadItem from "./DownloadItem";
 
 const Download: React.FC = () => {
-  const { progress } = useDownload();
-
-  const queueCurrent = useQuery({
-    queryKey: ["DOWNLOAD_QUEUE", "CURRENT"],
-    initialData: null,
-    refetchInterval: 60_000,
-    queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;", args: [] }).then(e => e.at(0) ?? null)
-  });
-  const queueNext = useQueue("PENDING");
   const queueCompleted = useQueue("COMPLETED", "ASC");
   const queueErrored = useQueue("ERRORED", "ASC");
   const queuePostponed = useQueue("POSTPONED");
+  const queueCurrent = useCurrentQueue();
+  const queueNext = useQueue("PENDING");
+  const { progress } = useDownload();
 
   return (
     <div className="grid h-full grid-cols-1 grid-rows-6 text-zinc-50 w-full">
@@ -52,7 +35,7 @@ const Download: React.FC = () => {
                   <FileDiff className="h-24 w-24" />
                 )}
               </AvatarFallback>
-              <AvatarImage />
+              <AvatarImage src={queueCurrent.data.icon ?? undefined} />
             </Avatar>
 
             <div>
@@ -100,7 +83,7 @@ const Download: React.FC = () => {
             <SectionDivider label="Completed" count={queueCompleted.data.length}>
               <Button size="sm" onClick={() =>
                 db.execute({ query: "DELETE FROM download_queue WHERE state = 'COMPLETED'" })
-                  .then(() => queryClient.invalidateQueries({ queryKey: [DOWNLOAD_QUEUE_COMPLETED] }))
+                  .then(() => queryClient.invalidateQueries({ queryKey: [KEY_DOWNLOAD_QUEUE, "COMPLETED"] }))
               }>
                 Clear
               </Button>
@@ -116,7 +99,9 @@ const Download: React.FC = () => {
         {!queueErrored.isError && !queueErrored.isLoading && queueErrored?.data?.length ? (
           <section className="flex flex-col">
             <SectionDivider label="Errored" count={queueErrored.data.length}>
-              <Button size="sm" onClick={() => { }}>
+              <Button size="sm" onClick={() =>
+                db.execute({ query: "DELETE FROM download_queue WHERE state = 'ERRORED';" })
+                  .then(() => queryClient.invalidateQueries({ queryKey: [KEY_DOWNLOAD_QUEUE, "ERRORED"] }))}>
                 Clear
               </Button>
             </SectionDivider>

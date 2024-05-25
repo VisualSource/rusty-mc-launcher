@@ -5,6 +5,8 @@ import {
   PackagePlus,
   PlusSquare,
 } from "lucide-react";
+import { downloadDir } from '@tauri-apps/api/path';
+import { open } from "@tauri-apps/api/dialog";
 import { Link } from "react-router-dom";
 
 import {
@@ -16,21 +18,33 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { TypographyMuted } from "@component/ui/typography";
 import import_profiles from "@/lib/system/import_profiles";
+import { useCurrentQueue } from "@/hooks/useQueue";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
-import { download_queue } from "@/lib/models/download_queue";
-import { useQuery } from "@tanstack/react-query";
-import { db } from "@/lib/system/commands";
+
+async function import_mrpack() {
+
+  const result = await open({
+    multiple: false,
+    defaultPath: await downloadDir(),
+    title: "Import Mrpack",
+    filters: [
+      {
+        name: "Mrpack",
+        extensions: ["mrpack"],
+      },
+    ],
+  });
+
+  console.log(result);
+
+
+}
 
 const Footer = () => {
   const { progress } = useDownload();
-  const queueCurrent = useQuery({
-    queryKey: ["DOWNLOAD_QUEUE", "CURRENT"],
-    initialData: null,
-    refetchInterval: 60_000,
-    queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;", args: [] }).then(e => e.at(0) ?? null)
-  });
+  const queueCurrent = useCurrentQueue();
   return (
     <footer className="flex h-16 bg-zinc-950 text-zinc-400 shadow flex-shrink-0 flex-grow-0">
       <div className="flex h-full w-full shrink items-center justify-start">
@@ -50,7 +64,7 @@ const Footer = () => {
             <DropdownMenuItem onClick={import_profiles}>
               Import Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={import_mrpack}>
               Import Mrpack
             </DropdownMenuItem>
           </DropdownMenuContent>
