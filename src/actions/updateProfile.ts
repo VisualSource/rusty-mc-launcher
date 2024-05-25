@@ -1,10 +1,11 @@
 import type { ActionFunction } from "react-router-dom";
+
+import { UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
 import { MinecraftProfile } from "@/lib/models/profiles";
-import logger from "@lib/system/logger";
-import { db } from "@system/commands";
 import { queryClient } from "@/lib/config/queryClient";
 import { CATEGORY_KEY } from "@/hooks/keys";
-import { UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
+import logger from "@lib/system/logger";
+import { db } from "@system/commands";
 
 const updateProfile: ActionFunction = async ({ request }) => {
   const data = await request.json() as MinecraftProfile;
@@ -42,7 +43,11 @@ const updateProfile: ActionFunction = async ({ request }) => {
             data.id,
             (new Date()).toISOString(),
             "client",
-            JSON.stringify({ game: data.version, loader: data.loader, loader_version: data.loader_version }),
+            JSON.stringify({
+              version: data.version,
+              loader: data.loader.replace(/^\w/, data.loader[0].toUpperCase()),
+              loader_version: data.loader_version
+            }),
             "PENDING"
           ]
         });

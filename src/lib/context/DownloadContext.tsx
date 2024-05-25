@@ -1,6 +1,8 @@
-import { type UnlistenFn, listen } from "@tauri-apps/api/event";
+import { type UnlistenFn, listen, emit, EventCallback } from "@tauri-apps/api/event";
 import { createContext, useSyncExternalStore } from "react";
 import logger from "@system/logger";
+import { toast } from "react-toastify";
+import { queryClient } from "../config/queryClient";
 
 type Progress = {
   message: string;
@@ -10,34 +12,73 @@ type Progress = {
   file: string;
 }
 
+type DownloadEvent = {
+  event: "group" | "update" | "notify" | "refresh" | "reset",
+  value: string
+}
+
 class DownloadManager extends EventTarget {
   private unsubscribe: Promise<UnlistenFn>;
   private current_progress: null | Progress = null;
 
   constructor() {
     super();
-    this.unsubscribe = listen<{ event: "group" | "update", value: string }>("rmcl://download", (ev) => {
-      const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
+    this.unsubscribe = listen<DownloadEvent>("rmcl://download", this.handler);
+  }
 
-      switch (ev.payload.event) {
-        case "group":
-          this.current_progress = {
-            message: data["message"] as string ?? "",
-            progress: data["progress"] as number ?? 0,
-            max_progress: data["max_progress"] as number ?? 0,
-            file: data["file"] as string ?? ""
-          };
-          break;
-        case "update": {
-          if (!this.current_progress) break;
-          this.current_progress.message = data["message"] as string ?? this.current_progress.message;
-          this.current_progress.progress = this.current_progress.progress + (data["progress"] as number ?? 0);
-          this.current_progress.file = data["file"] as string ?? this.current_progress.file;
-          break;
-        }
+  private handler: EventCallback<DownloadEvent> = (ev) => {
+    const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
+
+    switch (ev.payload.event) {
+      case "group":
+        this.current_progress = {
+          message: data["message"] as string ?? "",
+          progress: data["progress"] as number ?? 0,
+          max_progress: data["max_progress"] as number ?? 0,
+          file: data["file"] as string ?? ""
+        };
+        break;
+      case "update": {
+        if (!this.current_progress) break;
+        this.current_progress = {
+          message: data["message"] as string ?? this.current_progress.message,
+          file: data["file"] as string ?? this.current_progress.file,
+          max_progress: this.current_progress.max_progress,
+          progress: this.current_progress.progress + (data["progress"] as number ?? 0)
+        };
+        break;
       }
-      this.dispatchEvent(new Event("update"))
-    });
+      case "refresh": {
+        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "PENDING"] });
+        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "ERRORED"] });
+        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "COMPLETED"] });
+        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "POSTPONED"] });
+        queryClient.invalidateQueries({ queryKey: ["DOWNLOAD_QUEUE", "CURRENT"] });
+        break;
+      }
+      case "notify": {
+        switch (data["type"]) {
+          case "ok": {
+            toast.success(data["message"] as string);
+            break;
+          }
+          case "error": {
+            toast.error(data["message"] as string, {
+              data: { error: data["error"] ?? "Unknown Error" }
+            })
+            break;
+          }
+          default:
+            toast.info(data["message"] as string);
+            break;
+        }
+        break;
+      }
+      case "reset": {
+        this.current_progress = null;
+      }
+    }
+    this.dispatchEvent(new Event("update"))
   }
 
   public getSnapshot = () => {

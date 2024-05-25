@@ -27,7 +27,7 @@ const Download: React.FC = () => {
   const { progress } = useDownload();
 
   const queueCurrent = useQuery({
-    queryKey: ["DOWNLOAD_QUEUE_CURRENT"],
+    queryKey: ["DOWNLOAD_QUEUE", "CURRENT"],
     initialData: null,
     refetchInterval: 60_000,
     queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;", args: [] }).then(e => e.at(0) ?? null)
@@ -72,7 +72,7 @@ const Download: React.FC = () => {
             <SectionDivider label="Up Next" count={queueNext?.data?.length ?? 0} />
             <div className="flex flex-col gap-2 pl-4 pt-2">
               {queueNext?.data?.length ? (
-                queueNext?.data.map((item) => <DownloadItem {...item} />)
+                queueNext?.data.map((item) => <DownloadItem key={item.id} {...item} />)
               ) : (
                 <TypographyMuted>There are no downloads in queue</TypographyMuted>
               )}
@@ -89,7 +89,7 @@ const Download: React.FC = () => {
             </SectionDivider>
             <div className="flex flex-col gap-2 pl-4 pt-2">
               {queuePostponed.data.map((item) => (
-                <DownloadItem {...item} />
+                <DownloadItem key={item.id} {...item} />
               ))}
             </div>
           </section>
@@ -107,7 +107,7 @@ const Download: React.FC = () => {
             </SectionDivider>
             <div className="flex flex-col gap-2 pl-4 pt-2">
               {queueCompleted.data.map((item) => (
-                <DownloadItem {...item} />
+                <DownloadItem key={item.id} {...item} />
               ))}
             </div>
           </section>
@@ -122,7 +122,7 @@ const Download: React.FC = () => {
             </SectionDivider>
             <div className="flex flex-col gap-2 pl-4 pt-2">
               {queueErrored.data.map((item) => (
-                <DownloadItem {...item} />
+                <DownloadItem key={item.id} {...item} />
               ))}
             </div>
           </section>

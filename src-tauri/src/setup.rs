@@ -116,6 +116,20 @@ async fn handle_client_install(
     Ok(())
 }
 
+macro_rules! send_event {
+    ($event_channel:expr,$event_name:literal, $($json:tt)+) => {
+        if let Err(error) = $event_channel
+        .send(ChannelMessage::new(
+            $event_name,
+            serde_json::json_internal!($($json)+).to_string(),
+        ))
+        .await
+    {
+        log::error!("{}", error);
+    }
+    };
+}
+
 pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let app_dir = app
         .path_resolver()
@@ -189,6 +203,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
                     match &item.content_type {
                         QueueType::Client => {
+                            send_event!(tx, "refresh", {});
                             if let Err(err) = handle_client_install(&item, &state, &tx).await {
                                 log::error!("{}", err);
 
@@ -198,6 +213,17 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                                 } {
                                     log::error!("{}", err);
                                 }
+
+                                send_event!(tx,"notify",{
+                                    "message": "Install Error",
+                                    "error": err.to_string(),
+                                    "type": "error"
+                                });
+                            } else {
+                                send_event!(tx,"notify",{
+                                    "message": "Client Installed!",
+                                    "type": "ok"
+                                });
                             }
                         }
                         QueueType::Shader
@@ -216,7 +242,8 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
                         QueueType::Datapack => {}
                     }
-
+                    send_event!(tx, "refresh", {});
+                    send_event!(tx, "reset", {});
                     tokio::time::sleep(Duration::from_secs(60)).await;
                 }
                 Ok(None) => {}

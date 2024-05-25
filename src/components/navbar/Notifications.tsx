@@ -40,8 +40,9 @@ export const Notifications = () => {
                             >
                                 {(value.icon as React.ReactNode) ?? null}
                                 <div>
-                                    <div className="line-clamp-1 font-medium">
+                                    <div className="line-clamp-1 font-medium flex flex-col">
                                         {value.content as React.ReactNode}
+                                        <span className="text-xs">{(value.data as { error?: string })?.error ?? ""}</span>
                                     </div>
                                     <TypographyMuted asChild>
                                         <span>

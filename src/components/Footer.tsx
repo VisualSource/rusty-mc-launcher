@@ -26,7 +26,7 @@ import { db } from "@/lib/system/commands";
 const Footer = () => {
   const { progress } = useDownload();
   const queueCurrent = useQuery({
-    queryKey: ["DOWNLOAD_QUEUE_CURRENT"],
+    queryKey: ["DOWNLOAD_QUEUE", "CURRENT"],
     initialData: null,
     refetchInterval: 60_000,
     queryFn: () => db.select({ schema: download_queue.schema, query: "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;", args: [] }).then(e => e.at(0) ?? null)
@@ -65,22 +65,22 @@ const Footer = () => {
         >
           <Link to="downloads" className="group">
             {queueCurrent.data && progress ? (
-              <div className="flex items-end gap-3">
+              <div className="flex gap-3 items-center">
                 <Avatar className="rounded-none">
                   <AvatarFallback className="rounded-lg">
-                    {queueCurrent.data.content_type === "client" ? (
+                    {queueCurrent.data?.content_type === "client" ? (
                       <Monitor />
-                    ) : queueCurrent.data.content_type === "mod" ? (
+                    ) : queueCurrent?.data?.content_type === "mod" ? (
                       <PackagePlus />
                     ) : (
                       <FileDiff />
                     )}
                   </AvatarFallback>
-                  <AvatarImage />
+                  <AvatarImage src={queueCurrent.data.icon ?? undefined} />
                 </Avatar>
                 <div className="w-96">
                   <div className="flex w-full justify-between">
-                    <TypographyMuted asChild className="line-clamp-1">
+                    <TypographyMuted asChild className="line-clamp-1 mb-1">
                       <span>{progress.message}</span>
                     </TypographyMuted>
                     <TypographyMuted asChild>
