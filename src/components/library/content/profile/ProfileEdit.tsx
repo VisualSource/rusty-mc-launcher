@@ -30,11 +30,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CATEGORIES_KEY, CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { db, deleteProfile, showInFolder } from "@system/commands";
 import { ProfileVersionSelector } from "./ProfileVersionSelector";
 import type { MinecraftProfile } from "@lib/models/profiles";
 import { TypographyH3 } from "@/components/ui/typography";
+import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { queryClient } from "@lib/config/queryClient";
 import { categories } from "@/lib/models/categories";
@@ -43,25 +43,25 @@ import CategorySelect from "./CategorySelector";
 import { Button } from "@/components/ui/button";
 import { profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
-
+import logger from "@system/logger"
 const resolver = zodResolver(profile.schema);
 
 const handleChange = debounce(
   async (
     ev: {
       name?:
-        | "id"
-        | "name"
-        | "date_created"
-        | "version"
-        | "loader"
-        | "last_played"
-        | "icon"
-        | "loader_version"
-        | "java_args"
-        | "resolution_width"
-        | "resolution_height"
-        | "state";
+      | "id"
+      | "name"
+      | "date_created"
+      | "version"
+      | "loader"
+      | "last_played"
+      | "icon"
+      | "loader_version"
+      | "java_args"
+      | "resolution_width"
+      | "resolution_height"
+      | "state";
       type?: EventType;
       values?: MinecraftProfile;
     },
@@ -258,6 +258,9 @@ const ProfileEdit: React.FC = () => {
                     data.id,
                     "/",
                   );
+
+                  logger.debug(`Open path ${path}`);
+
                   await showInFolder(path);
                 }}
                 type="button"

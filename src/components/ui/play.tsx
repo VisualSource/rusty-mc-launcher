@@ -4,10 +4,17 @@ import type { MinecraftProfile } from "@/lib/models/profiles";
 import useIsGameRunning from "@hook/useIsGameRunning";
 import { Button, type ButtonProps } from "./button";
 import { cn } from "@/lib/utils";
+import { launchGame } from "@/lib/system/commands";
+import useUser from "@/hooks/useUser";
+import { toast } from "react-toastify";
+import logger from '@system/logger'
 
 const PlayButton: React.FC<
   ButtonProps & { profile: Pick<MinecraftProfile, "id" | "state"> }
 > = ({ profile, className, ...props }) => {
+  const user = useUser();
+
+
   const { isLoading, state: isRunning } = useIsGameRunning({
     profile: profile.id,
   });
@@ -15,7 +22,21 @@ const PlayButton: React.FC<
   return (
     <Button
       {...props}
-      onClick={() => {}}
+      onClick={async () => {
+        try {
+          if (!user.account) return;
+          await launchGame({
+            auth_access_token: user.account?.token.access_token,
+            auth_player_name: user.account?.details.name,
+            auth_uuid: user.account?.details.id,
+            auth_xuid: user.account?.xuid,
+            profile_id: profile.id
+          })
+        } catch (error) {
+          logger.error((error as Error).message);
+          toast.error("Failed to launch game!", { data: { error: (error as Error).message } })
+        }
+      }}
       disabled={isLoading || isRunning || profile.state === "INSTALLING"}
       className={cn(
         {

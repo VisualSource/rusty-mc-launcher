@@ -32,11 +32,11 @@ export const stop = (profile: string) =>
 
 const launchSchema = z.object({
   auth_player_name: z.string(),
-  auth_uuid: z.string().uuid(),
+  auth_uuid: z.string(),
   auth_access_token: z.string(),
   auth_xuid: z.string(),
 
-  profile_id: z.string().uuid(),
+  profile_id: uuidSchema,
 });
 
 export type LaunchConfig = z.infer<typeof launchSchema>;

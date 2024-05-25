@@ -114,7 +114,7 @@ impl Config {
 }
 
 pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(), LauncherError> {
-    let runtime_directory = app.get_path("path.app").await?;
+    let runtime_directory = app.get_path("path.app").await?.join("runtime");
 
     let profile = app
         .get_profile(&launch_config.profile_id)
@@ -127,6 +127,9 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
         })?;
 
     let game_directory = runtime_directory.join("profiles").join(&profile.id);
+    if !game_directory.exists() {
+        fs::create_dir_all(&game_directory).await?;
+    }
 
     let assets_root = runtime_directory.join("assets").normalize();
     if !assets_root.exists() || !assets_root.is_dir() {
