@@ -2,6 +2,7 @@ pub mod arguments;
 use self::arguments::Arguments;
 use crate::state::AppState;
 use crate::{errors::LauncherError, manifest::Manifest};
+use log::debug;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use tokio::fs;
@@ -114,7 +115,8 @@ impl Config {
 }
 
 pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(), LauncherError> {
-    let runtime_directory = app.get_path("path.app").await?.join("runtime");
+    let root_directory = app.get_path("path.app").await?;
+    let runtime_directory = root_directory.join("runtime");
 
     let profile = app
         .get_profile(&launch_config.profile_id)
@@ -126,7 +128,40 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
             ))
         })?;
 
-    let game_directory = runtime_directory.join("profiles").join(&profile.id);
+    log::debug!("Profile {:#?}", profile);
+
+    let version_id = match profile.loader {
+        crate::profile::Loader::Vanilla => profile.version.to_owned(),
+        crate::profile::Loader::Forge => format!(
+            "{}-forge-{}",
+            profile.version,
+            profile
+                .loader_version
+                .ok_or_else(|| LauncherError::NotFound(
+                    "No loader version was found".to_string()
+                ))?
+        ),
+        crate::profile::Loader::Fabric => format!(
+            "fabric-loader-{}-{}",
+            profile
+                .loader_version
+                .ok_or_else(|| LauncherError::NotFound(
+                    "No loader version was found".to_string()
+                ))?,
+            profile.version
+        ),
+        crate::profile::Loader::Quilt => format!(
+            "quilt-loader-{}-{}",
+            profile
+                .loader_version
+                .ok_or_else(|| LauncherError::NotFound(
+                    "No loader version was found".to_string()
+                ))?,
+            profile.version
+        ),
+    };
+
+    let game_directory = root_directory.join("profiles").join(&profile.id);
     if !game_directory.exists() {
         fs::create_dir_all(&game_directory).await?;
     }
@@ -141,7 +176,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
 
     let natives_directory = runtime_directory
         .join("natives")
-        .join(&profile.version)
+        .join(&version_id)
         .normalize();
 
     if !natives_directory.exists() || !natives_directory.is_dir() {
@@ -150,8 +185,8 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
 
     let manifest_directory = runtime_directory
         .join("versions")
-        .join(&profile.version)
-        .join(format!("{}.json", &profile.version))
+        .join(&version_id)
+        .join(format!("{}.json", &version_id))
         .normalize();
     if !manifest_directory.exists() || !manifest_directory.is_file() {
         return Err(LauncherError::NotFound(format!(
@@ -162,7 +197,9 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
 
     let manifest = Manifest::read_manifest(&manifest_directory, true).await?;
 
-    let classpath = manifest.libs_as_string(&runtime_directory, &profile.version)?;
+    log::debug!("{:?}", manifest);
+
+    let classpath = manifest.libs_as_string(&runtime_directory, &version_id)?;
 
     let config = Config {
         auth_player_name: launch_config.auth_player_name,
@@ -221,6 +258,8 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
 
     args.push(manifest.main_class);
     args.extend(game_args);
+
+    debug!("{:#?}", args);
 
     app.instances
         .insert_new_process(app, profile.id, &java_exe, args)

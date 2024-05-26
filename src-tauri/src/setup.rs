@@ -108,7 +108,11 @@ async fn handle_client_install(
         ));
     };
 
-    minecraft_launcher_lib::install_minecraft(app, config, tx).await?;
+    if let Some(loader_version) = minecraft_launcher_lib::install_minecraft(app, config, tx).await?
+    {
+        app.set_profile_loader_version(&item.profile_id, &loader_version)
+            .await?;
+    }
 
     app.set_profile_state(&item.profile_id, "INSTALLED").await?;
     app.set_queue_item_state(&item.id, "COMPLETED").await?;

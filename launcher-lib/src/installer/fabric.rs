@@ -1,5 +1,5 @@
 use crate::{errors::LauncherError, installer::download::download_libraries, manifest::Manifest};
-use log::info;
+use log::{debug, info};
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::{path::Path, process::Stdio};
@@ -51,7 +51,7 @@ pub async fn run_installer(
     version: &str,
     loader_version: Option<String>,
     quilt: bool,
-) -> Result<(), LauncherError> {
+) -> Result<String, LauncherError> {
     event!(&event_channel,"update",{ "message": "Fetching mod manifest" });
     let loader_version = if let Some(version) = loader_version {
         version
@@ -171,7 +171,7 @@ pub async fn run_installer(
 
     let modded_version = match quilt {
         false => format!("fabric-loader-{}-{}", loader_version, version),
-        true => format!("quilt-loader{}-{}", loader_version, version),
+        true => format!("quilt-loader-{}-{}", loader_version, version),
     };
 
     let modded_directory = runtime_directory.join("versions").join(&modded_version);
@@ -179,19 +179,19 @@ pub async fn run_installer(
     let modded_jar = modded_directory.join(format!("{}.jar", modded_version));
     let vanilla_jar = runtime_directory
         .join("versions")
+        .join(version)
         .join(format!("{}.jar", version));
 
     if modded_jar.exists() && modded_jar.is_file() {
         fs::remove_file(&modded_jar).await?;
     }
-
-    let bytes = fs::copy(&vanilla_jar, &modded_jar).await?;
-    info!(
-        "Copying {} to {} | {} bytes",
+    debug!(
+        "Copying {} to {}",
         vanilla_jar.to_string_lossy(),
-        modded_jar.to_string_lossy(),
-        bytes
+        modded_jar.to_string_lossy()
     );
+    let bytes = fs::copy(&vanilla_jar, &modded_jar).await?;
+    debug!("Copyed {} bytes", bytes);
 
     event!(&event_channel,"update",{ "progress": 1, "message": "Install Libraries" });
 
@@ -206,7 +206,7 @@ pub async fn run_installer(
     .await?;
 
     event!(&event_channel,"update",{ "progress": 1 });
-    Ok(())
+    Ok(loader_version)
 }
 
 #[cfg(test)]

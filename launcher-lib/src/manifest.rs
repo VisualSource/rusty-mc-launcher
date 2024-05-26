@@ -419,8 +419,8 @@ mod tests {
     #[tokio::test]
     async fn test_manifest_inhert() {
         init();
-        let manifest_dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\.minecraft\\versions\\fabric-loader-0.14.18-1.19.4\\fabric-loader-0.14.18-1.19.4.json");
-        let manifest = Manifest::read_manifest(&manifest_dir, false).await.unwrap();
+        let manifest_dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\us.visualsource.rmcl\\runtime\\versions\\fabric-loader-0.15.11-1.20.6\\fabric-loader-0.15.11-1.20.6.json");
+        let manifest = Manifest::read_manifest(&manifest_dir, true).await.unwrap();
 
         debug!("{:#?}", manifest);
     }

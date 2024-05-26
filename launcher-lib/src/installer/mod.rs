@@ -40,7 +40,7 @@ pub async fn install_minecraft(
     app: &AppState,
     config: InstallConfig,
     event_channel: &mpsc::Sender<ChannelMessage>,
-) -> Result<(), LauncherError> {
+) -> Result<Option<String>, LauncherError> {
     event!(&event_channel, "group", { "progress": 0, "max_progress": 9, "message": "Starting minecraft install." });
 
     let runtime_directory = app.get_path("path.app").await?.join("runtime");
@@ -93,7 +93,7 @@ pub async fn install_minecraft(
                 "Java executable was not found".to_string(),
             ))?;
 
-        match config.loader {
+        let version_id = match config.loader {
             Loader::Vanilla => {
                 return Err(LauncherError::Generic("Should not be here".to_string()))
             }
@@ -130,11 +130,12 @@ pub async fn install_minecraft(
                 .await?
             }
         };
+
+        Ok(Some(version_id))
     } else {
         event!(&event_channel,"update",{ "progress": 4 });
+        Ok(None)
     }
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -5,7 +5,7 @@ import { MinecraftProfile } from "@/lib/models/profiles";
 import { queryClient } from "@/lib/config/queryClient";
 import { CATEGORY_KEY } from "@/hooks/keys";
 import logger from "@lib/system/logger";
-import { db } from "@system/commands";
+import { createProfile, db } from "@system/commands";
 
 const updateProfile: ActionFunction = async ({ request }) => {
   const data = (await request.json()) as MinecraftProfile;
@@ -51,6 +51,8 @@ const updateProfile: ActionFunction = async ({ request }) => {
             "PENDING",
           ],
         });
+
+        await createProfile(data.id);
 
         await queryClient.invalidateQueries({
           queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],

@@ -221,7 +221,7 @@ pub async fn run_installer(
     loader_verison: Option<String>,
     runtime_directory: &Path,
     java: &str,
-) -> Result<(), LauncherError> {
+) -> Result<String, LauncherError> {
     event!(&event_channel,"update",{ "message":"Fetching mod manifest" });
     let loader_version = if let Some(loader) = loader_verison {
         loader
@@ -338,7 +338,7 @@ pub async fn run_installer(
 
     event!(&event_channel,"update",{ "progress": 1 });
 
-    Ok(())
+    Ok(loader_version)
 }
 
 #[cfg(test)]

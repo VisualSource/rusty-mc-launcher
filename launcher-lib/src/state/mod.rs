@@ -37,6 +37,20 @@ impl AppState {
         Ok(query)
     }
 
+    pub async fn set_profile_loader_version(
+        &self,
+        profile: &str,
+        version: &str,
+    ) -> Result<(), LauncherError> {
+        sqlx::query("UPDATE profiles SET loader_version = ? WHERE id = ?")
+            .bind(version)
+            .bind(profile)
+            .execute(&self.database.0)
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn set_profile_state(&self, profile: &str, state: &str) -> Result<(), LauncherError> {
         sqlx::query("UPDATE profiles SET state = ? WHERE id = ?")
             .bind(state)
