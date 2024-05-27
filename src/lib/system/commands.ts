@@ -46,16 +46,6 @@ export const launchGame = (config: LaunchConfig) =>
 
 export const loaderSchema = z.enum(["vanilla", "forge", "fabric", "quilt"]);
 export type Loader = z.infer<typeof loaderSchema>;
-const installSchema = z.object({
-  version: z.string(),
-  loader: loaderSchema,
-  loader_version: z.string().nullable().default(null),
-});
-
-export type InstallConfig = z.infer<typeof installSchema>;
-
-export const installGame = (config: InstallConfig) =>
-  invoke("install_game", { config: installSchema.parse(config) });
 
 const installWorkshopContentSchema = z.object({
   content_type: z.enum(["resource", "shader", "mod", "modpack"]),

@@ -1,8 +1,8 @@
 
 Todo:
-  ☐ Clean up for process table process
-  ☐ Loader version selector
-  ☐ Mod/Shader/Resource content install
+  ✔ Clean up for process table process @done(24-05-26 15:05)
+  ✔ Loader version selector @done(24-05-26 16:39)
+  ☐ Mod/Shader/Resource/Modpack content install
   ☐ Mrpack install/import
   ☐ Vanilla launcher profile import
   ☐ Content viewer in profile

@@ -36,6 +36,10 @@ impl Instances {
         Self(RwLock::new(HashMap::new()))
     }
 
+    pub async fn insert(&mut self, uuid: String, instance: Arc<RwLock<MinecraftInstance>>) {
+        self.0.write().await.insert(uuid, instance);
+    }
+
     pub async fn stop_process(&self, app: &AppState, uuid: String) -> Result<(), LauncherError> {
         if let Some(process) = self.get(&uuid).await {
             let a = process.write().await;
@@ -45,24 +49,6 @@ impl Instances {
             instance.remove_cache(app, &uuid).await?;
 
             self.0.write().await.remove(&uuid);
-        }
-
-        Ok(())
-    }
-
-    pub async fn rescue_cache(&mut self, app: &AppState) -> Result<(), LauncherError> {
-        let processes: Vec<ProcessCache> = sqlx::query_as!(ProcessCache, "SELECT * FROM processes")
-            .fetch_all(&app.database.0)
-            .await?;
-        sqlx::query("DELETE FROM processes")
-            .execute(&app.database.0)
-            .await?;
-
-        for process in processes {
-            let uuid = process.uuid.to_owned();
-            if let Err(err) = self.insert_cached_process(app, process).await {
-                log::warn!("Failed to rescue cached process {}: {}", uuid, err);
-            }
         }
 
         Ok(())
@@ -90,57 +76,6 @@ impl Instances {
         self.0.write().await.insert(uuid, i.clone());
 
         Ok(i)
-    }
-
-    pub async fn insert_cached_process(
-        &mut self,
-        app: &AppState,
-        cache: ProcessCache,
-    ) -> Result<Arc<RwLock<MinecraftInstance>>, LauncherError> {
-        let system = sysinfo::System::new();
-        let process = system
-            .process(sysinfo::Pid::from_u32(cache.get_pid()))
-            .ok_or_else(|| {
-                LauncherError::NotFound(format!("Could not find proccess {}", cache.pid))
-            })?;
-
-        if cache.name != process.name() {
-            return Err(LauncherError::Generic(format!(
-                "Cached process {} has different name than actual process {}",
-                cache.pid,
-                process.name()
-            )));
-        }
-
-        if let Some(path) = process.exe() {
-            if cache.exe != path.to_string_lossy() {
-                return Err(LauncherError::Generic(format!(
-                    "Cached process {} has different exe than actual process {}",
-                    cache.pid,
-                    path.to_string_lossy()
-                )));
-            }
-        } else {
-            return Err(LauncherError::Generic(format!(
-                "Cached process {} has no accessable path",
-                cache.pid
-            )));
-        }
-
-        let child = InstanceType::ResucedPID(cache.get_pid());
-
-        child
-            .cache_process(app, &cache.uuid, &cache.profile_id)
-            .await?;
-
-        let current_child = Arc::new(RwLock::new(child));
-
-        let mchild = MinecraftInstance::new(cache.uuid.to_owned(), cache.profile_id, current_child);
-
-        let mchild = Arc::new(RwLock::new(mchild));
-        self.0.write().await.insert(cache.uuid, mchild.clone());
-
-        Ok(mchild)
     }
 
     pub async fn get(&self, uuid: &str) -> Option<Arc<RwLock<MinecraftInstance>>> {

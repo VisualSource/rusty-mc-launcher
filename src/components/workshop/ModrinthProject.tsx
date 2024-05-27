@@ -18,7 +18,7 @@ import { Suspense, useState } from "react";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
-import { TeamsService } from "@lib/api/modrinth/services.gen";
+import { TeamsService, VersionsService } from "@lib/api/modrinth/services.gen";
 import {
   Carousel,
   CarouselApi,
@@ -30,11 +30,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { TypographyH1, TypographyH4 } from "@component/ui/typography";
 import type { Project } from "@lib/api/modrinth/types.gen";
-import useInstallContent from "@hook/useInstallContent";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { Separator } from "@component/ui/separator";
 import { Button } from "@component/ui/button";
 import { Badge } from "@component/ui/badge";
+import { db } from "@/lib/system/commands";
 
 const Team: React.FC<{ id: string }> = ({ id }) => {
   const { data } = useSuspenseQuery({
@@ -110,10 +110,51 @@ const Gallery: React.FC<{ gallery: NonNullable<Project["gallery"]> }> = ({
   );
 };
 
+async function install(data: Project) {
+  switch (data.project_type) {
+    case "mod":
+    case "resourcepack":
+    case "shader":
+
+      break;
+    case "modpack": {
+      const version_data = await VersionsService.getVersion({ id: data.id });
+      const file = version_data.files.at(0);
+      const id = crypto.randomUUID();
+      const profile = crypto.randomUUID();
+      await db.execute({
+        query: "INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?)",
+        args: [
+          id,
+          true,
+          0,
+          data.title,
+          data.icon_url ?? null,
+          profile,
+          (new Date()).toISOString(),
+          "modpack",
+          JSON.stringify({
+            content_type: "Modpack",
+            profile,
+            files: [{
+              sha1: file?.hashes.sha1,
+              url: file?.url,
+              size: file?.url
+            }]
+          }),
+          "PENDING"
+        ]
+      });
+
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 const ModrinthProject: React.FC = () => {
   const data = useAsyncValue() as Project;
-
-  const installContent = useInstallContent();
 
   return (
     <ScrollArea>
@@ -177,23 +218,23 @@ const ModrinthProject: React.FC = () => {
             ) : null}
             {data.donation_urls
               ? data.donation_urls.map((value) => (
-                  <a
-                    href={value.url}
-                    target="_blank"
-                    key={value.id}
-                    className="flex items-center"
-                    rel="noopener noreferrer"
-                  >
-                    <DollarSign className="pr-2" />
-                    <span className="text-blue-600 underline">
-                      {value.platform
+                <a
+                  href={value.url}
+                  target="_blank"
+                  key={value.id}
+                  className="flex items-center"
+                  rel="noopener noreferrer"
+                >
+                  <DollarSign className="pr-2" />
+                  <span className="text-blue-600 underline">
+                    {value.platform
+                      ? "Donate"
+                      : value.platform === "Other"
                         ? "Donate"
-                        : value.platform === "Other"
-                          ? "Donate"
-                          : value.platform}
-                    </span>
-                  </a>
-                ))
+                        : value.platform}
+                  </span>
+                </a>
+              ))
               : null}
           </div>
         </section>
@@ -207,17 +248,11 @@ const ModrinthProject: React.FC = () => {
                 <Button variant="secondary">
                   <Heart className="mr-1 h-5 w-5" /> Follow
                 </Button>
-                <Button
-                  onClick={() =>
-                    installContent(data.id, data.project_type, {
-                      minecraft_versions: data?.game_versions,
-                      modloaders: data?.loaders,
-                      name: data?.title ?? data.id,
-                    })
-                  }
-                >
+
+                <Button onClick={() => install(data)}>
                   <Plus className="mr-1" /> Install
                 </Button>
+
               </div>
             </section>
             <article className="prose prose-invert mb-4 max-w-none">

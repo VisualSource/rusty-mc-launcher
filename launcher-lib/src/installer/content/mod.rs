@@ -16,7 +16,7 @@ pub enum ContentType {
 pub struct InstallContent {
     content_type: ContentType,
     profile: Option<String>,
-    file: manifest::File,
+    files: Vec<manifest::File>,
 }
 
 pub async fn install_content(

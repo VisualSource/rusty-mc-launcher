@@ -5,15 +5,20 @@ mod sqlite;
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
+    sync::Arc,
 };
 
 use models::{QueueItem, Setting};
 use normalize_path::NormalizePath;
+use process::ProcessCache;
 
 use profile::Profile;
+use tokio::sync::RwLock;
 
 use crate::errors::LauncherError;
 pub use sqlite::Database;
+
+use self::process::{InstanceType, MinecraftInstance};
 
 pub struct AppState {
     pub instances: process::Instances,
@@ -26,6 +31,76 @@ impl AppState {
             database: sqlite::Database::new(path)?,
             instances: process::Instances::new(),
         })
+    }
+
+    pub async fn rescue_instances_cache(&mut self) -> Result<(), LauncherError> {
+        let processes: Vec<ProcessCache> =
+            sqlx::query_as!(ProcessCache, "SELECT * FROM processes;")
+                .fetch_all(&self.database.0)
+                .await?;
+        sqlx::query("DELETE FROM processes")
+            .execute(&self.database.0)
+            .await?;
+
+        for process in processes {
+            let uuid = process.uuid.to_owned();
+            if let Err(err) = self.insert_cached_process(process).await {
+                log::warn!("Failed to rescue cached process {}: {}", uuid, err);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn insert_cached_process(
+        &mut self,
+        cache: ProcessCache,
+    ) -> Result<Arc<RwLock<MinecraftInstance>>, LauncherError> {
+        let system = sysinfo::System::new();
+        let process = system
+            .process(sysinfo::Pid::from_u32(cache.get_pid()))
+            .ok_or_else(|| {
+                LauncherError::NotFound(format!("Could not find proccess {}", cache.pid))
+            })?;
+
+        if cache.name != process.name() {
+            return Err(LauncherError::Generic(format!(
+                "Cached process {} has different name than actual process {}",
+                cache.pid,
+                process.name()
+            )));
+        }
+
+        if let Some(path) = process.exe() {
+            if cache.exe != path.to_string_lossy() {
+                return Err(LauncherError::Generic(format!(
+                    "Cached process {} has different exe than actual process {}",
+                    cache.pid,
+                    path.to_string_lossy()
+                )));
+            }
+        } else {
+            return Err(LauncherError::Generic(format!(
+                "Cached process {} has no accessable path",
+                cache.pid
+            )));
+        }
+
+        let child = InstanceType::ResucedPID(cache.get_pid());
+
+        child
+            .cache_process(self, &cache.uuid, &cache.profile_id)
+            .await?;
+
+        let current_child = Arc::new(RwLock::new(child));
+
+        let mchild = MinecraftInstance::new(cache.uuid.to_owned(), cache.profile_id, current_child);
+
+        let mchild = Arc::new(RwLock::new(mchild));
+
+        self.instances.insert(cache.uuid, mchild.clone()).await;
+
+        Ok(mchild)
     }
 
     pub async fn get_profile(&self, id: &str) -> Result<Option<Profile>, LauncherError> {

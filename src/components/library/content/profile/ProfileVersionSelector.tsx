@@ -20,13 +20,13 @@ import { VersionSelector } from "@/components/ui/VersionSelector";
 import { MinecraftProfile } from "@/lib/models/profiles";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { LoaderVersionSelector } from "./LoaderVersionSelector";
 
 export const ProfileVersionSelector: React.FC<{
   form: UseFormReturn<MinecraftProfile, any, undefined>;
 }> = ({ form }) => {
   const [showSnapshots, setShowSnapshots] = useState(false);
   const method = useFormContext();
-  const currentLoader = method.watch("loader");
 
   return (
     <div className="flex flex-col space-y-2">
@@ -85,20 +85,8 @@ export const ProfileVersionSelector: React.FC<{
           </FormItem>
         )}
       />
-      {currentLoader !== "vanilla" ? (
-        <FormField
-          control={form.control}
-          name="loader_version"
-          render={() => (
-            <FormItem>
-              <FormLabel>Loader Version</FormLabel>
-              <FormControl></FormControl>
-              <FormDescription>The loader version to use.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : null}
+
+      <LoaderVersionSelector form={form} stable={showSnapshots} />
     </div>
   );
 };

@@ -150,8 +150,8 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
             Database::create_db(&fqdb).await?;
         }
 
-        let state = AppState::new(&fqdb)?;
-
+        let mut state = AppState::new(&fqdb)?;
+        state.rescue_instances_cache().await?;
         let migrations = app_dir.join("migrations");
         state.database.run_migrator(&migrations).await?;
 
