@@ -26,7 +26,6 @@ export const ProfileVersionSelector: React.FC<{
   form: UseFormReturn<MinecraftProfile, any, undefined>;
 }> = ({ form }) => {
   const [showSnapshots, setShowSnapshots] = useState(false);
-  const method = useFormContext();
 
   return (
     <div className="flex flex-col space-y-2">

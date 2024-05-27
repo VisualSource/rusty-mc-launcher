@@ -6,7 +6,7 @@ pub enum QueueType {
     Client,
     Modpack,
     Mod,
-    Resource,
+    Resourcepack,
     Shader,
     Datapack,
 }
@@ -23,7 +23,7 @@ impl From<String> for QueueType {
             "datapack" => Self::Datapack,
             "modpack" => Self::Modpack,
             "mod" => Self::Mod,
-            "resource" => Self::Resource,
+            "resourcepack" => Self::Resourcepack,
             "shader" => Self::Shader,
             _ => Self::Client,
         }

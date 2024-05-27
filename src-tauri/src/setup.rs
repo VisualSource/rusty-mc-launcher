@@ -232,7 +232,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                         }
                         QueueType::Shader
                         | QueueType::Mod
-                        | QueueType::Resource
+                        | QueueType::Resourcepack
                         | QueueType::Modpack => {
                             if let Err(err) = handle_content_install(&item, &state, &tx).await {
                                 if let Err(error) =

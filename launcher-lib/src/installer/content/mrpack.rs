@@ -67,8 +67,10 @@ struct MRPack {
 
 pub async fn install_mrpack(
     app: &AppState,
-    event_channel: tokio::sync::mpsc::Sender<ChannelMessage>,
+    event_channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
     mrpack_path: &Path,
+    profile_id: String,
+    runtime_directory: &Path,
 ) -> Result<(), LauncherError> {
     let mut archive = compression::open_archive(File::open(&mrpack_path).await?).await?;
 

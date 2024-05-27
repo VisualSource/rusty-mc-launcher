@@ -64,10 +64,12 @@ pub async fn install_local_mrpack(
 ) -> Result<(), Error> {
     let (handler, tx) = message_bridge!(window);
 
-    let result = install_mrpack(&state, tx, &file_path).await;
-    if let Err(err) = handler.await {
-        error!("Failed to exit event manager: {}", err);
-    };
+    unimplemented!()
 
-    result.map_err(Error::from)
+    //let result = install_mrpack(&state, tx, &file_path).await;
+    /*if let Err(err) = handler.await {
+        error!("Failed to exit event manager: {}", err);
+    };*/
+
+    //result.map_err(Error::from)
 }
