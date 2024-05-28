@@ -5,10 +5,8 @@ import { version } from "@masl/index";
 import { useMsal, useAccount } from "@azure/msal-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TypographyH3, TypographyH4 } from "@/components/ui/typography";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "../ui/badge";
+import { DownloadSettings } from "./DownloadSettings";
 
 const Settings = () => {
   const msal = useMsal();
@@ -47,21 +45,7 @@ const Settings = () => {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="download" className="container col-span-10 space-y-4">
-        <TypographyH3>Download Settings</TypographyH3>
-
-        <form>
-          <div className="mb-4">
-            <Label htmlFor="game-dir">Default minecraft Directory</Label>
-            <Input id="game-dir" placeholder="Default minecraft directory" />
-          </div>
-
-          <Button type="submit">Save</Button>
-        </form>
-
-        <div className="flex flex-col">
-          <Label className="mb-4">Clear Cached Images</Label>
-          <Button type="button">Clear</Button>
-        </div>
+        <DownloadSettings />
       </TabsContent>
       <TabsContent value="account" className="container col-span-10">
         <TypographyH3>Accounts</TypographyH3>

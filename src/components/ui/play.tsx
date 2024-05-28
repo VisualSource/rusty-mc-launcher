@@ -4,7 +4,7 @@ import type { MinecraftProfile } from "@/lib/models/profiles";
 import useIsGameRunning from "@hook/useIsGameRunning";
 import { Button, type ButtonProps } from "./button";
 import { cn } from "@/lib/utils";
-import { launchGame } from "@/lib/system/commands";
+import { launchGame, stop } from "@/lib/system/commands";
 import useUser from "@/hooks/useUser";
 import { toast } from "react-toastify";
 import logger from '@system/logger'
@@ -23,6 +23,10 @@ const PlayButton: React.FC<
     <Button
       {...props}
       onClick={async () => {
+        if (isRunning) {
+          await stop(profile.id);
+          return;
+        }
         try {
           if (!user.account) return;
           await launchGame({
@@ -37,7 +41,7 @@ const PlayButton: React.FC<
           toast.error("Failed to launch game!", { data: { error: (error as Error).message } })
         }
       }}
-      disabled={isLoading || isRunning || profile.state === "INSTALLING"}
+      disabled={isLoading || profile.state === "INSTALLING"}
       className={cn(
         {
           "bg-blue-500 hover:bg-blue-500/90 dark:bg-blue-900 dark:text-zinc-50 dark:hover:bg-blue-900/90":
