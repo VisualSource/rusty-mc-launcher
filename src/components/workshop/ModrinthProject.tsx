@@ -11,195 +11,21 @@ import {
 } from "lucide-react";
 import { Link, type To, useAsyncValue } from "react-router-dom";
 import { formatRelative } from "date-fns/formatRelative";
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { DiscordLogoIcon } from "@radix-ui/react-icons";
 import ReactMarkdown from "react-markdown";
-import { Suspense, useState } from "react";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import { Suspense } from "react";
 
-import { TeamsService, VersionsService } from "@lib/api/modrinth/services.gen";
-import {
-  Carousel,
-  CarouselApi,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { TypographyH1, TypographyH4 } from "@component/ui/typography";
 import type { Project } from "@lib/api/modrinth/types.gen";
+import SelectProfile from "../dialog/ProfileSelection";
 import { ScrollArea } from "@component/ui/scroll-area";
-import { Separator } from "@component/ui/separator";
 import { Button } from "@component/ui/button";
 import { Badge } from "@component/ui/badge";
-import { db } from "@/lib/system/commands";
-import SelectProfile, { selectProfile } from "../dialog/ProfileSelection";
-
-const Team: React.FC<{ id: string }> = ({ id }) => {
-  const { data } = useSuspenseQuery({
-    queryKey: ["modrinth", "team", id],
-    queryFn: () => TeamsService.getTeamMembers({ id }),
-  });
-
-  return (
-    <ul className="space-y-2">
-      {data
-        .toSorted((a, b) => (b.ordering ?? 0) - (a.ordering ?? 0))
-        .map((e) => (
-          <div key={e.user.id} className="flex items-center gap-2">
-            <Avatar>
-              <AvatarFallback></AvatarFallback>
-              <AvatarImage src={e.user.avatar_url} />
-            </Avatar>
-            <div>
-              <h5 className="line-clamp-1 font-bold">{e.user.username}</h5>
-              <p className="line-clamp-1 text-sm italic">{e.role}</p>
-            </div>
-          </div>
-        ))}
-    </ul>
-  );
-};
-
-const Gallery: React.FC<{ gallery: NonNullable<Project["gallery"]> }> = ({
-  gallery,
-}) => {
-  const [api, setApi] = useState<CarouselApi>();
-
-  const images = gallery.toSorted(
-    (a, b) => (b?.ordering ?? 0) - (a?.ordering ?? 0),
-  );
-
-  return (
-    <Carousel setApi={setApi}>
-      <CarouselContent>
-        {images.map((item, i) => (
-          <CarouselItem key={i}>
-            <div className="h-96">
-              <img
-                className="h-full w-full object-contain object-center"
-                src={item?.url}
-                alt={item?.title ?? `Gallery Image ${i}`}
-              />
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-
-      <Separator className="my-4" />
-
-      <div className="relative flex items-center justify-between px-6">
-        <CarouselPrevious className="relative bottom-0 left-0 right-0 top-0 translate-y-0" />
-
-        <div className="flex gap-4 overflow-hidden">
-          {images.slice(0, 6).map((item, i) => (
-            <button onClick={() => api?.scrollTo(i)} className="h-28 w-28">
-              <img
-                className="h-full w-full object-contain object-center"
-                src={item?.url}
-                alt={item?.title ?? `Gallery Image ${i}`}
-              />
-            </button>
-          ))}
-        </div>
-        <CarouselNext className="relative bottom-0 left-0 right-0 top-0 translate-y-0" />
-      </div>
-      <Separator className="my-4" />
-    </Carousel>
-  );
-};
-
-async function install(data: Project) {
-  switch (data.project_type) {
-    case "mod":
-    case "resourcepack":
-    case "shader": {
-
-      // request profile 
-      const profile = await selectProfile({ game: data.game_versions, loaders: data.loaders });
-      console.log("Profile", profile);
-      if (!profile) return;
-
-      const version_data = await VersionsService.getProjectVersions({
-        idSlug: data.slug!,
-        loaders: JSON.stringify([profile.loader]),
-        gameVersions: JSON.stringify([profile.version])
-      });
-      const content = version_data.at(0);
-      if (!content) return;
-
-      const file = content.files.find(e => e.primary);
-
-      //content.dependencies?.filter(e=>e.dependency_type === "optional")
-
-
-      // ask for optional
-      const content_id = data.project_type.replace(/^\w/, data.project_type[0].toUpperCase());
-      const id = crypto.randomUUID();
-      /*await db.execute({
-        query: "INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?);",
-        args: [
-          id,
-          true,
-          data.title,
-          data.icon_url ?? null,
-          profile.id,
-          (new Date()).toISOString(),
-          content_id,
-          JSON.stringify({
-            content_type:  content_id,
-            profile: profile.id,
-            files: []
-          }),
-          "PENDING"
-        ]
-      })*/
-      break;
-    }
-    case "modpack": {
-      const version_data = await VersionsService.getProjectVersions({ idSlug: data.slug! });
-
-      const version = version_data.at(0);
-      if (!version) return;
-
-      const file = version.files.find(e => e.primary);
-      if (!version) return;
-
-      const id = crypto.randomUUID();
-      const profile = crypto.randomUUID();
-
-      await db.execute({
-        query: "INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?)",
-        args: [
-          id,
-          true,
-          0,
-          data.title,
-          data.icon_url ?? null,
-          profile,
-          (new Date()).toISOString(),
-          "Modpack",
-          JSON.stringify({
-            content_type: "Modpack",
-            profile,
-            files: [{
-              sha1: file?.hashes.sha1,
-              url: file?.url,
-              size: file?.url
-            }]
-          }),
-          "PENDING"
-        ]
-      });
-
-      break;
-    }
-    default:
-      break;
-  }
-}
+import { install } from '@system/install';
+import { Gallery } from "./Gallery";
+import { Team } from './Team';
 
 const ModrinthProject: React.FC = () => {
   const data = useAsyncValue() as Project;

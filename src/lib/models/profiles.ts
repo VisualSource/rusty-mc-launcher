@@ -6,7 +6,7 @@ export const profile = {
   schema: z.object({
     id: z.string().uuid(),
     name: z.string(),
-    date_created: z.string().datetime(),
+    date_created: z.string(),
     version: z.string(),
     loader: loaderSchema,
 

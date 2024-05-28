@@ -1,18 +1,20 @@
+use normalize_path::NormalizePath;
 use std::path::Path;
+use uuid::Uuid;
 
 use crate::{
     errors::LauncherError,
-    install_minecraft,
+    event,
     installer::{
         compression,
         utils::{self, ChannelMessage},
-        InstallConfig,
     },
+    profile::Loader,
     AppState,
 };
 use futures::StreamExt;
 use serde::Deserialize;
-use tokio::fs::File;
+use tokio::fs::{self, File};
 
 const WHITELISTED_DOMAINS: [&str; 4] = [
     "cdn.modrinth.com",
@@ -21,24 +23,23 @@ const WHITELISTED_DOMAINS: [&str; 4] = [
     "gitlab.com",
 ];
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct Hashs {
     sha1: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct Env {
     client: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct PackDownload {
+struct PackFile {
     path: String,
     hashes: Hashs,
     env: Option<Env>,
     downloads: Vec<String>,
-    file_size: usize,
 }
 
 #[derive(Debug, Deserialize)]
@@ -55,13 +56,11 @@ struct Dependencies {
 /// https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct MRPack {
+struct MrPack {
     format_version: usize,
-    summary: Option<String>,
-    game: String,
-    version_id: String,
+    //version_id: String,
     name: String,
-    files: Vec<PackDownload>,
+    files: Vec<PackFile>,
     dependencies: Dependencies,
 }
 
@@ -74,29 +73,34 @@ pub async fn install_mrpack(
 ) -> Result<(), LauncherError> {
     let mut archive = compression::open_archive(File::open(&mrpack_path).await?).await?;
 
-    let pack = compression::parse_extract::<MRPack>(&mut archive, "modrinth.index.json").await?;
+    let pack = compression::parse_extract::<MrPack>(&mut archive, "modrinth.index.json").await?;
 
     if pack.format_version != 1 {
         return Err(LauncherError::Generic(
             "Pack format is not supported".to_string(),
         ));
     }
+    let current_profile_dir = runtime_directory.join("profiles").join(&profile_id);
+    if !current_profile_dir.exists() {
+        fs::create_dir_all(&current_profile_dir).await?;
+    }
 
-    let profile_id = uuid::Uuid::new_v4();
-
-    let current_profile_dir = app.get_path("key.app").await?.join(profile_id.to_string());
-
-    let mods_directory = current_profile_dir.join("mods");
+    event!(&event_channel,"update",{ "progress": 1 });
 
     // filter download for clients
+    let files = pack
+        .files
+        .into_iter()
+        .filter(|x| match &x.env {
+            Some(env) => env.client != "unsupported",
+            None => true,
+        })
+        .collect::<Vec<PackFile>>();
 
-    let files = pack.files.into_iter().filter(|x| match &x.env {
-        Some(env) => env.client != "unsupported",
-        None => true,
-    });
+    let data_files = files.clone();
 
-    let downloads = futures::stream::iter(files.map(|file| {
-        let dir = mods_directory.clone();
+    let downloads = futures::stream::iter(files.into_iter().map(|file| {
+        let dir = current_profile_dir.clone();
         async move {
             let source = file
                 .downloads
@@ -115,7 +119,9 @@ pub async fn install_mrpack(
                 ));
             }
 
-            utils::download_file(source, &dir, None, Some(&file.hashes.sha1)).await?;
+            let output = dir.join(&file.path).normalize();
+
+            utils::download_file(source, &output, None, Some(&file.hashes.sha1)).await?;
             Ok(())
         }
     }))
@@ -134,6 +140,8 @@ pub async fn install_mrpack(
         ));
     }
 
+    event!(&event_channel,"update",{ "progress": 1 });
+
     compression::extract_dir(
         &mut archive,
         "overrides",
@@ -141,7 +149,7 @@ pub async fn install_mrpack(
         Some(|file| file.replace("overrides", "")),
     )
     .await?;
-
+    event!(&event_channel,"update",{ "progress": 1 });
     compression::extract_dir(
         &mut archive,
         "client-overrides",
@@ -149,12 +157,94 @@ pub async fn install_mrpack(
         Some(|file| file.replace("client-overrides", "")),
     )
     .await?;
+    event!(&event_channel,"update",{ "progress": 1 });
+    let (modloader, loader_version) = if let Some(fabric) = pack.dependencies.fabric_loader {
+        (Loader::Fabric, Some(fabric))
+    } else if let Some(forge) = pack.dependencies.forge {
+        (Loader::Forge, Some(forge))
+    } else if let Some(quilt) = pack.dependencies.quilt_loader {
+        (Loader::Quilt, Some(quilt))
+    } else if pack.dependencies.neoforge.is_some() {
+        return Err(LauncherError::Generic(
+            "Neoforge is not supported".to_string(),
+        ));
+    } else {
+        (Loader::Vanilla, None)
+    };
 
-    //let install_config = InstallConfig::new()
+    event!(&event_channel,"update",{ "progress": 1 });
+    let title = format!(
+        "Minecraft {} {} {}",
+        pack.dependencies.minecraft,
+        modloader,
+        loader_version.clone().unwrap_or(String::new())
+    );
+    let metadata = serde_json::json!({
+       "version": pack.dependencies.minecraft,
+       "loader": modloader,
+       "loader_version":loader_version.clone().unwrap_or(String::new())
+    })
+    .to_string();
+    let queue_id = Uuid::new_v4().to_string();
+    sqlx::query!("INSERT INTO download_queue ('id','display','install_order','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,current_timestamp,?,?,'PENDING')",
+        queue_id,
+        1,
+        0,
+        title,
+        profile_id,
+        "Client",
+        metadata
+    ).execute(&app.database.0).await?;
+    let loader = modloader.to_string().to_lowercase();
+    sqlx::query!(
+        "INSERT INTO profiles ('id','name','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,current_timestamp,?,?,?,?,?);",
+        profile_id,
+        pack.name,
+        pack.dependencies.minecraft,
+        loader,
+        loader_version,
+        "-Xmx2048M",
+        "INSTALLED"
+    )
+    .execute(&app.database.0)
+    .await?;
 
-    //install_minecraft(app, config, event_channel)
+    for file in data_files {
+        let profile = profile_id.clone();
+        let path = Path::new(&file.path);
 
-    //install_minecraft(app, config, event_channel)
+        let file_name = path
+            .file_name()
+            .ok_or_else(|| LauncherError::NotFound("Failed to get file name".to_string()))?
+            .to_string_lossy()
+            .to_string();
 
-    unimplemented!()
+        let parent = path
+            .parent()
+            .ok_or_else(|| LauncherError::Generic("Failed to get path parent".to_string()))?
+            .to_string_lossy()
+            .to_string();
+        let content_type = if parent.starts_with("mods") {
+            "Mod"
+        } else if parent.starts_with("resourcepacks") {
+            "Resourcepack"
+        } else if parent.starts_with("shaderpacks") {
+            "Shader"
+        } else {
+            "Unknown"
+        };
+
+        sqlx::query!(
+            "INSERT INTO profile_content ('id','sha1','profile','file_name','type') VALUES (?,?,?,?,?);",
+            "",
+            file.hashes.sha1,
+            profile,
+            file_name,
+            content_type,
+        )
+        .execute(&app.database.0)
+        .await?;
+    }
+
+    Ok(())
 }

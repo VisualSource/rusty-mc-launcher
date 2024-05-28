@@ -11,12 +11,15 @@ import { QueueItem } from "@/lib/models/download_queue";
 import { queryClient } from "@/lib/config/queryClient";
 import { Button } from "../ui/button";
 import { db } from "@system/commands";
+import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
+import { QueueItemState } from "@/lib/QueueItemState";
 
 const DownloadItem: React.FC<QueueItem> = ({
   id,
   state,
   display_name,
   content_type,
+  icon,
   metadata,
 }) => {
   return (
@@ -24,19 +27,19 @@ const DownloadItem: React.FC<QueueItem> = ({
       <div className="flex gap-2">
         <Avatar className="rounded-none">
           <AvatarFallback className="rounded-lg">
-            {content_type === "client" ? (
+            {content_type === "Client" ? (
               <Monitor />
-            ) : content_type === "mod" ? (
+            ) : content_type === "Mod" ? (
               <PackagePlus />
             ) : (
               <FileDiff />
             )}
           </AvatarFallback>
-          <AvatarImage />
+          <AvatarImage src={icon ?? undefined} />
         </Avatar>
         <div>
           <TypographyH4>{display_name}</TypographyH4>
-          {content_type === "mod" ? (
+          {content_type === "Mod" ? (
             <TypographyMuted>{metadata?.name as string}</TypographyMuted>
           ) : null}
         </div>
@@ -51,7 +54,7 @@ const DownloadItem: React.FC<QueueItem> = ({
                 args: [id],
               });
               await queryClient.invalidateQueries({
-                queryKey: ["DOWNLOAD_QUEUE", "ERRORED"],
+                queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
               });
             }}
             size="icon"
@@ -67,14 +70,14 @@ const DownloadItem: React.FC<QueueItem> = ({
           <Button
             onClick={async () => {
               await db.execute({
-                query: "UPDATE download_queue SET state='PENDING' WHERE id = ?",
-                args: [id],
+                query: "UPDATE download_queue SET state = ? WHERE id = ?",
+                args: [QueueItemState.PENDING, id],
               });
               await queryClient.invalidateQueries({
-                queryKey: ["DOWNLOAD_QUEUE", "PENDING"],
+                queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
               });
               await queryClient.invalidateQueries({
-                queryKey: ["DOWNLOAD_QUEUE", "ERRORED"],
+                queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
               });
             }}
             size="icon"
@@ -89,7 +92,7 @@ const DownloadItem: React.FC<QueueItem> = ({
                 args: [id],
               });
               await queryClient.invalidateQueries({
-                queryKey: ["DOWNLOAD_QUEUE", "ERRORED"],
+                queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
               });
             }}
             size="icon"

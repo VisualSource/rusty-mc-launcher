@@ -8,6 +8,8 @@ const modrinthSearch: ActionFunction = async ({ request }) => {
   let offset = parseInt(query.get("offset")?.toString() ?? "0");
   if (Number.isNaN(offset)) offset = 0;
 
+  console.log(query);
+
   return ProjectsService.searchProjects({
     query: query.get("query") ?? "",
     facets:
@@ -17,10 +19,7 @@ const modrinthSearch: ActionFunction = async ({ request }) => {
           "categories:'forge'",
           "categories:'fabric'",
           "categories:'quilt'",
-          "categories:'liteloader'",
           "categories:'modloader'",
-          "categories:'rift'",
-          "categories:'neoforge'",
         ],
         ["project_type:mod"],
       ]),

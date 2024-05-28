@@ -88,6 +88,7 @@ async fn handle_content_install(
 
     minecraft_launcher_lib::content::install_content(app, config, tx).await?;
 
+    app.set_queue_item_state(&item.id, "COMPLETED").await?;
     Ok(())
 }
 
@@ -204,10 +205,9 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 Ok(Some(item)) => {
                     log::debug!("PROCESSING ITEM: {:#?}", item);
                     running = true;
-
+                    send_event!(tx, "refresh", {});
                     match &item.content_type {
                         QueueType::Client => {
-                            send_event!(tx, "refresh", {});
                             if let Err(err) = handle_client_install(&item, &state, &tx).await {
                                 log::error!("{}", err);
 
@@ -241,6 +241,16 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                                     log::error!("{}", error);
                                 }
                                 log::error!("{}", err);
+                                send_event!(tx,"notify",{
+                                    "message": "Install Error",
+                                    "error": err.to_string(),
+                                    "type": "error"
+                                });
+                            } else {
+                                send_event!(tx,"notify",{
+                                    "message": "Content Installed!",
+                                    "type": "ok"
+                                });
                             }
                         }
 

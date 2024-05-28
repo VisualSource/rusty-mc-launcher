@@ -1,5 +1,5 @@
 use crate::{errors::LauncherError, installer::download::download_libraries, manifest::Manifest};
-use log::{debug, info};
+use log::debug;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::{path::Path, process::Stdio};

@@ -28,7 +28,8 @@ fn main() {
             commands::game::install_local_mrpack,
             commands::show_in_folder,
             commands::profile::delete_profile,
-            commands::profile::create_profile
+            commands::profile::create_profile,
+            commands::profile::uninstall_content,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -11,13 +11,14 @@ import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
 import { db } from "@/lib/system/commands";
 import DownloadItem from "./DownloadItem";
+import { QueueItemState } from "@/lib/QueueItemState";
 
 const Download: React.FC = () => {
-  const queueCompleted = useQueue("COMPLETED", "ASC");
-  const queueErrored = useQueue("ERRORED", "ASC");
-  const queuePostponed = useQueue("POSTPONED");
+  const queueCompleted = useQueue(QueueItemState.COMPLETED, "ASC");
+  const queueErrored = useQueue(QueueItemState.ERRORED, "ASC");
+  const queuePostponed = useQueue(QueueItemState.POSTPONED);
   const queueCurrent = useCurrentQueue();
-  const queueNext = useQueue("PENDING");
+  const queueNext = useQueue(QueueItemState.PENDING);
   const { progress } = useDownload();
 
   return (
@@ -27,9 +28,9 @@ const Download: React.FC = () => {
           <div className="flex gap-4">
             <Avatar className="h-32 w-32 rounded-none xl:h-60 xl:w-60">
               <AvatarFallback className="h-32 w-32 rounded-lg xl:h-60 xl:w-60">
-                {queueCurrent.data.content_type === "client" ? (
+                {queueCurrent.data.content_type === "Client" ? (
                   <Monitor className="h-24 w-24" />
-                ) : queueCurrent.data.content_type === "mod" ? (
+                ) : queueCurrent.data.content_type === "Mod" ? (
                   <PackagePlus className="h-24 w-24" />
                 ) : (
                   <FileDiff className="h-24 w-24" />
@@ -70,8 +71,8 @@ const Download: React.FC = () => {
         ) : null}
 
         {!queuePostponed.isError &&
-        !queuePostponed.isLoading &&
-        queuePostponed?.data?.length ? (
+          !queuePostponed.isLoading &&
+          queuePostponed?.data?.length ? (
           <section className="flex w-full flex-col">
             <SectionDivider
               label="Postponed"
@@ -88,8 +89,8 @@ const Download: React.FC = () => {
         ) : null}
 
         {!queueCompleted.isError &&
-        !queueCompleted.isLoading &&
-        queueCompleted?.data?.length ? (
+          !queueCompleted.isLoading &&
+          queueCompleted?.data?.length ? (
           <section className="flex w-full flex-col">
             <SectionDivider
               label="Completed"
@@ -122,8 +123,8 @@ const Download: React.FC = () => {
         ) : null}
 
         {!queueErrored.isError &&
-        !queueErrored.isLoading &&
-        queueErrored?.data?.length ? (
+          !queueErrored.isLoading &&
+          queueErrored?.data?.length ? (
           <section className="flex flex-col">
             <SectionDivider label="Errored" count={queueErrored.data.length}>
               <Button

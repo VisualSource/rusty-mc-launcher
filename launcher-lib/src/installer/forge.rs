@@ -48,7 +48,7 @@ struct Processor {
     jar: String,
     classpath: Vec<String>,
     args: Vec<String>,
-    outputs: Option<HashMap<String, String>>,
+    //outputs: Option<HashMap<String, String>>,
 }
 
 impl Processor {
@@ -96,7 +96,7 @@ impl Processor {
 }
 #[derive(Debug, Deserialize)]
 struct InstallProfile {
-    path: String,
+    // path: String,
     version: String,
     minecraft: String,
     data: HashMap<String, Mapping>,

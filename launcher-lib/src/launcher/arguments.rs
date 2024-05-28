@@ -121,7 +121,9 @@ impl Arg {
 /// https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib/_helper.py#L57
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Arguments {
+    #[serde(default)]
     pub game: Vec<Arg>,
+    #[serde(default)]
     pub jvm: Vec<Arg>,
 }
 

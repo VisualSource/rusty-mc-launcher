@@ -67,7 +67,6 @@ export class MinecraftSemver {
     };
   }
 
-  static satisfies(a: string) {}
   // 1.20.6 > 1.20.6-rc1 > 1.20.6-pre4 > 24w14a
   static gt(a: string, b: string): boolean {
     const va = this.parse(a);

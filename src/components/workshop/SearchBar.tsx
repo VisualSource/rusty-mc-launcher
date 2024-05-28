@@ -23,85 +23,7 @@ import { TypographyH3 } from "../ui/typography";
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-
-/*type VersionList = {
-    latest: {
-        release: string;
-        snapshot: string;
-    }
-    versions: {
-        id: string
-        type: "snapshot" | "release"
-        url: string
-        time: string
-        releaseTime: string
-        sha1: string
-        complianceLevel: number
-    }[]
-}*/
-/*const NEWER = new Date("2017-06-02T13:50:27+00:00");
-const VersionSelector: React.FC<{ showSnapshots: boolean }> = ({ showSnapshots }) => {
-    const versions = useSuspenseQuery({
-        queryKey: ["minecraft", "versions"],
-        queryFn: () => fetch("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").then(value => value.json()) as Promise<VersionList>
-    })
-    const [open, setOpen] = useState(false);
-    const [value, setValue] = useState<string[]>([]);
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-[200px] justify-between"
-                >
-                    {value.length
-                        ? value.map((e) => {
-                            const item = versions.data.versions.find(a => a.id === e);
-                            if (!item) return null;
-                            return (<Badge>{item.id}</Badge>)
-                        })
-                        : "Select Versions..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
-                <Command>
-                    <CommandInput placeholder="Search versions..." />
-                    <CommandList className="scrollbar">
-                        <CommandEmpty>No versions found.</CommandEmpty>
-                        <CommandGroup>
-                            {versions.data?.versions.filter(e => (new Date(e.releaseTime) >= NEWER) && (showSnapshots || e.type === "release")).map((framework) => (
-                                <CommandItem
-                                    key={framework.id}
-                                    value={framework.id}
-                                    onSelect={(currentValue) => {
-                                        setValue((items) => {
-                                            if (items.includes(currentValue)) {
-                                                return items.filter(e => e !== currentValue);
-                                            }
-                                            return [...items, currentValue];
-                                        });
-                                    }}
-                                >
-                                    <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            value.includes(framework.id) ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    <span>{framework.id}</span>
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
-    );
-}*/
+import { IndexType } from "@/lib/api/modrinth";
 
 const CheckBoxItem: React.FC<{ label: string; id: string; icon?: string }> = ({
   label,
@@ -128,13 +50,19 @@ const CheckBoxItem: React.FC<{ label: string; id: string; icon?: string }> = ({
 };
 
 const ProjectTypeList = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const projectType = useSuspenseQuery({
     queryKey: ["modrinth", "tags", "project_type"],
     queryFn: () => TagsService.projectTypeList(),
   });
 
   return (
-    <Select defaultValue={projectType.data[0] ?? "mod"}>
+    <Select onValueChange={(value) => {
+      setSearchParams((prev) => {
+        prev.set("facets", JSON.stringify([[`project_type:${value}`]]))
+        return prev;
+      });
+    }} defaultValue={projectType.data[0] ?? "mod"}>
       <SelectTrigger>
         <SelectValue />
       </SelectTrigger>
@@ -152,6 +80,7 @@ const ProjectTypeList = () => {
 };
 
 const SearchBar = () => {
+
   const categoires = useQuery({
     queryKey: ["modrinth", "tags", "categoires"],
     queryFn: () => TagsService.categoryList(),
@@ -165,9 +94,14 @@ const SearchBar = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState<string>("");
   const [query] = useDebounce(search, 500);
+  const [searchBy, setSearchBy] = useState<IndexType>(searchParams.get("index") as IndexType ?? "relevance");
+
 
   useEffect(() => {
     if (query.length) {
+
+      searchParams.set("query", query);
+
       navigate({
         pathname: "/workshop/search",
         search: searchParams.toString(),
@@ -183,7 +117,14 @@ const SearchBar = () => {
           onChange={(ev) => setSearch(ev.target.value)}
           placeholder="Search"
         />
-        <Select defaultValue="relevance">
+        <Select value={searchBy} onValueChange={(value) => {
+          searchParams.set("index", value);
+          navigate({
+            pathname: "/workshop/search",
+            search: searchParams.toString(),
+          });
+          setSearchBy(value as IndexType)
+        }} defaultValue="relevance">
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>

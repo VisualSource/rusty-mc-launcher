@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 import { z } from "zod";
+import { workshop_content } from "../models/content";
 
 export const closeAuthServer = (port: number) =>
   invoke<void>("close_auth_server", { port });
@@ -11,6 +12,8 @@ type Query<S> = {
   schema: S;
 };
 
+type RowsAffected = number;
+type LastInsertRowId = number;
 export const db = {
   select: async <S extends z.Schema<any, any>>({
     query,
@@ -21,7 +24,7 @@ export const db = {
     return request.map((value) => schema.parse(value)) as z.infer<S>[];
   },
   execute: async ({ query, args = [] }: { query: string; args?: unknown[] }) =>
-    invoke("execute", { query, args }),
+    invoke<[RowsAffected, LastInsertRowId]>("execute", { query, args }),
 };
 
 const uuidSchema = z.string().uuid();
@@ -47,21 +50,6 @@ export const launchGame = (config: LaunchConfig) =>
 export const loaderSchema = z.enum(["vanilla", "forge", "fabric", "quilt"]);
 export type Loader = z.infer<typeof loaderSchema>;
 
-const installWorkshopContentSchema = z.object({
-  content_type: z.enum(["resource", "shader", "mod", "modpack"]),
-  profile: z.string().optional().nullable(),
-  file: z.object({
-    sha1: z.string(),
-    url: z.string(),
-    size: z.string(),
-  }),
-});
-export type InstallContentConfig = z.infer<typeof installWorkshopContentSchema>;
-export const installWorkshopContent = (config: InstallContentConfig) =>
-  invoke("install_workshop_content", {
-    config: installWorkshopContentSchema.parse(config),
-  });
-
 export const installLocalMrPack = (source: string) =>
   invoke("install_local_mrpack", { file_path: source });
 
@@ -72,3 +60,14 @@ export const deleteProfile = (profile: string) =>
   invoke("delete_profile", { profile });
 export const createProfile = (profile: string) =>
   invoke("create_profile", { profile });
+
+
+export const uninstallContent = async (profile: string, id: string) => {
+  const items = await db.select({ query: "SELECT * FROM profile_content WHERE id = ? AND profile = ?", args: [id, profile], schema: workshop_content.schema });
+  const item = items.at(0);
+  if (!item) return;
+
+  await invoke("uninstall_content", { content_type: item.type, filename: item.file_name, profile });
+
+  await db.execute({ query: "DELETE FROM profile_content WHERE id = ? AND profile = ?", args: [id, profile] });
+}

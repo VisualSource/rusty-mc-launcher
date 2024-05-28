@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { QueueItemState } from "../QueueItemState";
+
 
 export const download_queue = {
   name: "download_queue",
@@ -9,7 +11,7 @@ export const download_queue = {
     display_name: z.string(),
     icon: z.ostring().nullable().default(null),
     profile_id: z.string().uuid(),
-    created: z.string().datetime(),
+    created: z.string(),
     metadata: z
       .string()
       .transform((arg, ctx) => {
@@ -26,14 +28,14 @@ export const download_queue = {
       })
       .pipe(z.object({}).passthrough()),
     content_type: z.enum([
-      "client",
-      "modpack",
-      "mod",
-      "resource",
-      "shader",
-      "datapack",
+      "Client",
+      "Modpack",
+      "Mod",
+      "Resourcepack",
+      "Shader",
+      "Datapack",
     ]),
-    state: z.enum(["PENDING", "ERRORED", "CURRENT", "POSTPONED", "COMPLETED"]),
+    state: z.enum([QueueItemState.COMPLETED, QueueItemState.CURRENT, QueueItemState.ERRORED, QueueItemState.PENDING, QueueItemState.POSTPONED]),
   }),
 };
 

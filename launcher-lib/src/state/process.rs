@@ -232,8 +232,7 @@ impl InstanceType {
             return Err(LauncherError::Generic(format!(
                 "Cached process {} has no accessable path",
                 pid
-            ))
-            .into());
+            )));
         };
         let exe = path.to_string_lossy().to_string();
 

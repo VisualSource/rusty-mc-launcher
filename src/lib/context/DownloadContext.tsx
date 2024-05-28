@@ -1,13 +1,14 @@
 import {
   type UnlistenFn,
   listen,
-  emit,
   EventCallback,
 } from "@tauri-apps/api/event";
 import { createContext, useSyncExternalStore } from "react";
-import logger from "@system/logger";
 import { toast } from "react-toastify";
+import AskDialog from "@/components/dialog/AskDialog";
 import { queryClient } from "../config/queryClient";
+import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
+import { QueueItemState } from "../QueueItemState";
 
 type Progress = {
   message: string;
@@ -57,19 +58,19 @@ class DownloadManager extends EventTarget {
       }
       case "refresh": {
         queryClient.invalidateQueries({
-          queryKey: ["DOWNLOAD_QUEUE", "PENDING"],
+          queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
         });
         queryClient.invalidateQueries({
-          queryKey: ["DOWNLOAD_QUEUE", "ERRORED"],
+          queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
         });
         queryClient.invalidateQueries({
-          queryKey: ["DOWNLOAD_QUEUE", "COMPLETED"],
+          queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
         });
         queryClient.invalidateQueries({
-          queryKey: ["DOWNLOAD_QUEUE", "POSTPONED"],
+          queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
         });
         queryClient.invalidateQueries({
-          queryKey: ["DOWNLOAD_QUEUE", "CURRENT"],
+          queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.CURRENT],
         });
         break;
       }
@@ -129,6 +130,7 @@ export const DownloadProvider = ({ children }: React.PropsWithChildren) => {
   return (
     <DownloadContext.Provider value={{ progress }}>
       {children}
+      <AskDialog />
     </DownloadContext.Provider>
   );
 };

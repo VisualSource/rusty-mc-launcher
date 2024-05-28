@@ -79,9 +79,9 @@ const Footer = () => {
               <div className="flex items-center gap-3">
                 <Avatar className="rounded-none">
                   <AvatarFallback className="rounded-lg">
-                    {queueCurrent.data?.content_type === "client" ? (
+                    {queueCurrent.data?.content_type === "Client" ? (
                       <Monitor />
-                    ) : queueCurrent?.data?.content_type === "mod" ? (
+                    ) : queueCurrent?.data?.content_type === "Mod" ? (
                       <PackagePlus />
                     ) : (
                       <FileDiff />

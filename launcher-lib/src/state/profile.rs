@@ -1,12 +1,31 @@
+use std::fmt::Display;
+
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, sqlx::Type,
+)]
 pub enum Loader {
     Vanilla,
     Forge,
     Fabric,
     Quilt,
+}
+
+impl Display for Loader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Loader::Vanilla => "Vanilla",
+                Loader::Forge => "Forge",
+                Loader::Fabric => "Fabric",
+                Loader::Quilt => "Quilt",
+            }
+        )
+    }
 }
 
 impl Default for Loader {

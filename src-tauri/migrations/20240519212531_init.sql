@@ -41,6 +41,15 @@ CREATE TABLE IF NOT EXISTS download_queue (
     metadata TEXT,
     state TEXT DEFAULT 'PENDING' NOT NULL
 );
+CREATE TABLE IF NOT EXISTS profile_content (
+    id TEXT NOT NULL,
+    sha1 TEXT NOT NULL,
+    profile TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    version TEXT,
+    type TEXT NOT NULL
+);
+
 CREATE TRIGGER profile_insert AFTER INSERT ON profiles
 BEGIN
     INSERT INTO categories ('profile','category') VALUES (NEW.id,'40b8bf8c-5768-4c0d-82ba-8c00bb181cd8');
@@ -50,6 +59,7 @@ CREATE TRIGGER profile_delete AFTER DELETE ON profiles
 BEGIN
     DELETE FROM categories WHERE profile = OLD.id;
     DELETE FROM download_queue WHERE profile_id = OLD.id AND (state = 'PENDING' OR state = 'POSTPONED');
+    DELETE FROM profile_content WHERE profile = OLD.id;
 END;
 
 INSERT INTO settings VALUES (

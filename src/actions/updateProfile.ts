@@ -42,7 +42,7 @@ const updateProfile: ActionFunction = async ({ request }) => {
             null,
             data.id,
             new Date().toISOString(),
-            "client",
+            "Client",
             JSON.stringify({
               version: data.version,
               loader: data.loader.replace(/^\w/, data.loader[0].toUpperCase()),

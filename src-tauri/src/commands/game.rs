@@ -2,9 +2,7 @@ use std::path::PathBuf;
 
 use crate::errors::Error;
 use log::{debug, error};
-use minecraft_launcher_lib::{
-    installer::content::install_mrpack, start_game, AppState, ChannelMessage, LaunchConfig,
-};
+use minecraft_launcher_lib::{start_game, AppState, ChannelMessage, LaunchConfig};
 use tokio::sync::mpsc;
 
 macro_rules! message_bridge {
