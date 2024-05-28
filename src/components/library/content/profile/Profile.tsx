@@ -1,5 +1,5 @@
 import { Link, Outlet, useLoaderData, useParams } from "react-router-dom";
-import { Box, Images, Package, Play, Settings } from "lucide-react";
+import { Box, Images, Package, Settings } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MinecraftProfile } from "@lib/models/profiles";

@@ -61,13 +61,14 @@ export const deleteProfile = (profile: string) =>
 export const createProfile = (profile: string) =>
   invoke("create_profile", { profile });
 
+export const uninstallItem = async (content_type: string, filename: string, profile: string) => invoke("uninstall_content", { contentType: content_type, filename, profile });
 
 export const uninstallContent = async (profile: string, id: string) => {
   const items = await db.select({ query: "SELECT * FROM profile_content WHERE id = ? AND profile = ?", args: [id, profile], schema: workshop_content.schema });
   const item = items.at(0);
   if (!item) return;
 
-  await invoke("uninstall_content", { content_type: item.type, filename: item.file_name, profile });
+  await uninstallItem(item.type, item.file_name, profile);
 
   await db.execute({ query: "DELETE FROM profile_content WHERE id = ? AND profile = ?", args: [id, profile] });
 }

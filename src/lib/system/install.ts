@@ -1,12 +1,13 @@
 import { coerce, minSatisfying } from "semver";
+import { toast } from "react-toastify";
 
 import type { Project, Version, VersionDependency, VersionFile } from "../api/modrinth/types.gen";
 import { ProjectsService, VersionsService } from "../api/modrinth/services.gen";
+import { type ContentType, download_queue } from "../models/download_queue";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { askFor } from "@/components/dialog/AskDialog";
 import { workshop_content } from "../models/content";
 import { db, uninstallContent } from "./commands";
-import { toast } from "react-toastify";
 
 async function getVersion(current: VersionDependency, loaders?: string, game?: string): Promise<Version> {
     if (current.project_id) {
@@ -92,7 +93,6 @@ export async function install(data: Project) {
     const id = toast.loading("Preparing install...");
     try {
         switch (data.project_type) {
-
             case "resourcepack":
             case "shader": {
                 const profile = await selectProfile({ game: data.game_versions, loaders: data.loaders });
@@ -119,56 +119,23 @@ export async function install(data: Project) {
                     version: version.version_number!,
                     id: data.id
                 }];
-                /* if (version.dependencies?.length) {
-                     for await (const dep of getDependencies(version.dependencies, profile.id)) {
-                         switch (dep.type) {
-                             case "incompatible":
-                                 throw new Error("Incompatible with current install", { cause: dep.dep });
-                             case "include": {
-                                 if (!dep.file) throw new Error("Missing file download");
- 
-                                 await uninstallContent(profile.id, dep.id);
- 
-                                 files.push({
-                                     sha1: dep.file?.hashes.sha1,
-                                     url: dep.file?.url,
-                                     id: dep.id,
-                                     filename: dep.file?.filename,
-                                     version: dep.version
-                                 });
-                                 break;
-                             }
-                             default:
-                                 break;
-                         }
-                     }
-                 }*/
-
-                const content_id = data.project_type.replace(/^\w/, data.project_type[0].toUpperCase());
+                const content_id = data.project_type.replace(/^\w/, data.project_type[0].toUpperCase()) as ContentType;
                 const queue_id = crypto.randomUUID();
-                await db.execute({
-                    query: "INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?);",
-                    args: [
-                        queue_id,
-                        1,
-                        0,
-                        data.title,
-                        data.icon_url ?? null,
-                        profile.id,
-                        (new Date()).toISOString(),
-                        content_id,
-                        JSON.stringify({
-                            content_type: content_id,
-                            profile: profile.id,
-                            files: files
-                        }),
-                        "PENDING"
-                    ]
-                })
+
+                await download_queue.insert(queue_id, true, 0,
+                    data.title!,
+                    data.icon_url ?? null,
+                    profile.id,
+                    content_id,
+                    {
+                        content_type: content_id,
+                        profile: profile.id,
+                        files: files
+                    }
+                );
 
                 break;
             }
-
             case "mod": {
                 const profile = await selectProfile({ game: data.game_versions, loaders: data.loaders });
                 if (!profile) {
@@ -225,27 +192,15 @@ export async function install(data: Project) {
                     }
                 }
 
-                const content_id = data.project_type.replace(/^\w/, data.project_type[0].toUpperCase());
+                const content_id = data.project_type.replace(/^\w/, data.project_type[0].toUpperCase()) as ContentType;
                 const queue_id = crypto.randomUUID();
-                await db.execute({
-                    query: "INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?);",
-                    args: [
-                        queue_id,
-                        1,
-                        0,
-                        data.title,
-                        data.icon_url ?? null,
-                        profile.id,
-                        (new Date()).toISOString(),
-                        content_id,
-                        JSON.stringify({
-                            content_type: content_id,
-                            profile: profile.id,
-                            files: files
-                        }),
-                        "PENDING"
-                    ]
-                })
+
+                await download_queue.insert(queue_id, true, 0, data.title!, data.icon_url ?? null, profile.id, content_id, {
+                    content_type: content_id,
+                    profile: profile.id,
+                    files: files
+                });
+
                 break;
             }
             case "modpack": {
@@ -280,8 +235,6 @@ export async function install(data: Project) {
                     idSlug: data.id
                 });
 
-                console.log(version_data);
-
                 const version = version_data.at(0);
                 if (!version) return;
 
@@ -291,32 +244,17 @@ export async function install(data: Project) {
                 const queue_id = crypto.randomUUID();
                 const profile = crypto.randomUUID();
 
-                await db.execute({
-                    query: "INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    args: [
-                        queue_id,
-                        1,
-                        0,
-                        data.title,
-                        data.icon_url ?? null,
-                        profile,
-                        (new Date()).toISOString(),
-                        "Modpack",
-                        JSON.stringify({
-                            content_type: "Modpack",
-                            profile,
-                            files: [{
-                                sha1: file?.hashes.sha1,
-                                url: file?.url,
-                                id: data.id,
-                                filename: file?.filename,
-                                version: version.version_number!
-                            }]
-                        }),
-                        "PENDING"
-                    ]
+                await download_queue.insert(queue_id, true, 0, data.title!, data.icon_url ?? null, profile, "Modpack", {
+                    content_type: "Modpack",
+                    profile,
+                    files: [{
+                        sha1: file?.hashes.sha1,
+                        url: file?.url,
+                        id: data.id,
+                        filename: file?.filename,
+                        version: version.version_number!
+                    }]
                 });
-
                 break;
             }
             default:

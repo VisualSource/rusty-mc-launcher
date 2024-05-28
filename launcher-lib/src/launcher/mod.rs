@@ -262,7 +262,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
     debug!("{:#?}", args);
 
     app.instances
-        .insert_new_process(app, profile.id, &java_exe, args)
+        .insert_new_process(app, game_directory, profile.id, &java_exe, args)
         .await?;
 
     Ok(())

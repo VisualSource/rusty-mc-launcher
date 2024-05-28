@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { db } from "../system/commands";
 
 export const settings = {
   name: "settings",
@@ -7,6 +8,11 @@ export const settings = {
     metadata: z.string().nullable(),
     value: z.string(),
   }),
+
+  async select(key: string) {
+    return db.select({ query: "SELECT * FROM settings WHERE key = ?", args: [key], schema: settings.schema });
+  }
+
 };
 
 export type Setting = z.infer<typeof settings.schema>;

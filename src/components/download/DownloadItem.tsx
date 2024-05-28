@@ -6,7 +6,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
-import { TypographyH4, TypographyMuted } from "@component/ui/typography";
+import { TypographyH4 } from "@component/ui/typography";
 import { QueueItem } from "@/lib/models/download_queue";
 import { queryClient } from "@/lib/config/queryClient";
 import { Button } from "../ui/button";
@@ -20,11 +20,10 @@ const DownloadItem: React.FC<QueueItem> = ({
   display_name,
   content_type,
   icon,
-  metadata,
 }) => {
   return (
     <div className="flex justify-between gap-2">
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <Avatar className="rounded-none">
           <AvatarFallback className="rounded-lg">
             {content_type === "Client" ? (
@@ -35,13 +34,11 @@ const DownloadItem: React.FC<QueueItem> = ({
               <FileDiff />
             )}
           </AvatarFallback>
-          <AvatarImage src={icon ?? undefined} />
+          <AvatarImage className="rounded-md" src={icon ?? undefined} />
         </Avatar>
         <div>
-          <TypographyH4>{display_name}</TypographyH4>
-          {content_type === "Mod" ? (
-            <TypographyMuted>{metadata?.name as string}</TypographyMuted>
-          ) : null}
+          <TypographyH4 className="-mb-2">{display_name}</TypographyH4>
+          <span className="text-sm text-zinc-400">{content_type}</span>
         </div>
       </div>
 

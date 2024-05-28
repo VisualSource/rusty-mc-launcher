@@ -25,7 +25,6 @@ fn main() {
             commands::game::launch_game,
             commands::game::is_running,
             commands::game::stop,
-            commands::game::install_local_mrpack,
             commands::show_in_folder,
             commands::profile::delete_profile,
             commands::profile::create_profile,

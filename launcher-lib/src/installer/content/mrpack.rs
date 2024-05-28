@@ -68,6 +68,7 @@ pub async fn install_mrpack(
     app: &AppState,
     event_channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
     mrpack_path: &Path,
+    icon: Option<String>,
     profile_id: String,
     runtime_directory: &Path,
 ) -> Result<(), LauncherError> {
@@ -186,9 +187,11 @@ pub async fn install_mrpack(
     })
     .to_string();
     let queue_id = Uuid::new_v4().to_string();
-    sqlx::query!("INSERT INTO download_queue ('id','display','install_order','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,current_timestamp,?,?,'PENDING')",
+    let cicon = icon.clone();
+    sqlx::query!("INSERT INTO download_queue ('id','display','icon','install_order','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
         queue_id,
         1,
+        cicon,
         0,
         title,
         profile_id,
@@ -197,9 +200,10 @@ pub async fn install_mrpack(
     ).execute(&app.database.0).await?;
     let loader = modloader.to_string().to_lowercase();
     sqlx::query!(
-        "INSERT INTO profiles ('id','name','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,current_timestamp,?,?,?,?,?);",
+        "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,?,current_timestamp,?,?,?,?,?);",
         profile_id,
         pack.name,
+        icon,
         pack.dependencies.minecraft,
         loader,
         loader_version,

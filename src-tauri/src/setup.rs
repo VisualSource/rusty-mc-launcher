@@ -86,7 +86,7 @@ async fn handle_content_install(
         return Err(Error::Generic("No metadata for config".to_string()));
     };
 
-    minecraft_launcher_lib::content::install_content(app, config, tx).await?;
+    minecraft_launcher_lib::content::install_content(app, config, item.icon.clone(), tx).await?;
 
     app.set_queue_item_state(&item.id, "COMPLETED").await?;
     Ok(())
@@ -258,7 +258,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                     }
                     send_event!(tx, "refresh", {});
                     send_event!(tx, "reset", {});
-                    tokio::time::sleep(Duration::from_secs(60)).await;
+                    tokio::time::sleep(Duration::from_secs(30)).await;
                 }
                 Ok(None) => {}
                 Err(err) => log::error!("{}", err),

@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+const contentTypeSchema = z.enum(["Mod", "Resourcepack", "Shader", "Datapack"]);
+
+export type ContentType = z.infer<typeof contentTypeSchema>;
+
 export const workshop_content = {
     name: "profile_content",
     schema: z.object({
@@ -8,6 +12,6 @@ export const workshop_content = {
         profile: z.string().uuid(),
         file_name: z.string(),
         version: z.ostring().nullable().default(null),
-        type: z.enum(["Mod", "Resourcepack", "Shader", "Datapack"])
+        type: contentTypeSchema
     })
 }

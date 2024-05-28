@@ -57,12 +57,16 @@ impl Instances {
     pub async fn insert_new_process(
         &self,
         app: &AppState,
+        game_direcotry: std::path::PathBuf,
         profile_id: String,
         exe: &str,
         args: Vec<String>,
     ) -> Result<Arc<RwLock<MinecraftInstance>>, LauncherError> {
         let uuid = Uuid::new_v4().to_string();
-        let proc = Command::new(exe).args(args).spawn()?;
+        let proc = Command::new(exe)
+            .current_dir(game_direcotry)
+            .args(args)
+            .spawn()?;
 
         let child = InstanceType::FullChild(proc);
 

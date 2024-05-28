@@ -3,10 +3,10 @@ Todo:
   ✔ Clean up for process table process @done(24-05-26 15:05)
   ✔ Loader version selector @done(24-05-26 16:39)
   ✔ Mod/Shader/Resource/Modpack content install @started(24-05-27 12:42) @done(24-05-28 02:04) @lasted(13h22m30s)
-  ☐ Mrpack install/import
+  ✔ Mrpack install/import @started(24-05-28 11:40) @done(24-05-28 13:23) @lasted(1h43m34s)
   ☐ Vanilla launcher profile import
-  ☐ Content viewer in profile
-  ☐ Screen shot viewer
+  ✔ Content viewer in profile @started(24-05-28 13:41) @done(24-05-28 15:48) @lasted(2h7m38s)
+  ✔ Screen shot viewer @started(24-05-28 15:53) @done(24-05-28 16:22) @lasted(29m57s)
   ☐ Duplicate Profile
   ☐ Validate Content
   [] content version update check

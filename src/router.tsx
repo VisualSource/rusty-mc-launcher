@@ -29,6 +29,7 @@ import getProfile from "./loaders/getProfile";
 import updateCollection from "./actions/updateCollection";
 import Workshop from "./components/workshop/Workshop";
 import ProfileContent from "./components/library/content/profile/ProfileContent";
+import { Screenshots } from "./components/library/content/profile/Screenshots";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -65,6 +66,7 @@ const router = createBrowserRouter(
         >
           <Route index element={<ProfileContent />} />
           <Route path="edit" action={updateProfile} element={<ProfileEdit />} />
+          <Route path="screenshots" element={<Screenshots />} />
         </Route>
       </Route>
 

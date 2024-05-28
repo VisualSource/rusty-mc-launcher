@@ -1,28 +1,5 @@
-use std::path::PathBuf;
-
 use crate::errors::Error;
-use log::{debug, error};
-use minecraft_launcher_lib::{start_game, AppState, ChannelMessage, LaunchConfig};
-use tokio::sync::mpsc;
-
-macro_rules! message_bridge {
-    ($window: expr) => {{
-        let (tx, mut rx) = mpsc::channel::<ChannelMessage>(32);
-        let handler = tokio::spawn(async move {
-            while let Some(msg) = rx.recv().await {
-                debug!("{:#?}", msg);
-                if msg.event == "complete" {
-                    rx.close();
-                }
-                if let Err(err) = $window.emit("rmcl:://download", msg) {
-                    error!("Failed to notify window: {}", err);
-                }
-            }
-        });
-
-        (handler, tx)
-    }};
-}
+use minecraft_launcher_lib::{start_game, AppState, LaunchConfig};
 
 #[tauri::command]
 pub async fn launch_game(
@@ -51,23 +28,4 @@ pub async fn stop(state: tauri::State<'_, AppState>, profile: String) -> Result<
     }
 
     Ok(())
-}
-
-// remember to call `.manage(MyState::default())`
-#[tauri::command]
-pub async fn install_local_mrpack(
-    window: tauri::Window,
-    state: tauri::State<'_, AppState>,
-    file_path: PathBuf,
-) -> Result<(), Error> {
-    let (handler, tx) = message_bridge!(window);
-
-    unimplemented!()
-
-    //let result = install_mrpack(&state, tx, &file_path).await;
-    /*if let Err(err) = handler.await {
-        error!("Failed to exit event manager: {}", err);
-    };*/
-
-    //result.map_err(Error::from)
 }

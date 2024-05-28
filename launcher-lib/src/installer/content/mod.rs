@@ -1,4 +1,6 @@
 mod mrpack;
+use std::{path::PathBuf, str::FromStr};
+
 use crate::{errors::LauncherError, event, installer::utils, AppState, ChannelMessage};
 
 use futures::StreamExt;
@@ -68,6 +70,7 @@ async fn download_files(
 pub async fn install_content(
     app: &AppState,
     config: InstallContent,
+    icon: Option<String>,
     event_channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
 ) -> Result<(), LauncherError> {
     event!(&event_channel, "group", { "progress": 0, "max_progress": 1, "message": "Starting content install" });
@@ -130,25 +133,45 @@ pub async fn install_content(
             let file = config.files.first().ok_or_else(|| {
                 LauncherError::NotFound("Missing download mrpack file".to_string())
             })?;
+            let mut from_path = false;
+            let file_path = if file.url.starts_with("https://") {
+                let id = uuid::Uuid::new_v4();
+                let temp = std::env::temp_dir().join(format!("{id}.mrpack"));
+                event!(&event_channel, "group", { "progress": 0, "max_progress": 1, "message": "Downloading Files" });
+                utils::download_file(&file.url, &temp, None, Some(&file.sha1)).await?;
+                event!(&event_channel,"update",{ "progress": 1 });
 
-            let id = uuid::Uuid::new_v4();
-            let temp = std::env::temp_dir().join(format!("{id}.mrpack"));
-            event!(&event_channel, "group", { "progress": 0, "max_progress": 1, "message": "Downloading Files" });
-            utils::download_file(&file.url, &temp, None, Some(&file.sha1)).await?;
-            event!(&event_channel,"update",{ "progress": 1 });
+                temp
+            } else {
+                from_path = true;
+                let item = PathBuf::from_str(&file.url)
+                    .map_err(|_| LauncherError::Generic("Failed to parse path".to_string()))?;
+
+                if !(item.exists() && item.is_file()) {
+                    return Err(LauncherError::NotFound(format!(
+                        "No file found at: {}",
+                        item.to_string_lossy()
+                    )));
+                }
+
+                item
+            };
 
             event!(&event_channel, "group", { "progress": 0, "max_progress": 5, "message": "Installing Mrpack" });
             if let Err(err) =
-                mrpack::install_mrpack(app, event_channel, &temp, config.profile, &root).await
+                mrpack::install_mrpack(app, event_channel, &file_path, icon, config.profile, &root)
+                    .await
             {
-                tokio::fs::remove_file(&temp).await?;
-
+                if !from_path {
+                    tokio::fs::remove_file(&file_path).await?;
+                }
                 tokio::fs::remove_dir_all(&profile_direcotry).await?;
-
                 return Err(err);
             }
 
-            tokio::fs::remove_file(&temp).await?;
+            if !from_path {
+                tokio::fs::remove_file(&file_path).await?;
+            }
 
             Ok(())
         }

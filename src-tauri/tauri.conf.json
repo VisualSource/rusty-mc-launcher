@@ -22,6 +22,7 @@
         "writeFile": true,
         "createDir": true,
         "readFile": true,
+        "readDir": true,
         "scope": ["$APPDATA/**"]
       },
       "notification": {

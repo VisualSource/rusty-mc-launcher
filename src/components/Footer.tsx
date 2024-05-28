@@ -16,12 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "@component/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
+import { download_queue } from "@/lib/models/download_queue";
 import { TypographyMuted } from "@component/ui/typography";
 import import_profiles from "@/lib/system/import_profiles";
 import { useCurrentQueue } from "@/hooks/useQueue";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
+
+
 
 async function import_mrpack() {
   const result = await open({
@@ -36,7 +39,22 @@ async function import_mrpack() {
     ],
   });
 
-  console.log(result);
+  if (!result || Array.isArray(result)) return;
+
+  const queue_id = crypto.randomUUID();
+  const profile_id = crypto.randomUUID();
+
+  await download_queue.insert(queue_id, true, 0, `MrPack(${result})`, null, profile_id, "Modpack", {
+    content_type: "Modpack",
+    profile: profile_id,
+    files: [{
+      sha1: "",
+      url: result,
+      version: "",
+      filename: "",
+      id: "",
+    }]
+  });
 }
 
 const Footer = () => {
