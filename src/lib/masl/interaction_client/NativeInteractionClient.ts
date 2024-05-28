@@ -584,7 +584,10 @@ export class NativeInteractionClient extends BaseInteractionClient {
       ? ScopeSet.fromString(response.scope)
       : ScopeSet.fromString(request.scope);
 
-    const accountProperties = (response.account.properties || {}) as Record<string, string>;
+    const accountProperties = (response.account.properties || {}) as Record<
+      string,
+      string
+    >;
     const uid =
       accountProperties["UID"] ||
       idTokenClaims.oid ||
@@ -689,8 +692,8 @@ export class NativeInteractionClient extends BaseInteractionClient {
       request.tokenType === AuthenticationScheme.POP
         ? Constants.SHR_NONCE_VALIDITY
         : (typeof response.expires_in === "string"
-          ? parseInt(response.expires_in, 10)
-          : response.expires_in) || 0;
+            ? parseInt(response.expires_in, 10)
+            : response.expires_in) || 0;
     const tokenExpirationSeconds = reqTimestamp + expiresIn;
     const responseScopes = this.generateScopes(response, request);
 

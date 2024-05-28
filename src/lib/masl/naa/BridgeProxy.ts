@@ -54,8 +54,9 @@ export class BridgeProxy implements IBridgeProxy {
         (response: AuthBridgeResponse) => {
           const responsePayload =
             typeof response === "string" ? response : response.data;
-          const responseEnvelope =
-            JSON.parse(responsePayload) as BridgeResponseEnvelope;
+          const responseEnvelope = JSON.parse(
+            responsePayload,
+          ) as BridgeResponseEnvelope;
           const request = BridgeProxy.bridgeRequests.find(
             (element) => element.requestId === responseEnvelope.requestId,
           );
