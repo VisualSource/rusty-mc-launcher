@@ -23,9 +23,9 @@ import SelectProfile from "../dialog/ProfileSelection";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { Button } from "@component/ui/button";
 import { Badge } from "@component/ui/badge";
-import { install } from '@system/install';
+import { install } from "@system/install";
 import { Gallery } from "./Gallery";
-import { Team } from './Team';
+import { Team } from "./Team";
 
 const ModrinthProject: React.FC = () => {
   const data = useAsyncValue() as Project;
@@ -94,23 +94,23 @@ const ModrinthProject: React.FC = () => {
               ) : null}
               {data.donation_urls
                 ? data.donation_urls.map((value) => (
-                  <a
-                    href={value.url}
-                    target="_blank"
-                    key={value.id}
-                    className="flex items-center"
-                    rel="noopener noreferrer"
-                  >
-                    <DollarSign className="pr-2" />
-                    <span className="text-blue-600 underline">
-                      {value.platform
-                        ? "Donate"
-                        : value.platform === "Other"
+                    <a
+                      href={value.url}
+                      target="_blank"
+                      key={value.id}
+                      className="flex items-center"
+                      rel="noopener noreferrer"
+                    >
+                      <DollarSign className="pr-2" />
+                      <span className="text-blue-600 underline">
+                        {value.platform
                           ? "Donate"
-                          : value.platform}
-                    </span>
-                  </a>
-                ))
+                          : value.platform === "Other"
+                            ? "Donate"
+                            : value.platform}
+                      </span>
+                    </a>
+                  ))
                 : null}
             </div>
           </section>
@@ -128,7 +128,6 @@ const ModrinthProject: React.FC = () => {
                   <Button onClick={() => install(data)}>
                     <Plus className="mr-1" /> Install
                   </Button>
-
                 </div>
               </section>
               <article className="prose prose-invert mb-4 max-w-none">

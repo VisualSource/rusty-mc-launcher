@@ -24,8 +24,6 @@ import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
 
-
-
 async function import_mrpack() {
   const result = await open({
     multiple: false,
@@ -44,17 +42,28 @@ async function import_mrpack() {
   const queue_id = crypto.randomUUID();
   const profile_id = crypto.randomUUID();
 
-  await download_queue.insert(queue_id, true, 0, `MrPack(${result})`, null, profile_id, "Modpack", {
-    content_type: "Modpack",
-    profile: profile_id,
-    files: [{
-      sha1: "",
-      url: result,
-      version: "",
-      filename: "",
-      id: "",
-    }]
-  });
+  await download_queue.insert(
+    queue_id,
+    true,
+    0,
+    `MrPack(${result})`,
+    null,
+    profile_id,
+    "Modpack",
+    {
+      content_type: "Modpack",
+      profile: profile_id,
+      files: [
+        {
+          sha1: "",
+          url: result,
+          version: "",
+          filename: "",
+          id: "",
+        },
+      ],
+    },
+  );
 }
 
 const Footer = () => {

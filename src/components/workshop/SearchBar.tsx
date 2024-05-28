@@ -57,12 +57,15 @@ const ProjectTypeList = () => {
   });
 
   return (
-    <Select onValueChange={(value) => {
-      setSearchParams((prev) => {
-        prev.set("facets", JSON.stringify([[`project_type:${value}`]]))
-        return prev;
-      });
-    }} defaultValue={projectType.data[0] ?? "mod"}>
+    <Select
+      onValueChange={(value) => {
+        setSearchParams((prev) => {
+          prev.set("facets", JSON.stringify([[`project_type:${value}`]]));
+          return prev;
+        });
+      }}
+      defaultValue={projectType.data[0] ?? "mod"}
+    >
       <SelectTrigger>
         <SelectValue />
       </SelectTrigger>
@@ -80,7 +83,6 @@ const ProjectTypeList = () => {
 };
 
 const SearchBar = () => {
-
   const categoires = useQuery({
     queryKey: ["modrinth", "tags", "categoires"],
     queryFn: () => TagsService.categoryList(),
@@ -94,12 +96,12 @@ const SearchBar = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState<string>("");
   const [query] = useDebounce(search, 500);
-  const [searchBy, setSearchBy] = useState<IndexType>(searchParams.get("index") as IndexType ?? "relevance");
-
+  const [searchBy, setSearchBy] = useState<IndexType>(
+    (searchParams.get("index") as IndexType) ?? "relevance",
+  );
 
   useEffect(() => {
     if (query.length) {
-
       searchParams.set("query", query);
 
       navigate({
@@ -117,14 +119,18 @@ const SearchBar = () => {
           onChange={(ev) => setSearch(ev.target.value)}
           placeholder="Search"
         />
-        <Select value={searchBy} onValueChange={(value) => {
-          searchParams.set("index", value);
-          navigate({
-            pathname: "/workshop/search",
-            search: searchParams.toString(),
-          });
-          setSearchBy(value as IndexType)
-        }} defaultValue="relevance">
+        <Select
+          value={searchBy}
+          onValueChange={(value) => {
+            searchParams.set("index", value);
+            navigate({
+              pathname: "/workshop/search",
+              search: searchParams.toString(),
+            });
+            setSearchBy(value as IndexType);
+          }}
+          defaultValue="relevance"
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>

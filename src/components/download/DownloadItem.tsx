@@ -23,7 +23,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 }) => {
   return (
     <div className="flex justify-between gap-2">
-      <div className="flex gap-2 items-center">
+      <div className="flex items-center gap-2">
         <Avatar className="rounded-none">
           <AvatarFallback className="rounded-lg">
             {content_type === "Client" ? (

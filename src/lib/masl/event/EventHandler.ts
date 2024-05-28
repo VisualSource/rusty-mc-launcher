@@ -145,16 +145,16 @@ export class EventHandler {
       if (!cacheValue) {
         return;
       }
-      const parsedValue = JSON.parse(cacheValue);
+      const parsedValue = JSON.parse(cacheValue) as Record<string, unknown>;
       if (
         typeof parsedValue !== "object" ||
-        !AccountEntity.isAccountEntity(parsedValue as object)
+        !AccountEntity.isAccountEntity(parsedValue)
       ) {
         return;
       }
       const accountEntity = CacheManager.toObject<AccountEntity>(
         new AccountEntity(),
-        parsedValue as object,
+        parsedValue,
       );
       const accountInfo = accountEntity.getAccountInfo();
       if (!e.oldValue && e.newValue) {

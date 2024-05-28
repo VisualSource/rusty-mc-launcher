@@ -25,20 +25,6 @@ async function init() {
   return { pca, modrith };
 }
 
-/*
-//import { ErrorBoundary } from "react-error-boundary";
-//import SelectVersionDialog from "@component/dialog/SelectVersion";
-//import SelectProfile from "@component/dialog/ProfileSelection";
-//import GameCrash from "./components/dialog/GameCrash";
-  <SelectVersionDialog />
-              <GameCrash />
-              <ErrorBoundary fallback={<></>}>
-                <Suspense fallback={<></>}>
-                  <SelectProfile />
-                </Suspense>
-              </ErrorBoundary>
-
-*/
 init()
   .then(({ pca, modrith }) => {
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

@@ -43,25 +43,25 @@ import CategorySelect from "./CategorySelector";
 import { Button } from "@/components/ui/button";
 import { profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
-import logger from "@system/logger"
+import logger from "@system/logger";
 const resolver = zodResolver(profile.schema);
 
 const handleChange = debounce(
   async (
     ev: {
       name?:
-      | "id"
-      | "name"
-      | "date_created"
-      | "version"
-      | "loader"
-      | "last_played"
-      | "icon"
-      | "loader_version"
-      | "java_args"
-      | "resolution_width"
-      | "resolution_height"
-      | "state";
+        | "id"
+        | "name"
+        | "date_created"
+        | "version"
+        | "loader"
+        | "last_played"
+        | "icon"
+        | "loader_version"
+        | "java_args"
+        | "resolution_width"
+        | "resolution_height"
+        | "state";
       type?: EventType;
       values?: MinecraftProfile;
     },

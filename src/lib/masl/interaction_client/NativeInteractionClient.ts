@@ -584,14 +584,14 @@ export class NativeInteractionClient extends BaseInteractionClient {
       ? ScopeSet.fromString(response.scope)
       : ScopeSet.fromString(request.scope);
 
-    const accountProperties = response.account.properties || {};
+    const accountProperties = (response.account.properties || {}) as Record<string, string>;
     const uid =
-      (accountProperties as never)["UID"] ||
+      accountProperties["UID"] ||
       idTokenClaims.oid ||
       idTokenClaims.sub ||
       Constants.EMPTY_STRING;
     const tid =
-      (accountProperties as never)["TenantId"] ||
+      accountProperties["TenantId"] ||
       idTokenClaims.tid ||
       Constants.EMPTY_STRING;
 
@@ -689,8 +689,8 @@ export class NativeInteractionClient extends BaseInteractionClient {
       request.tokenType === AuthenticationScheme.POP
         ? Constants.SHR_NONCE_VALIDITY
         : (typeof response.expires_in === "string"
-            ? parseInt(response.expires_in, 10)
-            : response.expires_in) || 0;
+          ? parseInt(response.expires_in, 10)
+          : response.expires_in) || 0;
     const tokenExpirationSeconds = reqTimestamp + expiresIn;
     const responseScopes = this.generateScopes(response, request);
 
@@ -782,7 +782,7 @@ export class NativeInteractionClient extends BaseInteractionClient {
   private getMATSFromResponse(response: NativeResponse): MATS | null {
     if (response.properties.MATS) {
       try {
-        return JSON.parse(response.properties.MATS) as MATS | null;
+        return JSON.parse(response.properties.MATS) as MATS;
       } catch (e) {
         this.logger.error(
           "NativeInteractionClient - Error parsing MATS telemetry, returning null instead",

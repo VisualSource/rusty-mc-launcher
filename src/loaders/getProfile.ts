@@ -3,7 +3,7 @@ import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod";
 import { profile } from "@lib/models/profiles";
 import { db } from "@system/commands";
-import logger from '@system/logger';
+import logger from "@system/logger";
 
 const getProfile: LoaderFunction = async ({ params }) => {
   if (!params.id) return new Error("Invalid profile id");

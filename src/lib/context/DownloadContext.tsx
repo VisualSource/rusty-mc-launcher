@@ -1,8 +1,4 @@
-import {
-  type UnlistenFn,
-  listen,
-  EventCallback,
-} from "@tauri-apps/api/event";
+import { type UnlistenFn, listen, EventCallback } from "@tauri-apps/api/event";
 import { createContext, useSyncExternalStore } from "react";
 import { toast } from "react-toastify";
 import AskDialog from "@/components/dialog/AskDialog";

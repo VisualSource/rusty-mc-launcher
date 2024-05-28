@@ -223,9 +223,9 @@ export class BrowserCacheManager extends CacheManager {
         // Get item, parse, validate and write key to map
         const value = this.getItem(key);
         if (value) {
-          const credObj = this.validateAndParseJson(value);
+          const credObj = this.validateAndParseJson(value) as Record<string, string>;
           if (credObj && credObj.hasOwnProperty("credentialType")) {
-            switch ((credObj as never)["credentialType"]) {
+            switch (credObj["credentialType"]) {
               case CredentialType.ID_TOKEN:
                 if (CacheHelpers.isIdTokenEntity(credObj)) {
                   this.logger.trace(
@@ -415,7 +415,7 @@ export class BrowserCacheManager extends CacheManager {
     this.logger.trace("BrowserCacheManager.getAccountKeys called");
     const accountKeys = this.getItem(StaticCacheKeys.ACCOUNT_KEYS);
     if (accountKeys) {
-      return JSON.parse(accountKeys) as string[];
+      return JSON.parse(accountKeys) as Array<string>;
     }
 
     this.logger.verbose(
@@ -1574,9 +1574,7 @@ export class BrowserCacheManager extends CacheManager {
 
     let parsedRequest: CommonAuthorizationCodeRequest;
     try {
-      parsedRequest = JSON.parse(
-        base64Decode(encodedTokenRequest),
-      ) as CommonAuthorizationCodeRequest;
+      parsedRequest = JSON.parse(base64Decode(encodedTokenRequest)) as CommonAuthorizationCodeRequest;
     } catch (e) {
       this.logger.errorPii(`Attempted to parse: ${encodedTokenRequest}`);
       this.logger.error(`Parsing cached token request threw with error: ${e}`);
@@ -1820,7 +1818,7 @@ export class BrowserCacheManager extends CacheManager {
             },
             correlationId,
           );
-        } catch (e) {}
+        } catch (e) { }
       }
 
       throw e;

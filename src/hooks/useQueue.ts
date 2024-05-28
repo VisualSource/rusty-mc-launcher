@@ -20,7 +20,10 @@ export function useCurrentQueue() {
   });
 }
 
-export function useQueue(queue: keyof typeof QueueItemState, order: "ASC" | "DESC" = "DESC") {
+export function useQueue(
+  queue: keyof typeof QueueItemState,
+  order: "ASC" | "DESC" = "DESC",
+) {
   return useQuery({
     queryKey: [KEY_DOWNLOAD_QUEUE, queue],
     refetchInterval: 60_000,
