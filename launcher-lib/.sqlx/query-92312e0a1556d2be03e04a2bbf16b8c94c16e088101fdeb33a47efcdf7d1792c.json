@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM processes",
+  "query": "SELECT * FROM processes;",
   "describe": {
     "columns": [
       {
@@ -40,5 +40,5 @@
       false
     ]
   },
-  "hash": "9dd064d3d84300fbab7a726f59958bbf9719dfaae88952f122ab888e572babfa"
+  "hash": "92312e0a1556d2be03e04a2bbf16b8c94c16e088101fdeb33a47efcdf7d1792c"
 }

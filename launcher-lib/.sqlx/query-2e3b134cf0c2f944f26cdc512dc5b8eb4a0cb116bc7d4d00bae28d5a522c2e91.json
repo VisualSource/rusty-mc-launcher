@@ -57,6 +57,11 @@
         "name": "resolution_height",
         "ordinal": 10,
         "type_info": "Text"
+      },
+      {
+        "name": "state",
+        "ordinal": 11,
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -73,7 +78,8 @@
       true,
       true,
       true,
-      true
+      true,
+      false
     ]
   },
   "hash": "2e3b134cf0c2f944f26cdc512dc5b8eb4a0cb116bc7d4d00bae28d5a522c2e91"

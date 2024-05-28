@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,?,current_timestamp,?,?,?,?,?);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "216d873f4f17be27d75c7aa6a96d81c5f1e6ff695d0b256706ccfe09e0d23ab1"
+}
