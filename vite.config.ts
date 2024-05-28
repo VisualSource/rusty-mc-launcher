@@ -3,18 +3,16 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
+
 export default defineConfig({
   clearScreen: false,
   server: {
     strictPort: true
   },
-  test: {
-
-  },
+  test: {},
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
@@ -37,5 +35,5 @@ export default defineConfig({
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     sourcemap: !!process.env.TAURI_DEBUG
   },
-  plugins: [react()],
-})
+  plugins: [react()]
+});
