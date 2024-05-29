@@ -17,6 +17,12 @@
         "asset": true,
         "assetScope": ["$APPDATA/**/*"]
       },
+      "process": {
+        "all": false,
+        "exit": true,
+        "relaunch": false,
+        "relaunchDangerousAllowSymlinkMacos": false
+      },
       "fs": {
         "exists": true,
         "writeFile": true,

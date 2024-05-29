@@ -27,7 +27,7 @@ tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-wo
 #tauri-plugin-sqlite = { git="https://github.com/lzdyes/tauri-plugin-sqlite", tag = "v0.1.1" }
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 tauri-plugin-deep-link = { git = "https://github.com/FabianLars/tauri-plugin-deep-link" }
-tauri = { version = "1.6.2", features = [ "fs-read-dir", 
+tauri = { version = "1.6.2", features = [ "process-exit", "fs-read-dir", 
     "protocol-asset", 
     "window-request-user-attention", 
     "fs-read-file", 

@@ -1,5 +1,5 @@
 import { getName, getTauriVersion, getVersion } from "@tauri-apps/api/app";
-import { Book, HardDriveDownload, CircleUserRound } from "lucide-react";
+import { Book, HardDriveDownload, CircleUserRound, Play } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { version } from "@masl/index";
 import { useMsal, useAccount } from "@azure/msal-react";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TypographyH3, TypographyH4 } from "@/components/ui/typography";
 import { Badge } from "../ui/badge";
 import { DownloadSettings } from "./DownloadSettings";
+import { LaunchSettings } from "./LaunchSettings";
 
 const Settings = () => {
   const msal = useMsal();
@@ -42,6 +43,9 @@ const Settings = () => {
         </TabsTrigger>
         <TabsTrigger value="download" className="flex w-full justify-start">
           <HardDriveDownload className="pr-2" /> Downloads
+        </TabsTrigger>
+        <TabsTrigger value="launch" className="flex w-full justify-start">
+          <Play className="pr-2" /> Launch
         </TabsTrigger>
       </TabsList>
       <TabsContent value="download" className="container col-span-10 space-y-4">
@@ -117,6 +121,9 @@ const Settings = () => {
             </table>
           </div>
         </div>
+      </TabsContent>
+      <TabsContent value="launch" className="container col-span-10">
+        <LaunchSettings />
       </TabsContent>
     </Tabs>
   );

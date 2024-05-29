@@ -14,7 +14,7 @@ import { db } from "@/lib/system/commands";
 import DownloadItem from "./DownloadItem";
 
 const Download: React.FC = () => {
-  const queueCompleted = useQueue(QueueItemState.COMPLETED);
+  const queueCompleted = useQueue(QueueItemState.COMPLETED, "ASC");
   const queueErrored = useQueue(QueueItemState.ERRORED, "ASC");
   const queuePostponed = useQueue(QueueItemState.POSTPONED);
   const queueCurrent = useCurrentQueue();
