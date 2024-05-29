@@ -19,14 +19,14 @@ See [Relase Notes](RELEASE_NOTES.md)
 
 - Installable Clients
   - [x] Vanilla
-  - [ ] Forge
+  - [x] Forge
   - [x] Fabric
-  - [ ] OptiFine
+  - [x] Quilt
 - Profile Support
-  - [x] Import From Offical Launcher
-  - [x] Export to Offical Launcher
+  - [ ] Import From Offical Launcher
+  - [ ] Export to Offical Launcher
 - Modpacks
-  - [ ] One click Install
+  - [x] One click Install
   - [ ] Auto update
 - Mods
   - [x] One Click Install

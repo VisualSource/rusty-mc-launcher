@@ -37,9 +37,9 @@ fn create_db_path(path: &std::path::Path) -> String {
 const DEFAULT_TIMEZONE_STRATEGY: TimezoneStrategy = TimezoneStrategy::UseUtc;
 pub fn init_logger() -> TauriPlugin<Wry> {
     let level = if let Some(value) = option_env!("MCL_LOG") {
-        value.parse::<LevelFilter>().unwrap_or(LevelFilter::Error)
+        value.parse::<LevelFilter>().unwrap_or(LevelFilter::Warn)
     } else {
-        LevelFilter::Info
+        LevelFilter::Warn
     };
 
     let time_format = time::format_description::parse(
@@ -152,8 +152,11 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let mut state = AppState::new(&fqdb)?;
-        state.rescue_instances_cache().await?;
-        let migrations = app_dir.join("migrations");
+
+        let migrations = app
+            .path_resolver()
+            .resolve_resource("./migrations")
+            .ok_or_else(|| LauncherError::Generic("Failed to get config directory".to_string()))?;
         state.database.run_migrator(&migrations).await?;
 
         if !state.has_setting("path.app").await? {
@@ -161,6 +164,8 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 .insert_setting("path.app", None, app_dir.to_string_lossy().to_string())
                 .await?;
         }
+
+        state.rescue_instances_cache().await?;
 
         Ok::<_, LauncherError>(state)
     })?;

@@ -1,3 +1,2 @@
 [env]
-SQLITE_DEFAULT_FOREIGN_KEYS="1"
 MCL_LOG="Debug"
