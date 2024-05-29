@@ -207,7 +207,7 @@ pub async fn install_mrpack(
         pack.dependencies.minecraft,
         loader,
         loader_version,
-        "-Xmx2048M",
+        "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
         "INSTALLED"
     )
     .execute(&app.database.0)
