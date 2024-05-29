@@ -6,15 +6,15 @@ import { useQueue, useCurrentQueue } from "@hook/useQueue";
 import { TypographyMuted } from "@component/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { queryClient } from "@/lib/config/queryClient";
+import { QueueItemState } from "@/lib/QueueItemState";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
 import { db } from "@/lib/system/commands";
 import DownloadItem from "./DownloadItem";
-import { QueueItemState } from "@/lib/QueueItemState";
 
 const Download: React.FC = () => {
-  const queueCompleted = useQueue(QueueItemState.COMPLETED, "ASC");
+  const queueCompleted = useQueue(QueueItemState.COMPLETED);
   const queueErrored = useQueue(QueueItemState.ERRORED, "ASC");
   const queuePostponed = useQueue(QueueItemState.POSTPONED);
   const queueCurrent = useCurrentQueue();
@@ -71,8 +71,8 @@ const Download: React.FC = () => {
         ) : null}
 
         {!queuePostponed.isError &&
-        !queuePostponed.isLoading &&
-        queuePostponed?.data?.length ? (
+          !queuePostponed.isLoading &&
+          queuePostponed?.data?.length ? (
           <section className="flex w-full flex-col">
             <SectionDivider
               label="Postponed"
@@ -89,8 +89,8 @@ const Download: React.FC = () => {
         ) : null}
 
         {!queueCompleted.isError &&
-        !queueCompleted.isLoading &&
-        queueCompleted?.data?.length ? (
+          !queueCompleted.isLoading &&
+          queueCompleted?.data?.length ? (
           <section className="flex w-full flex-col">
             <SectionDivider
               label="Completed"
@@ -123,8 +123,8 @@ const Download: React.FC = () => {
         ) : null}
 
         {!queueErrored.isError &&
-        !queueErrored.isLoading &&
-        queueErrored?.data?.length ? (
+          !queueErrored.isLoading &&
+          queueErrored?.data?.length ? (
           <section className="flex flex-col">
             <SectionDivider label="Errored" count={queueErrored.data.length}>
               <Button
