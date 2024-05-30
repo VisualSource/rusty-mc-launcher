@@ -40,6 +40,9 @@ pub struct Config {
     natives_directory: String,
     assets_root: String,
 
+    classpath_separator: String,
+    library_directory: String,
+
     // optinal config
     launcher_name: String,
     launcher_version: String,
@@ -91,6 +94,9 @@ impl Config {
             "quickPlaySingleplayer" => self.quick_play_single_player.as_ref(),
             "quickPlayMultiplayer" => self.quick_play_multiplayer.as_ref(),
             "quickPlayRealms" => self.quick_play_realms.as_ref(),
+
+            "classpath_separator" => Some(&self.classpath_separator),
+            "library_directory" => Some(&self.library_directory),
 
             "auth_player_name" => Some(&self.auth_player_name),
             "auth_access_token" => Some(&self.auth_access_token),
@@ -166,6 +172,8 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
         fs::create_dir_all(&game_directory).await?;
     }
 
+    let lib_direcotry = runtime_directory.join("libraries");
+
     let assets_root = runtime_directory.join("assets").normalize();
     if !assets_root.exists() || !assets_root.is_dir() {
         return Err(LauncherError::NotFound(format!(
@@ -210,6 +218,8 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
         version_type: manifest.release_type.to_owned(),
         demo: false,
         launcher_name: "mcrl".to_string(),
+        classpath_separator: ";".to_string(),
+        library_directory: lib_direcotry.to_string_lossy().to_string(),
         launcher_version: env!("CARGO_PKG_VERSION").to_string(),
         assets_index_name: manifest
             .assets

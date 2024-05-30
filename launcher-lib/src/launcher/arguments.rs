@@ -83,16 +83,41 @@ pub enum Arg {
 
 impl Arg {
     fn replace_arg(flag: &String, config: &super::Config) -> String {
-        match lazy_regex::regex_captures!(r"\$\{(?P<target>.+)\}", flag) {
-            Some((_, target)) => match config.get_replacement(target) {
-                Some(flag_value) => {
-                    let key = format!("${{{}}}", target);
-                    flag.replace(&key, flag_value)
-                }
-                None => flag.to_owned(),
-            },
-            _ => flag.to_owned(),
+        let keys = vec![
+            "user_type",
+            "clientid",
+            "assets_root",
+            "game_directory",
+            "natives_directory",
+            "assets_index_name",
+            "version_type",
+            "classpath",
+            "version_name",
+            "auth_xuid",
+            "auth_uuid",
+            "auth_access_token",
+            "auth_player_name",
+            "library_directory",
+            "classpath_separator",
+            "quickPlayRealms",
+            "quickPlayMultiplayer",
+            "quickPlaySingleplayer",
+            "quickPlayPath",
+            "launcher_name",
+            "launcher_version",
+            "resolution_width",
+            "resolution_height",
+        ];
+        let mut flag = flag.clone();
+        for key in keys {
+            let target = format!("${{{}}}", key);
+            // TOOO FIX THIS
+            if let Some(r) = config.get_replacement(key) {
+                flag = flag.replace(&target, r);
+            }
         }
+
+        flag
     }
     fn parse(&self, config: &super::Config) -> Option<String> {
         match self {

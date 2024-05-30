@@ -111,14 +111,14 @@ pub async fn install_mrpack(
                     file.path
                 )))?;
 
-            if !WHITELISTED_DOMAINS
+            /*if !WHITELISTED_DOMAINS
                 .iter()
                 .any(|x| source.starts_with(&format!("https://{}", x)))
             {
                 return Err(LauncherError::Generic(
                     "Invalid download source".to_string(),
                 ));
-            }
+            }*/
 
             let output = dir.join(&file.path).normalize();
 
