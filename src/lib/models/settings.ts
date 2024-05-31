@@ -19,7 +19,7 @@ export const settings = {
   async insert(key: string, value: string, metadata: string | null = null) {
     await db.execute({
       query: "INSERT INTO settings VALUES (?,?,?)",
-      args: [key, metadata, value]
+      args: [key, metadata, value],
     });
   },
 

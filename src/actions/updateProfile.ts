@@ -17,10 +17,13 @@ const updateProfile: ActionFunction = async ({ request }) => {
 
         let version = data.version;
         if (data.version === "latest-release") {
-          const latest_data = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").then(e => e.json()) as { latest: { release: string, snapshot: string; } }
+          const latest_data = (await fetch(
+            "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json",
+          ).then((e) => e.json())) as {
+            latest: { release: string; snapshot: string };
+          };
           version = latest_data.latest.release;
         }
-
 
         await db.execute({
           query: `

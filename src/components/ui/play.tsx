@@ -1,5 +1,5 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
-import { exit } from '@tauri-apps/api/process';
+import { exit } from "@tauri-apps/api/process";
 import { toast } from "react-toastify";
 
 import type { MinecraftProfile } from "@/lib/models/profiles";
@@ -42,7 +42,7 @@ const PlayButton: React.FC<
 
           const exit_on_start = await settings.is_true("option.exit_on_start");
           if (exit_on_start) {
-            exitTimer = setTimeout(() => exit(0), 12_000)
+            exitTimer = setTimeout(() => exit(0), 12_000);
           }
         } catch (error) {
           logger.error((error as Error).message);

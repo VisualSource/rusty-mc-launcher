@@ -76,7 +76,9 @@ export const NavbarUpper: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <button className="mr-2 flex items-center justify-center bg-white px-3 text-black">
               <span className="mr-1 text-sm">
-                {isLoading || msal.inProgress === InteractionStatus.Login ? "Loading" : account?.details.name ?? "Login"}
+                {isLoading || msal.inProgress === InteractionStatus.Login
+                  ? "Loading"
+                  : account?.details.name ?? "Login"}
               </span>
               <ChevronDown className="h-4 w-4" />
             </button>

@@ -68,10 +68,11 @@ export const uninstallItem = async (
 ) =>
   invoke("uninstall_content", { contentType: content_type, filename, profile });
 
-export const copy_profile = async (profile: string, newProfile: string) => invoke("copy_profile", {
-  profile,
-  newProfile,
-})
+export const copy_profile = async (profile: string, newProfile: string) =>
+  invoke("copy_profile", {
+    profile,
+    newProfile,
+  });
 
 export const uninstallContent = async (profile: string, id: string) => {
   const items = await db.select({
