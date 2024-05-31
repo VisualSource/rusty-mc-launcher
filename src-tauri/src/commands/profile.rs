@@ -64,3 +64,28 @@ pub async fn uninstall_content(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn copy_profile(
+    state: tauri::State<'_, AppState>,
+    profile: String,
+    new_profile: String,
+) -> Result<(), Error> {
+    let root = state.get_path("path.app").await?.join("profiles");
+
+    let a = root.join(profile);
+    let b = root.join(new_profile);
+
+    if !(a.exists() && a.is_dir()) {
+        tokio::fs::create_dir_all(&a).await?;
+    }
+    if !(b.exists() && b.is_dir()) {
+        tokio::fs::create_dir_all(&b).await?;
+    }
+
+    if let Err(err) = copy_dir::copy_dir(&a, &b) {
+        log::error!("{}", err.to_string());
+    }
+
+    Ok(())
+}

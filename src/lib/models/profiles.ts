@@ -10,7 +10,7 @@ export const profile = {
     version: z.string(),
     loader: loaderSchema,
 
-    last_played: z.string().datetime().optional().nullable().default(null),
+    last_played: z.string().optional().nullable().default(null),
     icon: z.ostring().nullable().default(null),
     loader_version: z.ostring().nullable().default(null),
 

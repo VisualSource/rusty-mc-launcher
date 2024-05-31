@@ -2,6 +2,7 @@ import {
   AuthenticatedTemplate,
   useAccount,
   UnauthenticatedTemplate,
+  useMsal,
 } from "@azure/msal-react";
 import {
   Minus,
@@ -29,11 +30,13 @@ import { Notifications } from "./Notifications";
 import { useAvatar } from "@/hooks/useAvatar";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
+import { InteractionStatus } from "@/lib/masl";
 
 export const NavbarUpper: React.FC = () => {
+  const msal = useMsal();
   const isMaximized = useIsMaximized();
   const msAccount = useAccount();
-  const { account, logout, login } = useUser();
+  const { account, isLoading, logout, login } = useUser();
   const avatar = useAvatar();
   return (
     <section
@@ -73,7 +76,7 @@ export const NavbarUpper: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <button className="mr-2 flex items-center justify-center bg-white px-3 text-black">
               <span className="mr-1 text-sm">
-                {account?.details.name ?? "Login"}
+                {isLoading || msal.inProgress === InteractionStatus.Login ? "Loading" : account?.details.name ?? "Login"}
               </span>
               <ChevronDown className="h-4 w-4" />
             </button>

@@ -14,6 +14,14 @@ const updateProfile: ActionFunction = async ({ request }) => {
     case "POST": {
       try {
         const queue_id = crypto.randomUUID();
+
+        let version = data.version;
+        if (data.version === "latest-release") {
+          const latest_data = await fetch("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").then(e => e.json()) as { latest: { release: string, snapshot: string; } }
+          version = latest_data.latest.release;
+        }
+
+
         await db.execute({
           query: `
           BEGIN TRANSACTION;
@@ -29,7 +37,7 @@ const updateProfile: ActionFunction = async ({ request }) => {
             data.icon ?? null,
             data.date_created,
             data.last_played ?? null,
-            data.version,
+            version,
             data.loader,
             data.loader_version ?? null,
             data.java_args ?? null,
@@ -38,13 +46,13 @@ const updateProfile: ActionFunction = async ({ request }) => {
             "INSTALLING",
             queue_id,
             1,
-            `Minecraft ${data.version} ${data.loader}`,
+            `Minecraft ${version} ${data.loader}`,
             null,
             data.id,
             new Date().toISOString(),
             "Client",
             JSON.stringify({
-              version: data.version,
+              version: version,
               loader: data.loader.replace(/^\w/, data.loader[0].toUpperCase()),
               loader_version: data.loader_version,
             }),

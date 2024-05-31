@@ -86,7 +86,7 @@ const Footer = () => {
               <Link to="/create">Create Profile</Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={import_profiles}>
-              Import Profile
+              Import Profiles
             </DropdownMenuItem>
             <DropdownMenuItem onClick={import_mrpack}>
               Import Mrpack

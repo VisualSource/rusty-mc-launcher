@@ -13,7 +13,6 @@ const useCategoryGroup = (category: string) => {
         schema: profile.schema,
       }),
   });
-
   if (error) throw error;
   return data;
 };

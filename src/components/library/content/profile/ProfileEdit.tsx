@@ -30,38 +30,39 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { db, deleteProfile, showInFolder } from "@system/commands";
+import { copy_profile, db, deleteProfile, showInFolder } from "@system/commands";
 import { ProfileVersionSelector } from "./ProfileVersionSelector";
 import type { MinecraftProfile } from "@lib/models/profiles";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { queryClient } from "@lib/config/queryClient";
-import { categories } from "@/lib/models/categories";
+import { UNCATEGORIZEDP_GUID, categories } from "@/lib/models/categories";
 import { settings } from "@/lib/models/settings";
 import CategorySelect from "./CategorySelector";
 import { Button } from "@/components/ui/button";
 import { profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
 import logger from "@system/logger";
+import { toast } from "react-toastify";
 const resolver = zodResolver(profile.schema);
 
 const handleChange = debounce(
   async (
     ev: {
       name?:
-        | "id"
-        | "name"
-        | "date_created"
-        | "version"
-        | "loader"
-        | "last_played"
-        | "icon"
-        | "loader_version"
-        | "java_args"
-        | "resolution_width"
-        | "resolution_height"
-        | "state";
+      | "id"
+      | "name"
+      | "date_created"
+      | "version"
+      | "loader"
+      | "last_played"
+      | "icon"
+      | "loader_version"
+      | "java_args"
+      | "resolution_width"
+      | "resolution_height"
+      | "state";
       type?: EventType;
       values?: MinecraftProfile;
     },
@@ -278,7 +279,36 @@ const ProfileEdit: React.FC = () => {
                   Creates a copy of this profile.
                 </FormDescription>
               </div>
-              <Button type="button" variant="secondary">
+              <Button onClick={async () => {
+                try {
+                  const id = crypto.randomUUID();
+                  await copy_profile(data.id, id);
+
+                  await db.execute({
+                    query: "INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                    args: [
+                      id,
+                      data.name + " :Duplicate",
+                      data.icon,
+                      data.date_created,
+                      data.last_played,
+                      data.version,
+                      data.loader,
+                      data.loader_version,
+                      data.java_args,
+                      data.resolution_width,
+                      data.resolution_height,
+                      data.state
+                    ]
+                  });
+
+                  await queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID] })
+                  toast.success("Copyed profile");
+                } catch (error) {
+                  console.error(error);
+                  toast.error("Failed to copy", { data: { error: (error as Error).message } });
+                }
+              }} type="button" variant="secondary">
                 <Copy className="mr-2 h-5 w-5" />
                 Duplicate
               </Button>

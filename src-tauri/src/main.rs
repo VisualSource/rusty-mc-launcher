@@ -27,6 +27,7 @@ fn main() {
             commands::game::stop,
             commands::show_in_folder,
             commands::profile::delete_profile,
+            commands::profile::copy_profile,
             commands::profile::create_profile,
             commands::profile::uninstall_content,
         ])

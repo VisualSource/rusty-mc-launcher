@@ -50,6 +50,7 @@ const CheckBoxItem: React.FC<{ label: string; id: string; icon?: string }> = ({
 };
 
 const ProjectTypeList = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const projectType = useSuspenseQuery({
     queryKey: ["modrinth", "tags", "project_type"],
@@ -62,6 +63,10 @@ const ProjectTypeList = () => {
         setSearchParams((prev) => {
           prev.set("facets", JSON.stringify([[`project_type:${value}`]]));
           return prev;
+        });
+        navigate({
+          pathname: "/workshop/search",
+          search: searchParams.toString(),
         });
       }}
       defaultValue={projectType.data[0] ?? "mod"}
