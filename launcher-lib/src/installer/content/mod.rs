@@ -165,7 +165,7 @@ pub async fn install_content(
                 if !from_path {
                     tokio::fs::remove_file(&file_path).await?;
                 }
-                tokio::fs::remove_dir_all(&profile_direcotry).await?;
+                //tokio::fs::remove_dir_all(&profile_direcotry).await?;
                 return Err(err);
             }
 

@@ -16,11 +16,12 @@ use futures::StreamExt;
 use serde::Deserialize;
 use tokio::fs::{self, File};
 
-const WHITELISTED_DOMAINS: [&str; 4] = [
+const WHITELISTED_DOMAINS: [&str; 5] = [
     "cdn.modrinth.com",
     "github.com",
     "raw.githubusercontent.com",
     "gitlab.com",
+    "mediafilez.forgecdn.net",
 ];
 
 #[derive(Debug, Deserialize, Clone)]
@@ -58,6 +59,7 @@ struct Dependencies {
 #[serde(rename_all = "camelCase")]
 struct MrPack {
     format_version: usize,
+    icon: Option<String>,
     //version_id: String,
     name: String,
     files: Vec<PackFile>,
@@ -99,7 +101,7 @@ pub async fn install_mrpack(
         .collect::<Vec<PackFile>>();
 
     let data_files = files.clone();
-
+    event!(&event_channel, "group", { "progress": 0, "max_progress": data_files.len(), "message": "Downloading files" });
     let downloads = futures::stream::iter(files.into_iter().map(|file| {
         let dir = current_profile_dir.clone();
         async move {
@@ -111,18 +113,20 @@ pub async fn install_mrpack(
                     file.path
                 )))?;
 
-            /*if !WHITELISTED_DOMAINS
+            if !WHITELISTED_DOMAINS
                 .iter()
                 .any(|x| source.starts_with(&format!("https://{}", x)))
             {
                 return Err(LauncherError::Generic(
                     "Invalid download source".to_string(),
                 ));
-            }*/
+            }
 
             let output = dir.join(&file.path).normalize();
 
             utils::download_file(source, &output, None, Some(&file.hashes.sha1)).await?;
+
+            event!(&event_channel,"update",{ "progress": 1 });
             Ok(())
         }
     }))
@@ -140,8 +144,7 @@ pub async fn install_mrpack(
             "Failed to download libraries".to_string(),
         ));
     }
-
-    event!(&event_channel,"update",{ "progress": 1 });
+    event!(&event_channel, "group", { "progress": 0, "max_progress": 6, "message": "Finalizing" });
 
     compression::extract_dir(
         &mut archive,
@@ -186,8 +189,13 @@ pub async fn install_mrpack(
        "loader_version":loader_version.clone().unwrap_or(String::new())
     })
     .to_string();
+
     let queue_id = Uuid::new_v4().to_string();
+
+    let icon = icon.or(pack.icon);
+
     let cicon = icon.clone();
+
     sqlx::query!("INSERT INTO download_queue ('id','display','icon','install_order','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
         queue_id,
         1,
@@ -198,6 +206,7 @@ pub async fn install_mrpack(
         "Client",
         metadata
     ).execute(&app.database.0).await?;
+    event!(&event_channel,"update",{ "progress": 1 });
     let loader = modloader.to_string().to_lowercase();
     sqlx::query!(
         "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,?,current_timestamp,?,?,?,?,?);",
@@ -212,7 +221,7 @@ pub async fn install_mrpack(
     )
     .execute(&app.database.0)
     .await?;
-
+    event!(&event_channel,"update",{ "progress": 1 });
     for file in data_files {
         let profile = profile_id.clone();
         let path = Path::new(&file.path);
@@ -249,6 +258,6 @@ pub async fn install_mrpack(
         .execute(&app.database.0)
         .await?;
     }
-
+    event!(&event_channel,"update",{ "progress": 1 });
     Ok(())
 }

@@ -2,6 +2,7 @@ use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::path::Path;
+use std::time::Duration;
 use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
 
@@ -23,7 +24,7 @@ lazy_static::lazy_static! {
         .expect("Request client construct failed.")
     };
 }
-const FETCH_ATTEMPTS: usize = 3;
+const FETCH_ATTEMPTS: usize = 5;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChannelMessage {
@@ -117,6 +118,16 @@ pub async fn download_file(
     }
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
+        if attempt > 1 {
+            info!(
+                "Fetch Attempt {} | Duration {}ms | Task {}",
+                attempt,
+                15_000 * attempt,
+                source_url
+            );
+            tokio::time::sleep(Duration::from_millis(15_000 * (attempt as u64))).await;
+        }
+
         let mut req = REQUEST_CLIENT.request(reqwest::Method::GET, source_url);
 
         if let Some(auth_token) = auth {

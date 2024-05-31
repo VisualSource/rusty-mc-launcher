@@ -1,5 +1,6 @@
 pub mod arguments;
 use self::arguments::Arguments;
+use crate::manifest::Library;
 use crate::state::AppState;
 use crate::{errors::LauncherError, manifest::Manifest};
 use log::debug;
@@ -218,7 +219,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
         version_type: manifest.release_type.to_owned(),
         demo: false,
         launcher_name: "mcrl".to_string(),
-        classpath_separator: ";".to_string(),
+        classpath_separator: Library::get_class_sep().to_string(),
         library_directory: lib_direcotry.to_string_lossy().to_string(),
         launcher_version: env!("CARGO_PKG_VERSION").to_string(),
         assets_index_name: manifest

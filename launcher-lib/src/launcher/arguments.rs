@@ -23,6 +23,32 @@ pub enum RuleCondition {
     },
 }
 
+const REPLACEMENT_KEYS: [&str; 23] = [
+    "user_type",
+    "clientid",
+    "assets_root",
+    "game_directory",
+    "natives_directory",
+    "assets_index_name",
+    "version_type",
+    "classpath",
+    "version_name",
+    "auth_xuid",
+    "auth_uuid",
+    "auth_access_token",
+    "auth_player_name",
+    "library_directory",
+    "classpath_separator",
+    "quickPlayRealms",
+    "quickPlayMultiplayer",
+    "quickPlaySingleplayer",
+    "quickPlayPath",
+    "launcher_name",
+    "launcher_version",
+    "resolution_width",
+    "resolution_height",
+];
+
 impl RuleCondition {
     pub fn parse(&self, config: Option<&super::Config>) -> Option<bool> {
         match self {
@@ -82,34 +108,9 @@ pub enum Arg {
 }
 
 impl Arg {
-    fn replace_arg(flag: &String, config: &super::Config) -> String {
-        let keys = vec![
-            "user_type",
-            "clientid",
-            "assets_root",
-            "game_directory",
-            "natives_directory",
-            "assets_index_name",
-            "version_type",
-            "classpath",
-            "version_name",
-            "auth_xuid",
-            "auth_uuid",
-            "auth_access_token",
-            "auth_player_name",
-            "library_directory",
-            "classpath_separator",
-            "quickPlayRealms",
-            "quickPlayMultiplayer",
-            "quickPlaySingleplayer",
-            "quickPlayPath",
-            "launcher_name",
-            "launcher_version",
-            "resolution_width",
-            "resolution_height",
-        ];
-        let mut flag = flag.clone();
-        for key in keys {
+    fn replace_arg(flag: &str, config: &super::Config) -> String {
+        let mut flag = flag.to_string();
+        for key in REPLACEMENT_KEYS {
             let target = format!("${{{}}}", key);
             // TOOO FIX THIS
             if let Some(r) = config.get_replacement(key) {
