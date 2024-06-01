@@ -18,12 +18,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TagsService } from "@lib/api/modrinth/services.gen";
+import type { IndexType } from "@/lib/api/modrinth";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TypographyH3 } from "../ui/typography";
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { IndexType } from "@/lib/api/modrinth";
 
 const CheckBoxItem: React.FC<{ label: string; id: string; icon?: string }> = ({
   label,

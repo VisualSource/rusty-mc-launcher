@@ -1,4 +1,4 @@
-import { type UseFormReturn, useFormContext } from "react-hook-form";
+import { type UseFormReturn } from "react-hook-form";
 import { useState } from "react";
 
 import {
@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { VersionSelector } from "@/components/ui/VersionSelector";
+import { LoaderVersionSelector } from "./LoaderVersionSelector";
 import { MinecraftProfile } from "@/lib/models/profiles";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { LoaderVersionSelector } from "./LoaderVersionSelector";
 
 export const ProfileVersionSelector: React.FC<{
   form: UseFormReturn<MinecraftProfile, any, undefined>;
@@ -71,8 +71,9 @@ export const ProfileVersionSelector: React.FC<{
                 <SelectContent>
                   <SelectItem value="vanilla">Vanilla</SelectItem>
                   <SelectItem value="fabric">Fabric</SelectItem>
-                  <SelectItem value="forge">Forge</SelectItem>
                   <SelectItem value="quilt">Quilt</SelectItem>
+                  <SelectItem value="forge">Forge</SelectItem>
+                  <SelectItem value="neoforge">NeoForge</SelectItem>
                 </SelectContent>
               </Select>
             </FormControl>

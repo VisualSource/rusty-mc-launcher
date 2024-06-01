@@ -1,31 +1,13 @@
 import type { UseFormReturn } from "react-hook-form";
-
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { MinecraftProfile } from "@/lib/models/profiles";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandLoading,
-} from "@/components/ui/command";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList, CommandLoading, } from "@/components/ui/command";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form";
+import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover";
+import { MinecraftProfile } from "@/lib/models/profiles";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type FabricMetadata = {
@@ -42,8 +24,8 @@ export const LoaderVersionSelector: React.FC<{
 }> = ({ stable, form }) => {
   const [open, setOpen] = useState(false);
   const [loader, version] = form.watch(["loader", "version"]);
-  const { data, isError, isLoading, error } = useQuery({
-    enabled: loader !== "vanilla",
+  const { data, isError, isLoading } = useQuery({
+    enabled: loader !== "vanilla" && !!version,
     queryKey: ["MODLOADER_VERSION", loader, version, stable],
     queryFn: async () => {
       switch (loader) {
@@ -55,8 +37,7 @@ export const LoaderVersionSelector: React.FC<{
           if (!stable) {
             return data.map((item) => item.version);
           }
-
-          return data.filter((item) => item.stable).map((item) => item.version);
+          return data.filter((item) => item.stable).map((item) => item.version)
         }
         case "quilt": {
           const response = await fetch(
@@ -90,17 +71,39 @@ export const LoaderVersionSelector: React.FC<{
 
           return output;
         }
+        case "neoforge": {
+          const response = await fetch("https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml");
+          const data = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data, "application/xml");
+          const errorNode = doc.querySelector("parseerror");
+          if (errorNode) return [];
 
+          const [_, minor, patch] = version.split(".");
+
+          let output = [];
+          let target = `${minor}.${patch.length ? patch : "0"}`;
+          for (const item of doc.querySelectorAll("version")) {
+            if (item.textContent?.startsWith(target)) {
+              output.push(item.textContent);
+            }
+          }
+          return output.toReversed();
+        }
         default:
           throw new Error("There are no loader version for vanilla");
       }
     },
   });
 
+  useEffect(() => {
+    form.resetField("loader_version");
+  }, [loader, version, form]);
+
   if (loader === "vanilla") return null;
   return (
     <FormField
-      defaultValue={data?.[0]}
+      defaultValue={data?.at(0)}
       control={form.control}
       name="loader_version"
       rules={{
@@ -127,11 +130,10 @@ export const LoaderVersionSelector: React.FC<{
               <PopoverContent className="w-[200px] p-0">
                 <Command>
                   <CommandInput placeholder="Search Versions..." />
-                  {isLoading ? (
-                    <CommandLoading>Loading versions...</CommandLoading>
-                  ) : null}
-                  <CommandEmpty>No versions found.</CommandEmpty>
                   <CommandList className="scrollbar">
+                    {isLoading ? (
+                      <CommandLoading>Loading versions...</CommandLoading>
+                    ) : <CommandEmpty>No versions found.</CommandEmpty>}
                     {data?.map((version) => (
                       <CommandItem
                         key={version}
