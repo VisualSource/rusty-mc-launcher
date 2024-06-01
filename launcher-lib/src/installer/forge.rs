@@ -192,6 +192,58 @@ impl InstallProfile {
     }
 }
 
+pub async fn get_latest_neoforge_version(minecraft_version: &str) -> Result<String, LauncherError> {
+    let (_, major, _, minor) =
+        lazy_regex::regex_captures!(r"\d\.(?<major>\d+)(\.(?<minor>\d+))?", minecraft_version)
+            .ok_or_else(|| LauncherError::NotFound("Failed to find captures".to_string()))?;
+
+    let minor = if minor.is_empty() { "0" } else { minor };
+
+    let response = utils::REQUEST_CLIENT
+        .get("https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")
+        .send()
+        .await?;
+
+    let data = response.text().await?;
+
+    let regex = regex::Regex::new(&format!(
+        r"<version>(?<loader_version>{}\.{}\.(?<value>\d+)(-beta)?)</version>",
+        major, minor
+    ))?;
+    let caps = regex
+        .captures_iter(&data)
+        .flat_map(|cap| {
+            let rev = if let Some(value) = cap.name("value") {
+                value
+                    .as_str()
+                    .parse::<u64>()
+                    .map_err(|e| LauncherError::Generic(e.to_string()))
+            } else {
+                Err(LauncherError::NotFound(
+                    "value capture not found".to_string(),
+                ))
+            }?;
+            let v = if let Some(value) = cap.name("loader_version") {
+                Ok(value.as_str().to_string())
+            } else {
+                Err(LauncherError::NotFound(
+                    "Capture loader_version not found".to_string(),
+                ))
+            }?;
+
+            Ok::<(u64, String), LauncherError>((rev, v))
+        })
+        .max_by_key(|x| x.0);
+
+    if let Some(value) = caps {
+        Ok(value.1)
+    } else {
+        Err(LauncherError::NotFound(
+            "No valid loader version could be found".to_string(),
+        ))
+    }
+}
+
 pub async fn get_latest_version(minecraft_version: &str) -> Result<String, LauncherError> {
     let regex = regex::Regex::new(&format!(
         r"<version>{minecraft_version}-(?<loader_version>\d+\.\d+\.\d+)<\/version>"
@@ -215,38 +267,57 @@ pub async fn get_latest_version(minecraft_version: &str) -> Result<String, Launc
     Ok(loader_version.as_str().to_string())
 }
 
+pub async fn get_installer_download_url(
+    minecraft: &str,
+    loader_version: Option<String>,
+    neoforge: bool,
+) -> Result<(String, String), LauncherError> {
+    let loader_version = if let Some(v) = loader_version {
+        v
+    } else {
+        match neoforge {
+            true => get_latest_neoforge_version(minecraft).await,
+            false => get_latest_version(minecraft).await,
+        }?
+    };
+
+    let url = match neoforge {
+        true => {
+            format!(" https://maven.neoforged.net/releases/net/neoforged/neoforge/{0}/neoforge-{0}-installer.jar",loader_version)
+        }
+        false => {
+            let forge_version = format!("{}-{}", minecraft, loader_version);
+            format!(
+                "https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar",
+                forge_version
+            )
+        }
+    };
+
+    Ok((loader_version, url))
+}
+
 pub async fn run_installer(
     event_channel: &mpsc::Sender<ChannelMessage>,
     version: &str,
-    loader_verison: Option<String>,
+    loader_version: Option<String>,
     runtime_directory: &Path,
     java: &str,
+    neoforge: bool,
 ) -> Result<String, LauncherError> {
     event!(&event_channel,"update",{ "message":"Fetching mod manifest" });
-    let loader_version = if let Some(loader) = loader_verison {
-        loader
-    } else {
-        get_latest_version(version).await?
-    };
-
-    let forge_version = format!("{}-{}", version, loader_version);
-
-    info!("Using forge version {}", forge_version);
-
-    let forge_download_url = format!(
-        "https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar",
-        forge_version
-    );
+    let (loader_version, download_url) =
+        get_installer_download_url(version, loader_version, neoforge).await?;
 
     let temp = std::env::temp_dir();
-    let installer_path = temp.join(format!("installer-forge-{}.jar", forge_version));
+    let installer_path = temp.join(format!("installer-{}.jar", loader_version));
     // archive life time
     let (profile, modded_manifest_path) = {
         if installer_path.exists() && installer_path.is_file() {
             fs::remove_file(&installer_path).await?;
         }
 
-        utils::download_file(&forge_download_url, &installer_path, None, None).await?;
+        utils::download_file(&download_url, &installer_path, None, None).await?;
 
         info!("Extracting and parseing install_profile");
         let mut archive = open_archive(File::open(&installer_path).await?).await?;
@@ -353,6 +424,16 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_get_neoforge_version() {
+        init();
+
+        let r = get_latest_neoforge_version("1.20.6")
+            .await
+            .expect("Failed to get");
+        println!("{}", r);
+    }
+
+    #[tokio::test]
     async fn test_forge_install() {
         init();
 
@@ -362,7 +443,7 @@ mod tests {
             .join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\java.exe")
             .to_string_lossy()
             .to_string();
-        run_installer(&tx, "1.20.6", None, &runtime_dir, &java)
+        run_installer(&tx, "1.20.6", None, &runtime_dir, &java, false)
             .await
             .expect("Failed to install forge");
 

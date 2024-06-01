@@ -97,6 +97,17 @@ pub async fn install_minecraft(
             Loader::Vanilla => {
                 return Err(LauncherError::Generic("Should not be here".to_string()))
             }
+            Loader::Neoforge => {
+                forge::run_installer(
+                    event_channel,
+                    &config.version,
+                    config.loader_version,
+                    &runtime_directory,
+                    &java_exe,
+                    true,
+                )
+                .await?
+            }
             Loader::Forge => {
                 forge::run_installer(
                     event_channel,
@@ -104,6 +115,7 @@ pub async fn install_minecraft(
                     config.loader_version,
                     &runtime_directory,
                     &java_exe,
+                    false,
                 )
                 .await?
             }

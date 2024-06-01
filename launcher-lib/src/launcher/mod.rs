@@ -1,4 +1,5 @@
 pub mod arguments;
+
 use self::arguments::Arguments;
 use crate::manifest::Library;
 use crate::state::AppState;
@@ -139,6 +140,14 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
 
     let version_id = match profile.loader {
         crate::profile::Loader::Vanilla => profile.version.to_owned(),
+        crate::profile::Loader::Neoforge => format!(
+            "neoforge-{}",
+            profile
+                .loader_version
+                .ok_or_else(|| LauncherError::NotFound(
+                    "No loader version was found".to_string()
+                ))?
+        ),
         crate::profile::Loader::Forge => format!(
             "{}-forge-{}",
             profile.version,

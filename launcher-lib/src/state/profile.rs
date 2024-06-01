@@ -11,6 +11,7 @@ pub enum Loader {
     Forge,
     Fabric,
     Quilt,
+    Neoforge,
 }
 
 impl Display for Loader {
@@ -23,6 +24,7 @@ impl Display for Loader {
                 Loader::Forge => "Forge",
                 Loader::Fabric => "Fabric",
                 Loader::Quilt => "Quilt",
+                Loader::Neoforge => "Neoforge",
             }
         )
     }
@@ -40,6 +42,7 @@ impl From<String> for Loader {
             "quilt" => Self::Quilt,
             "forge" => Self::Forge,
             "fabric" => Self::Fabric,
+            "neoforge" => Self::Neoforge,
             _ => Self::Vanilla,
         }
     }
