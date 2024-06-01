@@ -168,10 +168,8 @@ pub async fn install_mrpack(
         (Loader::Forge, Some(forge))
     } else if let Some(quilt) = pack.dependencies.quilt_loader {
         (Loader::Quilt, Some(quilt))
-    } else if pack.dependencies.neoforge.is_some() {
-        return Err(LauncherError::Generic(
-            "Neoforge is not supported".to_string(),
-        ));
+    } else if let Some(v) = pack.dependencies.neoforge {
+        (Loader::Neoforge, Some(v))
     } else {
         (Loader::Vanilla, None)
     };
