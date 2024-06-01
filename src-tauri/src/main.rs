@@ -29,7 +29,7 @@ fn main() {
             commands::profile::delete_profile,
             commands::profile::copy_profile,
             commands::profile::create_profile,
-            commands::profile::uninstall_content,
+            commands::profile::uninstall_content
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

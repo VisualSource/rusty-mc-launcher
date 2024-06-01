@@ -1,20 +1,24 @@
 
+
 Todo:
-  ✔ Clean up for process table process @done(24-05-26 15:05)
-  ✔ Loader version selector @done(24-05-26 16:39)
-  ✔ Mod/Shader/Resource/Modpack content install @started(24-05-27 12:42) @done(24-05-28 02:04) @lasted(13h22m30s)
-  ✔ Mrpack install/import @started(24-05-28 11:40) @done(24-05-28 13:23) @lasted(1h43m34s)
-  ✔ Vanilla launcher profile import @started(24-05-31 14:28) @done(24-05-31 15:47) @lasted(1h19m53s)
-  ✔ Content viewer in profile @started(24-05-28 13:41) @done(24-05-28 15:48) @lasted(2h7m38s)
-  ✔ Screen shot viewer @started(24-05-28 15:53) @done(24-05-28 16:22) @lasted(29m57s)
-  ✔ Duplicate Profile @started(24-05-31 16:06) @done(24-05-31 16:59) @lasted(53m53s)
-  ✔ Fix workshop search @started(24-05-31 17:07) @done(24-05-31 17:07) @lasted(12s)
-  ✔ login indicator @started(24-05-31 14:28) @done(24-05-31 14:28) @lasted(16s)
+  ☐ content version update check
+  ☐ latest version
+  ☐ default icons
+  ☐ Validate Content
+  ☐ Modrinth login
+  ☐ Working neoforge
+  ☐ log viewer
 
 
-Postpond fetaures
-[] content version update check
-[] latest version
-[] default icons
-☐ Validate Content
-☐ Modrinth login
+
+Archive:
+  ✔ Clean up for process table process @done(24-05-26 15:05) @project(Todo)
+  ✔ Loader version selector @done(24-05-26 16:39) @project(Todo)
+  ✔ Mod/Shader/Resource/Modpack content install @started(24-05-27 12:42) @done(24-05-28 02:04) @lasted(13h22m30s) @project(Todo)
+  ✔ Mrpack install/import @started(24-05-28 11:40) @done(24-05-28 13:23) @lasted(1h43m34s) @project(Todo)
+  ✔ Vanilla launcher profile import @started(24-05-31 14:28) @done(24-05-31 15:47) @lasted(1h19m53s) @project(Todo)
+  ✔ Content viewer in profile @started(24-05-28 13:41) @done(24-05-28 15:48) @lasted(2h7m38s) @project(Todo)
+  ✔ Screen shot viewer @started(24-05-28 15:53) @done(24-05-28 16:22) @lasted(29m57s) @project(Todo)
+  ✔ Duplicate Profile @started(24-05-31 16:06) @done(24-05-31 16:59) @lasted(53m53s) @project(Todo)
+  ✔ Fix workshop search @started(24-05-31 17:07) @done(24-05-31 17:07) @lasted(12s) @project(Todo)
+  ✔ login indicator @started(24-05-31 14:28) @done(24-05-31 14:28) @lasted(16s) @project(Todo)

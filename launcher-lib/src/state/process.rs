@@ -63,6 +63,9 @@ impl Instances {
         args: Vec<String>,
     ) -> Result<Arc<RwLock<MinecraftInstance>>, LauncherError> {
         let uuid = Uuid::new_v4().to_string();
+
+        log::debug!("{exe} {}", args.join(" "));
+
         let proc = Command::new(exe)
             .current_dir(game_direcotry)
             .args(args)
@@ -89,10 +92,10 @@ impl Instances {
     pub async fn keys(&self) -> Vec<String> {
         self.0.read().await.keys().cloned().collect()
     }
-
     pub async fn exit_status(&self, uuid: &str) -> Result<Option<i32>, LauncherError> {
         if let Some(child) = self.get(uuid).await {
             let child = child.write().await;
+
             let status = child.current_child.write().await.try_wait().await?;
             Ok(status)
         } else {
