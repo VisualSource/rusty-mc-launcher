@@ -98,6 +98,7 @@ export const LoaderVersionSelector: React.FC<{
 
   useEffect(() => {
     form.resetField("loader_version");
+    if (loader === "vanilla") form.setValue("loader_version", null);
   }, [loader, version, form]);
 
   if (loader === "vanilla") return null;

@@ -1,13 +1,9 @@
 import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
+import { useNavigate, useOutletContext, } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EventType, useForm } from "react-hook-form";
-import {
-  NavigateFunction,
-  useNavigate,
-  useOutletContext,
-} from "react-router-dom";
+import { ask } from "@tauri-apps/api/dialog";
 import { join } from "@tauri-apps/api/path";
-import debounce from "lodash.debounce";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
 import {
@@ -36,6 +32,7 @@ import {
   db,
   deleteProfile,
   showInFolder,
+  uninstallContent,
 } from "@system/commands";
 import { UNCATEGORIZEDP_GUID, categories } from "@/lib/models/categories";
 import { ProfileVersionSelector } from "./ProfileVersionSelector";
@@ -51,53 +48,16 @@ import { Button } from "@/components/ui/button";
 import { profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
 import logger from "@system/logger";
+import { useRef } from "react";
+
+import { workshop_content } from "@/lib/models/content";
+import { download_queue } from "@/lib/models/download_queue";
 
 const resolver = zodResolver(profile.schema);
 
-const handleChange = debounce(
-  async (
-    ev: {
-      name?:
-      | "id"
-      | "name"
-      | "date_created"
-      | "version"
-      | "loader"
-      | "last_played"
-      | "icon"
-      | "loader_version"
-      | "java_args"
-      | "resolution_width"
-      | "resolution_height"
-      | "state";
-      type?: EventType;
-      values?: MinecraftProfile;
-    },
-    navigate: NavigateFunction,
-  ) => {
-    let value = ev.values![ev.name!]?.toString() ?? null;
-    let id = ev.values!["id"];
-    if (value) {
-      value = "'" + value + "'";
-    } else {
-      value = "NULL";
-    }
-
-    await db.execute({
-      query: `UPDATE profiles SET ${ev.name}=${value} WHERE id = ?`,
-      args: [id],
-    });
-    await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, id] });
-
-    navigate({
-      pathname: `/profile/${id}/edit`,
-    });
-  },
-  1000,
-);
-
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
+  const debounceMap = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const data = useOutletContext() as MinecraftProfile;
   const form = useForm<MinecraftProfile>({
     mode: "onChange",
@@ -105,7 +65,43 @@ const ProfileEdit: React.FC = () => {
     defaultValues: data,
   });
 
-  form.watch((_, ev) => handleChange(ev, navigate));
+  form.watch((formData, ev) => {
+    if (!ev.name) return;
+    const value = debounceMap.current.get(ev.name);
+    if (value) clearTimeout(value);
+    const timer = setTimeout(async () => {
+      const fieldValue = (ev as { values: Record<string, unknown> }).values[ev.name!] ?? null;
+      const id = (ev as { values: Record<string, unknown> }).values.id;
+
+      if (ev.name === "loader") {
+        const deleteMods = await ask("Changing the loader may cause installed content to not work. Would you like to delete all installed mods?", { title: "Loader Switch", type: "warning" });
+        if (deleteMods) {
+
+          const mods = await db.select({ query: "SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?", args: [data.id], schema: workshop_content.schema })
+
+          await Promise.allSettled(mods.map((e) => uninstallContent(data.id, e.id)));
+        }
+
+        if (formData.version && formData.loader) await download_queue.insert(crypto.randomUUID(), true, 0, `${formData.loader} ${formData.loader !== "vanilla" ? formData.loader_version : ""}`, formData.icon ?? null, data.id, "Client", {
+          version: formData.version,
+          loader: formData.loader?.replace(/^\w/, formData.loader[0].toUpperCase()),
+          loader_version: data.loader_version,
+        });
+
+      }
+
+      await db.execute({
+        query: `UPDATE profiles SET ${ev.name} = ? WHERE id = ?`,
+        args: [fieldValue, id],
+      });
+      await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, data.id] });
+      navigate({
+        pathname: `/profile/${data.id}/edit`,
+      });
+
+    }, 1000);
+    debounceMap.current.set(ev.name, timer);
+  });
 
   return (
     <ScrollArea>
