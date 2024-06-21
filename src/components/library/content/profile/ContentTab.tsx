@@ -18,7 +18,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { VersionsService, ProjectsService, VersionFilesService } from "@lib/api/modrinth/services.gen";
+import {
+  VersionsService,
+  ProjectsService,
+  VersionFilesService,
+} from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
 import { type ContentType, workshop_content } from "@/lib/models/content";
@@ -67,49 +71,65 @@ export const ContentTab: React.FC<{
         schema: workshop_content.schema,
       });
 
-      const { unknownContent, hashesContent, idsContent } = data.reduce((prev, cur) => {
-        if (cur.id.length) {
-          prev.idsContent.push(cur);
-        } else if (cur.sha1) {
-          prev.hashesContent.push(cur);
-        } else {
-          prev.unknownContent.push(cur);
-        }
-        return prev;
-      }, { unknownContent: [], hashesContent: [], idsContent: [] } as { unknownContent: typeof data, hashesContent: typeof data, idsContent: typeof data });
+      const { unknownContent, hashesContent, idsContent } = data.reduce(
+        (prev, cur) => {
+          if (cur.id.length) {
+            prev.idsContent.push(cur);
+          } else if (cur.sha1) {
+            prev.hashesContent.push(cur);
+          } else {
+            prev.unknownContent.push(cur);
+          }
+          return prev;
+        },
+        { unknownContent: [], hashesContent: [], idsContent: [] } as {
+          unknownContent: typeof data;
+          hashesContent: typeof data;
+          idsContent: typeof data;
+        },
+      );
 
       const a = async () => {
-        const ids = JSON.stringify(idsContent.map(e => e.id))
+        const ids = JSON.stringify(idsContent.map((e) => e.id));
         const projects = await ProjectsService.getProjects({ ids });
-        return projects.map(e => (
-          { record: idsContent.find(c => c.id === e.id), project: e }
-        ))
-      }
+        return projects.map((e) => ({
+          record: idsContent.find((c) => c.id === e.id),
+          project: e,
+        }));
+      };
 
       const b = async () => {
         const hashes = await VersionFilesService.versionsFromHashes({
           requestBody: {
             algorithm: "sha1",
-            hashes: hashesContent.map(e => e.sha1)
-          }
+            hashes: hashesContent.map((e) => e.sha1),
+          },
         });
 
-        const items = Object.entries(hashes).map(([key, version]) => ({ data: hashesContent.find(e => e.sha1 === key), version }))
+        const items = Object.entries(hashes).map(([key, version]) => ({
+          data: hashesContent.find((e) => e.sha1 === key),
+          version,
+        }));
 
-        const projects = await ProjectsService.getProjects({ ids: JSON.stringify(items.map(e => e.version.project_id)) });
+        const projects = await ProjectsService.getProjects({
+          ids: JSON.stringify(items.map((e) => e.version.project_id)),
+        });
 
-        return projects.map(e => ({
+        return projects.map((e) => ({
           project: e,
-          record: items.find(c => c.version.project_id === e.id)?.data
-        }))
-      }
+          record: items.find((c) => c.version.project_id === e.id)?.data,
+        }));
+      };
       const c = async () => {
-        return unknownContent.map(e => ({ record: e, project: null }))
-      }
+        return unknownContent.map((e) => ({ record: e, project: null }));
+      };
 
       const results = await Promise.allSettled([a(), b(), c()]);
 
-      const item = results.map(e => e.status === "fulfilled" ? e.value : null).filter(Boolean).flat(2);
+      const item = results
+        .map((e) => (e.status === "fulfilled" ? e.value : null))
+        .filter(Boolean)
+        .flat(2);
 
       return item;
     },
@@ -174,51 +194,81 @@ export const ContentTab: React.FC<{
                 )}
                 <TypographyMuted>
                   {data?.[virtualItem.index].record?.version ??
-                    data?.[virtualItem.index].record?.file_name ?? "Unknown"}
+                    data?.[virtualItem.index].record?.file_name ??
+                    "Unknown"}
                 </TypographyMuted>
               </div>
 
-              {data?.[virtualItem.index].project?.id ?
-                <Button onClick={async () => toast.promise(async () => {
-                  const id = await VersionsService.getProjectVersions({
-                    idSlug: data?.[virtualItem.index].project?.id!,
-                    gameVersions: `["${p.version}"]`,
-                    loaders: p.loader !== "vanilla" ? `["${p.loader}"]` : undefined
-                  });
-                  const version = id.at(0);
-                  const currentVersionId = data?.[virtualItem.index].record?.version;
-                  if (version && currentVersionId && (version.version_number !== currentVersionId)) {
-                    const doUpdate = await ask(`Would you like to update ${data?.[virtualItem.index].project?.title} to version (${id.at(0)?.version_number}) current is ${data?.[virtualItem.index].record?.version}`, {
-                      title: "Update Avaliable",
-                      cancelLabel: "No",
-                      okLabel: "Update",
-                      type: "info"
-                    });
+              {data?.[virtualItem.index].project?.id ? (
+                <Button
+                  onClick={async () =>
+                    toast.promise(
+                      async () => {
+                        const id = await VersionsService.getProjectVersions({
+                          idSlug: data?.[virtualItem.index].project?.id!,
+                          gameVersions: `["${p.version}"]`,
+                          loaders:
+                            p.loader !== "vanilla"
+                              ? `["${p.loader}"]`
+                              : undefined,
+                        });
+                        const version = id.at(0);
+                        const currentVersionId =
+                          data?.[virtualItem.index].record?.version;
+                        if (
+                          version &&
+                          currentVersionId &&
+                          version.version_number !== currentVersionId
+                        ) {
+                          const doUpdate = await ask(
+                            `Would you like to update ${data?.[virtualItem.index].project?.title} to version (${id.at(0)?.version_number}) current is ${data?.[virtualItem.index].record?.version}`,
+                            {
+                              title: "Update Avaliable",
+                              cancelLabel: "No",
+                              okLabel: "Update",
+                              type: "info",
+                            },
+                          );
 
-                    if (doUpdate) {
-                      await install_known(version, {
-                        title: data?.[virtualItem.index].project?.title!,
-                        type: data?.[virtualItem.index].project?.project_type!,
-                        icon: data?.[virtualItem.index].project?.icon_url
-                      }, p);
-                    }
+                          if (doUpdate) {
+                            await install_known(
+                              version,
+                              {
+                                title:
+                                  data?.[virtualItem.index].project?.title!,
+                                type: data?.[virtualItem.index].project
+                                  ?.project_type!,
+                                icon: data?.[virtualItem.index].project
+                                  ?.icon_url,
+                              },
+                              p,
+                            );
+                          }
 
+                          return { didUpdate: doUpdate };
+                        }
 
-                    return { didUpdate: doUpdate }
+                        return { didUpdate: false };
+                      },
+                      {
+                        pending: "Checking for update",
+                        success: {
+                          render({ data }) {
+                            return `${data.didUpdate ? `Updating content` : `Up to date!`}`;
+                          },
+                        },
+                        error: "Failed to check for update",
+                      },
+                    )
                   }
-
-                  return { didUpdate: false }
-                }, {
-                  pending: "Checking for update",
-                  success: {
-                    render({ data }) {
-                      return `${data.didUpdate ? `Updating content` : `Up to date!`}`;
-                    },
-                  },
-                  error: "Failed to check for update"
-                })} title="Check for update" variant="ghost" className="h-5 w-5 ml-auto mr-2" size="icon">
+                  title="Check for update"
+                  variant="ghost"
+                  className="ml-auto mr-2 h-5 w-5"
+                  size="icon"
+                >
                   <UpdateIcon className="h-5 w-5 hover:animate-spin" />
-                </Button> : null}
+                </Button>
+              ) : null}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="icon" title="Delete Mod">

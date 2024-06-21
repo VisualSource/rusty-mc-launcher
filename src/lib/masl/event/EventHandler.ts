@@ -145,7 +145,7 @@ export class EventHandler {
       if (!cacheValue) {
         return;
       }
-      const parsedValue = JSON.parse(cacheValue) as Record<string, unknown>;
+      const parsedValue = JSON.parse(cacheValue);
       if (
         typeof parsedValue !== "object" ||
         !AccountEntity.isAccountEntity(parsedValue)

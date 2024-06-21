@@ -58,8 +58,6 @@ export function createBrowserConfigurationAuthError(
 ): BrowserConfigurationAuthError {
   return new BrowserConfigurationAuthError(
     errorCode,
-    BrowserConfigurationAuthErrorMessages[
-      errorCode as keyof typeof BrowserConfigurationAuthErrorMessages
-    ],
+    BrowserConfigurationAuthErrorMessages[errorCode],
   );
 }

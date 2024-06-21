@@ -1,5 +1,5 @@
 import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
-import { useNavigate, useOutletContext, } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ask } from "@tauri-apps/api/dialog";
 import { join } from "@tauri-apps/api/path";
@@ -70,24 +70,46 @@ const ProfileEdit: React.FC = () => {
     const value = debounceMap.current.get(ev.name);
     if (value) clearTimeout(value);
     const timer = setTimeout(async () => {
-      const fieldValue = (ev as { values: Record<string, unknown> }).values[ev.name!] ?? null;
+      const fieldValue =
+        (ev as { values: Record<string, unknown> }).values[ev.name!] ?? null;
       const id = (ev as { values: Record<string, unknown> }).values.id;
 
       if (ev.name === "loader") {
-        const deleteMods = await ask("Changing the loader may cause installed content to not work. Would you like to delete all installed mods?", { title: "Loader Switch", type: "warning" });
+        const deleteMods = await ask(
+          "Changing the loader may cause installed content to not work. Would you like to delete all installed mods?",
+          { title: "Loader Switch", type: "warning" },
+        );
         if (deleteMods) {
+          const mods = await db.select({
+            query:
+              "SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?",
+            args: [data.id],
+            schema: workshop_content.schema,
+          });
 
-          const mods = await db.select({ query: "SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?", args: [data.id], schema: workshop_content.schema })
-
-          await Promise.allSettled(mods.map((e) => uninstallContent(data.id, e.id)));
+          await Promise.allSettled(
+            mods.map((e) => uninstallContent(data.id, e.id)),
+          );
         }
 
-        if (formData.version && formData.loader) await download_queue.insert(crypto.randomUUID(), true, 0, `${formData.loader} ${formData.loader !== "vanilla" ? formData.loader_version : ""}`, formData.icon ?? null, data.id, "Client", {
-          version: formData.version,
-          loader: formData.loader?.replace(/^\w/, formData.loader[0].toUpperCase()),
-          loader_version: data.loader_version,
-        });
-
+        if (formData.version && formData.loader)
+          await download_queue.insert(
+            crypto.randomUUID(),
+            true,
+            0,
+            `${formData.loader} ${formData.loader !== "vanilla" ? formData.loader_version : ""}`,
+            formData.icon ?? null,
+            data.id,
+            "Client",
+            {
+              version: formData.version,
+              loader: formData.loader?.replace(
+                /^\w/,
+                formData.loader[0].toUpperCase(),
+              ),
+              loader_version: data.loader_version,
+            },
+          );
       }
 
       await db.execute({
@@ -98,7 +120,6 @@ const ProfileEdit: React.FC = () => {
       navigate({
         pathname: `/profile/${data.id}/edit`,
       });
-
     }, 1000);
     debounceMap.current.set(ev.name, timer);
   });
@@ -107,7 +128,7 @@ const ProfileEdit: React.FC = () => {
     <ScrollArea>
       <Form {...form}>
         <form className="space-y-4">
-          <section className="space-y-4 rounded-md bg-zinc-900 px-4 py-2 shadow-lg ">
+          <section className="space-y-4 rounded-md bg-zinc-900 px-4 py-2 shadow-lg">
             <TypographyH3>Profile Settings</TypographyH3>
 
             <FormField

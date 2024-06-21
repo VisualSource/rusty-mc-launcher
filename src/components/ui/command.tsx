@@ -10,7 +10,12 @@ const CommandLoading = forwardRef<
   React.ElementRef<typeof CommandPrimitive.Loading>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Loading>
 >(({ className, ...props }, ref) => {
-  return <CommandPrimitive.Loading className={cn("py-6 text-center text-sm", className)} {...props} />;
+  return (
+    <CommandPrimitive.Loading
+      className={cn("py-6 text-center text-sm", className)}
+      {...props}
+    />
+  );
 });
 
 const Command = forwardRef<
@@ -28,7 +33,7 @@ const Command = forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
-interface CommandDialogProps extends DialogProps { }
+interface CommandDialogProps extends DialogProps {}
 
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   return (

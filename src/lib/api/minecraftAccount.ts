@@ -121,20 +121,23 @@ export async function getMinecraftAccount(
 
   //#region Get Minecraft Profile
   auth.info("Fetching minecraft profile");
-  const userProfile = await http.get<MinecraftAccount["details"] | { path: string, error: string, errorMessage: string }>(
-    MINECRAFT_PROFILE,
-    {
-      headers: {
-        Authorization: `Bearer ${minecraftLoginRequest.data.access_token}`,
-      },
-      responseType: ResponseType.JSON,
+  const userProfile = await http.get<
+    | MinecraftAccount["details"]
+    | { path: string; error: string; errorMessage: string }
+  >(MINECRAFT_PROFILE, {
+    headers: {
+      Authorization: `Bearer ${minecraftLoginRequest.data.access_token}`,
     },
-  );
+    responseType: ResponseType.JSON,
+  });
 
   if (userProfile.ok) throw new Error("Failed to load minecraft profile");
 
   if ("error" in userProfile) {
-    await message("Current Microsoft account does not have a minecraft account", { title: "Minecraft Login", type: "error" });
+    await message(
+      "Current Microsoft account does not have a minecraft account",
+      { title: "Minecraft Login", type: "error" },
+    );
     throw new Error("Current account does not have a minecraft account!");
   }
 

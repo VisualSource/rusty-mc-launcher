@@ -95,23 +95,23 @@ const ModrinthProject: React.FC = () => {
               ) : null}
               {data.donation_urls
                 ? data.donation_urls.map((value) => (
-                  <a
-                    href={value.url}
-                    target="_blank"
-                    key={value.id}
-                    className="flex items-center"
-                    rel="noopener noreferrer"
-                  >
-                    <DollarSign className="pr-2" />
-                    <span className="text-blue-600 underline">
-                      {value.platform
-                        ? "Donate"
-                        : value.platform === "Other"
+                    <a
+                      href={value.url}
+                      target="_blank"
+                      key={value.id}
+                      className="flex items-center"
+                      rel="noopener noreferrer"
+                    >
+                      <DollarSign className="pr-2" />
+                      <span className="text-blue-600 underline">
+                        {value.platform
                           ? "Donate"
-                          : value.platform}
-                    </span>
-                  </a>
-                ))
+                          : value.platform === "Other"
+                            ? "Donate"
+                            : value.platform}
+                      </span>
+                    </a>
+                  ))
                 : null}
             </div>
           </section>

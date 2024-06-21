@@ -47,7 +47,13 @@ export type LaunchConfig = z.infer<typeof launchSchema>;
 export const launchGame = (config: LaunchConfig) =>
   invoke("launch_game", { config: launchSchema.parse(config) });
 
-export const loaderSchema = z.enum(["vanilla", "forge", "fabric", "quilt", "neoforge"]);
+export const loaderSchema = z.enum([
+  "vanilla",
+  "forge",
+  "fabric",
+  "quilt",
+  "neoforge",
+]);
 export type Loader = z.infer<typeof loaderSchema>;
 
 export const installLocalMrPack = (source: string) =>

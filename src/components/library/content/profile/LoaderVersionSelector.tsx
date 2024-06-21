@@ -3,9 +3,27 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { Command, CommandEmpty, CommandInput, CommandItem, CommandList, CommandLoading, } from "@/components/ui/command";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandLoading,
+} from "@/components/ui/command";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { MinecraftProfile } from "@/lib/models/profiles";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,7 +55,7 @@ export const LoaderVersionSelector: React.FC<{
           if (!stable) {
             return data.map((item) => item.version);
           }
-          return data.filter((item) => item.stable).map((item) => item.version)
+          return data.filter((item) => item.stable).map((item) => item.version);
         }
         case "quilt": {
           const response = await fetch(
@@ -72,7 +90,9 @@ export const LoaderVersionSelector: React.FC<{
           return output;
         }
         case "neoforge": {
-          const response = await fetch("https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml");
+          const response = await fetch(
+            "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml",
+          );
           const data = await response.text();
           const parser = new DOMParser();
           const doc = parser.parseFromString(data, "application/xml");
@@ -134,7 +154,9 @@ export const LoaderVersionSelector: React.FC<{
                   <CommandList className="scrollbar">
                     {isLoading ? (
                       <CommandLoading>Loading versions...</CommandLoading>
-                    ) : <CommandEmpty>No versions found.</CommandEmpty>}
+                    ) : (
+                      <CommandEmpty>No versions found.</CommandEmpty>
+                    )}
                     {data?.map((version) => (
                       <CommandItem
                         key={version}

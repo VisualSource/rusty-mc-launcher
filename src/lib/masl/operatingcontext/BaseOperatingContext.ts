@@ -84,7 +84,7 @@ export abstract class BaseOperatingContext {
 
     const logLevel =
       logLevelKey && Object.keys(LogLevel).includes(logLevelKey)
-        ? LogLevel[logLevelKey as keyof typeof LogLevel]
+        ? LogLevel[logLevelKey]
         : undefined;
     if (logLevel) {
       loggerOptions.loggerCallback = BaseOperatingContext.loggerCallback;

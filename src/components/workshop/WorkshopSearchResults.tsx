@@ -67,7 +67,7 @@ const WorkshopSearchResults: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <div className="flex  items-center">
+                    <div className="flex items-center">
                       <Download className="mr-1 h-5 w-5" />
                       <span className="text-lg font-bold">
                         {project.downloads.toLocaleString(undefined, {
@@ -76,7 +76,7 @@ const WorkshopSearchResults: React.FC = () => {
                         })}
                       </span>
                     </div>
-                    <div className="flex  items-center">
+                    <div className="flex items-center">
                       <Heart className="mr-1 h-5 w-5" />
                       <span className="text-lg font-bold">
                         {project.follows.toLocaleString()}

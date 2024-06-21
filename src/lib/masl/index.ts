@@ -11,16 +11,20 @@
 import * as BrowserUtils from "./utils/BrowserUtils";
 export { BrowserUtils };
 
-export { PublicClientApplication } from "./app/PublicClientApplication";
-export { PublicClientNext } from "./app/PublicClientNext";
-export type { IController } from "./controllers/IController";
 export {
-  type Configuration,
-  type BrowserAuthOptions,
-  type CacheOptions,
-  type BrowserSystemOptions,
-  type BrowserTelemetryOptions,
-  type BrowserConfiguration,
+  PublicClientApplication,
+  createNestablePublicClientApplication,
+  createStandardPublicClientApplication,
+} from "./app/PublicClientApplication";
+export { PublicClientNext } from "./app/PublicClientNext";
+export { IController } from "./controllers/IController";
+export {
+  Configuration,
+  BrowserAuthOptions,
+  CacheOptions,
+  BrowserSystemOptions,
+  BrowserTelemetryOptions,
+  BrowserConfiguration,
   DEFAULT_IFRAME_TIMEOUT_MS,
 } from "./config/Configuration";
 export {
@@ -46,26 +50,26 @@ export {
 
 // Interfaces
 export {
-  type IPublicClientApplication,
+  IPublicClientApplication,
   stubbedPublicClientApplication,
 } from "./app/IPublicClientApplication";
-export type { INavigationClient } from "./navigation/INavigationClient";
+export { INavigationClient } from "./navigation/INavigationClient";
 export { NavigationClient } from "./navigation/NavigationClient";
-export type { NavigationOptions } from "./navigation/NavigationOptions";
-export type { PopupRequest } from "./request/PopupRequest";
-export type { RedirectRequest } from "./request/RedirectRequest";
-export type { SilentRequest } from "./request/SilentRequest";
-export type { SsoSilentRequest } from "./request/SsoSilentRequest";
-export type { EndSessionRequest } from "./request/EndSessionRequest";
-export type { EndSessionPopupRequest } from "./request/EndSessionPopupRequest";
-export type { AuthorizationUrlRequest } from "./request/AuthorizationUrlRequest";
-export type { AuthorizationCodeRequest } from "./request/AuthorizationCodeRequest";
-export type { AuthenticationResult } from "./response/AuthenticationResult";
-export type { ClearCacheRequest } from "./request/ClearCacheRequest";
+export { NavigationOptions } from "./navigation/NavigationOptions";
+export { PopupRequest } from "./request/PopupRequest";
+export { RedirectRequest } from "./request/RedirectRequest";
+export { SilentRequest } from "./request/SilentRequest";
+export { SsoSilentRequest } from "./request/SsoSilentRequest";
+export { EndSessionRequest } from "./request/EndSessionRequest";
+export { EndSessionPopupRequest } from "./request/EndSessionPopupRequest";
+export { AuthorizationUrlRequest } from "./request/AuthorizationUrlRequest";
+export { AuthorizationCodeRequest } from "./request/AuthorizationCodeRequest";
+export { AuthenticationResult } from "./response/AuthenticationResult";
+export { ClearCacheRequest } from "./request/ClearCacheRequest";
 
 // Cache
-export type { LoadTokenOptions } from "./cache/TokenCache";
-export type { ITokenCache } from "./cache/ITokenCache";
+export { LoadTokenOptions } from "./cache/TokenCache";
+export { ITokenCache } from "./cache/ITokenCache";
 
 // Storage
 export { MemoryStorage } from "./cache/MemoryStorage";
@@ -73,21 +77,21 @@ export { BrowserStorage } from "./cache/BrowserStorage";
 
 // Events
 export {
-  type EventMessage,
-  type EventPayload,
-  type EventError,
-  type EventCallbackFunction,
+  EventMessage,
+  EventPayload,
+  EventError,
+  EventCallbackFunction,
   EventMessageUtils,
-  type PopupEvent,
+  PopupEvent,
 } from "./event/EventMessage";
 export { EventType } from "./event/EventType";
 
 export {
   SignedHttpRequest,
-  type SignedHttpRequestOptions,
+  SignedHttpRequestOptions,
 } from "./crypto/SignedHttpRequest";
 
-export type {
+export {
   PopupWindowAttributes,
   PopupSize,
   PopupPosition,
@@ -101,9 +105,9 @@ export { BrowserPerformanceMeasurement } from "./telemetry/BrowserPerformanceMea
 export {
   AuthenticationScheme,
   // Account
-  type AccountInfo,
+  AccountInfo,
   AccountEntity,
-  type IdTokenClaims,
+  IdTokenClaims,
   // Error
   AuthError,
   AuthErrorCodes,
@@ -119,11 +123,11 @@ export {
   InteractionRequiredAuthErrorMessage,
   ServerError,
   // Network
-  type INetworkModule,
-  type NetworkResponse,
-  type NetworkRequestOptions,
+  INetworkModule,
+  NetworkResponse,
+  NetworkRequestOptions,
   // Logger Object
-  type ILoggerCallback,
+  ILoggerCallback,
   Logger,
   LogLevel,
   // Protocol Mode
@@ -131,23 +135,23 @@ export {
   ServerResponseType,
   PromptValue,
   // Server Response
-  type ExternalTokenResponse,
+  ExternalTokenResponse,
   // Utils
   StringUtils,
   UrlString,
   JsonWebTokenTypes,
   // AzureCloudInstance enum
   AzureCloudInstance,
-  type AzureCloudOptions,
+  AzureCloudOptions,
   AuthenticationHeaderParser,
   OIDC_DEFAULT_SCOPES,
-  type PerformanceCallbackFunction,
-  type PerformanceEvent,
+  PerformanceCallbackFunction,
+  PerformanceEvent,
   PerformanceEvents,
   // Telemetry
-  type InProgressPerformanceEvent,
-  type TenantProfile,
-  type IPerformanceClient,
+  InProgressPerformanceEvent,
+  TenantProfile,
+  IPerformanceClient,
   StubPerformanceClient,
 } from "@azure/msal-common";
 

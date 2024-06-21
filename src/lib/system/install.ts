@@ -123,8 +123,17 @@ function getClosestVersion(
   return [id ?? target];
 }
 
-export async function install_known(version: Version, project: { title: string, type: "shader" | "mod" | "modpack" | "resourcepack", icon?: string | null }, profile: MinecraftProfile) {
-  if (project.type === "modpack") throw new Error("Known modpack install is not supported!");
+export async function install_known(
+  version: Version,
+  project: {
+    title: string;
+    type: "shader" | "mod" | "modpack" | "resourcepack";
+    icon?: string | null;
+  },
+  profile: MinecraftProfile,
+) {
+  if (project.type === "modpack")
+    throw new Error("Known modpack install is not supported!");
 
   const file = version.files.find((e) => e.primary) ?? version.files.at(0);
   if (!file) throw new Error("No file download was found");

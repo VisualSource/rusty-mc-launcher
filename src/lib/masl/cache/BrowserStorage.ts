@@ -15,7 +15,7 @@ export class BrowserStorage implements IWindowStorage<string> {
 
   constructor(cacheLocation: string) {
     this.validateWindowStorage(cacheLocation);
-    this.windowStorage = window[cacheLocation as keyof typeof window];
+    this.windowStorage = window[cacheLocation];
   }
 
   private validateWindowStorage(cacheLocation: string): void {

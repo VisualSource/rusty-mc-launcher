@@ -223,10 +223,7 @@ export class BrowserCacheManager extends CacheManager {
         // Get item, parse, validate and write key to map
         const value = this.getItem(key);
         if (value) {
-          const credObj = this.validateAndParseJson(value) as Record<
-            string,
-            string
-          >;
+          const credObj = this.validateAndParseJson(value);
           if (credObj && credObj.hasOwnProperty("credentialType")) {
             switch (credObj["credentialType"]) {
               case CredentialType.ID_TOKEN:
@@ -418,7 +415,7 @@ export class BrowserCacheManager extends CacheManager {
     this.logger.trace("BrowserCacheManager.getAccountKeys called");
     const accountKeys = this.getItem(StaticCacheKeys.ACCOUNT_KEYS);
     if (accountKeys) {
-      return JSON.parse(accountKeys) as Array<string>;
+      return JSON.parse(accountKeys);
     }
 
     this.logger.verbose(
@@ -1577,9 +1574,7 @@ export class BrowserCacheManager extends CacheManager {
 
     let parsedRequest: CommonAuthorizationCodeRequest;
     try {
-      parsedRequest = JSON.parse(
-        base64Decode(encodedTokenRequest),
-      ) as CommonAuthorizationCodeRequest;
+      parsedRequest = JSON.parse(base64Decode(encodedTokenRequest));
     } catch (e) {
       this.logger.errorPii(`Attempted to parse: ${encodedTokenRequest}`);
       this.logger.error(`Parsing cached token request threw with error: ${e}`);
@@ -1771,6 +1766,15 @@ export class BrowserCacheManager extends CacheManager {
     if (request.claims) {
       claimsHash = await this.cryptoImpl.hashString(request.claims);
     }
+
+    /**
+     * meta data for cache stores time in seconds from epoch
+     * AuthenticationResult returns expiresOn and extExpiresOn in milliseconds (as a Date object which is in ms)
+     * We need to map these for the cache when building tokens from AuthenticationResult
+     *
+     * The next MSAL VFuture should map these both to same value if possible
+     */
+
     const accessTokenEntity = CacheHelpers.createAccessTokenEntity(
       result.account?.homeAccountId,
       result.account.environment,
@@ -1778,8 +1782,8 @@ export class BrowserCacheManager extends CacheManager {
       this.clientId,
       result.tenantId,
       result.scopes.join(" "),
-      result.expiresOn?.getTime() || 0,
-      result.extExpiresOn?.getTime() || 0,
+      result.expiresOn ? result.expiresOn.getTime() / 1000 : 0,
+      result.extExpiresOn ? result.extExpiresOn.getTime() / 1000 : 0,
       base64Decode,
       undefined, // refreshOn
       result.tokenType as AuthenticationScheme,

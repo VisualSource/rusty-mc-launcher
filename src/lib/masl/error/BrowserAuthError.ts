@@ -88,6 +88,8 @@ export const BrowserAuthErrorMessages = {
   [BrowserAuthErrorCodes.nativePromptNotSupported]:
     "The provided prompt is not supported by the native platform. This request should be routed to the web based flow.",
   [BrowserAuthErrorCodes.invalidBase64String]: "Invalid base64 encoded string.",
+  [BrowserAuthErrorCodes.invalidPopTokenRequest]:
+    "Invalid PoP token request. The request should not have both a popKid value and signPopToken set to true.",
 };
 
 /**
@@ -313,6 +315,12 @@ export const BrowserAuthErrorMessage = {
     code: BrowserAuthErrorCodes.invalidBase64String,
     desc: BrowserAuthErrorMessages[BrowserAuthErrorCodes.invalidBase64String],
   },
+  invalidPopTokenRequest: {
+    code: BrowserAuthErrorCodes.invalidPopTokenRequest,
+    desc: BrowserAuthErrorMessages[
+      BrowserAuthErrorCodes.invalidPopTokenRequest
+    ],
+  },
 };
 
 /**
@@ -320,12 +328,7 @@ export const BrowserAuthErrorMessage = {
  */
 export class BrowserAuthError extends AuthError {
   constructor(errorCode: string) {
-    super(
-      errorCode,
-      BrowserAuthErrorMessages[
-        errorCode as keyof typeof BrowserAuthErrorMessages
-      ],
-    );
+    super(errorCode, BrowserAuthErrorMessages[errorCode]);
 
     Object.setPrototypeOf(this, BrowserAuthError.prototype);
     this.name = "BrowserAuthError";
