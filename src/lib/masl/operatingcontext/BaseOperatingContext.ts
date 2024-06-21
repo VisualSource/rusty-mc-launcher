@@ -67,7 +67,7 @@ export abstract class BaseOperatingContext {
     try {
       sessionStorage = window[BrowserCacheLocation.SessionStorage];
       // Mute errors if it's a non-browser environment or cookies are blocked.
-    } catch (e) {}
+    } catch (e) { }
 
     const logLevelKey = sessionStorage?.getItem(LOG_LEVEL_CACHE_KEY);
     const piiLoggingKey = sessionStorage
@@ -84,7 +84,7 @@ export abstract class BaseOperatingContext {
 
     const logLevel =
       logLevelKey && Object.keys(LogLevel).includes(logLevelKey)
-        ? LogLevel[logLevelKey]
+        ? LogLevel[logLevelKey as keyof typeof LogLevel]
         : undefined;
     if (logLevel) {
       loggerOptions.loggerCallback = BaseOperatingContext.loggerCallback;
