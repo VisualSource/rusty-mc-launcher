@@ -2,6 +2,7 @@ import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
 import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
 import { auth } from "@system/logger";
+import { message } from "@tauri-apps/api/dialog";
 
 const MINECRAFT_LOGIN =
   "https://api.minecraftservices.com/authentication/login_with_xbox";
@@ -37,6 +38,14 @@ export type MinecraftAccount = {
   };
 };
 
+/**
+ * @see https://wiki.vg/Microsoft_Authentication_Scheme
+ *
+ * @export
+ * @param {string} userId
+ * @param {string} accessToken
+ * @return {*}  {Promise<MinecraftAccount>}
+ */
 export async function getMinecraftAccount(
   userId: string,
   accessToken: string,
@@ -103,6 +112,7 @@ export async function getMinecraftAccount(
     }),
     { responseType: ResponseType.JSON },
   );
+
   const jwt = JSON.parse(
     atob(minecraftLoginRequest.data.access_token.split(".")[1]),
   ) as { xuid: string; exp: number };
@@ -111,7 +121,7 @@ export async function getMinecraftAccount(
 
   //#region Get Minecraft Profile
   auth.info("Fetching minecraft profile");
-  const userProfile = await http.get<MinecraftAccount["details"]>(
+  const userProfile = await http.get<MinecraftAccount["details"] | { path: string, error: string, errorMessage: string }>(
     MINECRAFT_PROFILE,
     {
       headers: {
@@ -120,13 +130,21 @@ export async function getMinecraftAccount(
       responseType: ResponseType.JSON,
     },
   );
+
+  if (userProfile.ok) throw new Error("Failed to load minecraft profile");
+
+  if ("error" in userProfile) {
+    await message("Current Microsoft account does not have a minecraft account", { title: "Minecraft Login", type: "error" });
+    throw new Error("Current account does not have a minecraft account!");
+  }
+
   //#endregion
 
   const profile: MinecraftAccount = {
     exp: expDate,
     xuid: jwt.xuid,
     token: minecraftLoginRequest.data,
-    details: userProfile.data,
+    details: userProfile.data as MinecraftAccount["details"],
   };
 
   localStorage.setItem(key, JSON.stringify(profile));

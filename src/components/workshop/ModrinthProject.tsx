@@ -12,6 +12,7 @@ import {
 import { Link, type To, useAsyncValue } from "react-router-dom";
 import { formatRelative } from "date-fns/formatRelative";
 import { DiscordLogoIcon } from "@radix-ui/react-icons";
+
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -45,7 +46,7 @@ const ModrinthProject: React.FC = () => {
           </div>
 
           <section className="rounded-md bg-blue-900/10 p-2 shadow-2xl">
-            {data.gallery ? <Gallery gallery={data.gallery} /> : null}
+            {data.gallery?.length ? <Gallery gallery={data.gallery} /> : null}
 
             <div className="flex flex-wrap gap-2 p-4">
               {data.source_url ? (
@@ -94,23 +95,23 @@ const ModrinthProject: React.FC = () => {
               ) : null}
               {data.donation_urls
                 ? data.donation_urls.map((value) => (
-                    <a
-                      href={value.url}
-                      target="_blank"
-                      key={value.id}
-                      className="flex items-center"
-                      rel="noopener noreferrer"
-                    >
-                      <DollarSign className="pr-2" />
-                      <span className="text-blue-600 underline">
-                        {value.platform
+                  <a
+                    href={value.url}
+                    target="_blank"
+                    key={value.id}
+                    className="flex items-center"
+                    rel="noopener noreferrer"
+                  >
+                    <DollarSign className="pr-2" />
+                    <span className="text-blue-600 underline">
+                      {value.platform
+                        ? "Donate"
+                        : value.platform === "Other"
                           ? "Donate"
-                          : value.platform === "Other"
-                            ? "Donate"
-                            : value.platform}
-                      </span>
-                    </a>
-                  ))
+                          : value.platform}
+                    </span>
+                  </a>
+                ))
                 : null}
             </div>
           </section>

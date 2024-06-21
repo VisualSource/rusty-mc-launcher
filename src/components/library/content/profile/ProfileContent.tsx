@@ -8,7 +8,7 @@ const ProfileContent: React.FC = () => {
 
   return (
     <div className="h-full space-y-4 overflow-hidden rounded-md bg-zinc-900 px-4 py-2 shadow-lg">
-      <Tabs defaultValue="mods" className="flex h-full w-full flex-col">
+      <Tabs defaultValue="logs" className="flex h-full w-full flex-col">
         <TabsList className="w-full">
           <TabsTrigger value="mods">Mods</TabsTrigger>
           <TabsTrigger value="resource">Resource Packs</TabsTrigger>

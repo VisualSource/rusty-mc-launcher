@@ -39,7 +39,7 @@ init()
             </ModrinthProvider>
           </MsalProvider>
         </QueryClientProvider>
-        <ToastContainer position="bottom-right" theme="dark" />
+        <ToastContainer stacked pauseOnFocusLoss={false} position="bottom-right" theme="dark" />
       </StrictMode>,
     );
   })

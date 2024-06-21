@@ -13,6 +13,7 @@ import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { askFor } from "@/components/dialog/AskDialog";
 import { workshop_content } from "../models/content";
 import { db, uninstallContent } from "./commands";
+import { MinecraftProfile } from "../models/profiles";
 
 async function getVersion(
   current: VersionDependency,
@@ -120,6 +121,82 @@ function getClosestVersion(
 
   const id = minSatisfying(versions, `${t.major}.${t.minor}.x`);
   return [id ?? target];
+}
+
+export async function install_known(version: Version, project: { title: string, type: "shader" | "mod" | "modpack" | "resourcepack", icon?: string | null }, profile: MinecraftProfile) {
+  if (project.type === "modpack") throw new Error("Known modpack install is not supported!");
+
+  const file = version.files.find((e) => e.primary) ?? version.files.at(0);
+  if (!file) throw new Error("No file download was found");
+
+  await uninstallContent(profile.id, version.project_id);
+
+  const files = [
+    {
+      sha1: file?.hashes.sha1,
+      url: file?.url,
+      filename: file.filename,
+      version: version.version_number!,
+      id: version.project_id,
+    },
+  ];
+
+  switch (project.type) {
+    case "mod": {
+      if (!version.dependencies?.length) break;
+      for await (const dep of getDependencies(
+        version.dependencies,
+        profile.id,
+        JSON.stringify([profile.loader]),
+        JSON.stringify([profile.version]),
+      )) {
+        switch (dep.type) {
+          case "incompatible":
+            throw new Error("Incompatible with current install", {
+              cause: dep.dep,
+            });
+          case "include": {
+            if (!dep.file) throw new Error("Missing file download");
+
+            await uninstallContent(profile.id, dep.id);
+
+            files.push({
+              sha1: dep.file?.hashes.sha1,
+              url: dep.file?.url,
+              id: dep.id,
+              filename: dep.file?.filename,
+              version: dep.version,
+            });
+            break;
+          }
+          default:
+            break;
+        }
+      }
+      break;
+    }
+  }
+
+  const content_id = project.type.replace(
+    /^\w/,
+    project.type[0].toUpperCase(),
+  ) as ContentType;
+  const queue_id = crypto.randomUUID();
+
+  await download_queue.insert(
+    queue_id,
+    true,
+    0,
+    project.title,
+    project.icon ?? null,
+    profile.id,
+    content_id,
+    {
+      content_type: content_id,
+      profile: profile.id,
+      files: files,
+    },
+  );
 }
 
 export async function install(data: Project) {
