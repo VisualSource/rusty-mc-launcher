@@ -36,7 +36,7 @@ export const NavbarUpper: React.FC = () => {
   const msal = useMsal();
   const isMaximized = useIsMaximized();
   const msAccount = useAccount();
-  const { account, isLoading, logout, login } = useUser();
+  const { account, isLoading, logout, login, error, isError } = useUser();
   const avatar = useAvatar();
   return (
     <section
@@ -76,7 +76,7 @@ export const NavbarUpper: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <button className="mr-2 flex items-center justify-center bg-white px-3 text-black">
               <span className="mr-1 text-sm">
-                {isLoading || msal.inProgress === InteractionStatus.Login
+                {isError ? error?.message : isLoading || msal.inProgress === InteractionStatus.Login
                   ? "Loading"
                   : account?.details.name ?? "Login"}
               </span>

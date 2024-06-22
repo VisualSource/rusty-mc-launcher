@@ -131,7 +131,7 @@ export async function getMinecraftAccount(
     responseType: ResponseType.JSON,
   });
 
-  if (userProfile.ok) throw new Error("Failed to load minecraft profile");
+  if (!userProfile.ok) throw new Error("Failed to load minecraft profile");
 
   if ("error" in userProfile) {
     await message(
