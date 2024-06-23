@@ -1,21 +1,25 @@
 import { createRouter } from "@tanstack/react-router";
+import { queryClient } from "@lib/api/queryClient";
 
 import { routeTree } from "./routeTree.gen";
 
 export const router = createRouter({
-	routeTree,
-	context: {
-		auth: {
-			msa: undefined,
-			modrinth: undefined,
-		},
-	},
+  routeTree,
+  defaultPreload: "intent",
+  defaultPreloadStaleTime: 0,
+  context: {
+    queryClient,
+    auth: {
+      msa: undefined,
+      modrinth: undefined,
+    },
+  },
 });
 
 declare module "@tanstack/react-router" {
-	interface Register {
-		router: typeof router;
-	}
+  interface Register {
+    router: typeof router;
+  }
 }
 
 /*import {
