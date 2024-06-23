@@ -89,16 +89,16 @@ export const ContentTab: React.FC<{
         },
       );
 
-      const a = async () => {
+      const loadIdContent = async () => {
         const ids = JSON.stringify(idsContent.map((e) => e.id));
         const projects = await ProjectsService.getProjects({ ids });
-        return projects.map((e) => ({
-          record: idsContent.find((c) => c.id === e.id),
-          project: e,
-        }));
+        return idsContent.map((item) => {
+          const project = projects.find(e => e.id === item.id);
+          return { record: item, project: project ?? null };
+        });
       };
 
-      const b = async () => {
+      const loadHashContent = async () => {
         const hashes = await VersionFilesService.versionsFromHashes({
           requestBody: {
             algorithm: "sha1",
@@ -106,25 +106,27 @@ export const ContentTab: React.FC<{
           },
         });
 
-        const items = Object.entries(hashes).map(([key, version]) => ({
-          data: hashesContent.find((e) => e.sha1 === key),
-          version,
-        }));
+        const items = Object.entries(hashes).map(([hash, version]) => ({ hash, id: version.project_id }));
 
         const projects = await ProjectsService.getProjects({
-          ids: JSON.stringify(items.map((e) => e.version.project_id)),
+          ids: JSON.stringify(items.map(e => e.id)),
         });
 
-        return projects.map((e) => ({
-          project: e,
-          record: items.find((c) => c.version.project_id === e.id)?.data,
-        }));
+        return hashesContent.map((content) => {
+          const projectId = items.find(e => e.hash === content.sha1);
+          if (!projectId) return { record: content, project: null };
+
+          const project = projects.find(e => e.id === projectId.id);
+          if (!project) return { record: content, project: null };
+
+          return { record: content, project }
+        });
       };
       const c = async () => {
         return unknownContent.map((e) => ({ record: e, project: null }));
       };
 
-      const results = await Promise.allSettled([a(), b(), c()]);
+      const results = await Promise.allSettled([loadIdContent(), loadHashContent(), c()]);
 
       const item = results
         .map((e) => (e.status === "fulfilled" ? e.value : null))
