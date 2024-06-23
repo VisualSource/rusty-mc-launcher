@@ -1,8 +1,10 @@
 /// <reference types="vitest" />
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
