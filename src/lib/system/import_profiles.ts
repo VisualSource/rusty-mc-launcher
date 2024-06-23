@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
 import type { MinecraftProfile } from "../models/profiles";
-import { queryClient } from "../config/queryClient";
+import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import { type Loader, db } from "./commands";
 import logger from "./logger";
@@ -16,15 +16,17 @@ const get_version = (
 	if (lastVersionId.includes("forge")) {
 		const [version, _, loader_version] = lastVersionId.split("-");
 		return [version, "forge", loader_version];
-	} else if (lastVersionId.includes("fabric")) {
+	}
+	if (lastVersionId.includes("fabric")) {
 		const [_, _1, loader_version, version] = lastVersionId.split("-");
 		return [version, "fabric", loader_version];
-	} else if (lastVersionId.includes("quilt")) {
+	}
+	if (lastVersionId.includes("quilt")) {
 		const [_, _1, loader_version, version] = lastVersionId.split("-");
 		return [version, "quilt", loader_version];
-	} else {
-		return [lastVersionId, "vanilla", null];
 	}
+
+	return [lastVersionId, "vanilla", null];
 };
 
 const import_profiles = async () => {
@@ -78,10 +80,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-						version.replace(
-							"latest-",
-							"",
-						) as keyof (typeof latest_data)["latest"]
+					version.replace(
+						"latest-",
+						"",
+					) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -89,7 +91,7 @@ const import_profiles = async () => {
 			profiles.push({
 				name: profile.name.length
 					? profile.name
-					: `${loader}${loader != "vanilla" ? `(${loader_version})` : ""} ${version}`,
+					: `${loader}${loader !== "vanilla" ? `(${loader_version})` : ""} ${version}`,
 				icon: profile.icon.length ? profile.icon : null,
 				id,
 				java_args:
@@ -110,7 +112,7 @@ const import_profiles = async () => {
 				{ length: profiles.length },
 			)
 				.fill(0)
-				.map((e) => "(?,?,?,?,?,?,?,?,?,?,?,?)")
+				.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?)")
 				.join(", ")};`,
 			args: profiles
 				.flatMap((e) => [

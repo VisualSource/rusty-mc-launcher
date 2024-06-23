@@ -4,7 +4,7 @@ function Index() {
 	return (
 		<div>
 			Hello
-			<Link to="/workshop/project/$id" params={{ id: "TEST" }}>
+			<Link to="/workshop/project/$id" params={{ id: "AANobbMI" }}>
 				Workshop
 			</Link>
 		</div>

@@ -1,10 +1,11 @@
 import { type UnlistenFn, listen, type EventCallback } from "@tauri-apps/api/event";
 import { createContext, useSyncExternalStore } from "react";
 import { toast } from "react-toastify";
+
 import AskDialog from "@/components/dialog/AskDialog";
-import { queryClient } from "../config/queryClient";
-import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
+import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
+import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 
 type Progress = {
 	message: string;
@@ -34,21 +35,21 @@ class DownloadManager extends EventTarget {
 		switch (ev.payload.event) {
 			case "group":
 				this.current_progress = {
-					message: (data["message"] as string) ?? "",
-					progress: (data["progress"] as number) ?? 0,
-					max_progress: (data["max_progress"] as number) ?? 0,
-					file: (data["file"] as string) ?? "",
+					message: (data?.message as string | undefined) ?? "",
+					progress: (data?.progress as number | undefined) ?? 0,
+					max_progress: (data?.max_progress as number | undefined) ?? 0,
+					file: (data?.file as string | undefined) ?? "",
 				};
 				break;
 			case "update": {
 				if (!this.current_progress) break;
 				this.current_progress = {
-					message: (data["message"] as string) ?? this.current_progress.message,
-					file: (data["file"] as string) ?? this.current_progress.file,
+					message: (data?.message as string | undefined) ?? this.current_progress.message,
+					file: (data?.file as string | undefined) ?? this.current_progress.file,
 					max_progress: this.current_progress.max_progress,
 					progress:
 						this.current_progress.progress +
-						((data["progress"] as number) ?? 0),
+						((data?.progress as number | undefined) ?? 0),
 				};
 				break;
 			}
@@ -71,19 +72,19 @@ class DownloadManager extends EventTarget {
 				break;
 			}
 			case "notify": {
-				switch (data["type"]) {
+				switch (data?.type) {
 					case "ok": {
-						toast.success(data["message"] as string);
+						toast.success(data.message as string);
 						break;
 					}
 					case "error": {
-						toast.error(data["message"] as string, {
-							data: { error: data["error"] ?? "Unknown Error" },
+						toast.error(data.message as string, {
+							data: { error: data?.error ?? "Unknown Error" },
 						});
 						break;
 					}
 					default:
-						toast.info(data["message"] as string);
+						toast.info(data.message as string);
 						break;
 				}
 				break;

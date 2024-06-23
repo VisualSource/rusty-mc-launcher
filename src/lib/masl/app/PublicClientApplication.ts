@@ -151,7 +151,7 @@ export class PublicClientApplication implements IPublicClientApplication {
 	 * @param callbackId
 	 */
 	removeEventCallback(callbackId: string): void {
-		return this.controller.removeEventCallback(callbackId);
+		this.controller.removeEventCallback(callbackId);
 	}
 
 	/**
@@ -370,7 +370,7 @@ export class PublicClientApplication implements IPublicClientApplication {
 	 * @param version
 	 */
 	initializeWrapperLibrary(sku: WrapperSKU, version: string): void {
-		return this.controller.initializeWrapperLibrary(sku, version);
+		this.controller.initializeWrapperLibrary(sku, version);
 	}
 
 	/**

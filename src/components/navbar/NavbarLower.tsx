@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, MatchRoute } from "@tanstack/react-router";
 import {
 	NavigationMenu,
 	NavigationMenuContent,
@@ -20,19 +20,15 @@ export const NavbarLower: React.FC = () => {
 				<NavigationMenuList>
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
-							showIcon={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<NavLink
-								to=""
-								className={({ isActive }) =>
-									cn("transition-colors", {
-										"border-b-2 border-blue-300 text-blue-300": isActive,
-									})
-								}
-							>
-								LIBRARY
-							</NavLink>
+							<Link to="/">
+								<MatchRoute to="/">
+									{(match) => (<span className={cn("transition-colors", {
+										"border-b-2 border-blue-300 text-blue-300": match,
+									})}>LIBRARY</span>)}
+								</MatchRoute>
+							</Link>
 						</NavigationMenuTrigger>
 						<NavigationMenuContent>
 							<Button asChild className="w-full rounded-none" variant="ghost">
@@ -49,36 +45,28 @@ export const NavbarLower: React.FC = () => {
 					</NavigationMenuItem>
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
-							showIcon={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<NavLink
-								to="workshop"
-								className={({ isActive }) =>
-									cn("transition-colors", {
-										"border-b-2 border-blue-300 text-blue-300": isActive,
-									})
-								}
-							>
-								WORKSHOP
-							</NavLink>
+							<Link to="/workshop">
+								<MatchRoute to="/workshop">
+									{(match) => (<span className={cn("transition-colors", {
+										"border-b-2 border-blue-300 text-blue-300": match,
+									})}>WORKSHOP</span>)}
+								</MatchRoute>
+							</Link>
 						</NavigationMenuTrigger>
 					</NavigationMenuItem>
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
-							showIcon={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<NavLink
-								to="downloads"
-								className={({ isActive }) =>
-									cn("transition-colors", {
-										"border-b-2 border-blue-300 text-blue-300": isActive,
-									})
-								}
-							>
-								DOWNLOADS
-							</NavLink>
+							<Link to="/downloads">
+								<MatchRoute to="/downloads">
+									{(match) => (<span className={cn("transition-colors", {
+										"border-b-2 border-blue-300 text-blue-300": match,
+									})}>DOWNLOADS</span>)}
+								</MatchRoute>
+							</Link>
 						</NavigationMenuTrigger>
 					</NavigationMenuItem>
 				</NavigationMenuList>

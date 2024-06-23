@@ -1,32 +1,167 @@
-import { compareAsc } from "date-fns/compareAsc";
-import { addSeconds } from "date-fns/addSeconds";
-import { UsersService } from "../services.gen";
-import { Middleware, OpenAPI } from "../core/OpenAPI";
+//import { compareAsc } from "date-fns/compareAsc";
+//import { addSeconds } from "date-fns/addSeconds";
+//import { UsersService } from "../services.gen";
+//import { OpenAPI } from "../core/OpenAPI";
 import type {
+	AccountInfo,
 	AuthenticationResult,
+	AuthorizationCodeRequest,
+	BrowserConfiguration,
 	ClearCacheRequest,
+	Configuration,
 	EndSessionPopupRequest,
+	EndSessionRequest,
+	EventCallbackFunction,
+	INavigationClient,
+	IPublicClientApplication,
 	ITokenCache,
+	Logger,
+	PerformanceCallbackFunction,
 	PopupRequest,
 	RedirectRequest,
+	SilentRequest,
 	SsoSilentRequest,
+	WrapperSKU,
 } from "@masl/index";
-import { type AuthResponse, PopupClient } from "./PopupClient";
+import type { AccountFilter } from "@azure/msal-common";
+/*import { type AuthResponse, PopupClient } from "./PopupClient";
 import {
 	BrowserAuthErrorCodes,
 	createBrowserAuthError,
 } from "@/lib/masl/error/BrowserAuthError";
-import { auth } from "@/lib/system/logger";
+import { auth } from "@/lib/system/logger";*/
+//import { AccountFilter } from "@azure/msal-common";
 
-type CachedToken = Omit<AuthResponse, "expires_in"> & { expires: string };
-type AccountInfo = Awaited<ReturnType<typeof UsersService.getUser>>;
-type SilentRequest = { account?: AccountInfo };
+//type CachedToken = Omit<AuthResponse, "expires_in"> & { expires: string };
+//type AccountInfo = Awaited<ReturnType<typeof UsersService.getUser>>;
+//type SilentRequest = { account?: AccountInfo };
 
-export class ModrinthClientApplication {
+export class ModrinthClientApplication implements IPublicClientApplication {
+	public static async createPublicClientApplication(
+		_configuration?: Configuration,
+	): Promise<IPublicClientApplication> {
+		const pca = new ModrinthClientApplication();
+		return pca;
+	}
+
 	initialize(): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
-	public async acquireTokenPopup(): Promise<string> {
+	acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
+		throw new Error("Method not implemented.");
+	}
+	acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	acquireTokenSilent(
+		_silentRequest: SilentRequest,
+	): Promise<AuthenticationResult> {
+		throw new Error("Method not implemented.");
+	}
+	acquireTokenByCode(
+		_request: AuthorizationCodeRequest,
+	): Promise<AuthenticationResult> {
+		throw new Error("Method not implemented.");
+	}
+	addEventCallback(_callback: EventCallbackFunction): string | null {
+		throw new Error("Method not implemented.");
+	}
+	removeEventCallback(_callbackId: string): void {
+		throw new Error("Method not implemented.");
+	}
+	addPerformanceCallback(_callback: PerformanceCallbackFunction): string {
+		throw new Error("Method not implemented.");
+	}
+	removePerformanceCallback(_callbackId: string): boolean {
+		throw new Error("Method not implemented.");
+	}
+	enableAccountStorageEvents(): void {
+		throw new Error("Method not implemented.");
+	}
+	disableAccountStorageEvents(): void {
+		throw new Error("Method not implemented.");
+	}
+	getAccount(_accountFilter: AccountFilter): AccountInfo | null {
+		throw new Error("Method not implemented.");
+	}
+	getAccountByHomeId(_homeAccountId: string): AccountInfo | null {
+		throw new Error("Method not implemented.");
+	}
+	getAccountByLocalId(_localId: string): AccountInfo | null {
+		throw new Error("Method not implemented.");
+	}
+	getAccountByUsername(_userName: string): AccountInfo | null {
+		throw new Error("Method not implemented.");
+	}
+	getAllAccounts(): AccountInfo[] {
+		throw new Error("Method not implemented.");
+	}
+	handleRedirectPromise(
+		_hash?: string | undefined,
+	): Promise<AuthenticationResult | null> {
+		throw new Error("Method not implemented.");
+	}
+	loginPopup(
+		_request?: PopupRequest | undefined,
+	): Promise<AuthenticationResult> {
+		throw new Error("Method not implemented.");
+	}
+	loginRedirect(_request?: RedirectRequest | undefined): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	logout(_logoutRequest?: EndSessionRequest | undefined): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	logoutRedirect(
+		_logoutRequest?: EndSessionRequest | undefined,
+	): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	logoutPopup(
+		_logoutRequest?: EndSessionPopupRequest | undefined,
+	): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	ssoSilent(_request: SsoSilentRequest): Promise<AuthenticationResult> {
+		throw new Error("Method not implemented.");
+	}
+	getTokenCache(): ITokenCache {
+		throw new Error("Method not implemented.");
+	}
+	getLogger(): Logger {
+		throw new Error("Method not implemented.");
+	}
+	setLogger(_logger: Logger): void {
+		throw new Error("Method not implemented.");
+	}
+	setActiveAccount(_account: AccountInfo | null): void {
+		throw new Error("Method not implemented.");
+	}
+	getActiveAccount(): AccountInfo | null {
+		throw new Error("Method not implemented.");
+	}
+	initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void {
+		throw new Error("Method not implemented.");
+	}
+	setNavigationClient(_navigationClient: INavigationClient): void {
+		throw new Error("Method not implemented.");
+	}
+	getConfiguration(): BrowserConfiguration {
+		throw new Error("Method not implemented.");
+	}
+	hydrateCache(
+		_result: AuthenticationResult,
+		_request: PopupRequest | RedirectRequest | SilentRequest | SsoSilentRequest,
+	): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	clearCache(_logoutRequest?: ClearCacheRequest | undefined): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	/*initialize(): Promise<void> {
+		throw new Error("Method not implemented.");
+	}
+	public async acquireTokenPopup(): Promise<AuthenticationResult> {
 		const client = this.createPopupClient();
 		const token = await client.acquireToken();
 
@@ -53,7 +188,17 @@ export class ModrinthClientApplication {
 			}),
 		);
 
-		return token.access_token;
+		//return token.access_token;
+		return {
+			accessToken: "",
+			account: {},
+			authority: "",
+			correlationId: "",
+			expiresOn: new Date(),
+			fromCache: false,
+			idToken: "",
+			
+		};
 	}
 	public async acquireTokenSilent(
 		silentRequest: SilentRequest,
@@ -174,5 +319,5 @@ export class ModrinthClientApplication {
 	}
 	private createPopupClient() {
 		return new PopupClient();
-	}
+	}*/
 }

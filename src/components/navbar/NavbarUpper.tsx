@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { appWindow } from "@tauri-apps/api/window";
 import { exit } from "@tauri-apps/api/process";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import {
 	DropdownMenu,
@@ -27,10 +27,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
+import { InteractionStatus } from "@/lib/masl";
 import { useAvatar } from "@/hooks/useAvatar";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
-import { InteractionStatus } from "@/lib/masl";
 
 export const NavbarUpper: React.FC = () => {
 	const msal = useMsal();
@@ -53,7 +53,7 @@ export const NavbarUpper: React.FC = () => {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
 						<DropdownMenuItem asChild>
-							<Link to="settings">Settings</Link>
+							<Link to="/settings">Settings</Link>
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={() => exit()}>Exit</DropdownMenuItem>
@@ -74,7 +74,7 @@ export const NavbarUpper: React.FC = () => {
 				</Avatar>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<button className="mr-2 flex items-center justify-center bg-white px-3 text-black">
+						<button className="mr-2 flex items-center justify-center bg-white px-3 text-black" type="button">
 							<span className="mr-1 text-sm">
 								{isError
 									? error?.message

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/api/dialog";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import {
 	DropdownMenu,
@@ -83,7 +83,7 @@ const Footer = () => {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
 						<DropdownMenuItem asChild>
-							<Link to="/create">Create Profile</Link>
+							<Link to="/create-profile">Create Profile</Link>
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={import_profiles}>
 							Import Profiles
@@ -101,7 +101,7 @@ const Footer = () => {
 					className="hover:bg-transparent dark:hover:bg-transparent"
 					asChild
 				>
-					<Link to="downloads" className="group">
+					<Link to="/downloads" className="group">
 						{queueCurrent.data && progress ? (
 							<div className="flex items-center gap-3">
 								<Avatar className="rounded-none">
@@ -149,7 +149,7 @@ const Footer = () => {
 				</Button>
 			</div>
 
-			<div className="flex h-full w-full shrink items-center justify-end"></div>
+			<div className="flex h-full w-full shrink items-center justify-end" />
 		</footer>
 	);
 };

@@ -17,6 +17,9 @@ importers:
       '@azure/msal-react':
         specifier: ^2.0.19
         version: 2.0.19(@azure/msal-browser@3.17.0)(react@18.3.1)
+      '@hey-api/client-fetch':
+        specifier: ^0.1.6
+        version: 0.1.6
       '@hookform/resolvers':
         specifier: ^3.6.0
         version: 3.6.0(react-hook-form@7.52.0(react@18.3.1))
@@ -161,6 +164,9 @@ importers:
       react-markdown:
         specifier: ^9.0.1
         version: 9.0.1(@types/react@18.3.3)(react@18.3.1)
+      react-resizable-panels:
+        specifier: ^2.0.19
+        version: 2.0.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-toastify:
         specifier: ^10.0.5
         version: 10.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -656,6 +662,9 @@ packages:
 
   '@floating-ui/utils@0.2.2':
     resolution: {integrity: sha512-J4yDIIthosAsRZ5CPYP/jQvUAQtlZTTD/4suA08/FEnlxqW3sKS9iAhgsa9VYLZ6vDHn/ixJgIqRQPotoBjxIw==}
+
+  '@hey-api/client-fetch@0.1.6':
+    resolution: {integrity: sha512-TKDRqY1FfgZFZULidLlDNJ+WUCpcfkSYCTcKWqaOmaG6yTkmQ+0B0BvkJBH55J5uiXEzlngDzuROZNTUTgvMjg==}
 
   '@hey-api/openapi-ts@0.47.2':
     resolution: {integrity: sha512-I46pbh3YosmPHbjUzs28hZobmdnFtaISrglDNDBbbY9lM0H7CrBZXHq0enWZZu4lx32KvJ40PcdMsGfhd/MmQQ==}
@@ -2993,6 +3002,12 @@ packages:
       '@types/react':
         optional: true
 
+  react-resizable-panels@2.0.19:
+    resolution: {integrity: sha512-v3E41kfKSuCPIvJVb4nL4mIZjjKIn/gh6YqZF/gDfQDolv/8XnhJBek4EiV2gOr3hhc5A3kOGOayk3DhanpaQw==}
+    peerDependencies:
+      react: ^16.14.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.14.0 || ^17.0.0 || ^18.0.0
+
   react-style-singleton@2.2.1:
     resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
     engines: {node: '>=10'}
@@ -3847,6 +3862,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.2': {}
+
+  '@hey-api/client-fetch@0.1.6': {}
 
   '@hey-api/openapi-ts@0.47.2(typescript@5.5.2)':
     dependencies:
@@ -6412,6 +6429,11 @@ snapshots:
       use-sidecar: 1.1.2(@types/react@18.3.3)(react@18.3.1)
     optionalDependencies:
       '@types/react': 18.3.3
+
+  react-resizable-panels@2.0.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   react-style-singleton@2.2.1(@types/react@18.3.3)(react@18.3.1):
     dependencies:

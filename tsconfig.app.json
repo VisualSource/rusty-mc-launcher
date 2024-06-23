@@ -25,21 +25,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
 
-    /* Paths */
-
-    "baseUrl": "src",
     "paths": {
-      "@/*": ["./*"],
-      "@context/*": ["lib/context/*"],
-      "@system/*": ["lib/system/*"],
-      "@masl/*": ["lib/masl/*"],
-      "@component/*": ["components/*"],
-      "@lib/*": ["lib/*"],
-      "@polyfill/*": ["lib/polyfill/*"],
-      "@hook/*": ["hooks/*"],
-      "@auth/*": ["lib/auth/*"],
-      "@page/*": ["pages/*"],
-      "@util/*": ["utils/*"]
+      "@/*": ["./src/*"],
+      "@context/*": ["./src/lib/context/*"],
+      "@system/*": ["./src/lib/system/*"],
+      "@masl/*": ["./src/lib/masl/*"],
+      "@component/*": ["./src/components/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@polyfill/*": ["./src/lib/polyfill/*"],
+      "@hook/*": ["./src/hooks/*"],
+      "@auth/*": ["./src/lib/auth/*"],
+      "@page/*": ["./src/pages/*"],
+      "@util/*": ["./src/utils/*"]
     }
   },
   "include": ["src"]
