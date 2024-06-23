@@ -3,17 +3,17 @@
  * Licensed under the MIT License.
  */
 
-import { InteractionType } from "./BrowserConstants";
+import type { InteractionType } from "./BrowserConstants";
 import {
-  ICrypto,
-  RequestStateObject,
-  ProtocolUtils,
-  createClientAuthError,
-  ClientAuthErrorCodes,
+	type ICrypto,
+	type RequestStateObject,
+	ProtocolUtils,
+	createClientAuthError,
+	ClientAuthErrorCodes,
 } from "@azure/msal-common";
 
 export type BrowserStateObject = {
-  interactionType: InteractionType;
+	interactionType: InteractionType;
 };
 
 /**
@@ -22,20 +22,20 @@ export type BrowserStateObject = {
  * @param state
  */
 export function extractBrowserRequestState(
-  browserCrypto: ICrypto,
-  state: string,
+	browserCrypto: ICrypto,
+	state: string,
 ): BrowserStateObject | null {
-  if (!state) {
-    return null;
-  }
+	if (!state) {
+		return null;
+	}
 
-  try {
-    const requestStateObj: RequestStateObject = ProtocolUtils.parseRequestState(
-      browserCrypto,
-      state,
-    );
-    return requestStateObj.libraryState.meta as BrowserStateObject;
-  } catch (e) {
-    throw createClientAuthError(ClientAuthErrorCodes.invalidState);
-  }
+	try {
+		const requestStateObj: RequestStateObject = ProtocolUtils.parseRequestState(
+			browserCrypto,
+			state,
+		);
+		return requestStateObj.libraryState.meta as BrowserStateObject;
+	} catch (e) {
+		throw createClientAuthError(ClientAuthErrorCodes.invalidState);
+	}
 }

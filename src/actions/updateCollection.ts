@@ -5,31 +5,31 @@ import { CATEGORIES_KEY, CATEGORY_KEY } from "@hook/keys";
 import { queryClient } from "@/lib/config/queryClient";
 
 const updateCollection: ActionFunction = async ({ request }) => {
-  const data = await request.formData();
-  const id = data.get("id")?.toString();
+	const data = await request.formData();
+	const id = data.get("id")?.toString();
 
-  if (!id) {
-    toast.error("Failed to update collection");
-    return new Response(null, {
-      headers: {
-        Location: `/`,
-      },
-      status: 302,
-    });
-  }
+	if (!id) {
+		toast.error("Failed to update collection");
+		return new Response(null, {
+			headers: {
+				Location: `/`,
+			},
+			status: 302,
+		});
+	}
 
-  const collection = parseInt(data.get("collection")?.toString() ?? "");
-  if (!Number.isInteger(collection)) {
-    toast.error("Failed to update collection");
-    return new Response(null, {
-      headers: {
-        Location: `/profile/${id}`,
-      },
-      status: 302,
-    });
-  }
+	const collection = Number.parseInt(data.get("collection")?.toString() ?? "");
+	if (!Number.isInteger(collection)) {
+		toast.error("Failed to update collection");
+		return new Response(null, {
+			headers: {
+				Location: `/profile/${id}`,
+			},
+			status: 302,
+		});
+	}
 
-  /* switch (request.method) {
+	/* switch (request.method) {
      case "DELETE": {
        await categories.delete({
          where: [{ profile_id: id }, { AND: { group_id: collection } }],
@@ -48,16 +48,16 @@ const updateCollection: ActionFunction = async ({ request }) => {
        break;
    }*/
 
-  queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, collection] });
-  queryClient.invalidateQueries({ queryKey: ["PROFILE_CATEGORIES", id] });
-  queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
+	queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, collection] });
+	queryClient.invalidateQueries({ queryKey: ["PROFILE_CATEGORIES", id] });
+	queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
 
-  return new Response(null, {
-    headers: {
-      Location: `/profile/${id}`,
-    },
-    status: 302,
-  });
+	return new Response(null, {
+		headers: {
+			Location: `/profile/${id}`,
+		},
+		status: 302,
+	});
 };
 
 export default updateCollection;

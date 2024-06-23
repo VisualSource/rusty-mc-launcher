@@ -6,23 +6,23 @@ import { ScrollArea } from "@component/ui/scroll-area";
 import SearchBar from "./SearchBar";
 
 const WorkshopSearch: React.FC = () => {
-  const data = useLoaderData();
+	const data = useLoaderData();
 
-  return (
-    <div className="flex h-full flex-col gap-2 bg-zinc-950">
-      <ScrollRestoration />
-      <SearchBar />
-      <ScrollArea>
-        <div className="h-full bg-zinc-900 py-2">
-          <Suspense fallback={<>Loading...</>}>
-            <Await resolve={data}>
-              <WorkshopSearchResults />
-            </Await>
-          </Suspense>
-        </div>
-      </ScrollArea>
-    </div>
-  );
+	return (
+		<div className="flex h-full flex-col gap-2 bg-zinc-950">
+			<ScrollRestoration />
+			<SearchBar />
+			<ScrollArea>
+				<div className="h-full bg-zinc-900 py-2">
+					<Suspense fallback={<>Loading...</>}>
+						<Await resolve={data}>
+							<WorkshopSearchResults />
+						</Await>
+					</Suspense>
+				</div>
+			</ScrollArea>
+		</div>
+	);
 };
 
 export default WorkshopSearch;

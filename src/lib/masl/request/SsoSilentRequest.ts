@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { CommonAuthorizationUrlRequest, StringDict } from "@azure/msal-common";
+import type { CommonAuthorizationUrlRequest, StringDict } from "@azure/msal-common";
 
 /**
  * Request object passed by user to ssoSilent to retrieve a Code from the server (first leg of authorization code grant flow)
@@ -31,14 +31,14 @@ import { CommonAuthorizationUrlRequest, StringDict } from "@azure/msal-common";
  * - nonce                      - A value included in the request that is returned in the id token. A randomly generated unique value is typically used to mitigate replay attacks.
  */
 export type SsoSilentRequest = Partial<
-  Omit<
-    CommonAuthorizationUrlRequest,
-    | "responseMode"
-    | "codeChallenge"
-    | "codeChallengeMethod"
-    | "requestedClaimsHash"
-    | "nativeBroker"
-  >
+	Omit<
+		CommonAuthorizationUrlRequest,
+		| "responseMode"
+		| "codeChallenge"
+		| "codeChallengeMethod"
+		| "requestedClaimsHash"
+		| "nativeBroker"
+	>
 > & {
-  tokenBodyParameters?: StringDict;
+	tokenBodyParameters?: StringDict;
 };

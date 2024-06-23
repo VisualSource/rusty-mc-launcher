@@ -1,4 +1,24 @@
-import {
+import { createRouter } from "@tanstack/react-router";
+
+import { routeTree } from "./routeTree.gen";
+
+export const router = createRouter({
+	routeTree,
+	context: {
+		auth: {
+			msa: undefined,
+			modrinth: undefined,
+		},
+	},
+});
+
+declare module "@tanstack/react-router" {
+	interface Register {
+		router: typeof router;
+	}
+}
+
+/*import {
   createBrowserRouter,
   createRoutesFromElements,
   Navigate,
@@ -94,4 +114,4 @@ const router = createBrowserRouter(
   ),
 );
 
-export default router;
+export default router;*/

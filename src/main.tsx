@@ -1,4 +1,23 @@
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { RouterProvider } from "@tanstack/react-router";
+import { createRoot } from "react-dom/client";
+import { StrictMode } from "react";
+
+import { router } from "./router";
+
+import "react-toastify/dist/ReactToastify.css";
+import { getPCA } from "./lib/auth/msal";
+
+const root = createRoot(document.getElementById("root")!);
+root.render(
+	<StrictMode>
+		<RouterProvider
+			router={router}
+			context={{ auth: { msa: await getPCA(), modrinth: undefined } }}
+		/>
+	</StrictMode>,
+);
+
+/*import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { MsalProvider } from "@azure/msal-react";
@@ -7,7 +26,7 @@ import { exit } from "@tauri-apps/api/process";
 import ReactDOM from "react-dom/client";
 import { StrictMode } from "react";
 
-import "react-toastify/dist/ReactToastify.css";
+
 
 import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
 import { ModrinthProvider } from "./components/providers/ModrinthProvider";
@@ -48,4 +67,4 @@ init()
       </StrictMode>,
     );
   })
-  .catch(() => exit(1));
+  .catch(() => exit(1));*/

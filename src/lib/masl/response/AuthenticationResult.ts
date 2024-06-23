@@ -3,11 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import {
-  AccountInfo,
-  AuthenticationResult as CommonAuthenticationResult,
+import type {
+	AccountInfo,
+	AuthenticationResult as CommonAuthenticationResult,
 } from "@azure/msal-common";
 
 export type AuthenticationResult = CommonAuthenticationResult & {
-  account: AccountInfo;
+	account: AccountInfo;
 };

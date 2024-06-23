@@ -12,68 +12,68 @@ import { db } from "@system/commands";
 import { Link } from "react-router-dom";
 
 export const FavoritesLoading: React.FC = () => {
-  return (
-    <>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <Card className="relative w-80" key={i}>
-          <CardHeader>
-            <Skeleton className="h-4 w-1/3" />
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Skeleton className="h-36 w-full rounded-sm" />
-            <Skeleton className="h-9 w-full" />
-          </CardContent>
-        </Card>
-      ))}
-    </>
-  );
+	return (
+		<>
+			{Array.from({ length: 8 }).map((_, i) => (
+				<Card className="relative w-80" key={i}>
+					<CardHeader>
+						<Skeleton className="h-4 w-1/3" />
+					</CardHeader>
+					<CardContent className="flex flex-col gap-4">
+						<Skeleton className="h-36 w-full rounded-sm" />
+						<Skeleton className="h-9 w-full" />
+					</CardContent>
+				</Card>
+			))}
+		</>
+	);
 };
 
 const Favorites: React.FC = () => {
-  const { data, error } = useSuspenseQuery({
-    queryKey: [CATEGORY_KEY, FAVORITES_GUID],
-    queryFn: () =>
-      db.select<typeof profile.schema>({
-        query:
-          "SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?",
-        args: [FAVORITES_GUID],
-        schema: profile.schema,
-      }),
-  });
+	const { data, error } = useSuspenseQuery({
+		queryKey: [CATEGORY_KEY, FAVORITES_GUID],
+		queryFn: () =>
+			db.select<typeof profile.schema>({
+				query:
+					"SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?",
+				args: [FAVORITES_GUID],
+				schema: profile.schema,
+			}),
+	});
 
-  if (error) throw error;
+	if (error) throw error;
 
-  return (
-    <>
-      {data.length === 0 ? (
-        <div className="flex h-full w-full items-center justify-center">
-          No Favorites Yet!
-        </div>
-      ) : (
-        data.map((value) => (
-          <Card className="relative w-80" key={value.id}>
-            <CardHeader>
-              <Link to={`/profile/${value.id}`} title="Edit profile">
-                <CardTitle className="underline">{value.name}</CardTitle>
-              </Link>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <Avatar className="aspect-square h-36 w-full rounded-none">
-                <AvatarImage
-                  src={value.icon ?? undefined}
-                  className="rounded-none"
-                />
-                <AvatarFallback className="rounded-none">
-                  <Layers3 />
-                </AvatarFallback>
-              </Avatar>
-              <PlayButton profile={value} />
-            </CardContent>
-          </Card>
-        ))
-      )}
-    </>
-  );
+	return (
+		<>
+			{data.length === 0 ? (
+				<div className="flex h-full w-full items-center justify-center">
+					No Favorites Yet!
+				</div>
+			) : (
+				data.map((value) => (
+					<Card className="relative w-80" key={value.id}>
+						<CardHeader>
+							<Link to={`/profile/${value.id}`} title="Edit profile">
+								<CardTitle className="underline">{value.name}</CardTitle>
+							</Link>
+						</CardHeader>
+						<CardContent className="flex flex-col gap-4">
+							<Avatar className="aspect-square h-36 w-full rounded-none">
+								<AvatarImage
+									src={value.icon ?? undefined}
+									className="rounded-none"
+								/>
+								<AvatarFallback className="rounded-none">
+									<Layers3 />
+								</AvatarFallback>
+							</Avatar>
+							<PlayButton profile={value} />
+						</CardContent>
+					</Card>
+				))
+			)}
+		</>
+	);
 };
 
 export default Favorites;

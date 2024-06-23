@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { CommonEndSessionRequest } from "@azure/msal-common";
+import type { CommonEndSessionRequest } from "@azure/msal-common";
 
 /**
  * EndSessionRequest
@@ -16,8 +16,8 @@ import { CommonEndSessionRequest } from "@azure/msal-common";
  * - logoutHint             - A string that specifies the account that is being logged out in order to skip the server account picker on logout
  */
 export type EndSessionRequest = Partial<
-  Omit<CommonEndSessionRequest, "tokenQueryParameters">
+	Omit<CommonEndSessionRequest, "tokenQueryParameters">
 > & {
-  authority?: string;
-  onRedirectNavigate?: (url: string) => boolean | void;
+	authority?: string;
+	onRedirectNavigate?: (url: string) => boolean | void;
 };

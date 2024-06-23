@@ -4,13 +4,13 @@
  */
 
 import {
-  AuthorizationCodeClient,
-  ClientConfiguration,
+	AuthorizationCodeClient,
+	type ClientConfiguration,
 } from "@azure/msal-common";
 
 export class HybridSpaAuthorizationCodeClient extends AuthorizationCodeClient {
-  constructor(config: ClientConfiguration) {
-    super(config);
-    this.includeRedirectUri = false;
-  }
+	constructor(config: ClientConfiguration) {
+		super(config);
+		this.includeRedirectUri = false;
+	}
 }
