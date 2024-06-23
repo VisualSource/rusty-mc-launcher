@@ -1,5 +1,6 @@
 import { Link, Outlet, useLoaderData, useParams } from "react-router-dom";
-import { Box, Images, Package, Settings } from "lucide-react";
+import { Box, FileBox, Images, Package, Settings } from "lucide-react";
+import { open } from "@tauri-apps/api/dialog";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MinecraftProfile } from "@lib/models/profiles";
@@ -60,6 +61,23 @@ const Profile: React.FC = () => {
               <Link to={`/profile/${id}/edit`}>
                 <Settings className="mr-1 h-5 w-5" /> Settings
               </Link>
+            </Button>
+          </li>
+          <li>
+            <Button onClick={async () => {
+              const files = await open({
+                multiple: true,
+                filters: [
+                  { name: "Mod", extensions: ["jar"] },
+                  { name: "Resource Pack", extensions: ["zip"] },
+                  { name: 'Shader Pack', extensions: ["zip"] }
+                ]
+              });
+              console.log(files);
+
+
+            }} title="Install content from out side launcher" className="w-full" variant="secondary" size="sm">
+              <FileBox className="mr-1 h-5 w-5" />Install
             </Button>
           </li>
         </ul>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Book } from "lucide-react";
+import { Layers3 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 
@@ -14,7 +14,7 @@ const CollectionItem: React.FC<{
         <Avatar className="h-5 w-5 rounded-none">
           <AvatarImage className="rounded-none" src={icon} />
           <AvatarFallback className="rounded-none">
-            <Book />
+            <Layers3 />
           </AvatarFallback>
         </Avatar>
         <span className="line-clamp-1">{name}</span>

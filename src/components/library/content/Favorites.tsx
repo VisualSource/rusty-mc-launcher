@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Book } from "lucide-react";
+import { Layers3 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { profile } from "@lib/models/profiles";
 import PlayButton from "@/components/ui/play";
 import { CATEGORY_KEY } from "@hook/keys";
 import { db } from "@system/commands";
+import { Link } from "react-router-dom";
 
 export const FavoritesLoading: React.FC = () => {
   return (
@@ -52,7 +53,9 @@ const Favorites: React.FC = () => {
         data.map((value) => (
           <Card className="relative w-80" key={value.id}>
             <CardHeader>
-              <CardTitle>{value.name}</CardTitle>
+              <Link to={`/profile/${value.id}`} title="Edit profile">
+                <CardTitle className="underline">{value.name}</CardTitle>
+              </Link>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <Avatar className="aspect-square h-36 w-full rounded-none">
@@ -61,7 +64,7 @@ const Favorites: React.FC = () => {
                   className="rounded-none"
                 />
                 <AvatarFallback className="rounded-none">
-                  <Book />
+                  <Layers3 />
                 </AvatarFallback>
               </Avatar>
               <PlayButton profile={value} />
