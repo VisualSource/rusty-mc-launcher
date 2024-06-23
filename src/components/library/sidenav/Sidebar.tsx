@@ -10,6 +10,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import useCategories from "@hook/useCategories";
 import Collection from "./Collection";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const EMPTY_DATA = [
 	{ id: FAVORITES_GUID, name: "Favorites" },
@@ -42,9 +43,10 @@ const Sidebar = () => {
 	const collections = useCategories();
 
 	return (
-		<Accordion type="multiple">
-			{collections.length
-				? collections.map((category) => (
+		<ScrollArea>
+			<Accordion type="multiple">
+				{collections.length
+					? collections.map((category) => (
 						<QueryErrorResetBoundary key={category.metadata}>
 							{({ reset }) => (
 								<ErrorBoundary
@@ -54,14 +56,14 @@ const Sidebar = () => {
 									<Suspense fallback={<CollectionLoading />}>
 										<Collection
 											name={category.value ?? "Unknown Name"}
-											id={category.metadata!}
+											id={category.metadata}
 										/>
 									</Suspense>
 								</ErrorBoundary>
 							)}
 						</QueryErrorResetBoundary>
 					))
-				: EMPTY_DATA.map((item) => (
+					: EMPTY_DATA.map((item) => (
 						<QueryErrorResetBoundary key={`${item.name}_${item.id}`}>
 							{({ reset }) => (
 								<ErrorBoundary
@@ -75,7 +77,8 @@ const Sidebar = () => {
 							)}
 						</QueryErrorResetBoundary>
 					))}
-		</Accordion>
+			</Accordion>
+		</ScrollArea>
 	);
 };
 

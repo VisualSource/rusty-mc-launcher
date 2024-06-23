@@ -17,6 +17,12 @@ module.exports = {
 			},
 		},
 		extend: {
+			containers: {
+				"5xs": "4rem",
+				"4xs": "8rem",
+				"3xs": "12rem",
+				"2xs": "16rem",
+			},
 			colors: {
 				border: "hsl(var(--border))",
 				input: "hsl(var(--input))",
@@ -73,5 +79,9 @@ module.exports = {
 			},
 		},
 	},
-	plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+	plugins: [
+		require("tailwindcss-animate"),
+		require("@tailwindcss/typography"),
+		require("@tailwindcss/container-queries"),
+	],
 };

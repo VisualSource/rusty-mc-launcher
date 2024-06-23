@@ -9,6 +9,13 @@ export const settings = {
 		value: z.string(),
 	}),
 
+	async getLike(value: string) {
+		return db.select({
+			query: `SELECT * FROM settings WHERE key LIKE '${value}';`,
+			schema: settings.schema
+		});
+	},
+
 	async update(key: string, value: string) {
 		return db.execute({
 			query: "UPDATE settings SET value = ? WHERE key = ?;",
