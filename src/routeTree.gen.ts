@@ -24,6 +24,7 @@ import { Route as AuthenticatedWorkshopProjectIdImport } from './routes/_authent
 import { Route as AuthenticatedLayoutProfileIdImport } from './routes/_authenticated/_layout/profile/$id'
 import { Route as AuthenticatedLayoutProfileIdScreenshotsImport } from './routes/_authenticated/_layout/profile/$id.screenshots'
 import { Route as AuthenticatedLayoutProfileIdEditImport } from './routes/_authenticated/_layout/profile/$id.edit'
+import { Route as AuthenticatedLayoutProfileIdContentImport } from './routes/_authenticated/_layout/profile/$id.content'
 
 // Create Virtual Routes
 
@@ -129,6 +130,12 @@ const AuthenticatedLayoutProfileIdEditRoute =
     getParentRoute: () => AuthenticatedLayoutProfileIdRoute,
   } as any)
 
+const AuthenticatedLayoutProfileIdContentRoute =
+  AuthenticatedLayoutProfileIdContentImport.update({
+    path: '/content',
+    getParentRoute: () => AuthenticatedLayoutProfileIdRoute,
+  } as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -217,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkshopProjectIdImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/_layout/profile/$id/content': {
+      id: '/_authenticated/_layout/profile/$id/content'
+      path: '/content'
+      fullPath: '/profile/$id/content'
+      preLoaderRoute: typeof AuthenticatedLayoutProfileIdContentImport
+      parentRoute: typeof AuthenticatedLayoutProfileIdImport
+    }
     '/_authenticated/_layout/profile/$id/edit': {
       id: '/_authenticated/_layout/profile/$id/edit'
       path: '/edit'
@@ -244,6 +258,7 @@ export const routeTree = rootRoute.addChildren({
       AuthenticatedLayoutIndexLazyRoute,
       AuthenticatedLayoutProfileIdRoute:
         AuthenticatedLayoutProfileIdRoute.addChildren({
+          AuthenticatedLayoutProfileIdContentRoute,
           AuthenticatedLayoutProfileIdEditRoute,
           AuthenticatedLayoutProfileIdScreenshotsRoute,
         }),
@@ -326,6 +341,7 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated/_layout/profile/$id.tsx",
       "parent": "/_authenticated/_layout",
       "children": [
+        "/_authenticated/_layout/profile/$id/content",
         "/_authenticated/_layout/profile/$id/edit",
         "/_authenticated/_layout/profile/$id/screenshots"
       ]
@@ -333,6 +349,10 @@ export const routeTree = rootRoute.addChildren({
     "/_authenticated/workshop/project/$id": {
       "filePath": "_authenticated/workshop/project.$id.tsx",
       "parent": "/_authenticated"
+    },
+    "/_authenticated/_layout/profile/$id/content": {
+      "filePath": "_authenticated/_layout/profile/$id.content.tsx",
+      "parent": "/_authenticated/_layout/profile/$id"
     },
     "/_authenticated/_layout/profile/$id/edit": {
       "filePath": "_authenticated/_layout/profile/$id.edit.tsx",

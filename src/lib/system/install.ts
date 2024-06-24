@@ -7,35 +7,52 @@ import type {
 	VersionDependency,
 	VersionFile,
 } from "../api/modrinth/types.gen";
-import { ProjectsService, VersionsService } from "../api/modrinth/services.gen";
+import { getProjectVersions, getVersion, getProject } from "../api/modrinth/services.gen";
 import { type ContentType, download_queue } from "../models/download_queue";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { askFor } from "@/components/dialog/AskDialog";
 import { workshop_content } from "../models/content";
 import { db, uninstallContent } from "./commands";
 import type { MinecraftProfile } from "../models/profiles";
+import { modrinthClient } from "../api/modrinthClient";
 
-async function getVersion(
+async function getContentVersion(
 	current: VersionDependency,
 	loaders?: string,
 	game?: string,
 ): Promise<Version> {
 	if (current.project_id) {
-		const versions = await VersionsService.getProjectVersions({
-			idSlug: current.project_id!,
-			gameVersions: game,
-			loaders,
+		const versions = await getProjectVersions({
+			client: modrinthClient,
+			path: {
+				"id|slug": current.project_id
+			},
+			query: {
+				game_versions: game,
+				loaders
+			}
 		});
+		if (versions.error) throw versions.error;
+		if (!versions.data) throw new Error("Failed to load project versions");
 
-		const version = versions.at(0);
+		const version = versions.data.at(0);
 		if (!version) throw new Error("Failed to get verison");
 
 		return version;
-	} else if (current.version_id) {
-		return VersionsService.getVersion({ id: current.version_id });
+	}
+	if (current.version_id) {
+		const version = await getVersion({
+			client: modrinthClient,
+			path: {
+				id: current.version_id
+			}
+		});
+		if (version.error) throw version.error;
+		if (!version.data) throw new Error("Failed to load version");
+		return version.data;
 	}
 
-	throw new Error(`Failed to get dependency version`, { cause: current });
+	throw new Error("Failed to get dependency version", { cause: current });
 }
 
 type Dep =
@@ -53,7 +70,7 @@ async function* getDependencies(
 		const current = deps_to_install.shift();
 		if (!current) continue;
 
-		const version = await getVersion(current, loaders, game);
+		const version = await getContentVersion(current, loaders, game);
 		const file = version.files.find((e) => e.primary) ?? version.files.at(0);
 		if (!file) throw new Error("Missing file download");
 
@@ -71,9 +88,14 @@ async function* getDependencies(
 		}
 
 		if (current.dependency_type === "optional") {
-			const project = await ProjectsService.getProject({
-				idSlug: version.project_id,
+			const project = await getProject({
+				client: modrinthClient,
+				path: {
+					"id|slug": version.project_id
+				}
 			});
+			if (project.error) throw project.error;
+			if (!project.data) throw new Error("Failed load project");
 
 			const result = await askFor({
 				title: "Optional Dependencies",
@@ -83,8 +105,8 @@ async function* getDependencies(
 				options: [
 					{
 						id: version.project_id,
-						name: project.title!,
-						icon: project.icon_url ?? undefined,
+						name: project.data.title ?? "Unname project",
+						icon: project.data.icon_url ?? undefined,
 					},
 				],
 			});
@@ -97,10 +119,11 @@ async function* getDependencies(
 			deps_to_install.push(...version.dependencies);
 		}
 
+		if (!version.version_number) throw new Error("Dep missing version number");
 		yield {
 			type: "include",
 			file,
-			version: version.version_number!,
+			version: version.version_number,
 			id: version.project_id,
 		};
 	}
@@ -145,7 +168,7 @@ export async function install_known(
 			sha1: file?.hashes.sha1,
 			url: file?.url,
 			filename: file.filename,
-			version: version.version_number!,
+			version: version.version_number,
 			id: version.project_id,
 		},
 	];
@@ -228,10 +251,15 @@ export async function install(data: Project) {
 					return;
 				}
 
-				const versions = await VersionsService.getProjectVersions({
-					idSlug: data.id,
+				const versions = await getProjectVersions({
+					client: modrinthClient,
+					path: {
+						"id|slug": data.id,
+					}
 				});
-				const version = versions.at(0);
+				if (versions.error) throw versions.error;
+				if (!versions.data) throw new Error("Failed to project versions");
+				const version = versions.data.at(0);
 				if (!version) throw new Error("No versions are avaiable");
 
 				const file =
@@ -245,7 +273,7 @@ export async function install(data: Project) {
 						sha1: file?.hashes.sha1,
 						url: file?.url,
 						filename: file.filename,
-						version: version.version_number!,
+						version: version.version_number,
 						id: data.id,
 					},
 				];
@@ -259,7 +287,7 @@ export async function install(data: Project) {
 					queue_id,
 					true,
 					0,
-					data.title!,
+					data.title ?? "Unknown",
 					data.icon_url ?? null,
 					profile.id,
 					content_id,
@@ -295,12 +323,19 @@ export async function install(data: Project) {
 
 				const loaders = JSON.stringify([profile.loader]);
 				const gameVersions = JSON.stringify(target);
-				const versions = await VersionsService.getProjectVersions({
-					idSlug: data.id,
-					loaders,
-					gameVersions,
+				const versions = await getProjectVersions({
+					client: modrinthClient,
+					path: {
+						"id|slug": data.id
+					},
+					query: {
+						loaders,
+						game_versions: gameVersions
+					}
 				});
-				const version = versions.at(0);
+				if (versions.error) throw versions.error;
+				if (!versions.data) throw new Error("Failed to load project versions")
+				const version = versions.data.at(0);
 				if (!version) throw new Error("No versions are avaiable");
 
 				const file =
@@ -314,7 +349,7 @@ export async function install(data: Project) {
 						sha1: file?.hashes.sha1,
 						url: file?.url,
 						filename: file.filename,
-						version: version.version_number!,
+						version: version.version_number,
 						id: data.id,
 					},
 				];
@@ -360,7 +395,7 @@ export async function install(data: Project) {
 					queue_id,
 					true,
 					0,
-					data.title!,
+					data.title ?? "Unknown",
 					data.icon_url ?? null,
 					profile.id,
 					content_id,
@@ -411,13 +446,20 @@ export async function install(data: Project) {
 					return;
 				}
 
-				const version_data = await VersionsService.getProjectVersions({
-					loaders: JSON.stringify(loaders.map((e) => e.id)),
-					gameVersions: JSON.stringify(gameVersions.map((e) => e.id)),
-					idSlug: data.id,
+				const version_data = await getProjectVersions({
+					client: modrinthClient,
+					path: {
+						"id|slug": data.id
+					},
+					query: {
+						loaders: JSON.stringify(loaders.map((e) => e.id)),
+						game_versions: JSON.stringify(gameVersions.map((e) => e.id))
+					},
 				});
+				if (version_data.error) throw version_data.error;
+				if (!version_data.data) throw new Error("Failed to get project versions");
 
-				const version = version_data.at(0);
+				const version = version_data.data.at(0);
 				if (!version) return;
 
 				const file =
@@ -431,7 +473,7 @@ export async function install(data: Project) {
 					queue_id,
 					true,
 					0,
-					data.title!,
+					data.title ?? "Unknown",
 					data.icon_url ?? null,
 					profile,
 					"Modpack",
@@ -444,7 +486,7 @@ export async function install(data: Project) {
 								url: file?.url,
 								id: data.id,
 								filename: file?.filename,
-								version: version.version_number!,
+								version: version.version_number,
 							},
 						],
 					},

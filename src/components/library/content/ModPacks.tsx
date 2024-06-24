@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ProjectsService } from "@lib/api/modrinth/services.gen";
+import { Box, GanttChartSquare } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import {
 	Card,
 	CardContent,
@@ -8,18 +9,25 @@ import {
 	CardTitle,
 } from "@component/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
-import { Box, GanttChartSquare } from "lucide-react";
+import { searchProjects } from "@lib/api/modrinth/services.gen";
+import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+
 const ModPacks: React.FC = () => {
 	const { data, error } = useSuspenseQuery({
 		queryKey: ["modrinth", "modpacks", "popular"],
-		queryFn: () =>
-			ProjectsService.searchProjects({
-				limit: 10,
-				facets: `[["project_type:modpack"]]`,
-				index: "follows",
-			}),
+		queryFn: async () => {
+			const response = await searchProjects({
+				client: modrinthClient,
+				query: {
+					limit: 10,
+					facets: `[["project_type:modpack"]]`,
+					index: "follows",
+				}
+			});
+			if (response.error) throw response.error;
+			return response.data;
+		}
 	});
 	if (error) throw error;
 	return (
@@ -34,7 +42,7 @@ const ModPacks: React.FC = () => {
 							<AvatarImage src={value.icon_url ?? undefined} />
 						</Avatar>
 						<div>
-							<CardTitle> {value.title}</CardTitle>
+							<CardTitle title={value.title} className="line-clamp-1 text-wrap"> {value.title}</CardTitle>
 							<CardDescription>By {value.author}</CardDescription>
 						</div>
 					</CardHeader>
@@ -50,7 +58,7 @@ const ModPacks: React.FC = () => {
 							</AvatarFallback>
 						</Avatar>
 						<Button asChild>
-							<Link to={`/workshop/${value.project_id}`}>View Pack</Link>
+							<Link to="/workshop/project/$id" params={{ id: value.project_id }}>View Pack</Link>
 						</Button>
 					</CardContent>
 				</Card>

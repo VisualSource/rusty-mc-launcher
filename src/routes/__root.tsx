@@ -11,7 +11,7 @@ const Index: React.FC = () => {
 	return (
 		<>
 			<Navbar />
-			<main className="overflow-y-scroll overflow-x-hidden scrollbar h-full flex flex-col">
+			<main className="overflow-x-hidden h-full flex flex-col">
 				<Outlet />
 			</main>
 			<Footer />

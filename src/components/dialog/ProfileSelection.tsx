@@ -19,7 +19,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-	CommandLoading,
+	//CommandLoading,
 } from "../ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 //import { getLoaderType } from "@/utils/versionUtils";
@@ -147,7 +147,7 @@ const SelectProfile: React.FC = () => {
 		return () => {
 			window.removeEventListener(KEY, callback);
 		};
-	}, [dispatch]);
+	}, []);
 
 	return (
 		<Dialog
@@ -165,7 +165,9 @@ const SelectProfile: React.FC = () => {
 					<CommandInput placeholder="Search Profile" />
 					<CommandEmpty>No Profiles</CommandEmpty>
 					{isLoading ? (
-						<CommandLoading>Loading Profiles...</CommandLoading>
+						<div>
+							{/*<CommandLoading>Loading Profiles...</CommandLoading>*/}
+						</div>
 					) : null}
 					<CommandList className="scrollbar max-h-72">
 						{data?.map((profile) => (

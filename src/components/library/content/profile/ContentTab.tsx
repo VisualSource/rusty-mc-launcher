@@ -1,8 +1,8 @@
 import { AlertTriangle, Box, LoaderCircle, Trash2 } from "lucide-react";
-import { Link, useOutletContext } from "react-router-dom";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { UpdateIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { ask } from "@tauri-apps/api/dialog";
 import { toast } from "react-toastify";
 import { useRef } from "react";
@@ -19,17 +19,18 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-	VersionsService,
-	ProjectsService,
-	VersionFilesService,
+	getProjects,
+	versionsFromHashes,
+	getProjectVersions
 } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
 import { type ContentType, workshop_content } from "@/lib/models/content";
-import { db, uninstallItem } from "@/lib/system/commands";
 import type { MinecraftProfile } from "@/lib/models/profiles";
-import { queryClient } from "@/lib/config/queryClient";
+import { modrinthClient } from "@/lib/api/modrinthClient";
+import { db, uninstallItem } from "@/lib/system/commands";
 import { install_known } from "@/lib/system/install";
+import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import logger from "@system/logger";
 
@@ -57,10 +58,9 @@ async function uninstall(filename: string, type: string, profile: string) {
 }
 
 export const ContentTab: React.FC<{
-	profile: string;
+	profile: MinecraftProfile;
 	content_type: ContentType;
 }> = ({ profile, content_type }) => {
-	const p = useOutletContext() as MinecraftProfile;
 	const container = useRef<HTMLDivElement>(null);
 	const { data, isLoading, isError, error } = useQuery({
 		queryKey: ["WORKSHOP_CONTENT", content_type, profile],
@@ -91,35 +91,50 @@ export const ContentTab: React.FC<{
 
 			const loadIdContent = async () => {
 				const ids = JSON.stringify(idsContent.map((e) => e.id));
-				const projects = await ProjectsService.getProjects({ ids });
+				const projects = await getProjects({
+					client: modrinthClient,
+					query: {
+						ids
+					}
+				});
+				if (projects.error) throw projects.error;
+				if (!projects.data) throw new Error("Failed to load projects.");
 				return idsContent.map((item) => {
-					const project = projects.find((e) => e.id === item.id);
+					const project = projects.data.find((e) => e.id === item.id);
 					return { record: item, project: project ?? null };
 				});
 			};
 
 			const loadHashContent = async () => {
-				const hashes = await VersionFilesService.versionsFromHashes({
-					requestBody: {
+				const hashes = await versionsFromHashes({
+					client: modrinthClient,
+					body: {
 						algorithm: "sha1",
 						hashes: hashesContent.map((e) => e.sha1),
 					},
 				});
+				if (hashes.error) throw hashes.error;
+				if (!hashes.data) throw new Error("Failed to load versions from hashs");
 
-				const items = Object.entries(hashes).map(([hash, version]) => ({
+				const items = Object.entries(hashes.data).map(([hash, version]) => ({
 					hash,
 					id: version.project_id,
 				}));
 
-				const projects = await ProjectsService.getProjects({
-					ids: JSON.stringify(items.map((e) => e.id)),
+				const projects = await getProjects({
+					client: modrinthClient,
+					query: {
+						ids: JSON.stringify(items.map((e) => e.id)),
+					}
 				});
+				if (projects.error) throw projects.error;
+				if (!projects.data) throw new Error("Failed to load projects");
 
 				return hashesContent.map((content) => {
 					const projectId = items.find((e) => e.hash === content.sha1);
 					if (!projectId) return { record: content, project: null };
 
-					const project = projects.find((e) => e.id === projectId.id);
+					const project = projects.data.find((e) => e.id === projectId.id);
 					if (!project) return { record: content, project: null };
 
 					return { record: content, project };
@@ -135,12 +150,10 @@ export const ContentTab: React.FC<{
 				c(),
 			]);
 
-			const item = results
+			return results
 				.map((e) => (e.status === "fulfilled" ? e.value : null))
 				.filter(Boolean)
 				.flat(2);
-
-			return item;
 		},
 	});
 
@@ -151,7 +164,7 @@ export const ContentTab: React.FC<{
 	});
 
 	return (
-		<div ref={container} className="h-full overflow-y-scroll">
+		<div ref={container} className="h-full">
 			{isLoading ? (
 				<div className="flex h-full w-full flex-col items-center justify-center">
 					<div className="flex gap-2">
@@ -165,7 +178,7 @@ export const ContentTab: React.FC<{
 					<TypographyH3>Something went wrong:</TypographyH3>
 					<pre className="text-red-300">{error.message}</pre>
 				</div>
-			) : (
+			) : data?.length ?? 0 >= 1 ? (
 				<div
 					className="relative w-full"
 					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
@@ -189,10 +202,7 @@ export const ContentTab: React.FC<{
 							</Avatar>
 							<div>
 								{data?.[virtualItem.index].project ? (
-									<Link
-										className="-mb-1 line-clamp-1 underline"
-										to={`/workshop/${data?.[virtualItem.index].project?.id ?? ""}`}
-									>
+									<Link to="/workshop/project/$id" params={{ id: data?.[virtualItem.index].project?.id ?? "" }} className="-mb-1 line-clamp-1 underline">
 										{data?.[virtualItem.index].project?.title}
 									</Link>
 								) : (
@@ -213,15 +223,24 @@ export const ContentTab: React.FC<{
 									onClick={async () =>
 										toast.promise(
 											async () => {
-												const id = await VersionsService.getProjectVersions({
-													idSlug: data?.[virtualItem.index].project?.id!,
-													gameVersions: `["${p.version}"]`,
-													loaders:
-														p.loader !== "vanilla"
-															? `["${p.loader}"]`
-															: undefined,
+												const project = data[virtualItem.index].project;
+												if (!project) throw new Error("Missing project!");
+												const id = await getProjectVersions({
+													client: modrinthClient,
+													path: {
+														"id|slug": project.id
+													},
+													query: {
+														gameVersions: `["${profile.version}"]`,
+														loaders:
+															profile.loader !== "vanilla"
+																? `["${profile.loader}"]`
+																: undefined,
+													}
 												});
-												const version = id.at(0);
+												if (id.error) throw id.error;
+												if (!id.data) throw new Error("Failed to load project versions");
+												const version = id.data.at(0);
 												const currentVersionId =
 													data?.[virtualItem.index].record?.version;
 												if (
@@ -230,7 +249,7 @@ export const ContentTab: React.FC<{
 													version.version_number !== currentVersionId
 												) {
 													const doUpdate = await ask(
-														`Would you like to update ${data?.[virtualItem.index].project?.title} to version (${id.at(0)?.version_number}) current is ${data?.[virtualItem.index].record?.version}`,
+														`Would you like to update ${project.title} to version (${id.data.at(0)?.version_number}) current is ${data?.[virtualItem.index].record?.version}`,
 														{
 															title: "Update Avaliable",
 															cancelLabel: "No",
@@ -243,14 +262,11 @@ export const ContentTab: React.FC<{
 														await install_known(
 															version,
 															{
-																title:
-																	data?.[virtualItem.index].project?.title!,
-																type: data?.[virtualItem.index].project
-																	?.project_type!,
-																icon: data?.[virtualItem.index].project
-																	?.icon_url,
+																title: project.title ?? "Unknown content name",
+																type: project.project_type,
+																icon: project?.icon_url,
 															},
-															p,
+															profile,
 														);
 													}
 
@@ -263,7 +279,7 @@ export const ContentTab: React.FC<{
 												pending: "Checking for update",
 												success: {
 													render({ data }) {
-														return `${data.didUpdate ? `Updating content` : `Up to date!`}`;
+														return data.didUpdate ? "Updating content" : "Up to date!";
 													},
 												},
 												error: "Failed to check for update",
@@ -299,15 +315,16 @@ export const ContentTab: React.FC<{
 									<AlertDialogFooter>
 										<AlertDialogCancel>Cancel</AlertDialogCancel>
 										<AlertDialogAction
-											onClick={() =>
-												uninstall(
-													data?.[virtualItem.index].record?.file_name!,
-													content_type,
-													profile,
-												)
-											}
-										>
-											Ok
+											onClick={() => {
+												const filename = data?.[virtualItem.index].record?.file_name;
+												if (filename) {
+													uninstall(
+														filename,
+														content_type,
+														profile.id,
+													)
+												}
+											}}>Ok
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>
@@ -315,7 +332,7 @@ export const ContentTab: React.FC<{
 						</div>
 					))}
 				</div>
-			)}
+			) : (<div className="w-full h-full flex flex-col justify-center items-center">No content installed</div>)}
 		</div>
 	);
 };

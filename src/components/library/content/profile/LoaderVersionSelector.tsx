@@ -9,7 +9,6 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-	CommandLoading,
 } from "@/components/ui/command";
 import {
 	FormControl,
@@ -153,7 +152,9 @@ export const LoaderVersionSelector: React.FC<{
 									<CommandInput placeholder="Search Versions..." />
 									<CommandList className="scrollbar">
 										{isLoading ? (
-											<CommandLoading>Loading versions...</CommandLoading>
+											<div>
+												{/**<CommandLoading>Loading versions...</CommandLoading> */}
+											</div>
 										) : (
 											<CommandEmpty>No versions found.</CommandEmpty>
 										)}

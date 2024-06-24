@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { loaderSchema } from "../system/commands";
+import { db, loaderSchema } from "../system/commands";
 
 export const profile = {
 	name: "profiles",
@@ -23,6 +23,24 @@ export const profile = {
 			.enum(["UNINSTALLED", "INSTALLING", "INSTALLED"])
 			.default("UNINSTALLED"),
 	}),
+	async delete(id: string) {
+		return db.execute({
+			query: "DELETE FROM profiles WHERE id = ?;",
+			args: [id]
+		})
+	},
+	async get(id: string) {
+		const profiles = await db.select<typeof profile.schema>({
+			query: "SELECT * FROM profiles WHERE id = ? LIMIT 1;",
+			args: [id],
+			schema: profile.schema,
+		});
+
+		const item = profiles.at(0);
+		if (!item) throw new Error(`No profile found with id of ${id}`);
+
+		return item;
+	}
 };
 
 export type MinecraftProfile = z.infer<typeof profile.schema>;

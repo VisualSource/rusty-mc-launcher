@@ -7,7 +7,6 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-	CommandLoading,
 } from "./command";
 import {
 	useMinecraftVersions,
@@ -50,7 +49,9 @@ export const VersionSelector: React.FC<{
 					<CommandList className="scrollbar max-h-48">
 						<CommandEmpty>No Versions Found.</CommandEmpty>
 						{isLoading ? (
-							<CommandLoading>Loading Versions</CommandLoading>
+							<div>
+								{/**<CommandLoading>Loading Versions</CommandLoading> */}
+							</div>
 						) : null}
 						<CommandGroup>
 							{data?.map((item) => (

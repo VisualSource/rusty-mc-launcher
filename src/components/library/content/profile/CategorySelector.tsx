@@ -9,7 +9,6 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-	CommandLoading,
 } from "@/components/ui/command";
 import {
 	Popover,
@@ -38,7 +37,7 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
 	const categoryList = useCategories();
 	const mutate = useCategoryMutation();
 
-	const { data, isError, error, isLoading } = useQuery({
+	const { data, isLoading } = useQuery({
 		queryKey: [KEY_PROFILE_COLLECTION, profile],
 		queryFn: () =>
 			db.select({
@@ -79,12 +78,14 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
 					<CommandList>
 						<CommandEmpty>No collection found</CommandEmpty>
 						{isLoading ? (
-							<CommandLoading>Loading collections...</CommandLoading>
+							<div>
+								{/**<CommandLoading>Loading collections...</CommandLoading> */}
+							</div>
 						) : null}
 						<CommandGroup>
 							{categoryList.map((category) => (
 								<CommandItem
-									value={category.metadata!}
+									value={category.metadata ?? undefined}
 									onSelect={(currentValue) => {
 										const action =
 											data?.findIndex((e) => e.category === currentValue) === -1

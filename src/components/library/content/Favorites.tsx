@@ -9,13 +9,13 @@ import { profile } from "@lib/models/profiles";
 import PlayButton from "@/components/ui/play";
 import { CATEGORY_KEY } from "@hook/keys";
 import { db } from "@system/commands";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 export const FavoritesLoading: React.FC = () => {
 	return (
 		<>
 			{Array.from({ length: 8 }).map((_, i) => (
-				<Card className="relative w-80" key={i}>
+				<Card className="relative w-80" key={`favorites_skeletion_${i + 1}`}>
 					<CardHeader>
 						<Skeleton className="h-4 w-1/3" />
 					</CardHeader>
@@ -53,8 +53,8 @@ const Favorites: React.FC = () => {
 				data.map((value) => (
 					<Card className="relative w-80" key={value.id}>
 						<CardHeader>
-							<Link to={`/profile/${value.id}`} title="Edit profile">
-								<CardTitle className="underline">{value.name}</CardTitle>
+							<Link to="/profile/$id" params={{ id: value.id }} title="Edit profile">
+								<CardTitle className="underline text-xl">{value.name}</CardTitle>
 							</Link>
 						</CardHeader>
 						<CardContent className="flex flex-col gap-4">
