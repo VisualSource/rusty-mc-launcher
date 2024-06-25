@@ -40,8 +40,10 @@ const CheckBoxItem: React.FC<{ label: string; id: string; icon?: string }> = ({
 				{icon ? (
 					<span
 						className="inline-block h-4 w-4"
+
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: thrid party icon
 						dangerouslySetInnerHTML={{ __html: icon }}
-					></span>
+					/>
 				) : null}
 				{label.replace(/^./, label[0].toUpperCase() ?? "")}
 			</label>

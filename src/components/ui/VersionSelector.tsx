@@ -1,5 +1,5 @@
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
 	Command,
 	CommandEmpty,
@@ -7,6 +7,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
+	CommandLoading
 } from "./command";
 import {
 	useMinecraftVersions,
@@ -21,6 +22,7 @@ export const VersionSelector: React.FC<{
 	defaultValue?: string;
 	onChange?: (value: string) => void;
 }> = ({ onChange, defaultValue, type = "release" }) => {
+	const btn = useRef<HTMLButtonElement>(null);
 	const { data, isLoading } = useMinecraftVersions(type);
 	const [open, setOpen] = useState(false);
 	const [value, setValue] = useState(defaultValue);
@@ -28,7 +30,7 @@ export const VersionSelector: React.FC<{
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button
+				<Button ref={btn}
 					disabled={isLoading}
 					aria-expanded={open}
 					type="button"
@@ -49,9 +51,7 @@ export const VersionSelector: React.FC<{
 					<CommandList className="scrollbar max-h-48">
 						<CommandEmpty>No Versions Found.</CommandEmpty>
 						{isLoading ? (
-							<div>
-								{/**<CommandLoading>Loading Versions</CommandLoading> */}
-							</div>
+							<CommandLoading>Loading Versions</CommandLoading>
 						) : null}
 						<CommandGroup>
 							{data?.map((item) => (
@@ -65,6 +65,7 @@ export const VersionSelector: React.FC<{
 										setValue(currentValue === value ? "" : currentValue);
 										setOpen(false);
 										onChange?.call(undefined, nextValue);
+										btn.current?.dispatchEvent(new Event("change", { bubbles: true }));
 									}}
 								>
 									<Check

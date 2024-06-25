@@ -1,15 +1,15 @@
 import type { ProjectResult } from "@lib/api/modrinth/types.gen";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 import { Skeleton } from "../ui/skeleton";
 
 export const WorkshopCard: React.FC<{ project: ProjectResult }> = ({
 	project,
 }) => {
 	return (
-		<Link className="flex p-2" to={`/workshop/${project.project_id}`}>
-			<div className="h-40 w-40">
+		<Link className="flex p-2" to="/workshop/project/$id" params={{ id: project.project_id }}>
+			<div className="h-28 w-28">
 				<img
-					className="h-full w-full"
+					className="h-full w-full rounded-lg"
 					alt={project.title}
 					src={project.icon_url ?? undefined}
 				/>

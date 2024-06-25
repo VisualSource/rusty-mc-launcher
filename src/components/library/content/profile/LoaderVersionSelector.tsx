@@ -1,7 +1,7 @@
 import type { UseFormReturn } from "react-hook-form";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
 	Command,
@@ -9,6 +9,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
+	CommandLoading
 } from "@/components/ui/command";
 import {
 	FormControl,
@@ -36,9 +37,10 @@ type QuiltMetadata = {
 };
 
 export const LoaderVersionSelector: React.FC<{
-	form: UseFormReturn<MinecraftProfile, any, undefined>;
+	form: UseFormReturn<MinecraftProfile, unknown, undefined>;
 	stable: boolean;
 }> = ({ stable, form }) => {
+	const btn = useRef<HTMLButtonElement>(null);
 	const [open, setOpen] = useState(false);
 	const [loader, version] = form.watch(["loader", "version"]);
 	const { data, isError, isLoading } = useQuery({
@@ -118,7 +120,8 @@ export const LoaderVersionSelector: React.FC<{
 	useEffect(() => {
 		form.resetField("loader_version");
 		if (loader === "vanilla") form.setValue("loader_version", null);
-	}, [loader, version, form]);
+		btn.current?.dispatchEvent(new Event("change", { bubbles: true }));
+	}, [loader, form]);
 
 	if (loader === "vanilla") return null;
 	return (
@@ -136,6 +139,7 @@ export const LoaderVersionSelector: React.FC<{
 						<Popover open={open} onOpenChange={setOpen}>
 							<PopoverTrigger asChild>
 								<Button
+									ref={btn}
 									className="w-full"
 									disabled={isError}
 									variant="outline"
@@ -152,9 +156,7 @@ export const LoaderVersionSelector: React.FC<{
 									<CommandInput placeholder="Search Versions..." />
 									<CommandList className="scrollbar">
 										{isLoading ? (
-											<div>
-												{/**<CommandLoading>Loading versions...</CommandLoading> */}
-											</div>
+											<CommandLoading>Loading versions...</CommandLoading>
 										) : (
 											<CommandEmpty>No versions found.</CommandEmpty>
 										)}
@@ -169,6 +171,7 @@ export const LoaderVersionSelector: React.FC<{
 															: currentValue,
 													);
 													setOpen(false);
+													btn.current?.dispatchEvent(new Event("change", { bubbles: true }));
 												}}
 											>
 												<Check

@@ -23,7 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 export const ProfileVersionSelector: React.FC<{
-	form: UseFormReturn<MinecraftProfile, any, undefined>;
+	form: UseFormReturn<MinecraftProfile, unknown, undefined>;
 }> = ({ form }) => {
 	const [showSnapshots, setShowSnapshots] = useState(false);
 
@@ -60,6 +60,7 @@ export const ProfileVersionSelector: React.FC<{
 			<FormField
 				control={form.control}
 				name="loader"
+				rules={{ required: { message: "A loader is required", value: true } }}
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Mod Loader</FormLabel>

@@ -1,4 +1,3 @@
-import { Form, useSubmit } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -16,6 +15,7 @@ import type { Setting } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCategoriesMutation } from "@/hooks/useCategoriesMutation";
 
 const DEFAULT_GROUP = [FAVORITES_GUID, UNCATEGORIZEDP_GUID];
 
@@ -23,12 +23,12 @@ const CollectionItem: React.FC<{
 	collection: Setting;
 }> = ({ collection }) => {
 	const [open, setOpen] = useState(false);
-	const submit = useSubmit();
+	const mutation = useCategoriesMutation();
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<button className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800">
+				<button className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800" type="button">
 					<TypographyH4 className="line-clamp-3 text-wrap text-lg text-zinc-50">
 						{collection.value}
 					</TypographyH4>
@@ -38,23 +38,18 @@ const CollectionItem: React.FC<{
 				<DialogHeader>
 					<DialogTitle>Edit Collection</DialogTitle>
 				</DialogHeader>
-				<Form
-					onSubmit={() => setOpen(false)}
-					action="/collections"
-					method="PATCH"
-				>
-					{DEFAULT_GROUP.includes(collection.metadata!) ? (
+				<form onSubmit={async (ev) => {
+					ev.preventDefault();
+					const name = new FormData(ev.target as HTMLFormElement).get("name");
+					await mutation.mutateAsync({ type: "PATCH", data: { id: collection.metadata, name } });
+					setOpen(false)
+				}}>
+					{collection.metadata && DEFAULT_GROUP.includes(collection.metadata) ? (
 						<div className="mb-4">
 							<TypographyMuted>This colletion is not editable.</TypographyMuted>
 						</div>
 					) : (
 						<div className="mb-4 grid w-full items-center gap-1.5">
-							<input
-								name="id"
-								defaultValue={collection.metadata!}
-								className="hidden"
-								readOnly
-							/>
 							<Label htmlFor="name">Collection name</Label>
 							<Input
 								autoComplete="false"
@@ -68,12 +63,12 @@ const CollectionItem: React.FC<{
 							/>
 						</div>
 					)}
-					{DEFAULT_GROUP.includes(collection.metadata!) ? null : (
+					{collection.metadata && DEFAULT_GROUP.includes(collection.metadata) ? null : (
 						<DialogFooter>
 							<div className="flex w-full justify-between">
-								<Button
-									onClick={() => {
-										submit(collection, { method: "DELETE" });
+								<Button disabled={mutation.isPending}
+									onClick={async () => {
+										await mutation.mutateAsync({ type: "DELETE", data: { id: collection.metadata } })
 										setOpen(false);
 									}}
 									title="Delete Collection"
@@ -83,11 +78,11 @@ const CollectionItem: React.FC<{
 								>
 									<Trash2 />
 								</Button>
-								<Button type="submit">Save</Button>
+								<Button disabled={mutation.isPending} type="submit">Save</Button>
 							</div>
 						</DialogFooter>
 					)}
-				</Form>
+				</form>
 			</DialogContent>
 		</Dialog>
 	);

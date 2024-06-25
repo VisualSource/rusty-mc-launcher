@@ -1,15 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { profileQueryOptions } from "../_profile.$id";
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ContentTab } from '@/components/library/content/profile/ContentTab';
-import { profileQueryOptions } from './$id';
-//import { Button } from '@/components/ui/button';
-//import { open } from "@tauri-apps/api/dialog";
-//import { FileBox, Trash2 } from 'lucide-react';
 
-export const Route = createFileRoute('/_authenticated/_layout/profile/$id/content')({
+export const Route = createFileRoute('/_authenticated/_layout/profile/_profile/$id/')({
   component: ProfileContent
-});
+})
 
 function ProfileContent() {
   const params = Route.useParams();
@@ -36,22 +33,3 @@ function ProfileContent() {
     </div>
   );
 }
-/*
-   <header className='flex gap-2 mt-2'>
-            <Button
-              title="Install content from out side launcher"
-              className="w-full"
-              variant="secondary"
-              size="sm"
-            >
-              <FileBox className="mr-1 h-5 w-5" />
-              Install
-            </Button>
-            <Button size="sm">Update All</Button>
-            <Button size="sm" variant="destructive">
-              <Trash2 className="mr-1 h-5 w-5" />
-              Delete All
-            </Button>
-          </header>
-
-*/

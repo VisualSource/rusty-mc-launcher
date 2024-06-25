@@ -9,6 +9,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
+	CommandLoading
 } from "@/components/ui/command";
 import {
 	Popover,
@@ -20,7 +21,6 @@ import { categories } from "@/lib/models/categories";
 import useCategories from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { db } from "@system/commands";
 import { cn } from "@/lib/utils";
 
 const CategorySelect: React.FC<{ profile: string }> = ({ profile }) => {
@@ -39,12 +39,7 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
 
 	const { data, isLoading } = useQuery({
 		queryKey: [KEY_PROFILE_COLLECTION, profile],
-		queryFn: () =>
-			db.select({
-				query: "SELECT * FROM categories WHERE profile = ?",
-				args: [profile],
-				schema: categories.schema,
-			}),
+		queryFn: () => categories.getCategoriesForProfile(profile)
 	});
 	const [open, setOpen] = useState(false);
 
@@ -59,7 +54,7 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
 					{data?.length ? (
 						<>
 							{data.map((item) => (
-								<Badge key={item.id}>
+								<Badge variant="default" key={item.id}>
 									{
 										categoryList.find((e) => e.metadata === item.category)
 											?.value
@@ -78,9 +73,7 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
 					<CommandList>
 						<CommandEmpty>No collection found</CommandEmpty>
 						{isLoading ? (
-							<div>
-								{/**<CommandLoading>Loading collections...</CommandLoading> */}
-							</div>
+							<CommandLoading>Loading collections...</CommandLoading>
 						) : null}
 						<CommandGroup>
 							{categoryList.map((category) => (

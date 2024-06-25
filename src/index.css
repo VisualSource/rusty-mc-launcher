@@ -117,11 +117,14 @@
     body {
       @apply bg-background text-foreground;
     }
+    html {
+      @apply overflow-hidden;
+    }
   }
 
   @layer components {
     #root {
-      @apply flex h-screen flex-col overflow-hidden;
+      @apply flex h-screen flex-col;
     }
 
     .scrollbar {
