@@ -14,7 +14,6 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
-import { Route as AuthenticatedCreateProfileImport } from './routes/_authenticated/create-profile'
 import { Route as AuthenticatedLayoutImport } from './routes/_authenticated/_layout'
 import { Route as AuthenticatedLayoutCollectionsImport } from './routes/_authenticated/_layout/collections'
 import { Route as AuthenticatedWorkshopSearchRouteImport } from './routes/_authenticated/workshop/search/route'
@@ -31,6 +30,9 @@ const AuthenticatedSettingsLazyImport = createFileRoute(
 )()
 const AuthenticatedDownloadsLazyImport = createFileRoute(
   '/_authenticated/downloads',
+)()
+const AuthenticatedCreateProfileLazyImport = createFileRoute(
+  '/_authenticated/create-profile',
 )()
 const AuthenticatedLayoutIndexLazyImport = createFileRoute(
   '/_authenticated/_layout/',
@@ -59,12 +61,13 @@ const AuthenticatedDownloadsLazyRoute = AuthenticatedDownloadsLazyImport.update(
   import('./routes/_authenticated/downloads.lazy').then((d) => d.Route),
 )
 
-const AuthenticatedCreateProfileRoute = AuthenticatedCreateProfileImport.update(
-  {
+const AuthenticatedCreateProfileLazyRoute =
+  AuthenticatedCreateProfileLazyImport.update({
     path: '/create-profile',
     getParentRoute: () => AuthenticatedRoute,
-  } as any,
-)
+  } as any).lazy(() =>
+    import('./routes/_authenticated/create-profile.lazy').then((d) => d.Route),
+  )
 
 const AuthenticatedLayoutRoute = AuthenticatedLayoutImport.update({
   id: '/_layout',
@@ -151,7 +154,7 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated/create-profile'
       path: '/create-profile'
       fullPath: '/create-profile'
-      preLoaderRoute: typeof AuthenticatedCreateProfileImport
+      preLoaderRoute: typeof AuthenticatedCreateProfileLazyImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/downloads': {
@@ -241,7 +244,7 @@ export const routeTree = rootRoute.addChildren({
           AuthenticatedLayoutProfileProfileIdIndexRoute,
         }),
     }),
-    AuthenticatedCreateProfileRoute,
+    AuthenticatedCreateProfileLazyRoute,
     AuthenticatedDownloadsLazyRoute,
     AuthenticatedSettingsLazyRoute,
     AuthenticatedWorkshopSearchRouteRoute,
@@ -281,7 +284,7 @@ export const routeTree = rootRoute.addChildren({
       ]
     },
     "/_authenticated/create-profile": {
-      "filePath": "_authenticated/create-profile.tsx",
+      "filePath": "_authenticated/create-profile.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/downloads": {
