@@ -1,12 +1,23 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { User2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { TeamsService } from "@lib/api/modrinth/services.gen";
+import { getTeamMembers } from "@lib/api/modrinth/services.gen";
+import { modrinthClient } from "@/lib/api/modrinthClient";
 
 export const Team: React.FC<{ id: string }> = ({ id }) => {
 	const { data } = useSuspenseQuery({
 		queryKey: ["modrinth", "team", id],
-		queryFn: () => TeamsService.getTeamMembers({ id }),
+		queryFn: async () => {
+			const repsonse = await getTeamMembers({
+				client: modrinthClient,
+				path: {
+					id
+				}
+			});
+			if (repsonse.error) throw repsonse.error;
+			if (!repsonse.data) throw new Error("Failed to load team members");
+			return repsonse.data;
+		},
 	});
 
 	return (

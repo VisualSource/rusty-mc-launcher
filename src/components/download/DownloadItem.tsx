@@ -6,13 +6,13 @@ import {
 	Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
-import { TypographyH4 } from "@component/ui/typography";
 import type { QueueItem } from "@/lib/models/download_queue";
-import { queryClient } from "@/lib/config/queryClient";
+import { TypographyH4 } from "@component/ui/typography";
+import { QueueItemState } from "@/lib/QueueItemState";
+import { queryClient } from "@/lib/api/queryClient";
+import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Button } from "../ui/button";
 import { db } from "@system/commands";
-import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
-import { QueueItemState } from "@/lib/QueueItemState";
 
 const DownloadItem: React.FC<QueueItem> = ({
 	id,

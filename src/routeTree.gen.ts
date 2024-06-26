@@ -16,10 +16,9 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as AuthenticatedCreateProfileImport } from './routes/_authenticated/create-profile'
 import { Route as AuthenticatedLayoutImport } from './routes/_authenticated/_layout'
-import { Route as AuthenticatedWorkshopIndexImport } from './routes/_authenticated/workshop/index'
-import { Route as AuthenticatedWorkshopSearchImport } from './routes/_authenticated/workshop/search'
 import { Route as AuthenticatedLayoutCollectionsImport } from './routes/_authenticated/_layout/collections'
-import { Route as AuthenticatedWorkshopProjectIdImport } from './routes/_authenticated/workshop/project.$id'
+import { Route as AuthenticatedWorkshopSearchRouteImport } from './routes/_authenticated/workshop/search/route'
+import { Route as AuthenticatedWorkshopProjectIdRouteImport } from './routes/_authenticated/workshop/project.$id/route'
 import { Route as AuthenticatedLayoutProfileProfileIdImport } from './routes/_authenticated/_layout/profile/_profile.$id'
 import { Route as AuthenticatedLayoutProfileProfileIdIndexImport } from './routes/_authenticated/_layout/profile/_profile.$id/index'
 import { Route as AuthenticatedLayoutProfileProfileIdScreenshotsImport } from './routes/_authenticated/_layout/profile/_profile.$id/screenshots'
@@ -80,30 +79,31 @@ const AuthenticatedLayoutIndexLazyRoute =
     import('./routes/_authenticated/_layout/index.lazy').then((d) => d.Route),
   )
 
-const AuthenticatedWorkshopIndexRoute = AuthenticatedWorkshopIndexImport.update(
-  {
-    path: '/workshop/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any,
-)
-
-const AuthenticatedWorkshopSearchRoute =
-  AuthenticatedWorkshopSearchImport.update({
-    path: '/workshop/search',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-
 const AuthenticatedLayoutCollectionsRoute =
   AuthenticatedLayoutCollectionsImport.update({
     path: '/collections',
     getParentRoute: () => AuthenticatedLayoutRoute,
   } as any)
 
-const AuthenticatedWorkshopProjectIdRoute =
-  AuthenticatedWorkshopProjectIdImport.update({
+const AuthenticatedWorkshopSearchRouteRoute =
+  AuthenticatedWorkshopSearchRouteImport.update({
+    path: '/workshop/search',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/workshop/search/route.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedWorkshopProjectIdRouteRoute =
+  AuthenticatedWorkshopProjectIdRouteImport.update({
     path: '/workshop/project/$id',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_authenticated/workshop/project.$id/route.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 
 const AuthenticatedLayoutProfileProfileIdRoute =
   AuthenticatedLayoutProfileProfileIdImport.update({
@@ -168,26 +168,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsLazyImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/workshop/search': {
+      id: '/_authenticated/workshop/search'
+      path: '/workshop/search'
+      fullPath: '/workshop/search'
+      preLoaderRoute: typeof AuthenticatedWorkshopSearchRouteImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/_layout/collections': {
       id: '/_authenticated/_layout/collections'
       path: '/collections'
       fullPath: '/collections'
       preLoaderRoute: typeof AuthenticatedLayoutCollectionsImport
       parentRoute: typeof AuthenticatedLayoutImport
-    }
-    '/_authenticated/workshop/search': {
-      id: '/_authenticated/workshop/search'
-      path: '/workshop/search'
-      fullPath: '/workshop/search'
-      preLoaderRoute: typeof AuthenticatedWorkshopSearchImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/workshop/': {
-      id: '/_authenticated/workshop/'
-      path: '/workshop'
-      fullPath: '/workshop'
-      preLoaderRoute: typeof AuthenticatedWorkshopIndexImport
-      parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/_layout/': {
       id: '/_authenticated/_layout/'
@@ -200,7 +193,7 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated/workshop/project/$id'
       path: '/workshop/project/$id'
       fullPath: '/workshop/project/$id'
-      preLoaderRoute: typeof AuthenticatedWorkshopProjectIdImport
+      preLoaderRoute: typeof AuthenticatedWorkshopProjectIdRouteImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/_layout/profile/_profile/$id': {
@@ -251,9 +244,8 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedCreateProfileRoute,
     AuthenticatedDownloadsLazyRoute,
     AuthenticatedSettingsLazyRoute,
-    AuthenticatedWorkshopSearchRoute,
-    AuthenticatedWorkshopIndexRoute,
-    AuthenticatedWorkshopProjectIdRoute,
+    AuthenticatedWorkshopSearchRouteRoute,
+    AuthenticatedWorkshopProjectIdRouteRoute,
   }),
 })
 
@@ -276,7 +268,6 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/downloads",
         "/_authenticated/settings",
         "/_authenticated/workshop/search",
-        "/_authenticated/workshop/",
         "/_authenticated/workshop/project/$id"
       ]
     },
@@ -301,24 +292,20 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated/settings.lazy.tsx",
       "parent": "/_authenticated"
     },
+    "/_authenticated/workshop/search": {
+      "filePath": "_authenticated/workshop/search/route.tsx",
+      "parent": "/_authenticated"
+    },
     "/_authenticated/_layout/collections": {
       "filePath": "_authenticated/_layout/collections.tsx",
       "parent": "/_authenticated/_layout"
-    },
-    "/_authenticated/workshop/search": {
-      "filePath": "_authenticated/workshop/search.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/workshop/": {
-      "filePath": "_authenticated/workshop/index.tsx",
-      "parent": "/_authenticated"
     },
     "/_authenticated/_layout/": {
       "filePath": "_authenticated/_layout/index.lazy.tsx",
       "parent": "/_authenticated/_layout"
     },
     "/_authenticated/workshop/project/$id": {
-      "filePath": "_authenticated/workshop/project.$id.tsx",
+      "filePath": "_authenticated/workshop/project.$id/route.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/_layout/profile/_profile/$id": {

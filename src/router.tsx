@@ -1,8 +1,14 @@
-import { createRouter, ErrorComponent } from "@tanstack/react-router";
+import { createRouter, ErrorComponent, stringifySearchWith } from "@tanstack/react-router";
 import { queryClient } from "@lib/api/queryClient";
 
 import { routeTree } from "./routeTree.gen";
 import { Loader2 } from "lucide-react";
+import { Facets } from "./lib/Facets";
+
+function replacer(_key: string, value: unknown) {
+  if (value instanceof Facets) return value.toArray();
+  return value;
+}
 
 export const router = createRouter({
   routeTree,
@@ -10,6 +16,7 @@ export const router = createRouter({
   defaultPreloadStaleTime: 0,
   defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
   defaultPendingComponent: () => (<div className="p-2 text-2xl"><div className="inline-block animate-spin px-2 transition opacity-1 duration-500 delay-300"><Loader2 /></div></div>),
+  stringifySearch: stringifySearchWith(value => JSON.stringify(value, replacer)),
   context: {
     queryClient,
     auth: {
