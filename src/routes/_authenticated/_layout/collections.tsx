@@ -1,18 +1,20 @@
-import CollectionItem from "@/components/library/content/collections/CollectionItem";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import useCategories, { categoriesQueryOptions } from "@/hooks/useCategories";
-import { useCategoriesMutation } from "@/hooks/useCategoriesMutation";
-import { Label } from "@radix-ui/react-dropdown-menu";
-
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import CollectionItem from "@/components/library/content/collections/CollectionItem";
+import useCategories, { categoriesQueryOptions } from "@/hooks/useCategories";
+import { useCategoriesMutation } from "@/hooks/useCategoriesMutation";
+import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/Loading";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
 export const Route = createFileRoute("/_authenticated/_layout/collections")({
 	component: Collections,
-	loader: (opts) => opts.context.queryClient.ensureQueryData(categoriesQueryOptions)
+	loader: (opts) => opts.context.queryClient.ensureQueryData(categoriesQueryOptions),
+	pendingComponent: Loading
 });
 
 function Collections() {

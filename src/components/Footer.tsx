@@ -77,7 +77,7 @@ const Footer = () => {
 						<Button variant="ghost" className="group dark:hover:bg-transparent">
 							<PlusSquare className="pr-2" />
 							<TypographyMuted className="transition-colors dark:group-hover:text-zinc-300">
-								Add a Game
+								Add a Profile
 							</TypographyMuted>
 						</Button>
 					</DropdownMenuTrigger>
@@ -89,7 +89,7 @@ const Footer = () => {
 							Import Profiles
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={import_mrpack}>
-							Import Mrpack
+							Import Modpack
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

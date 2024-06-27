@@ -1,6 +1,7 @@
-import { Facets } from '@/lib/Facets';
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod';
+import { Loading } from '@/components/Loading';
+import { Facets } from '@/lib/Facets';
 
 const DEFUALT_FACETS = [
     ["categories:'forge'", "categories:'fabric'", "categories:'quilt'", "categories:'modloader'", "categories:'neoforge'"],
@@ -20,4 +21,5 @@ export type ModrinthSearchParams = z.infer<typeof querySchema>;
 
 export const Route = createFileRoute('/_authenticated/workshop/search')({
     validateSearch: (search) => querySchema.parse(search),
+    pendingComponent: Loading
 })

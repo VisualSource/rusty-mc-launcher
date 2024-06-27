@@ -1,6 +1,7 @@
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 import { Book } from "lucide-react";
 
 import {
@@ -12,19 +13,19 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@component/ui/form";
+import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
 import type { MinecraftProfile } from "@lib/models/profiles";
+import { createProfile, db } from "@/lib/system/commands";
 import { TypographyH3 } from "@/components/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
+import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import { profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
-import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
-import { createProfile, db } from "@/lib/system/commands";
-import { queryClient } from "@/lib/api/queryClient";
-import logger from "@/lib/system/logger";
 import { CATEGORY_KEY } from "@/hooks/keys";
-import { UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
+import logger from "@/lib/system/logger";
 
 export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 	component: CreateProfile,
@@ -33,6 +34,7 @@ export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 const resolver = zodResolver(profile.schema);
 
 function CreateProfile() {
+	const navigate = useNavigate();
 	const form = useForm<MinecraftProfile>({
 		resolver,
 		defaultValues: {
@@ -101,7 +103,15 @@ function CreateProfile() {
 			await queryClient.invalidateQueries({
 				queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
 			});
+
+			await navigate({
+				to: "/profile/$id",
+				params: {
+					id: ev.id
+				}
+			});
 		} catch (error) {
+			toast.error("Failed to create profile", { data: { error } });
 			logger.error(error);
 		}
 	};
@@ -240,7 +250,7 @@ function CreateProfile() {
 					</section>
 
 					<div className="absolute bottom-4 right-4">
-						<Button type="submit">Create</Button>
+						<Button disabled={form.formState.isLoading || form.formState.isSubmitting} type="submit">Create</Button>
 					</div>
 				</form>
 			</Form>

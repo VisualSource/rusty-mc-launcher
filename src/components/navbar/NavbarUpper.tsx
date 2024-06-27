@@ -90,6 +90,9 @@ export const NavbarUpper: React.FC = () => {
 							<DropdownMenuItem onClick={() => login()}>Login</DropdownMenuItem>
 						</UnauthenticatedTemplate>
 						<AuthenticatedTemplate>
+							<DropdownMenuItem asChild>
+								<Link to="/settings/accounts">Accounts</Link>
+							</DropdownMenuItem>
 							<DropdownMenuItem onClick={() => logout(msAccount)}>
 								Signout
 							</DropdownMenuItem>

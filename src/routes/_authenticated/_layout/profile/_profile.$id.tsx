@@ -1,12 +1,14 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import PlayButton from '@/components/ui/play';
-import { Separator } from '@/components/ui/separator';
-import { KEY_PROFILE } from '@/hooks/keys';
-import { profile } from '@/lib/models/profiles';
+import { ErrorComponent, Link, Outlet, createFileRoute } from '@tanstack/react-router'
+import { AlertTriangle, Box, Images, Package, Settings } from 'lucide-react';
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
-import { Link, Outlet, createFileRoute } from '@tanstack/react-router'
-import { Box, Images, Package, Settings } from 'lucide-react';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { profile } from '@/lib/models/profiles';
+import { Button } from '@/components/ui/button';
+import { Loading } from '@/components/Loading';
+import PlayButton from '@/components/ui/play';
+import { KEY_PROFILE } from '@/hooks/keys';
 
 export const profileQueryOptions = (id: string) => queryOptions({
   queryKey: [KEY_PROFILE, id],
@@ -15,7 +17,17 @@ export const profileQueryOptions = (id: string) => queryOptions({
 
 export const Route = createFileRoute('/_authenticated/_layout/profile/_profile/$id')({
   component: Profile,
-  loader: (opts) => opts.context.queryClient.ensureQueryData(profileQueryOptions(opts.params.id))
+  loader: (opts) => opts.context.queryClient.ensureQueryData(profileQueryOptions(opts.params.id)),
+  pendingComponent: () => (<Loading />),
+  notFoundComponent: () => (
+    <div className="p-2 text-2xl h-full w-full flex justify-center items-center">
+      <div className="inline-block px-2">
+        <AlertTriangle />
+      </div>
+      <span>Not Found</span>
+    </div>
+  ),
+  errorComponent: (error) => <ErrorComponent error={error} />
 })
 
 function Profile() {
@@ -53,23 +65,23 @@ function Profile() {
         <Separator />
         <ul className="space-y-2 px-4">
           <li>
-            <Button className="w-full" variant="secondary" size="sm" asChild>
+            <Button className="w-full justify-start" variant="secondary" size="sm" asChild>
               <Link to="/profile/$id" params={params}>
-                <Package className="mr-1 h-5 w-5" /> Content
+                <Package className="mr-2 h-5 w-5" /> Content
               </Link>
             </Button>
           </li>
           <li>
-            <Button className="w-full" variant="secondary" size="sm" asChild>
+            <Button className="w-full justify-start" variant="secondary" size="sm" asChild>
               <Link to="/profile/$id/screenshots" params={params}>
-                <Images className="mr-1 h-5 w-5" /> Screenshots
+                <Images className="mr-2 h-5 w-5" /> Screenshots
               </Link>
             </Button>
           </li>
           <li>
-            <Button className="w-full" variant="secondary" size="sm" asChild>
+            <Button className="w-full justify-start" variant="secondary" size="sm" asChild>
               <Link to="/profile/$id/edit" params={params}>
-                <Settings className="mr-1 h-5 w-5" /> Settings
+                <Settings className="mr-2 h-5 w-5" /> Settings
               </Link>
             </Button>
           </li>

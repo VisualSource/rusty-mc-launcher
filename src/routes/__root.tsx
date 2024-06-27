@@ -21,7 +21,7 @@ const Index: React.FC = () => {
 				position="bottom-right"
 				theme="dark" />
 			<ReactQueryDevtools />
-			<TanStackRouterDevtools />
+			<TanStackRouterDevtools position="bottom-right" />
 		</>
 	);
 };

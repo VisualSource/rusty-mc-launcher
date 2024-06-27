@@ -229,6 +229,9 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                                     "type": "error"
                                 });
                             } else {
+                                send_event!(tx,"done",{
+                                    "keys": ["profile",item.id],
+                                });
                                 send_event!(tx,"notify",{
                                     "message": "Client Installed!",
                                     "type": "ok"

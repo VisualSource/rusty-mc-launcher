@@ -1,11 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { profileQueryOptions } from "../_profile.$id";
 import { useSuspenseQuery } from '@tanstack/react-query';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ContentTab } from '@/components/library/content/profile/ContentTab';
+import { profileQueryOptions } from "../_profile.$id";
+import { Loading } from '@/components/Loading';
 
 export const Route = createFileRoute('/_authenticated/_layout/profile/_profile/$id/')({
-  component: ProfileContent
+  component: ProfileContent,
+  pendingComponent: Loading
 })
 
 function ProfileContent() {

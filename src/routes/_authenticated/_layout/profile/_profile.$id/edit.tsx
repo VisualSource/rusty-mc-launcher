@@ -21,15 +21,17 @@ import { download_queue } from "@/lib/models/download_queue";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { workshop_content } from "@/lib/models/content";
+import { profileQueryOptions } from "../_profile.$id";
 import { queryClient } from "@/lib/api/queryClient";
 import { settings } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import { profileQueryOptions } from "../_profile.$id";
 import logger from "@/lib/system/logger";
 
 export const Route = createFileRoute('/_authenticated/_layout/profile/_profile/$id/edit')({
-  component: ProfileEdit
+  component: ProfileEdit,
+  pendingComponent: Loading
 });
 
 const onFormChange = debounce(async (og: MinecraftProfile, profile: MinecraftProfile) => {
@@ -84,6 +86,7 @@ const onFormChange = debounce(async (og: MinecraftProfile, profile: MinecraftPro
 }, 500);
 
 function ProfileEdit() {
+  const navigate = Route.useNavigate();
   const formRef = useRef<HTMLFormElement>(null);
   const params = Route.useParams();
   const query = useSuspenseQuery(profileQueryOptions(params.id));
@@ -303,6 +306,12 @@ function ProfileEdit() {
                     queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
                   });
                   toast.success("Copyed profile");
+                  navigate({
+                    to: "/profile/$id",
+                    params: {
+                      id: id
+                    }
+                  });
                 } catch (error) {
                   console.error(error);
                   toast.error("Failed to copy", {
@@ -369,6 +378,10 @@ function ProfileEdit() {
                         });
                       }
                       await deleteProfile(query.data.id);
+
+                      navigate({
+                        to: "/"
+                      });
                     }}
                   >
                     Ok

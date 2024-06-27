@@ -9,12 +9,14 @@ import { ScrollArea } from "@component/ui/scroll-area";
 import { QueueItemState } from "@/lib/QueueItemState";
 import { queryClient } from "@/lib/api/queryClient";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
+import { Loading } from "@/components/Loading";
 import { Button } from "@component/ui/button";
 import useDownload from "@hook/useDownload";
 import { db } from "@/lib/system/commands";
 
 export const Route = createLazyFileRoute("/_authenticated/downloads")({
 	component: Download,
+	pendingComponent: Loading
 });
 
 function Download() {

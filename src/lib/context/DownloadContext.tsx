@@ -16,7 +16,7 @@ type Progress = {
 };
 
 type DownloadEvent = {
-	event: "group" | "update" | "notify" | "refresh" | "reset";
+	event: "group" | "update" | "notify" | "refresh" | "reset" | "done";
 	value: string;
 };
 
@@ -91,6 +91,13 @@ class DownloadManager extends EventTarget {
 			}
 			case "reset": {
 				this.current_progress = null;
+				break;
+			}
+			case "done": {
+				if (Array.isArray(data.keys)) {
+					queryClient.invalidateQueries({ queryKey: data.keys })
+				}
+				break;
 			}
 		}
 		this.dispatchEvent(new Event("update"));

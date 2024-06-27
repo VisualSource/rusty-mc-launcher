@@ -18,9 +18,11 @@ import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ModrinthSearchParams } from "./route";
+import { Loading } from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 
 const ALLOWED_MOD_LOADERS = ["forge", "fabric", "quilt", "neoforge"] as const;
 const SHOW_LOADERS_ON = ["mod", "modpack", "shader"] as const;
@@ -35,7 +37,7 @@ function filterOn(name: string, list: LoaderTag[]): LoaderTag[] {
 export const Route = createLazyFileRoute("/_authenticated/workshop/search")({
 	component: WorkshopHome,
 	errorComponent: (error) => <ErrorComponent error={error} />,
-	pendingComponent: () => (<div>loading....</div>)
+	pendingComponent: Loading
 });
 
 function WorkshopHome() {
@@ -299,7 +301,7 @@ function WorkshopHome() {
 										</AvatarFallback>
 										<AvatarImage src={project.icon_url ?? undefined} />
 									</Avatar>
-									<div>
+									<div title={project.title}>
 										<TypographyH4 className="line-clamp-1">{project.title ?? "Unknown Project"}</TypographyH4>
 										<span className="text-sm text-muted-foreground">
 											By <span className="underline">{project.author}</span>

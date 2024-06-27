@@ -2,7 +2,7 @@
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import react from '@vitejs/plugin-react';
+import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from 'vite';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -17,7 +17,6 @@ export default defineConfig({
   test: {},
   resolve: {
     alias: {
-      'node-fetch': 'isomorphic-fetch',
       "@masl": resolve(__dirname, "./src/lib/masl"),
       "@": resolve(__dirname, "./src"),
       "@context": resolve(__dirname, "./src/lib/context"),

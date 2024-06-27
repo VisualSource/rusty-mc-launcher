@@ -39,7 +39,7 @@ function Layout() {
                   className="rounded-sm text-zinc-700"
                   asChild
                 >
-                  <Link to="/collections">
+                  <Link title="View collections" to="/collections">
                     <Grid2X2 />
                   </Link>
                 </Button>

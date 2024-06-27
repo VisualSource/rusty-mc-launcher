@@ -8,6 +8,7 @@ import { FileImage } from "lucide-react";
 import { useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { settings } from "@/lib/models/settings";
+import { Loading } from "@/components/Loading";
 
 const profileScreenshotsQueryOptions = (id: string) => queryOptions({
   queryKey: ["PROFILE", id, "SCREENSHOTS"],
@@ -30,7 +31,7 @@ const profileScreenshotsQueryOptions = (id: string) => queryOptions({
 export const Route = createFileRoute('/_authenticated/_layout/profile/_profile/$id/screenshots')({
   component: Screenshots,
   errorComponent: (error) => <ErrorComponent error={error} />,
-  pendingComponent: () => "Loading Images....",
+  pendingComponent: Loading,
   loader: (opts) => opts.context.queryClient.ensureQueryData(profileScreenshotsQueryOptions(opts.params.id))
 });
 

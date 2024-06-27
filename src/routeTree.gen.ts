@@ -14,7 +14,9 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
+import { Route as AuthenticatedSettingsImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedLayoutImport } from './routes/_authenticated/_layout'
+import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedLayoutCollectionsImport } from './routes/_authenticated/_layout/collections'
 import { Route as AuthenticatedWorkshopSearchRouteImport } from './routes/_authenticated/workshop/search/route'
 import { Route as AuthenticatedWorkshopProjectIdRouteImport } from './routes/_authenticated/workshop/project.$id/route'
@@ -25,9 +27,6 @@ import { Route as AuthenticatedLayoutProfileProfileIdEditImport } from './routes
 
 // Create Virtual Routes
 
-const AuthenticatedSettingsLazyImport = createFileRoute(
-  '/_authenticated/settings',
-)()
 const AuthenticatedDownloadsLazyImport = createFileRoute(
   '/_authenticated/downloads',
 )()
@@ -37,6 +36,15 @@ const AuthenticatedCreateProfileLazyImport = createFileRoute(
 const AuthenticatedLayoutIndexLazyImport = createFileRoute(
   '/_authenticated/_layout/',
 )()
+const AuthenticatedSettingsGameLazyImport = createFileRoute(
+  '/_authenticated/settings/game',
+)()
+const AuthenticatedSettingsDownloadLazyImport = createFileRoute(
+  '/_authenticated/settings/download',
+)()
+const AuthenticatedSettingsAccountsLazyImport = createFileRoute(
+  '/_authenticated/settings/accounts',
+)()
 
 // Create/Update Routes
 
@@ -44,13 +52,6 @@ const AuthenticatedRoute = AuthenticatedImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRoute,
 } as any)
-
-const AuthenticatedSettingsLazyRoute = AuthenticatedSettingsLazyImport.update({
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/settings.lazy').then((d) => d.Route),
-)
 
 const AuthenticatedDownloadsLazyRoute = AuthenticatedDownloadsLazyImport.update(
   {
@@ -69,6 +70,11 @@ const AuthenticatedCreateProfileLazyRoute =
     import('./routes/_authenticated/create-profile.lazy').then((d) => d.Route),
   )
 
+const AuthenticatedSettingsRoute = AuthenticatedSettingsImport.update({
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
 const AuthenticatedLayoutRoute = AuthenticatedLayoutImport.update({
   id: '/_layout',
   getParentRoute: () => AuthenticatedRoute,
@@ -80,6 +86,41 @@ const AuthenticatedLayoutIndexLazyRoute =
     getParentRoute: () => AuthenticatedLayoutRoute,
   } as any).lazy(() =>
     import('./routes/_authenticated/_layout/index.lazy').then((d) => d.Route),
+  )
+
+const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
+  {
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any,
+)
+
+const AuthenticatedSettingsGameLazyRoute =
+  AuthenticatedSettingsGameLazyImport.update({
+    path: '/game',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/settings/game.lazy').then((d) => d.Route),
+  )
+
+const AuthenticatedSettingsDownloadLazyRoute =
+  AuthenticatedSettingsDownloadLazyImport.update({
+    path: '/download',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/settings/download.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedSettingsAccountsLazyRoute =
+  AuthenticatedSettingsAccountsLazyImport.update({
+    path: '/accounts',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/settings/accounts.lazy').then(
+      (d) => d.Route,
+    ),
   )
 
 const AuthenticatedLayoutCollectionsRoute =
@@ -150,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLayoutImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/create-profile': {
       id: '/_authenticated/create-profile'
       path: '/create-profile'
@@ -162,13 +210,6 @@ declare module '@tanstack/react-router' {
       path: '/downloads'
       fullPath: '/downloads'
       preLoaderRoute: typeof AuthenticatedDownloadsLazyImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsLazyImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/workshop/search': {
@@ -184,6 +225,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/collections'
       preLoaderRoute: typeof AuthenticatedLayoutCollectionsImport
       parentRoute: typeof AuthenticatedLayoutImport
+    }
+    '/_authenticated/settings/accounts': {
+      id: '/_authenticated/settings/accounts'
+      path: '/accounts'
+      fullPath: '/settings/accounts'
+      preLoaderRoute: typeof AuthenticatedSettingsAccountsLazyImport
+      parentRoute: typeof AuthenticatedSettingsImport
+    }
+    '/_authenticated/settings/download': {
+      id: '/_authenticated/settings/download'
+      path: '/download'
+      fullPath: '/settings/download'
+      preLoaderRoute: typeof AuthenticatedSettingsDownloadLazyImport
+      parentRoute: typeof AuthenticatedSettingsImport
+    }
+    '/_authenticated/settings/game': {
+      id: '/_authenticated/settings/game'
+      path: '/game'
+      fullPath: '/settings/game'
+      preLoaderRoute: typeof AuthenticatedSettingsGameLazyImport
+      parentRoute: typeof AuthenticatedSettingsImport
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexImport
+      parentRoute: typeof AuthenticatedSettingsImport
     }
     '/_authenticated/_layout/': {
       id: '/_authenticated/_layout/'
@@ -244,9 +313,14 @@ export const routeTree = rootRoute.addChildren({
           AuthenticatedLayoutProfileProfileIdIndexRoute,
         }),
     }),
+    AuthenticatedSettingsRoute: AuthenticatedSettingsRoute.addChildren({
+      AuthenticatedSettingsAccountsLazyRoute,
+      AuthenticatedSettingsDownloadLazyRoute,
+      AuthenticatedSettingsGameLazyRoute,
+      AuthenticatedSettingsIndexRoute,
+    }),
     AuthenticatedCreateProfileLazyRoute,
     AuthenticatedDownloadsLazyRoute,
-    AuthenticatedSettingsLazyRoute,
     AuthenticatedWorkshopSearchRouteRoute,
     AuthenticatedWorkshopProjectIdRouteRoute,
   }),
@@ -267,9 +341,9 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/_layout",
+        "/_authenticated/settings",
         "/_authenticated/create-profile",
         "/_authenticated/downloads",
-        "/_authenticated/settings",
         "/_authenticated/workshop/search",
         "/_authenticated/workshop/project/$id"
       ]
@@ -283,16 +357,22 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/_layout/profile/_profile/$id"
       ]
     },
+    "/_authenticated/settings": {
+      "filePath": "_authenticated/settings.tsx",
+      "parent": "/_authenticated",
+      "children": [
+        "/_authenticated/settings/accounts",
+        "/_authenticated/settings/download",
+        "/_authenticated/settings/game",
+        "/_authenticated/settings/"
+      ]
+    },
     "/_authenticated/create-profile": {
       "filePath": "_authenticated/create-profile.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/downloads": {
       "filePath": "_authenticated/downloads.lazy.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/settings": {
-      "filePath": "_authenticated/settings.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/workshop/search": {
@@ -302,6 +382,22 @@ export const routeTree = rootRoute.addChildren({
     "/_authenticated/_layout/collections": {
       "filePath": "_authenticated/_layout/collections.tsx",
       "parent": "/_authenticated/_layout"
+    },
+    "/_authenticated/settings/accounts": {
+      "filePath": "_authenticated/settings/accounts.lazy.tsx",
+      "parent": "/_authenticated/settings"
+    },
+    "/_authenticated/settings/download": {
+      "filePath": "_authenticated/settings/download.lazy.tsx",
+      "parent": "/_authenticated/settings"
+    },
+    "/_authenticated/settings/game": {
+      "filePath": "_authenticated/settings/game.lazy.tsx",
+      "parent": "/_authenticated/settings"
+    },
+    "/_authenticated/settings/": {
+      "filePath": "_authenticated/settings/index.tsx",
+      "parent": "/_authenticated/settings"
     },
     "/_authenticated/_layout/": {
       "filePath": "_authenticated/_layout/index.lazy.tsx",

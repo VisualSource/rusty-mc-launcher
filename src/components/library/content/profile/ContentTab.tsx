@@ -63,11 +63,11 @@ export const ContentTab: React.FC<{
 }> = ({ profile, content_type }) => {
 	const container = useRef<HTMLDivElement>(null);
 	const { data, isLoading, isError, error } = useQuery({
-		queryKey: ["WORKSHOP_CONTENT", content_type, profile],
+		queryKey: ["WORKSHOP_CONTENT", content_type, profile.id],
 		queryFn: async () => {
 			const data = await db.select({
 				query: "SELECT * FROM profile_content WHERE profile = ? AND type = ?; ",
-				args: [profile, content_type],
+				args: [profile.id, content_type],
 				schema: workshop_content.schema,
 			});
 

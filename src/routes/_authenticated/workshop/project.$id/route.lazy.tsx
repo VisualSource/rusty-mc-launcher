@@ -1,25 +1,35 @@
-import SelectProfile from '@/components/dialog/ProfileSelection';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { TypographyH1, TypographyH4 } from '@/components/ui/typography';
-import { Gallery } from '@/components/workshop/Gallery';
-import { Team } from '@/components/workshop/Team';
-import { projectQueryOptions } from '@/lib/query/modrinthProjectQuery';
-import { install } from '@/lib/system/install';
-import { DiscordLogoIcon } from '@radix-ui/react-icons';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { AlertTriangle, Bug, Calendar, Code, DollarSign, Download, Globe, Heart, Plus, RefreshCcw } from 'lucide-react';
 import { ErrorComponent, createLazyFileRoute, useRouter } from '@tanstack/react-router'
 import { formatRelative } from 'date-fns/formatRelative';
-import { Bug, Calendar, Code, DollarSign, Download, Globe, Heart, Plus, RefreshCcw } from 'lucide-react';
-import { Suspense } from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { DiscordLogoIcon } from '@radix-ui/react-icons';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import { Suspense } from 'react';
+
+import { TypographyH1, TypographyH4 } from '@/components/ui/typography';
+import { projectQueryOptions } from '@/lib/query/modrinthProjectQuery';
+import SelectProfile from '@/components/dialog/ProfileSelection';
+import { Gallery } from '@/components/workshop/Gallery';
+import { Team } from '@/components/workshop/Team';
+import { Button } from '@/components/ui/button';
+import { install } from '@/lib/system/install';
+import { Loading } from '@/components/Loading';
+import { Badge } from '@/components/ui/badge';
 
 export const Route = createLazyFileRoute('/_authenticated/workshop/project/$id')({
   component: Project,
   errorComponent: (error) => <ErrorComponent error={error} />,
-  pendingComponent: () => (<div>Loading project...</div>)
+  notFoundComponent: () => (
+    <div className="p-2 text-2xl h-full w-full flex justify-center items-center">
+      <div className="inline-block px-2">
+        <AlertTriangle />
+      </div>
+      <span>Not Found</span>
+    </div>
+  ),
+  pendingComponent: Loading
 })
 
 function Project() {
