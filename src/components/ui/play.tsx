@@ -29,7 +29,7 @@ const PlayButton: React.FC<
 					return;
 				}
 
-				let exitTimer;
+				let exitTimer: ReturnType<typeof setTimeout> | undefined;
 				try {
 					if (!user.account) return;
 					await launchGame({
