@@ -23,7 +23,7 @@ export const Gallery: React.FC<{
 		<Carousel setApi={setApi}>
 			<CarouselContent>
 				{images.map((item, i) => (
-					<CarouselItem key={i}>
+					<CarouselItem key={`carousel_item_${i + 1}`}>
 						<div className="h-96">
 							<img
 								className="h-full w-full object-contain object-center"
@@ -43,7 +43,8 @@ export const Gallery: React.FC<{
 				<div className="flex gap-4 overflow-hidden">
 					{images.slice(0, 6).map((item, i) => (
 						<button
-							key={i}
+							type="button"
+							key={`preview_image_${i + 1}`}
 							onClick={() => api?.scrollTo(i)}
 							className="h-28 w-28"
 						>

@@ -9,7 +9,10 @@ import type { BridgeCapabilities } from "./BridgeCapabilities";
 import type { AccountContext } from "./BridgeAccountContext";
 import type { BridgeError } from "./BridgeError";
 import type { BridgeRequest } from "./BridgeRequest";
-import type { BridgeRequestEnvelope, BridgeMethods } from "./BridgeRequestEnvelope";
+import type {
+	BridgeRequestEnvelope,
+	BridgeMethods,
+} from "./BridgeRequestEnvelope";
 import type { BridgeResponseEnvelope } from "./BridgeResponseEnvelope";
 import { BridgeStatusCode } from "./BridgeStatusCode";
 import type { IBridgeProxy } from "./IBridgeProxy";

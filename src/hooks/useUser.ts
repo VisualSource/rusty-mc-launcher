@@ -64,7 +64,7 @@ const useUser = () => {
 	);
 
 	const refresh = useCallback(async () => {
-		if (!msAccount) throw new Error("Invalid userid");
+		if (!msAccount?.homeAccountId) throw new Error("Invalid userid");
 		const accessToken = await getToken(instance, {
 			scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
 			forceRefresh: true,
@@ -73,7 +73,7 @@ const useUser = () => {
 			},
 		});
 		return getMinecraftAccount(msAccount.homeAccountId, accessToken);
-	}, [msAccount?.homeAccountId, instance]);
+	}, [instance, msAccount?.homeAccountId]);
 
 	return {
 		account: mcAccount.data,

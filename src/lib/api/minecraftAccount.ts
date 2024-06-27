@@ -34,7 +34,7 @@ export type MinecraftAccount = {
 			url: string;
 			variant: string;
 		}[];
-		profileActions: {};
+		profileActions: Record<string, unknown>;
 	};
 };
 

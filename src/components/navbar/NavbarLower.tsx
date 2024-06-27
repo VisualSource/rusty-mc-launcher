@@ -11,7 +11,6 @@ import { Separator } from "@component/ui/separator";
 import { Button } from "@component/ui/button";
 import { cn } from "@/lib/utils";
 
-
 export const NavbarLower: React.FC = () => {
 	return (
 		<section
@@ -27,9 +26,15 @@ export const NavbarLower: React.FC = () => {
 						>
 							<Link to="/">
 								<MatchRoute to="/">
-									{(match) => (<span className={cn("transition-colors", {
-										"border-b-2 border-blue-300 text-blue-300": match,
-									})}>LIBRARY</span>)}
+									{(match) => (
+										<span
+											className={cn("transition-colors", {
+												"border-b-2 border-blue-300 text-blue-300": match,
+											})}
+										>
+											LIBRARY
+										</span>
+									)}
 								</MatchRoute>
 							</Link>
 						</NavigationMenuTrigger>
@@ -53,9 +58,15 @@ export const NavbarLower: React.FC = () => {
 						>
 							<Link to="/workshop/search" search={{} as ModrinthSearchParams}>
 								<MatchRoute to="/workshop/search">
-									{(match) => (<span className={cn("transition-colors", {
-										"border-b-2 border-blue-300 text-blue-300": match,
-									})}>WORKSHOP</span>)}
+									{(match) => (
+										<span
+											className={cn("transition-colors", {
+												"border-b-2 border-blue-300 text-blue-300": match,
+											})}
+										>
+											WORKSHOP
+										</span>
+									)}
 								</MatchRoute>
 							</Link>
 						</NavigationMenuTrigger>
@@ -67,9 +78,15 @@ export const NavbarLower: React.FC = () => {
 						>
 							<Link to="/downloads">
 								<MatchRoute to="/downloads">
-									{(match) => (<span className={cn("transition-colors", {
-										"border-b-2 border-blue-300 text-blue-300": match,
-									})}>DOWNLOADS</span>)}
+									{(match) => (
+										<span
+											className={cn("transition-colors", {
+												"border-b-2 border-blue-300 text-blue-300": match,
+											})}
+										>
+											DOWNLOADS
+										</span>
+									)}
 								</MatchRoute>
 							</Link>
 						</NavigationMenuTrigger>

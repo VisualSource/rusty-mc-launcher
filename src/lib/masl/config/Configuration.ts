@@ -289,11 +289,11 @@ export function buildConfiguration(
 		storeAuthStateInCookie: false,
 		secureCookies: false,
 		// Default cache migration to true if cache location is localStorage since entries are preserved across tabs/windows. Migration has little to no benefit in sessionStorage and memoryStorage
-		cacheMigrationEnabled:
-			userInputCache &&
+		cacheMigrationEnabled: true /** we will be using local storage */
+			/*userInputCache &&
 			userInputCache.cacheLocation === BrowserCacheLocation.LocalStorage
 				? true
-				: false,
+				: false*/,
 		claimsBasedCachingEnabled: false,
 	};
 

@@ -56,12 +56,26 @@ const Favorites: React.FC = () => {
 				data.map((value) => (
 					<div className="space-y-3 w-[256px]" key={value.id}>
 						<div className="space-y-1 text-sm">
-							<h3 className="font-medium leading-none text-lg line-clamp-2">{value.name}</h3>
-							<p className="text-xs text-muted-foreground">{value.loader.replace(/^\w/, value.loader[0].toUpperCase())} {value.version}</p>
+							<h3 className="font-medium leading-none text-lg line-clamp-2">
+								{value.name}
+							</h3>
+							<p className="text-xs text-muted-foreground">
+								{value.loader.replace(/^\w/, value.loader[0].toUpperCase())}{" "}
+								{value.version}
+							</p>
 						</div>
 						<div className="overflow-hidden rounded-md">
 							{value.icon ? (
-								<img height={256} width={256} className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-square" src={value.icon ?? "https://images.unsplash.com/photo-1446185250204-f94591f7d702?w=300&dpr=2&q=80&w=256&q=75"} alt={value.name} />
+								<img
+									height={256}
+									width={256}
+									className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-square"
+									src={
+										value.icon ??
+										"https://images.unsplash.com/photo-1446185250204-f94591f7d702?w=300&dpr=2&q=80&w=256&q=75"
+									}
+									alt={value.name}
+								/>
 							) : (
 								<div className="flex justify-center bg-accent rounded-lg items-center h-64 w-64">
 									<Layers3 />

@@ -12,7 +12,7 @@ export const settings = {
 	async getLike(value: string) {
 		return db.select({
 			query: `SELECT * FROM settings WHERE key LIKE '${value}';`,
-			schema: settings.schema
+			schema: settings.schema,
 		});
 	},
 

@@ -3,7 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import type { IPerformanceMeasurement, SubMeasurement } from "@azure/msal-common";
+import type {
+	IPerformanceMeasurement,
+	SubMeasurement,
+} from "@azure/msal-common";
 
 export class BrowserPerformanceMeasurement implements IPerformanceMeasurement {
 	private readonly measureName: string;
@@ -62,7 +65,8 @@ export class BrowserPerformanceMeasurement implements IPerformanceMeasurement {
 	): void {
 		if (BrowserPerformanceMeasurement.supportsBrowserPerformance()) {
 			try {
-				measurements.forEach((measurement) => {
+
+				for (const measurement of measurements) {
 					const measureName = BrowserPerformanceMeasurement.makeMeasureName(
 						measurement.name,
 						correlationId,
@@ -86,7 +90,7 @@ export class BrowserPerformanceMeasurement implements IPerformanceMeasurement {
 							),
 						);
 					}
-				});
+				}
 			} catch (e) {
 				// Silently catch and return null
 			}

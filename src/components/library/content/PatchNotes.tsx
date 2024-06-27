@@ -4,7 +4,13 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import { useState } from "react";
 import { AlertTriangle, Loader2, X } from "lucide-react";
-import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, } from "@/components/ui/drawer";
+import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerHeader,
+	DrawerTitle,
+} from "@/components/ui/drawer";
 import { Button } from "@component/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loading } from "@/components/Loading";
@@ -16,10 +22,10 @@ type Patch = {
 	image: {
 		url: string;
 		title: string;
-	}
+	};
 	body: string;
 	id: string;
-}
+};
 
 type PatchNodes = {
 	version: number;
@@ -38,13 +44,19 @@ type PatchNodes = {
 	}[];
 };
 
-const PatchNotesRead: React.FC<{ contentPath?: string, open: boolean, setOpen: (value: boolean) => void }> = ({ contentPath, open, setOpen }) => {
+const PatchNotesRead: React.FC<{
+	contentPath?: string;
+	open: boolean;
+	setOpen: (value: boolean) => void;
+}> = ({ contentPath, open, setOpen }) => {
 	const query = useQuery({
 		enabled: !!contentPath?.length,
 		queryKey: ["MINECRAFT", "PATCH_NODES", contentPath],
-		queryFn: () => fetch(`https://launchercontent.mojang.com/v2/${contentPath}`).then(e => e.json() as Promise<Patch>)
-
-	})
+		queryFn: () =>
+			fetch(`https://launchercontent.mojang.com/v2/${contentPath}`).then(
+				(e) => e.json() as Promise<Patch>,
+			),
+	});
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
 			<DrawerContent className="overflow-hidden max-h-screen">
@@ -72,28 +84,29 @@ const PatchNotesRead: React.FC<{ contentPath?: string, open: boolean, setOpen: (
 							</div>
 						) : query.isLoading ? (
 							<Loading />
-						) : (<>
-							<h1>{query.data?.title}</h1>
-							<ReactMarkdown
-								components={{
-									a: ({ children, href }) => (
-										<a target="_blank" rel="noopener noreferrer" href={href}>
-											{children}
-										</a>
-									),
-								}}
-								rehypePlugins={[rehypeRaw]}
-							>
-								{query.data?.body}
-							</ReactMarkdown>
-						</>)}
+						) : (
+							<>
+								<h1>{query.data?.title}</h1>
+								<ReactMarkdown
+									components={{
+										a: ({ children, href }) => (
+											<a target="_blank" rel="noopener noreferrer" href={href}>
+												{children}
+											</a>
+										),
+									}}
+									rehypePlugins={[rehypeRaw]}
+								>
+									{query.data?.body}
+								</ReactMarkdown>
+							</>
+						)}
 					</div>
 				</div>
-
 			</DrawerContent>
-		</Drawer >
+		</Drawer>
 	);
-}
+};
 
 export const PatchNotesSkeletons: React.FC = () => {
 	return (
@@ -108,9 +121,10 @@ export const PatchNotesSkeletons: React.FC = () => {
 						<Skeleton className="h-4 w-10" />
 					</div>
 				</div>
-			))}</>
+			))}
+		</>
 	);
-}
+};
 
 const PatchNotes: React.FC = () => {
 	const [openNotes, setOpenNotes] = useState(false);
@@ -120,7 +134,11 @@ const PatchNotes: React.FC = () => {
 		queryFn: () =>
 			fetch("https://launchercontent.mojang.com/v2/javaPatchNotes.json")
 				.then((value) => value.json() as Promise<PatchNodes>)
-				.then((value) => value.entries.toSorted((a, b) => compareDesc(a.date, b.date)).slice(0, 10)),
+				.then((value) =>
+					value.entries
+						.toSorted((a, b) => compareDesc(a.date, b.date))
+						.slice(0, 10),
+				),
 	});
 
 	if (error) throw new Error("Failed to load patch notes");
@@ -128,9 +146,23 @@ const PatchNotes: React.FC = () => {
 	return (
 		<>
 			{data.map((value) => (
-				<button type="button" onClick={() => { setContentPath(value.contentPath); setOpenNotes(true) }} className="space-y-3 w-[150px]" key={value.id}>
+				<button
+					type="button"
+					onClick={() => {
+						setContentPath(value.contentPath);
+						setOpenNotes(true);
+					}}
+					className="space-y-3 w-[150px]"
+					key={value.id}
+				>
 					<div className="overflow-hidden rounded-md">
-						<img height={150} width={150} className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-[3/4]" src={`https://launchercontent.mojang.com${value.image.url}`} alt={value.image.title} />
+						<img
+							height={150}
+							width={150}
+							className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-[3/4]"
+							src={`https://launchercontent.mojang.com${value.image.url}`}
+							alt={value.image.title}
+						/>
 					</div>
 					<div className="space-y-1 text-sm text-left">
 						<h3 className="font-medium leading-none">{value.title}</h3>
@@ -138,7 +170,11 @@ const PatchNotes: React.FC = () => {
 					</div>
 				</button>
 			))}
-			<PatchNotesRead open={openNotes} setOpen={setOpenNotes} contentPath={contentPath} />
+			<PatchNotesRead
+				open={openNotes}
+				setOpen={setOpenNotes}
+				contentPath={contentPath}
+			/>
 		</>
 	);
 };

@@ -1,4 +1,8 @@
-import { type UnlistenFn, listen, type EventCallback } from "@tauri-apps/api/event";
+import {
+	type UnlistenFn,
+	listen,
+	type EventCallback,
+} from "@tauri-apps/api/event";
 import { createContext, useSyncExternalStore } from "react";
 import { toast } from "react-toastify";
 
@@ -44,8 +48,11 @@ class DownloadManager extends EventTarget {
 			case "update": {
 				if (!this.current_progress) break;
 				this.current_progress = {
-					message: (data?.message as string | undefined) ?? this.current_progress.message,
-					file: (data?.file as string | undefined) ?? this.current_progress.file,
+					message:
+						(data?.message as string | undefined) ??
+						this.current_progress.message,
+					file:
+						(data?.file as string | undefined) ?? this.current_progress.file,
 					max_progress: this.current_progress.max_progress,
 					progress:
 						this.current_progress.progress +
@@ -95,7 +102,7 @@ class DownloadManager extends EventTarget {
 			}
 			case "done": {
 				if (Array.isArray(data.keys)) {
-					queryClient.invalidateQueries({ queryKey: data.keys })
+					queryClient.invalidateQueries({ queryKey: data.keys });
 				}
 				break;
 			}

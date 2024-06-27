@@ -16,7 +16,7 @@ import { db } from "@/lib/system/commands";
 
 export const Route = createLazyFileRoute("/_authenticated/downloads")({
 	component: Download,
-	pendingComponent: Loading
+	pendingComponent: Loading,
 });
 
 function Download() {
@@ -77,8 +77,8 @@ function Download() {
 				) : null}
 
 				{!queuePostponed.isError &&
-					!queuePostponed.isLoading &&
-					queuePostponed?.data?.length ? (
+				!queuePostponed.isLoading &&
+				queuePostponed?.data?.length ? (
 					<section className="flex w-full flex-col">
 						<SectionDivider
 							label="Postponed"
@@ -95,8 +95,8 @@ function Download() {
 				) : null}
 
 				{!queueCompleted.isError &&
-					!queueCompleted.isLoading &&
-					queueCompleted?.data?.length ? (
+				!queueCompleted.isLoading &&
+				queueCompleted?.data?.length ? (
 					<section className="flex w-full flex-col">
 						<SectionDivider
 							label="Completed"
@@ -129,8 +129,8 @@ function Download() {
 				) : null}
 
 				{!queueErrored.isError &&
-					!queueErrored.isLoading &&
-					queueErrored?.data?.length ? (
+				!queueErrored.isLoading &&
+				queueErrored?.data?.length ? (
 					<section className="flex flex-col">
 						<SectionDivider label="Errored" count={queueErrored.data.length}>
 							<Button
@@ -161,4 +161,4 @@ function Download() {
 			</ScrollArea>
 		</div>
 	);
-};
+}

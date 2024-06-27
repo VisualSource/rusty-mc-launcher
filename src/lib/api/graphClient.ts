@@ -40,7 +40,7 @@ export async function getAccountPhoto(client: Client, userId: string) {
 	const etagKey = `${userId}.image.etag`;
 	const etagSaved = localStorage.getItem(etagKey);
 
-	const metadata = (await client.api(`/me/photo`).get()) as ImageMetadata;
+	const metadata = (await client.api("/me/photo").get()) as ImageMetadata;
 
 	const etag = metadata["@odata.mediaEtag"]
 		.replace("W/", "")
@@ -54,7 +54,7 @@ export async function getAccountPhoto(client: Client, userId: string) {
 		const hasDir = await exists("images", { dir: BaseDirectory.AppData });
 		if (!hasDir) await createDir("images", { dir: BaseDirectory.AppData });
 
-		const imageRaw = (await client.api(`/me/photo/$value`).get()) as Blob;
+		const imageRaw = (await client.api("/me/photo/$value").get()) as Blob;
 
 		const buffer = await imageRaw.arrayBuffer();
 

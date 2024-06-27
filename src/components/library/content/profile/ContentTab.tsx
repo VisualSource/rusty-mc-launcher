@@ -21,7 +21,7 @@ import {
 import {
 	getProjects,
 	versionsFromHashes,
-	getProjectVersions
+	getProjectVersions,
 } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
@@ -94,8 +94,8 @@ export const ContentTab: React.FC<{
 				const projects = await getProjects({
 					client: modrinthClient,
 					query: {
-						ids
-					}
+						ids,
+					},
 				});
 				if (projects.error) throw projects.error;
 				if (!projects.data) throw new Error("Failed to load projects.");
@@ -125,7 +125,7 @@ export const ContentTab: React.FC<{
 					client: modrinthClient,
 					query: {
 						ids: JSON.stringify(items.map((e) => e.id)),
-					}
+					},
 				});
 				if (projects.error) throw projects.error;
 				if (!projects.data) throw new Error("Failed to load projects");
@@ -202,7 +202,11 @@ export const ContentTab: React.FC<{
 							</Avatar>
 							<div>
 								{data?.[virtualItem.index].project ? (
-									<Link to="/workshop/project/$id" params={{ id: data?.[virtualItem.index].project?.id ?? "" }} className="-mb-1 line-clamp-1 underline">
+									<Link
+										to="/workshop/project/$id"
+										params={{ id: data?.[virtualItem.index].project?.id ?? "" }}
+										className="-mb-1 line-clamp-1 underline"
+									>
 										{data?.[virtualItem.index].project?.title}
 									</Link>
 								) : (
@@ -228,7 +232,7 @@ export const ContentTab: React.FC<{
 												const id = await getProjectVersions({
 													client: modrinthClient,
 													path: {
-														"id|slug": project.id
+														"id|slug": project.id,
 													},
 													query: {
 														gameVersions: `["${profile.version}"]`,
@@ -236,10 +240,11 @@ export const ContentTab: React.FC<{
 															profile.loader !== "vanilla"
 																? `["${profile.loader}"]`
 																: undefined,
-													}
+													},
 												});
 												if (id.error) throw id.error;
-												if (!id.data) throw new Error("Failed to load project versions");
+												if (!id.data)
+													throw new Error("Failed to load project versions");
 												const version = id.data.at(0);
 												const currentVersionId =
 													data?.[virtualItem.index].record?.version;
@@ -279,7 +284,9 @@ export const ContentTab: React.FC<{
 												pending: "Checking for update",
 												success: {
 													render({ data }) {
-														return data.didUpdate ? "Updating content" : "Up to date!";
+														return data.didUpdate
+															? "Updating content"
+															: "Up to date!";
 													},
 												},
 												error: "Failed to check for update",
@@ -316,15 +323,14 @@ export const ContentTab: React.FC<{
 										<AlertDialogCancel>Cancel</AlertDialogCancel>
 										<AlertDialogAction
 											onClick={() => {
-												const filename = data?.[virtualItem.index].record?.file_name;
+												const filename =
+													data?.[virtualItem.index].record?.file_name;
 												if (filename) {
-													uninstall(
-														filename,
-														content_type,
-														profile.id,
-													)
+													uninstall(filename, content_type, profile.id);
 												}
-											}}>Ok
+											}}
+										>
+											Ok
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>
@@ -332,7 +338,11 @@ export const ContentTab: React.FC<{
 						</div>
 					))}
 				</div>
-			) : (<div className="w-full h-full flex flex-col justify-center items-center">No content installed</div>)}
+			) : (
+				<div className="w-full h-full flex flex-col justify-center items-center">
+					No content installed
+				</div>
+			)}
 		</div>
 	);
 };

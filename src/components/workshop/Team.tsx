@@ -11,8 +11,8 @@ export const Team: React.FC<{ id: string }> = ({ id }) => {
 			const repsonse = await getTeamMembers({
 				client: modrinthClient,
 				path: {
-					id
-				}
+					id,
+				},
 			});
 			if (repsonse.error) throw repsonse.error;
 			if (!repsonse.data) throw new Error("Failed to load team members");

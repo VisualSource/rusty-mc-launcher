@@ -107,8 +107,8 @@ function CreateProfile() {
 			await navigate({
 				to: "/profile/$id",
 				params: {
-					id: ev.id
-				}
+					id: ev.id,
+				},
 			});
 		} catch (error) {
 			toast.error("Failed to create profile", { data: { error } });
@@ -250,7 +250,12 @@ function CreateProfile() {
 					</section>
 
 					<div className="absolute bottom-4 right-4">
-						<Button disabled={form.formState.isLoading || form.formState.isSubmitting} type="submit">Create</Button>
+						<Button
+							disabled={form.formState.isLoading || form.formState.isSubmitting}
+							type="submit"
+						>
+							Create
+						</Button>
 					</div>
 				</form>
 			</Form>

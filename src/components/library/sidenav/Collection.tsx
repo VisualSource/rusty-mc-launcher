@@ -15,7 +15,9 @@ const Collection: React.FC<{
 	return (
 		<AccordionItem value={name} className="border-none">
 			<AccordionTrigger className="flex w-full items-center bg-gradient-to-r from-zinc-700/95 from-10% to-zinc-800 px-1 py-0.5 text-zinc-50">
-				<span className="inline-block text-xs w-1/2 @4xs/main:w-auto  @4xs/main:text-sm @3xs:text-base text-ellipsis overflow-hidden whitespace-nowrap">{name} ({collections.length})</span>
+				<span className="inline-block text-xs w-1/2 @4xs/main:w-auto  @4xs/main:text-sm @3xs:text-base text-ellipsis overflow-hidden whitespace-nowrap">
+					{name} ({collections.length})
+				</span>
 			</AccordionTrigger>
 			<AccordionContent>
 				<ul>

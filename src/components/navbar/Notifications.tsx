@@ -3,7 +3,7 @@ import { formatRelative } from "date-fns/formatRelative";
 import { Archive, Mail } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@component/ui/popover";
-import { TypographyH4, } from "../ui/typography";
+import { TypographyH4 } from "../ui/typography";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
@@ -37,20 +37,25 @@ export const Notifications = () => {
 				<Separator className="mb-4 mt-2" />
 				<div className="max-h-56 pt-4 overflow-y-auto scrollbar">
 					<ul className="min-h-[200px] space-y-2">
-						{notifications.map(value => (
+						{notifications.map((value) => (
 							<li
 								key={value.id}
 								className="flex items-center justify-between rounded-lg px-4 py-1 border relative"
 							>
-								{value.read ? null : (<div className="absolute top-0.5 left-0.5 rounded-full bg-destructive h-2 w-2" />)}
+								{value.read ? null : (
+									<div className="absolute top-0.5 left-0.5 rounded-full bg-destructive h-2 w-2" />
+								)}
 								{(value.icon as React.ReactNode) ?? null}
 								<div>
-									<h1 className="line-clamp-1 font-medium">{value.content as React.ReactNode}</h1>
+									<h1 className="line-clamp-1 font-medium">
+										{value.content as React.ReactNode}
+									</h1>
 
 									{value.data && "error" in value.data ? (
 										<pre className="text-xs text-destructive">
 											<code>
-												{(value.data.error as Error)?.message ?? value.data.error}
+												{(value.data.error as Error)?.message ??
+													value.data.error}
 											</code>
 										</pre>
 									) : null}

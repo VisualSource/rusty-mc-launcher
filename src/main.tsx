@@ -18,28 +18,31 @@ import "react-toastify/dist/ReactToastify.css";
 
 await attachLogger().catch(() => exit(1));
 const msa = await getPCA().catch(() => exit(1) as never);
-const mca = await ModrinthClientApplication.createPublicClientApplication().catch(() => exit(1) as never);
+const mca =
+	await ModrinthClientApplication.createPublicClientApplication().catch(
+		() => exit(1) as never,
+	);
 
 // biome-ignore lint/style/noNonNullAssertion: The dom element with id "root" shall be there.
 const root = createRoot(document.getElementById("root")!);
 root.render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <MsalProvider instance={msa}>
-        <ModrinthProvider client={mca}>
-          <DownloadProvider>
-            <RouterProvider
-              router={router}
-              context={{
-                auth: {
-                  msa,
-                  modrinth: mca
-                }
-              }}
-            />
-          </DownloadProvider>
-        </ModrinthProvider>
-      </MsalProvider>
-    </QueryClientProvider>
-  </StrictMode>,
+	<StrictMode>
+		<QueryClientProvider client={queryClient}>
+			<MsalProvider instance={msa}>
+				<ModrinthProvider client={mca}>
+					<DownloadProvider>
+						<RouterProvider
+							router={router}
+							context={{
+								auth: {
+									msa,
+									modrinth: mca,
+								},
+							}}
+						/>
+					</DownloadProvider>
+				</ModrinthProvider>
+			</MsalProvider>
+		</QueryClientProvider>
+	</StrictMode>,
 );

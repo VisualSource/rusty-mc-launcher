@@ -9,10 +9,11 @@ const useCategoryGroup = (category: string | null) => {
 		queryFn: async () => {
 			if (!category) throw new Error("Invalid id");
 			return db.select({
-				query: "SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?;",
+				query:
+					"SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?;",
 				args: [category],
 				schema: profile.schema,
-			})
+			});
 		},
 	});
 	if (error) throw error;

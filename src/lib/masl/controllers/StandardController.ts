@@ -34,7 +34,10 @@ import {
 	DEFAULT_BROWSER_CACHE_MANAGER,
 } from "../cache/BrowserCacheManager";
 import * as AccountManager from "../cache/AccountManager";
-import type { BrowserConfiguration, CacheOptions } from "../config/Configuration";
+import type {
+	BrowserConfiguration,
+	CacheOptions,
+} from "../config/Configuration";
 import {
 	InteractionType,
 	ApiId,

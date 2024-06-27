@@ -3,7 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import type { CommonAuthorizationUrlRequest, StringDict } from "@azure/msal-common";
+import type {
+	CommonAuthorizationUrlRequest,
+	StringDict,
+} from "@azure/msal-common";
 import type { PopupWindowAttributes } from "./PopupWindowAttributes";
 
 /**

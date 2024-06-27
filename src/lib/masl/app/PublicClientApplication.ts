@@ -22,7 +22,10 @@ import type { EndSessionRequest } from "../request/EndSessionRequest";
 import type { SsoSilentRequest } from "../request/SsoSilentRequest";
 import * as ControllerFactory from "../controllers/ControllerFactory";
 import { StandardController } from "../controllers/StandardController";
-import type { BrowserConfiguration, Configuration } from "../config/Configuration";
+import type {
+	BrowserConfiguration,
+	Configuration,
+} from "../config/Configuration";
 import { StandardOperatingContext } from "../operatingcontext/StandardOperatingContext";
 import type { AuthenticationResult } from "../response/AuthenticationResult";
 import type { EventCallbackFunction } from "../event/EventMessage";

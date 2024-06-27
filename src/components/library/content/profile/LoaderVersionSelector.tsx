@@ -9,7 +9,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-	CommandLoading
+	CommandLoading,
 } from "@/components/ui/command";
 import {
 	FormControl,
@@ -171,7 +171,9 @@ export const LoaderVersionSelector: React.FC<{
 															: currentValue,
 													);
 													setOpen(false);
-													btn.current?.dispatchEvent(new Event("change", { bubbles: true }));
+													btn.current?.dispatchEvent(
+														new Event("change", { bubbles: true }),
+													);
 												}}
 											>
 												<Check

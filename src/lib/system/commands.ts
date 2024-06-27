@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api";
-import { z } from "zod";
+import { type ZodTypeDef, z } from "zod";
 import { workshop_content } from "../models/content";
 
 export const closeAuthServer = (port: number) =>
@@ -15,7 +15,7 @@ type Query<S> = {
 type RowsAffected = number;
 type LastInsertRowId = number;
 export const db = {
-	select: async <S extends z.Schema<any, any>>({
+	select: async <S extends z.Schema<unknown, ZodTypeDef>>({
 		query,
 		args = [],
 		schema,

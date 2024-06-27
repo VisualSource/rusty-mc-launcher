@@ -28,7 +28,10 @@ const CollectionItem: React.FC<{
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<button className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800" type="button">
+				<button
+					className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800"
+					type="button"
+				>
 					<TypographyH4 className="line-clamp-3 text-wrap text-lg text-zinc-50">
 						{collection.value}
 					</TypographyH4>
@@ -38,13 +41,19 @@ const CollectionItem: React.FC<{
 				<DialogHeader>
 					<DialogTitle>Edit Collection</DialogTitle>
 				</DialogHeader>
-				<form onSubmit={async (ev) => {
-					ev.preventDefault();
-					const name = new FormData(ev.target as HTMLFormElement).get("name");
-					await mutation.mutateAsync({ type: "PATCH", data: { id: collection.metadata, name } });
-					setOpen(false)
-				}}>
-					{collection.metadata && DEFAULT_GROUP.includes(collection.metadata) ? (
+				<form
+					onSubmit={async (ev) => {
+						ev.preventDefault();
+						const name = new FormData(ev.target as HTMLFormElement).get("name");
+						await mutation.mutateAsync({
+							type: "PATCH",
+							data: { id: collection.metadata, name },
+						});
+						setOpen(false);
+					}}
+				>
+					{collection.metadata &&
+					DEFAULT_GROUP.includes(collection.metadata) ? (
 						<div className="mb-4">
 							<TypographyMuted>This colletion is not editable.</TypographyMuted>
 						</div>
@@ -63,12 +72,17 @@ const CollectionItem: React.FC<{
 							/>
 						</div>
 					)}
-					{collection.metadata && DEFAULT_GROUP.includes(collection.metadata) ? null : (
+					{collection.metadata &&
+					DEFAULT_GROUP.includes(collection.metadata) ? null : (
 						<DialogFooter>
 							<div className="flex w-full justify-between">
-								<Button disabled={mutation.isPending}
+								<Button
+									disabled={mutation.isPending}
 									onClick={async () => {
-										await mutation.mutateAsync({ type: "DELETE", data: { id: collection.metadata } })
+										await mutation.mutateAsync({
+											type: "DELETE",
+											data: { id: collection.metadata },
+										});
 										setOpen(false);
 									}}
 									title="Delete Collection"
@@ -78,7 +92,9 @@ const CollectionItem: React.FC<{
 								>
 									<Trash2 />
 								</Button>
-								<Button disabled={mutation.isPending} type="submit">Save</Button>
+								<Button disabled={mutation.isPending} type="submit">
+									Save
+								</Button>
 							</div>
 						</DialogFooter>
 					)}

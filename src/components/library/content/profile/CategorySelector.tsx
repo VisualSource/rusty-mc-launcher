@@ -9,7 +9,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-	CommandLoading
+	CommandLoading,
 } from "@/components/ui/command";
 import {
 	Popover,
@@ -39,7 +39,7 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
 
 	const { data, isLoading } = useQuery({
 		queryKey: [KEY_PROFILE_COLLECTION, profile],
-		queryFn: () => categories.getCategoriesForProfile(profile)
+		queryFn: () => categories.getCategoriesForProfile(profile),
 	});
 	const [open, setOpen] = useState(false);
 

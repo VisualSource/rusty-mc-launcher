@@ -18,7 +18,7 @@ export const categories = {
 			schema: categories.schema,
 		});
 		return items;
-	}
+	},
 };
 
 export type Category = z.infer<typeof categories.schema>;

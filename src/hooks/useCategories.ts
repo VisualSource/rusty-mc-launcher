@@ -4,7 +4,7 @@ import { CATEGORIES_KEY } from "./keys";
 
 export const categoriesQueryOptions = queryOptions({
 	queryKey: [CATEGORIES_KEY],
-	queryFn: () => settings.getLike("category.%")
+	queryFn: () => settings.getLike("category.%"),
 });
 
 const useCategories = () => {

@@ -85,7 +85,10 @@ export const NavbarUpper: React.FC = () => {
 				</Avatar>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<button className="mr-2 flex items-center justify-center bg-white px-3 text-black" type="button">
+						<button
+							className="mr-2 flex items-center justify-center bg-white px-3 text-black"
+							type="button"
+						>
 							<span className="mr-1 text-sm">
 								{isError
 									? error?.message
@@ -106,7 +109,8 @@ export const NavbarUpper: React.FC = () => {
 						<AuthenticatedTemplate>
 							<DropdownMenuItem asChild>
 								<Link to="/settings/accounts">
-									<Users2 className="h-4 w-4 mr-2" />Accounts
+									<Users2 className="h-4 w-4 mr-2" />
+									Accounts
 								</Link>
 							</DropdownMenuItem>
 							<DropdownMenuItem onClick={() => logout(msAccount)}>

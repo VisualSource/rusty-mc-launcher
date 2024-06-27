@@ -56,7 +56,10 @@ import type {
 	NativeExtensionRequestBody,
 	NativeTokenRequest,
 } from "../broker/nativeBroker/NativeRequest";
-import type { MATS, NativeResponse } from "../broker/nativeBroker/NativeResponse";
+import type {
+	MATS,
+	NativeResponse,
+} from "../broker/nativeBroker/NativeResponse";
 import {
 	NativeAuthError,
 	NativeAuthErrorCodes,

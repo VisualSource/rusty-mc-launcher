@@ -7,7 +7,11 @@ import type {
 	VersionDependency,
 	VersionFile,
 } from "../api/modrinth/types.gen";
-import { getProjectVersions, getVersion, getProject } from "../api/modrinth/services.gen";
+import {
+	getProjectVersions,
+	getVersion,
+	getProject,
+} from "../api/modrinth/services.gen";
 import { type ContentType, download_queue } from "../models/download_queue";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { askFor } from "@/components/dialog/AskDialog";
@@ -25,12 +29,12 @@ async function getContentVersion(
 		const versions = await getProjectVersions({
 			client: modrinthClient,
 			path: {
-				"id|slug": current.project_id
+				"id|slug": current.project_id,
 			},
 			query: {
 				game_versions: game,
-				loaders
-			}
+				loaders,
+			},
 		});
 		if (versions.error) throw versions.error;
 		if (!versions.data) throw new Error("Failed to load project versions");
@@ -44,8 +48,8 @@ async function getContentVersion(
 		const version = await getVersion({
 			client: modrinthClient,
 			path: {
-				id: current.version_id
-			}
+				id: current.version_id,
+			},
 		});
 		if (version.error) throw version.error;
 		if (!version.data) throw new Error("Failed to load version");
@@ -91,8 +95,8 @@ async function* getDependencies(
 			const project = await getProject({
 				client: modrinthClient,
 				path: {
-					"id|slug": version.project_id
-				}
+					"id|slug": version.project_id,
+				},
 			});
 			if (project.error) throw project.error;
 			if (!project.data) throw new Error("Failed load project");
@@ -255,7 +259,7 @@ export async function install(data: Project) {
 					client: modrinthClient,
 					path: {
 						"id|slug": data.id,
-					}
+					},
 				});
 				if (versions.error) throw versions.error;
 				if (!versions.data) throw new Error("Failed to project versions");
@@ -326,15 +330,15 @@ export async function install(data: Project) {
 				const versions = await getProjectVersions({
 					client: modrinthClient,
 					path: {
-						"id|slug": data.id
+						"id|slug": data.id,
 					},
 					query: {
 						loaders,
-						game_versions: gameVersions
-					}
+						game_versions: gameVersions,
+					},
 				});
 				if (versions.error) throw versions.error;
-				if (!versions.data) throw new Error("Failed to load project versions")
+				if (!versions.data) throw new Error("Failed to load project versions");
 				const version = versions.data.at(0);
 				if (!version) throw new Error("No versions are avaiable");
 
@@ -449,15 +453,16 @@ export async function install(data: Project) {
 				const version_data = await getProjectVersions({
 					client: modrinthClient,
 					path: {
-						"id|slug": data.id
+						"id|slug": data.id,
 					},
 					query: {
 						loaders: JSON.stringify(loaders.map((e) => e.id)),
-						game_versions: JSON.stringify(gameVersions.map((e) => e.id))
+						game_versions: JSON.stringify(gameVersions.map((e) => e.id)),
 					},
 				});
 				if (version_data.error) throw version_data.error;
-				if (!version_data.data) throw new Error("Failed to get project versions");
+				if (!version_data.data)
+					throw new Error("Failed to get project versions");
 
 				const version = version_data.data.at(0);
 				if (!version) return;

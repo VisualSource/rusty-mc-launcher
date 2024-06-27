@@ -21,7 +21,10 @@ import type {
 import type { EndSessionRequest } from "../request/EndSessionRequest";
 import type { SsoSilentRequest } from "../request/SsoSilentRequest";
 import * as ControllerFactory from "../controllers/ControllerFactory";
-import type { BrowserConfiguration, Configuration } from "../config/Configuration";
+import type {
+	BrowserConfiguration,
+	Configuration,
+} from "../config/Configuration";
 import type { EventCallbackFunction } from "../event/EventMessage";
 import type { ClearCacheRequest } from "../request/ClearCacheRequest";
 import type { AuthenticationResult } from "../response/AuthenticationResult";
@@ -51,7 +54,7 @@ export class PublicClientNext implements IPublicClientApplication {
 		configuration: Configuration,
 	): Promise<IPublicClientApplication> {
 		const controller = await ControllerFactory.createController(configuration);
-		let pca;
+		let pca: PublicClientNext;
 		if (controller !== null) {
 			pca = new PublicClientNext(configuration, controller);
 		} else {
@@ -175,7 +178,7 @@ export class PublicClientNext implements IPublicClientApplication {
 	 * @param callbackId
 	 */
 	removeEventCallback(callbackId: string): void {
-		return this.controller.removeEventCallback(callbackId);
+		this.controller.removeEventCallback(callbackId);
 	}
 
 	/**
@@ -394,7 +397,7 @@ export class PublicClientNext implements IPublicClientApplication {
 	 * @param version
 	 */
 	initializeWrapperLibrary(sku: WrapperSKU, version: string): void {
-		return this.controller.initializeWrapperLibrary(sku, version);
+		this.controller.initializeWrapperLibrary(sku, version);
 	}
 
 	/**

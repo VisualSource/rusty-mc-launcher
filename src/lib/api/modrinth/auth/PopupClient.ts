@@ -182,7 +182,7 @@ export class PopupClient {
 	}
 	private openPopup(urlNaviagge: string, popupParams: PopupParams) {
 		try {
-			let popupWindow;
+			let popupWindow: Window | undefined | null;
 
 			if (popupParams.popup) {
 				popupWindow = popupParams.popup;
@@ -204,7 +204,7 @@ export class PopupClient {
 
 			return popupWindow;
 		} catch (error) {
-			auth.error("Error opening popup " + (error as AuthError)?.message);
+			auth.error(`Error opening popup ${(error as AuthError)?.message}`);
 			throw createBrowserAuthError(BrowserAuthErrorCodes.popupWindowError);
 		}
 	}

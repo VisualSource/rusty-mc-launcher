@@ -80,10 +80,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-					version.replace(
-						"latest-",
-						"",
-					) as keyof (typeof latest_data)["latest"]
+						version.replace(
+							"latest-",
+							"",
+						) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -114,21 +114,20 @@ const import_profiles = async () => {
 				.fill(0)
 				.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?)")
 				.join(", ")};`,
-			args: profiles
-				.flatMap((e) => [
-					e.id,
-					e.name,
-					e.icon,
-					e.date_created,
-					e.last_played,
-					e.version,
-					e.loader,
-					e.loader_version,
-					e.java_args,
-					e.resolution_width,
-					e.resolution_width,
-					e.state,
-				]),
+			args: profiles.flatMap((e) => [
+				e.id,
+				e.name,
+				e.icon,
+				e.date_created,
+				e.last_played,
+				e.version,
+				e.loader,
+				e.loader_version,
+				e.java_args,
+				e.resolution_width,
+				e.resolution_width,
+				e.state,
+			]),
 		});
 
 		await queryClient.invalidateQueries({
@@ -142,23 +141,22 @@ const import_profiles = async () => {
 				.fill(0)
 				.map((_) => "(?,?,?,?,?,?,?,?,?,?)")
 				.join(", ")};`,
-			args: profiles
-				.flatMap((e) => [
-					crypto.randomUUID(),
-					1,
-					0,
-					e.name,
-					e.icon,
-					e.id,
-					new Date().toISOString(),
-					"Client",
-					JSON.stringify({
-						version: e.version,
-						loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
-						loader_version: e.loader_version,
-					}),
-					"PENDING",
-				]),
+			args: profiles.flatMap((e) => [
+				crypto.randomUUID(),
+				1,
+				0,
+				e.name,
+				e.icon,
+				e.id,
+				new Date().toISOString(),
+				"Client",
+				JSON.stringify({
+					version: e.version,
+					loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
+					loader_version: e.loader_version,
+				}),
+				"PENDING",
+			]),
 		});
 
 		await queryClient.invalidateQueries({

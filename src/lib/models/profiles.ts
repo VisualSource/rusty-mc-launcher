@@ -26,8 +26,8 @@ export const profile = {
 	async delete(id: string) {
 		return db.execute({
 			query: "DELETE FROM profiles WHERE id = ?;",
-			args: [id]
-		})
+			args: [id],
+		});
 	},
 	async get(id: string) {
 		const profiles = await db.select<typeof profile.schema>({
@@ -40,7 +40,7 @@ export const profile = {
 		if (!item) throw new Error(`No profile found with id of ${id}`);
 
 		return item;
-	}
+	},
 };
 
 export type MinecraftProfile = z.infer<typeof profile.schema>;

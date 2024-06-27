@@ -7,7 +7,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-	CommandLoading
+	CommandLoading,
 } from "./command";
 import {
 	useMinecraftVersions,
@@ -30,7 +30,8 @@ export const VersionSelector: React.FC<{
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button ref={btn}
+				<Button
+					ref={btn}
 					disabled={isLoading}
 					aria-expanded={open}
 					type="button"
@@ -65,7 +66,9 @@ export const VersionSelector: React.FC<{
 										setValue(currentValue === value ? "" : currentValue);
 										setOpen(false);
 										onChange?.call(undefined, nextValue);
-										btn.current?.dispatchEvent(new Event("change", { bubbles: true }));
+										btn.current?.dispatchEvent(
+											new Event("change", { bubbles: true }),
+										);
 									}}
 								>
 									<Check

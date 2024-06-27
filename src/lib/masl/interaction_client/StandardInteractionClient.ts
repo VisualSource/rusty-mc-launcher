@@ -22,7 +22,10 @@ import {
 } from "@azure/msal-common";
 import { BaseInteractionClient } from "./BaseInteractionClient";
 import type { AuthorizationUrlRequest } from "../request/AuthorizationUrlRequest";
-import { BrowserConstants, type InteractionType } from "../utils/BrowserConstants";
+import {
+	BrowserConstants,
+	type InteractionType,
+} from "../utils/BrowserConstants";
 import { version } from "../packageMetadata";
 import type { BrowserStateObject } from "../utils/BrowserProtocolUtils";
 import type { EndSessionRequest } from "../request/EndSessionRequest";

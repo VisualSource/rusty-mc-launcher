@@ -19,7 +19,8 @@ const Index: React.FC = () => {
 				stacked
 				pauseOnFocusLoss={false}
 				position="bottom-right"
-				theme="dark" />
+				theme="dark"
+			/>
 			<ReactQueryDevtools />
 			<TanStackRouterDevtools position="bottom-right" />
 		</>
