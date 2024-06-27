@@ -12,6 +12,11 @@ import {
 	Hexagon,
 	User2,
 	ChevronDown,
+	Settings,
+	Users2,
+	LogIn,
+	LogOut,
+	DoorOpen,
 } from "lucide-react";
 import { appWindow } from "@tauri-apps/api/window";
 import { exit } from "@tauri-apps/api/process";
@@ -53,10 +58,16 @@ export const NavbarUpper: React.FC = () => {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
 						<DropdownMenuItem asChild>
-							<Link to="/settings">Settings</Link>
+							<Link to="/settings">
+								<Settings className="h-4 w-4 mr-2" />
+								Settings
+							</Link>
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
-						<DropdownMenuItem onClick={() => exit()}>Exit</DropdownMenuItem>
+						<DropdownMenuItem onClick={exit as () => void}>
+							<DoorOpen className="h-4 w-4 mr-2" />
+							Exit
+						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
 				<Button size="sm" variant="ghost" className="h-full rounded-none">
@@ -87,14 +98,19 @@ export const NavbarUpper: React.FC = () => {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
 						<UnauthenticatedTemplate>
-							<DropdownMenuItem onClick={() => login()}>Login</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => login()}>
+								<LogIn />
+								Login
+							</DropdownMenuItem>
 						</UnauthenticatedTemplate>
 						<AuthenticatedTemplate>
 							<DropdownMenuItem asChild>
-								<Link to="/settings/accounts">Accounts</Link>
+								<Link to="/settings/accounts">
+									<Users2 className="h-4 w-4 mr-2" />Accounts
+								</Link>
 							</DropdownMenuItem>
 							<DropdownMenuItem onClick={() => logout(msAccount)}>
-								Signout
+								<LogOut className="h-4 w-4 mr-2" /> Signout
 							</DropdownMenuItem>
 						</AuthenticatedTemplate>
 					</DropdownMenuContent>
