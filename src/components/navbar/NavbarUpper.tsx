@@ -42,7 +42,7 @@ export const NavbarUpper: React.FC = () => {
 	const isMaximized = useIsMaximized();
 	const msAccount = useAccount();
 	const { account, isLoading, logout, login, error, isError } = useUser();
-	const avatar = useAvatar();
+
 	return (
 		<section
 			className="flex h-9 justify-between px-1 pt-1"
@@ -78,7 +78,7 @@ export const NavbarUpper: React.FC = () => {
 				<Notifications />
 
 				<Avatar className="h-8 rounded-none">
-					<AvatarImage src={avatar?.data} />
+					<AvatarImage src={account?.details.id ? `https://visage.surgeplay.com/face/256/${account.details.id}` : `https://api.dicebear.com/5.x/initials/svg?seed=${msAccount?.name}`} />
 					<AvatarFallback className="rounded-none">
 						<User2 />
 					</AvatarFallback>

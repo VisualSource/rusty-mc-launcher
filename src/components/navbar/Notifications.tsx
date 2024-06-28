@@ -51,11 +51,11 @@ export const Notifications = () => {
 										{value.content as React.ReactNode}
 									</h1>
 
-									{value.data && "error" in value.data ? (
+									{value.data && (value.data as { error: Error })?.error ? (
 										<pre className="text-xs text-destructive">
 											<code>
-												{(value.data.error as Error)?.message ??
-													value.data.error}
+												{(value.data as { error: Error }).error?.message ??
+													(value.data as { error: unknown }).error}
 											</code>
 										</pre>
 									) : null}

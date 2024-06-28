@@ -13,6 +13,20 @@ const MC_LOGIN_RELAY = "rp://api.minecraftservices.com/";
 const XBOX_LIVE_RELAY = "http://auth.xboxlive.com";
 const UNIX_EPOCH_DATE = new Date("1970-01-01T00:00:00Z");
 
+export type Skin = {
+	id: string;
+	state: "ACTIVE" | "INACTIVE";
+	url: string;
+	variant: "CLASSIC" | "SLIM";
+}
+
+export type Cape = {
+	alias: string;
+	id: string;
+	state: "ACTIVE" | "INACTIVE";
+	url: string;
+}
+
 export type MinecraftAccount = {
 	exp: string;
 	xuid: string;
@@ -20,20 +34,10 @@ export type MinecraftAccount = {
 		access_token: string;
 	};
 	details: {
-		capes?: {
-			alias: string;
-			id: string;
-			state: string;
-			url: string;
-		}[];
+		capes?: Cape[];
 		id: string;
 		name: string;
-		skins: {
-			id: string;
-			state: string;
-			url: string;
-			variant: string;
-		}[];
+		skins: Skin[];
 		profileActions: Record<string, unknown>;
 	};
 };

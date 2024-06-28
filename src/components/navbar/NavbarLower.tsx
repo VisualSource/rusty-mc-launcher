@@ -54,6 +54,25 @@ export const NavbarLower: React.FC = () => {
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
 							chevron={false}
+							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent">
+							<Link to="/skins">
+								<MatchRoute to="/skins">
+									{(match) => (
+										<span
+											className={cn("transition-colors", {
+												"border-b-2 border-blue-300 text-blue-300": match,
+											})}
+										>
+											SKINS
+										</span>
+									)}
+								</MatchRoute>
+							</Link>
+						</NavigationMenuTrigger>
+					</NavigationMenuItem>
+					<NavigationMenuItem>
+						<NavigationMenuTrigger
+							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
 							<Link to="/workshop/search" search={{} as ModrinthSearchParams}>
