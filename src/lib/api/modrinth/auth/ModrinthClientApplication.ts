@@ -1,225 +1,284 @@
-import type {
-	AccountInfo,
-	AuthenticationResult as CommonAuthenticationResult,
-} from "@azure/msal-common";
-import type {
-	AuthorizationCodeRequest,
-	BrowserConfiguration,
-	ClearCacheRequest,
-	Configuration,
-	EndSessionPopupRequest,
-	EndSessionRequest,
-	EventCallbackFunction,
-	INavigationClient,
-	ITokenCache,
-	Logger,
-	PerformanceCallbackFunction,
-	PopupRequest,
-	RedirectRequest,
-	SilentRequest,
-	SsoSilentRequest,
-	WrapperSKU,
+import { addSeconds } from "date-fns/addSeconds";
+import {
+	BrowserAuthError,
+	BrowserAuthErrorCodes,
+	type Configuration,
+	type EndSessionRequest,
+	type PopupRequest,
 } from "@masl/index";
-import type { AccountFilter } from "@azure/msal-common";
+import { modrinthClient } from "../../modrinthClient";
+import {
+	getUserFromAuth,
+	getUserNotifications,
+	getFollowedProjects,
+	readNotifications,
+	readNotification,
+	deleteNotifications,
+	deleteNotification,
+	followProject,
+	unfollowProject,
+} from "../services.gen";
 import { PopupClient } from "./PopupClient";
 import { auth } from "@/lib/system/logger";
-import { getUserFromAuth } from "../services.gen";
-import { modrinthClient } from "../../modrinthClient";
-import { addSeconds } from "date-fns/addSeconds";
 import type { User } from "../types.gen";
+import { queryClient } from "../../queryClient";
 
-export type AuthenticationResult = CommonAuthenticationResult & {
-	account: User;
+export type AuthenticationResult = {
+	tokenType: string;
+	accessToken: string;
+	account: User | null;
+	authority: string;
+	expiresOn: Date | null;
+	fromCache: boolean;
 };
-export class ModrinthClientApplication {
+
+const ACCOUNT_KEY = "modrinth.account";
+
+const sterilize = (_key: string, value: unknown) => {
+	if (value instanceof Date) {
+		return `Date(${value.toISOString()})`;
+	}
+
+	return value;
+}
+
+const desterilize = (_key: string, value: unknown) => {
+	if (typeof value === "string" && value.startsWith("Date(")) {
+		return new Date(value.replace("Date(", "").replace(")", ""));
+	}
+	return value;
+}
+
+export class ModrinthClientApplication extends EventTarget {
+	private data: AuthenticationResult | null = null;;
+
 	public static async createPublicClientApplication(
 		_configuration?: Configuration,
 	): Promise<ModrinthClientApplication> {
 		const pca = new ModrinthClientApplication();
+		await pca.initialize();
 		return pca;
 	}
 
-	initialize(): Promise<void> {
-		throw new Error("Method not implemented.");
+	public get isAuthed(): boolean {
+		return this.data !== null;
 	}
-	async acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
+
+	async followProject(id: string) {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+
+		const { error, response } = await followProject({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			path: {
+				"id|slug": id
+			}
+		});
+		if (error) throw error;
+		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] })
+	}
+
+	async unfollowProject(id: string) {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+
+		const { error, response } = await unfollowProject({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			path: {
+				"id|slug": id
+			}
+		});
+		if (error) throw error;
+		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] })
+	}
+
+	async getFollowed() {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+
+		const { error, data, response } = await getFollowedProjects({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			path: {
+				"id|username": this.data?.account.id
+			}
+		});
+
+		if (error) throw error;
+		if (!response.ok || !data) throw new Error("Failed to get user followed projects.", { cause: response });
+
+		return data;
+	}
+
+	async getNotifications() {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+
+		const { error, data, response } = await getUserNotifications({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			path: {
+				"id|username": this.data.account.id
+			}
+		});
+
+		if (error) throw error;
+		if (!response.ok || !data) throw new Error("Failed to get user notifications", { cause: response });
+
+		return data;
+	}
+
+	async readNotification(id: string) {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+
+		const { response, error } = await readNotification({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			path: {
+				id
+			}
+		});
+
+		if (error) throw error;
+		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+	}
+	async readNotifications(ids: string[]) {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		const { response, error } = await readNotifications({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			query: {
+				ids: JSON.stringify(ids)
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+	}
+	async deleteNotification(id: string) {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		const { response, error } = await deleteNotification({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			path: {
+				id
+			}
+		});
+
+		if (error) throw error;
+		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+	}
+	async deleteNotifications(ids: string) {
+		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		const { response, error } = await deleteNotifications({
+			client: modrinthClient,
+			headers: {
+				"Authorization": this.data.accessToken
+			},
+			query: {
+				ids: JSON.stringify(ids)
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+
+	}
+
+	async initialize(): Promise<void> {
+		try {
+			this.data = this.readCache();
+		} catch (error) {
+			auth.error(`Failed to load modrinth cache: ${(error as Error).message}`, error);
+		}
+	}
+	async acquireTokenPopup(): Promise<AuthenticationResult> {
 		const client = this.createPopupClient();
 		const token = await client.acquireToken();
 
-		const response = await getUserFromAuth({
-			client: modrinthClient,
-			headers: {
-				"Authorization": token.access_token
-			}
-		});
-		if (response.error) throw response.error;
-		if (!response.data) throw new Error("Failed to fetch user data");
-
-		return {
+		this.data = {
 			tokenType: token.token_type,
 			accessToken: token.access_token,
-			account: response.data,
+			account: this.data?.account,
 			authority: "modrinth",
 			expiresOn: addSeconds(new Date(), token.expires_in),
 			fromCache: false,
 		} as AuthenticationResult;
-	}
-	acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	acquireTokenSilent(
-		silentRequest: SilentRequest,
-	): Promise<AuthenticationResult> {
-		const account = silentRequest?.account
-			? silentRequest.account as never
-			: this.getActiveAccount();
-		if (!account) {
-			throw new Error("Failed to get user account");
-		}
 
-		const cache = localStorage.getItem(`modrinth.auth.${account.id}`);
+		this.writeCache(this.data);
 
-		throw new Error("Method not implemented.");
+		return this.data;
 	}
-	acquireTokenByCode(
-		_request: AuthorizationCodeRequest,
-	): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
+	async acquireTokenSilent(): Promise<string> {
+		if (this.data)
+			return this.data.accessToken;
+
+		throw new BrowserAuthError(BrowserAuthErrorCodes.unableToLoadToken);
 	}
-	addEventCallback(_callback: EventCallbackFunction): string | null {
-		throw new Error("Method not implemented.");
-	}
-	removeEventCallback(_callbackId: string): void {
-		throw new Error("Method not implemented.");
-	}
-	addPerformanceCallback(_callback: PerformanceCallbackFunction): string {
-		throw new Error("Method not implemented.");
-	}
-	removePerformanceCallback(_callbackId: string): boolean {
-		throw new Error("Method not implemented.");
-	}
-	enableAccountStorageEvents(): void {
-		throw new Error("Method not implemented.");
-	}
-	disableAccountStorageEvents(): void {
-		throw new Error("Method not implemented.");
-	}
-	getAccount(_accountFilter: AccountFilter): AccountInfo | null {
-		throw new Error("Method not implemented.");
-	}
-	getAccountByHomeId(_homeAccountId: string): AccountInfo | null {
-		throw new Error("Method not implemented.");
-	}
-	getAccountByLocalId(_localId: string): AccountInfo | null {
-		throw new Error("Method not implemented.");
-	}
-	getAccountByUsername(_userName: string): AccountInfo | null {
-		throw new Error("Method not implemented.");
-	}
-	getAllAccounts(): AccountInfo[] {
-		throw new Error("Method not implemented.");
-	}
-	handleRedirectPromise(
-		_hash?: string | undefined,
-	): Promise<AuthenticationResult | null> {
-		throw new Error("Method not implemented.");
-	}
-	loginPopup(
+	async loginPopup(
 		_request?: PopupRequest | undefined,
 	): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
-	}
-	loginRedirect(_request?: RedirectRequest | undefined): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	logout(_logoutRequest?: EndSessionRequest | undefined): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	logoutRedirect(
-		_logoutRequest?: EndSessionRequest | undefined,
-	): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	logoutPopup(
-		_logoutRequest?: EndSessionPopupRequest | undefined,
-	): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	ssoSilent(_request: SsoSilentRequest): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
-	}
-	getTokenCache(): ITokenCache {
-		throw new Error("Method not implemented.");
-	}
-	getLogger(): Logger {
-		throw new Error("Method not implemented.");
-	}
-	setLogger(_logger: Logger): void {
-		throw new Error("Method not implemented.");
-	}
-	setActiveAccount(_account: AccountInfo | null): void {
-		throw new Error("Method not implemented.");
-	}
-	getActiveAccount(): User | null {
-		const active = localStorage.getItem("modrinth.account");
-		if (!active) return null;
+		const account = await this.acquireTokenPopup();
 
-		try {
-			return JSON.parse(active) as User;
-		} catch (error) {
-			auth.error(`Failed to load active user: ${(error as Error)?.message}`);
-			localStorage.removeItem("modrinth.account");
-			return null;
-		}
+		const response = await getUserFromAuth({
+			client: modrinthClient,
+			headers: {
+				"Authorization": account.accessToken
+			}
+		});
+		if (response.error) throw response.error;
+		if (!response.response.ok || !response.data) throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
+
+
+		if (!this.data) throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
+		this.data.account = response.data;
+
+		this.writeCache(this.data);
+
+		this.dispatchEvent(new Event("update-data"));
+
+		return this.data;
 	}
-	initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void {
-		throw new Error("Method not implemented.");
+	public async logout(_logoutRequest?: EndSessionRequest | undefined): Promise<void> {
+		this.data = null;
+		this.clearCache();
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] })
+		this.dispatchEvent(new Event("update-data"));
 	}
-	setNavigationClient(_navigationClient: INavigationClient): void {
-		throw new Error("Method not implemented.");
+	public getActiveAccount(): User | null {
+		if (this.data?.account)
+			return this.data.account;
+
+		return null
 	}
-	getConfiguration(): BrowserConfiguration {
-		throw new Error("Method not implemented.");
+	public clearCache(): void {
+		localStorage.removeItem(ACCOUNT_KEY);
 	}
-	hydrateCache(
-		_result: AuthenticationResult,
-		_request: PopupRequest | RedirectRequest | SilentRequest | SsoSilentRequest,
-	): Promise<void> {
-		throw new Error("Method not implemented.");
+	private writeCache(data: AuthenticationResult) {
+		localStorage.setItem(ACCOUNT_KEY, JSON.stringify(data, sterilize));
 	}
-	clearCache(_logoutRequest?: ClearCacheRequest | undefined): Promise<void> {
-		throw new Error("Method not implemented.");
+	private readCache(): AuthenticationResult | null {
+		const cache = localStorage.getItem(ACCOUNT_KEY);
+		if (!cache) return null;
+		return JSON.parse(cache, desterilize) as AuthenticationResult;
 	}
 	private createPopupClient() {
 		return new PopupClient();
 	}
-	/*
-	public async acquireTokenSilent(
-		silentRequest: SilentRequest,
-	): Promise<string> {
-		const account = silentRequest?.account
-			? silentRequest.account
-			: this.getActiveAccount();
-		if (!account) {
-			throw new Error("Failed to get user account");
-		}
-
-		const cache = localStorage.getItem(`modrinth.auth.${account.id}`);
-
-		if (!cache)
-			throw createBrowserAuthError(
-				BrowserAuthErrorCodes.noTokenRequestCacheError,
-			);
-
-		const data = JSON.parse(cache) as CachedToken;
-
-		if (compareAsc(new Date(), data.expires) === 1) {
-			localStorage.removeItem(`modrinth.auth.${account.id}`);
-			throw createBrowserAuthError(BrowserAuthErrorCodes.unableToLoadToken);
-		}
-
-		return data.access_token;
-	}
-
-*/
 }

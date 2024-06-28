@@ -33,7 +33,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
 import { InteractionStatus } from "@/lib/masl";
-import { useAvatar } from "@/hooks/useAvatar";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
 
@@ -77,7 +76,7 @@ export const NavbarUpper: React.FC = () => {
 			<div className="flex h-full" data-tauri-drag-region>
 				<Notifications />
 
-				<Avatar className="h-8 rounded-none">
+				<Avatar className="h-8 rounded-none rounded-s-lg border-y border-l">
 					<AvatarImage src={account?.details.id ? `https://visage.surgeplay.com/face/256/${account.details.id}` : `https://api.dicebear.com/5.x/initials/svg?seed=${msAccount?.name}`} />
 					<AvatarFallback className="rounded-none">
 						<User2 />
@@ -86,7 +85,7 @@ export const NavbarUpper: React.FC = () => {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<button
-							className="mr-2 flex items-center justify-center bg-white px-3 text-black"
+							className="mr-2 flex items-center rounded-s-none justify-center bg-white px-3 text-black"
 							type="button"
 						>
 							<span className="mr-1 text-sm">
