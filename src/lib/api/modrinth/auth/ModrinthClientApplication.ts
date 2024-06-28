@@ -1,10 +1,8 @@
-//import { compareAsc } from "date-fns/compareAsc";
-//import { addSeconds } from "date-fns/addSeconds";
-//import { UsersService } from "../services.gen";
-//import { OpenAPI } from "../core/OpenAPI";
 import type {
 	AccountInfo,
-	AuthenticationResult,
+	AuthenticationResult as CommonAuthenticationResult,
+} from "@azure/msal-common";
+import type {
 	AuthorizationCodeRequest,
 	BrowserConfiguration,
 	ClearCacheRequest,
@@ -13,7 +11,6 @@ import type {
 	EndSessionRequest,
 	EventCallbackFunction,
 	INavigationClient,
-	IPublicClientApplication,
 	ITokenCache,
 	Logger,
 	PerformanceCallbackFunction,
@@ -24,22 +21,20 @@ import type {
 	WrapperSKU,
 } from "@masl/index";
 import type { AccountFilter } from "@azure/msal-common";
-/*import { type AuthResponse, PopupClient } from "./PopupClient";
-import {
-	BrowserAuthErrorCodes,
-	createBrowserAuthError,
-} from "@/lib/masl/error/BrowserAuthError";
-import { auth } from "@/lib/system/logger";*/
-//import { AccountFilter } from "@azure/msal-common";
+import { PopupClient } from "./PopupClient";
+import { auth } from "@/lib/system/logger";
+import { getUserFromAuth } from "../services.gen";
+import { modrinthClient } from "../../modrinthClient";
+import { addSeconds } from "date-fns/addSeconds";
+import type { User } from "../types.gen";
 
-//type CachedToken = Omit<AuthResponse, "expires_in"> & { expires: string };
-//type AccountInfo = Awaited<ReturnType<typeof UsersService.getUser>>;
-//type SilentRequest = { account?: AccountInfo };
-
-export class ModrinthClientApplication implements IPublicClientApplication {
+export type AuthenticationResult = CommonAuthenticationResult & {
+	account: User;
+};
+export class ModrinthClientApplication {
 	public static async createPublicClientApplication(
 		_configuration?: Configuration,
-	): Promise<IPublicClientApplication> {
+	): Promise<ModrinthClientApplication> {
 		const pca = new ModrinthClientApplication();
 		return pca;
 	}
@@ -47,15 +42,43 @@ export class ModrinthClientApplication implements IPublicClientApplication {
 	initialize(): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
-	acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
+	async acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
+		const client = this.createPopupClient();
+		const token = await client.acquireToken();
+
+		const response = await getUserFromAuth({
+			client: modrinthClient,
+			headers: {
+				"Authorization": token.access_token
+			}
+		});
+		if (response.error) throw response.error;
+		if (!response.data) throw new Error("Failed to fetch user data");
+
+		return {
+			tokenType: token.token_type,
+			accessToken: token.access_token,
+			account: response.data,
+			authority: "modrinth",
+			expiresOn: addSeconds(new Date(), token.expires_in),
+			fromCache: false,
+		} as AuthenticationResult;
 	}
 	acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
 	acquireTokenSilent(
-		_silentRequest: SilentRequest,
+		silentRequest: SilentRequest,
 	): Promise<AuthenticationResult> {
+		const account = silentRequest?.account
+			? silentRequest.account as never
+			: this.getActiveAccount();
+		if (!account) {
+			throw new Error("Failed to get user account");
+		}
+
+		const cache = localStorage.getItem(`modrinth.auth.${account.id}`);
+
 		throw new Error("Method not implemented.");
 	}
 	acquireTokenByCode(
@@ -137,8 +160,17 @@ export class ModrinthClientApplication implements IPublicClientApplication {
 	setActiveAccount(_account: AccountInfo | null): void {
 		throw new Error("Method not implemented.");
 	}
-	getActiveAccount(): AccountInfo | null {
-		throw new Error("Method not implemented.");
+	getActiveAccount(): User | null {
+		const active = localStorage.getItem("modrinth.account");
+		if (!active) return null;
+
+		try {
+			return JSON.parse(active) as User;
+		} catch (error) {
+			auth.error(`Failed to load active user: ${(error as Error)?.message}`);
+			localStorage.removeItem("modrinth.account");
+			return null;
+		}
 	}
 	initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void {
 		throw new Error("Method not implemented.");
@@ -158,48 +190,10 @@ export class ModrinthClientApplication implements IPublicClientApplication {
 	clearCache(_logoutRequest?: ClearCacheRequest | undefined): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
-	/*initialize(): Promise<void> {
-		throw new Error("Method not implemented.");
+	private createPopupClient() {
+		return new PopupClient();
 	}
-	public async acquireTokenPopup(): Promise<AuthenticationResult> {
-		const client = this.createPopupClient();
-		const token = await client.acquireToken();
-
-		const addHeader = (request: RequestInit) => {
-			request.headers = new Headers(request.headers);
-			request.headers.append("Authorization", token.access_token);
-			return request;
-		};
-
-		OpenAPI.interceptors.request.use(addHeader);
-		const response = await UsersService.getUserFromAuth();
-		OpenAPI.interceptors.request.eject(addHeader);
-
-		localStorage.setItem(
-			`modrinth.user.${response.id}`,
-			JSON.stringify(response),
-		);
-		localStorage.setItem(
-			`modrinth.auth.${response.id}`,
-			JSON.stringify({
-				access_token: token.access_token,
-				token_type: token.token_type,
-				expires: addSeconds(new Date(), token.expires_in).toISOString(),
-			}),
-		);
-
-		//return token.access_token;
-		return {
-			accessToken: "",
-			account: {},
-			authority: "",
-			correlationId: "",
-			expiresOn: new Date(),
-			fromCache: false,
-			idToken: "",
-			
-		};
-	}
+	/*
 	public async acquireTokenSilent(
 		silentRequest: SilentRequest,
 	): Promise<string> {
@@ -226,98 +220,6 @@ export class ModrinthClientApplication implements IPublicClientApplication {
 
 		return data.access_token;
 	}
-	public getAccountById(localId: string): AccountInfo | null {
-		try {
-			const user = localStorage.getItem(`modrinth.user.${localId}`);
-			return user ? (JSON.parse(user) as AccountInfo) : null;
-		} catch (error) {
-			auth.error(`Failed to get user by id: ${(error as Error)?.message}`);
-			return null;
-		}
-	}
-	public getAccountByUsername(userName: string): AccountInfo | null {
-		for (let i = 0; i < localStorage.length; i++) {
-			const key = localStorage.key(i);
-			if (!key || !key.startsWith("modrinth.user.")) continue;
 
-			try {
-				const value = localStorage.getItem(key);
-				if (!value) continue;
-				const item = JSON.parse(value) as AccountInfo;
-				if (item.username === userName) return item;
-			} catch (error) {
-				auth.error(
-					`Failed to parse user account info: ${(error as Error)?.message}`,
-				);
-			}
-		}
-		return null;
-	}
-	public getAllAccounts(): AccountInfo[] {
-		const data = [];
-		for (let i = 0; i < localStorage.length; i++) {
-			const key = localStorage.key(i);
-			if (!key || !key.startsWith("modrinth.user.")) continue;
-			try {
-				const value = localStorage.getItem(key);
-				if (!value) continue;
-				const item = JSON.parse(value) as AccountInfo;
-				data.push(item);
-			} catch (error) {
-				auth.error(
-					`Failed to parse user account info: ${(error as Error)?.message}`,
-				);
-			}
-		}
-		return data;
-	}
-	public loginPopup(
-		request?: PopupRequest | undefined,
-	): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
-	}
-	public logoutPopup(
-		logoutRequest?: EndSessionPopupRequest | undefined,
-	): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	public getTokenCache(): ITokenCache {
-		throw new Error("Method not implemented.");
-	}
-	public setActiveAccount(account: AccountInfo | null): void {
-		if (!account) return;
-		localStorage.setItem("modrinth.active", account?.id);
-	}
-	public getActiveAccount(): AccountInfo | null {
-		const active = localStorage.getItem("modrinth.active");
-		if (!active) return null;
-
-		try {
-			return JSON.parse(active) as AccountInfo;
-		} catch (error) {
-			auth.error(`Failed to load active user: ${(error as Error)?.message}`);
-			localStorage.removeItem("modrinth.active");
-			return null;
-		}
-	}
-	public hydrateCache(
-		result: AuthenticationResult,
-		request: PopupRequest | RedirectRequest | SilentRequest | SsoSilentRequest,
-	): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	public clearCache(
-		logoutRequest?: ClearCacheRequest | undefined,
-	): Promise<void> {
-		for (let i = 0; i < localStorage.length; i++) {
-			const key = localStorage.key(i);
-			if (!key || !key.startsWith("modrinth")) continue;
-			localStorage.removeItem(key);
-		}
-
-		throw new Error("Method not implemented.");
-	}
-	private createPopupClient() {
-		return new PopupClient();
-	}*/
+*/
 }
