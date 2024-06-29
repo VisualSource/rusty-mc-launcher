@@ -351,7 +351,7 @@ function MinecraftSkinControl() {
 						<Switch
 							checked={
 								content.skins.find((e) => e.state === "ACTIVE")?.variant ===
-									"SLIM" ?? false
+								"SLIM"
 							}
 							onCheckedChange={(value) => {
 								const current = content.skins.find((e) => e.state === "ACTIVE");
