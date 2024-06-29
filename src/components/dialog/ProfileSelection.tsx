@@ -1,9 +1,7 @@
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useReducer, useState } from "react";
-import { coerce, satisfies } from "semver";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useReducer } from "react";
 import { Book, Check } from "lucide-react";
-import { z } from "zod";
+
 
 import {
 	Dialog,
@@ -15,20 +13,17 @@ import {
 import {
 	Command,
 	CommandEmpty,
-	CommandGroup,
 	CommandInput,
 	CommandItem,
 	CommandList,
-	//CommandLoading,
+	CommandLoading,
 } from "../ui/command";
+import { profile, type MinecraftProfile } from "@/lib/models/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-//import { getLoaderType } from "@/utils/versionUtils";
+import { db } from "@/lib/system/commands";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { profile, type MinecraftProfile } from "@/lib/models/profiles";
-import { useQuery } from "@tanstack/react-query";
-import { db } from "@/lib/system/commands";
 
 const KEY = "rmcl://select-profile";
 const RETURN_KEY = "rmcl://select-profile/return";
@@ -165,9 +160,7 @@ const SelectProfile: React.FC = () => {
 					<CommandInput placeholder="Search Profile" />
 					<CommandEmpty>No Profiles</CommandEmpty>
 					{isLoading ? (
-						<div>
-							{/*<CommandLoading>Loading Profiles...</CommandLoading>*/}
-						</div>
+						<CommandLoading>Loading Profiles...</CommandLoading>
 					) : null}
 					<CommandList className="scrollbar max-h-72">
 						{data?.map((profile) => (
