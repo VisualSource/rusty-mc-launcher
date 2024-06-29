@@ -5,9 +5,17 @@ Todo:
   ☐ latest version
   ☐ default icons
   ☐ Validate Content
-  ☐ Modrinth login
+  ✔ Modrinth login @done(24-06-28 15:41)
   ☐ Working neoforge
   ☐ log viewer
+  ✔ import third party mods @started(24-06-28 15:42) @done(24-06-29 01:54) @lasted(10h12m39s)
+  ✔ import curseforge modpack @started(24-06-28 15:42) @done(24-06-29 02:11) @lasted(10h29m34s)
+  ☐ theme selector
+  ✔ installed version managment @done(24-06-26 22:26)
+  ☐ check if msa has minecraft
+  ☐ crash reporting
+  ☐ editable home page
+  ✔ skin viewer @done(24-06-27 21:06)
 
 
 

@@ -2,12 +2,12 @@ import type { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthC
 import { modrinthContext } from "@lib/context/ModrinthContext";
 
 export const ModrinthProvider = ({
-  client,
-  children,
+	client,
+	children,
 }: React.PropsWithChildren<{ client: ModrinthClientApplication }>) => {
-  return (
-    <modrinthContext.Provider value={client}>
-      {children}
-    </modrinthContext.Provider>
-  );
+	return (
+		<modrinthContext.Provider value={client}>
+			{children}
+		</modrinthContext.Provider>
+	);
 };

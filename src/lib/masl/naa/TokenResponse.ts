@@ -4,18 +4,18 @@
  */
 
 export type TokenResponse = {
-  access_token: string;
-  expires_in: number;
-  id_token: string;
-  properties: TokenResponseProperties | null;
-  scope?: string;
-  shr?: string; // token binding enabled at native layer it is the access token, not the signing keys
-  extendedLifetimeToken?: boolean;
-  authority?: string;
+	access_token: string;
+	expires_in: number;
+	id_token: string;
+	properties: TokenResponseProperties | null;
+	scope?: string;
+	shr?: string; // token binding enabled at native layer it is the access token, not the signing keys
+	extendedLifetimeToken?: boolean;
+	authority?: string;
 };
 
 export type TokenResponseProperties = {
-  MATS?: string;
+	MATS?: string;
 };
 
 /*

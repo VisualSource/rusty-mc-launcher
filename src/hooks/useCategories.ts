@@ -1,19 +1,16 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { CATEGORIES_KEY } from "./keys";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { settings } from "@lib/models/settings";
-import { db } from "@lib/system/commands";
+import { CATEGORIES_KEY } from "./keys";
+
+export const categoriesQueryOptions = queryOptions({
+	queryKey: [CATEGORIES_KEY],
+	queryFn: () => settings.getLike("category.%"),
+});
 
 const useCategories = () => {
-  const { data, error } = useSuspenseQuery({
-    queryKey: [CATEGORIES_KEY],
-    queryFn: () =>
-      db.select({
-        query: "SELECT * FROM settings WHERE key LIKE 'category.%';",
-        schema: settings.schema,
-      }),
-  });
-  if (error) throw error;
-  return data;
+	const { data, error } = useSuspenseQuery(categoriesQueryOptions);
+	if (error) throw error;
+	return data;
 };
 
 export default useCategories;

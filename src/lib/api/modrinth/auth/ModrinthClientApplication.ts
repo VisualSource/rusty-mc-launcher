@@ -1,178 +1,321 @@
-import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
-import { UsersService } from "../services.gen";
-import { Middleware, OpenAPI } from "../core/OpenAPI";
-import type {
-  AuthenticationResult,
-  ClearCacheRequest,
-  EndSessionPopupRequest,
-  ITokenCache,
-  PopupRequest,
-  RedirectRequest,
-  SsoSilentRequest,
-} from "@masl/index";
-import { AuthResponse, PopupClient } from "./PopupClient";
 import {
-  BrowserAuthErrorCodes,
-  createBrowserAuthError,
-} from "@/lib/masl/error/BrowserAuthError";
+	BrowserAuthError,
+	BrowserAuthErrorCodes,
+	type Configuration,
+	type EndSessionRequest,
+	type PopupRequest,
+} from "@masl/index";
+import { modrinthClient } from "../../modrinthClient";
+import {
+	getUserFromAuth,
+	getUserNotifications,
+	getFollowedProjects,
+	readNotifications,
+	readNotification,
+	deleteNotifications,
+	deleteNotification,
+	followProject,
+	unfollowProject,
+} from "../services.gen";
+import { PopupClient } from "./PopupClient";
 import { auth } from "@/lib/system/logger";
+import type { User } from "../types.gen";
+import { queryClient } from "../../queryClient";
 
-type CachedToken = Omit<AuthResponse, "expires_in"> & { expires: string };
-type AccountInfo = Awaited<ReturnType<typeof UsersService.getUser>>;
-type SilentRequest = { account?: AccountInfo };
+export type AuthenticationResult = {
+	tokenType: string;
+	accessToken: string;
+	account: User | null;
+	authority: string;
+	expiresOn: Date | null;
+	fromCache: boolean;
+};
 
-export class ModrinthClientApplication {
-  initialize(): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  public async acquireTokenPopup(): Promise<string> {
-    const client = this.createPopupClient();
-    const token = await client.acquireToken();
+const ACCOUNT_KEY = "modrinth.account";
 
-    const addHeader = (request: RequestInit) => {
-      request.headers = new Headers(request.headers);
-      request.headers.append("Authorization", token.access_token);
-      return request;
-    };
+const sterilize = (_key: string, value: unknown) => {
+	if (value instanceof Date) {
+		return `Date(${value.toISOString()})`;
+	}
 
-    OpenAPI.interceptors.request.use(addHeader);
-    const response = await UsersService.getUserFromAuth();
-    OpenAPI.interceptors.request.eject(addHeader);
+	return value;
+};
 
-    localStorage.setItem(
-      `modrinth.user.${response.id}`,
-      JSON.stringify(response),
-    );
-    localStorage.setItem(
-      `modrinth.auth.${response.id}`,
-      JSON.stringify({
-        access_token: token.access_token,
-        token_type: token.token_type,
-        expires: addSeconds(new Date(), token.expires_in).toISOString(),
-      }),
-    );
+const desterilize = (_key: string, value: unknown) => {
+	if (typeof value === "string" && value.startsWith("Date(")) {
+		return new Date(value.replace("Date(", "").replace(")", ""));
+	}
+	return value;
+};
 
-    return token.access_token;
-  }
-  public async acquireTokenSilent(
-    silentRequest: SilentRequest,
-  ): Promise<string> {
-    let account = silentRequest?.account
-      ? silentRequest.account
-      : this.getActiveAccount();
-    if (!account) {
-      throw new Error("Failed to get user account");
-    }
+export class ModrinthClientApplication extends EventTarget {
+	private data: AuthenticationResult | null = null;
 
-    const cache = localStorage.getItem(`modrinth.auth.${account.id}`);
+	public static async createPublicClientApplication(
+		_configuration?: Configuration,
+	): Promise<ModrinthClientApplication> {
+		const pca = new ModrinthClientApplication();
+		await pca.initialize();
+		return pca;
+	}
 
-    if (!cache)
-      throw createBrowserAuthError(
-        BrowserAuthErrorCodes.noTokenRequestCacheError,
-      );
+	public get isAuthed(): boolean {
+		return this.data !== null;
+	}
 
-    const data = JSON.parse(cache) as CachedToken;
+	async followProject(id: string) {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 
-    if (compareAsc(new Date(), data.expires) === 1) {
-      localStorage.removeItem(`modrinth.auth.${account.id}`);
-      throw createBrowserAuthError(BrowserAuthErrorCodes.unableToLoadToken);
-    }
+		const { error, response } = await followProject({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			path: {
+				"id|slug": id,
+			},
+		});
+		if (error) throw error;
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 
-    return data.access_token;
-  }
-  public getAccountById(localId: string): AccountInfo | null {
-    try {
-      const user = localStorage.getItem(`modrinth.user.${localId}`);
-      return user ? (JSON.parse(user) as AccountInfo) : null;
-    } catch (error) {
-      auth.error(`Failed to get user by id: ${(error as Error)?.message}`);
-      return null;
-    }
-  }
-  public getAccountByUsername(userName: string): AccountInfo | null {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith("modrinth.user.")) continue;
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] });
+	}
 
-      try {
-        const value = localStorage.getItem(key);
-        if (!value) continue;
-        const item = JSON.parse(value) as AccountInfo;
-        if (item.username === userName) return item;
-      } catch (error) {
-        auth.error(
-          `Failed to parse user account info: ${(error as Error)?.message}`,
-        );
-      }
-    }
-    return null;
-  }
-  public getAllAccounts(): AccountInfo[] {
-    let data = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith("modrinth.user.")) continue;
-      try {
-        const value = localStorage.getItem(key);
-        if (!value) continue;
-        const item = JSON.parse(value) as AccountInfo;
-        data.push(item);
-      } catch (error) {
-        auth.error(
-          `Failed to parse user account info: ${(error as Error)?.message}`,
-        );
-      }
-    }
-    return data;
-  }
-  public loginPopup(
-    request?: PopupRequest | undefined,
-  ): Promise<AuthenticationResult> {
-    throw new Error("Method not implemented.");
-  }
-  public logoutPopup(
-    logoutRequest?: EndSessionPopupRequest | undefined,
-  ): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  public getTokenCache(): ITokenCache {
-    throw new Error("Method not implemented.");
-  }
-  public setActiveAccount(account: AccountInfo | null): void {
-    if (!account) return;
-    localStorage.setItem("modrinth.active", account?.id);
-  }
-  public getActiveAccount(): AccountInfo | null {
-    const active = localStorage.getItem("modrinth.active");
-    if (!active) return null;
+	async unfollowProject(id: string) {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 
-    try {
-      return JSON.parse(active) as AccountInfo;
-    } catch (error) {
-      auth.error(`Failed to load active user: ${(error as Error)?.message}`);
-      localStorage.removeItem("modrinth.active");
-      return null;
-    }
-  }
-  public hydrateCache(
-    result: AuthenticationResult,
-    request: PopupRequest | RedirectRequest | SilentRequest | SsoSilentRequest,
-  ): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  public clearCache(
-    logoutRequest?: ClearCacheRequest | undefined,
-  ): Promise<void> {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith("modrinth")) continue;
-      localStorage.removeItem(key);
-    }
+		const { error, response } = await unfollowProject({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			path: {
+				"id|slug": id,
+			},
+		});
+		if (error) throw error;
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 
-    throw new Error("Method not implemented.");
-  }
-  private createPopupClient() {
-    return new PopupClient();
-  }
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] });
+	}
+
+	async getFollowed() {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
+
+		const { error, data, response } = await getFollowedProjects({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			path: {
+				"id|username": this.data?.account.id,
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok || !data)
+			throw new Error("Failed to get user followed projects.", {
+				cause: response,
+			});
+
+		return data;
+	}
+
+	async getNotifications() {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
+
+		const { error, data, response } = await getUserNotifications({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			path: {
+				"id|username": this.data.account.id,
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok || !data)
+			throw new Error("Failed to get user notifications", { cause: response });
+
+		return data;
+	}
+
+	async readNotification(id: string) {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
+
+		const { response, error } = await readNotification({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			path: {
+				id,
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
+	}
+	async readNotifications(ids: string[]) {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
+		const { response, error } = await readNotifications({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			query: {
+				ids: JSON.stringify(ids),
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
+	}
+	async deleteNotification(id: string) {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
+		const { response, error } = await deleteNotification({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			path: {
+				id,
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
+	}
+	async deleteNotifications(ids: string) {
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
+		const { response, error } = await deleteNotifications({
+			client: modrinthClient,
+			headers: {
+				Authorization: this.data.accessToken,
+			},
+			query: {
+				ids: JSON.stringify(ids),
+			},
+		});
+
+		if (error) throw error;
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
+	}
+
+	async initialize(): Promise<void> {
+		try {
+			this.data = this.readCache();
+		} catch (error) {
+			auth.error(
+				`Failed to load modrinth cache: ${(error as Error).message}`,
+				error,
+			);
+		}
+	}
+	async acquireTokenPopup(): Promise<AuthenticationResult> {
+		const client = this.createPopupClient();
+		const token = await client.acquireToken();
+
+		this.data = {
+			tokenType: token.token_type,
+			accessToken: token.access_token,
+			account: this.data?.account,
+			authority: "modrinth",
+			expiresOn: addSeconds(new Date(), token.expires_in),
+			fromCache: false,
+		} as AuthenticationResult;
+
+		this.writeCache(this.data);
+
+		return this.data;
+	}
+	async acquireTokenSilent(): Promise<string> {
+		if (this.data) return this.data.accessToken;
+
+		throw new BrowserAuthError(BrowserAuthErrorCodes.unableToLoadToken);
+	}
+	async loginPopup(
+		_request?: PopupRequest | undefined,
+	): Promise<AuthenticationResult> {
+		const account = await this.acquireTokenPopup();
+
+		const response = await getUserFromAuth({
+			client: modrinthClient,
+			headers: {
+				Authorization: account.accessToken,
+			},
+		});
+		if (response.error) throw response.error;
+		if (!response.response.ok || !response.data)
+			throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
+
+		if (!this.data)
+			throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
+		this.data.account = response.data;
+
+		this.writeCache(this.data);
+
+		this.dispatchEvent(new Event("update-data"));
+
+		return this.data;
+	}
+	public async logout(
+		_logoutRequest?: EndSessionRequest | undefined,
+	): Promise<void> {
+		this.data = null;
+		this.clearCache();
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] });
+		this.dispatchEvent(new Event("update-data"));
+	}
+	public getActiveAccount(): User | null {
+		if (this.data?.account) return this.data.account;
+
+		return null;
+	}
+	public clearCache(): void {
+		localStorage.removeItem(ACCOUNT_KEY);
+	}
+	private writeCache(data: AuthenticationResult) {
+		localStorage.setItem(ACCOUNT_KEY, JSON.stringify(data, sterilize));
+	}
+	private readCache(): AuthenticationResult | null {
+		const cache = localStorage.getItem(ACCOUNT_KEY);
+		if (!cache) return null;
+		return JSON.parse(cache, desterilize) as AuthenticationResult;
+	}
+	private createPopupClient() {
+		return new PopupClient();
+	}
 }

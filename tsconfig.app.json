@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /*Bundler*/
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "allowJs": false,
+    /* Lint */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    "paths": {
+      "@/*": ["./src/*"],
+      "@context/*": ["./src/lib/context/*"],
+      "@system/*": ["./src/lib/system/*"],
+      "@masl/*": ["./src/lib/masl/*"],
+      "@component/*": ["./src/components/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@polyfill/*": ["./src/lib/polyfill/*"],
+      "@hook/*": ["./src/hooks/*"],
+      "@auth/*": ["./src/lib/auth/*"],
+      "@page/*": ["./src/pages/*"],
+      "@util/*": ["./src/utils/*"]
+    }
+  },
+  "include": ["src"]
+}

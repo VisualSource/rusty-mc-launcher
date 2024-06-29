@@ -1,8 +1,10 @@
 /// <reference types="vitest" />
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import react from '@vitejs/plugin-react';
+import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from 'vite';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
@@ -15,7 +17,6 @@ export default defineConfig({
   test: {},
   resolve: {
     alias: {
-      'node-fetch': 'isomorphic-fetch',
       "@masl": resolve(__dirname, "./src/lib/masl"),
       "@": resolve(__dirname, "./src"),
       "@context": resolve(__dirname, "./src/lib/context"),
@@ -31,9 +32,9 @@ export default defineConfig({
   },
   envPrefix: ["PUBLIC_VITE", 'VITE_', 'TAURI_PLATFORM', 'TAURI_ARCH', 'TAURI_FAMILY', 'TAURI_PLATFORM_VERSION', 'TAURI_PLATFORM_TYPE', 'TAURI_DEBUG'],
   build: {
-    target: process.env.TAURI_PLATFORM == 'windows' ? 'chrome105' : 'safari13',
+    target: process.env.TAURI_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     sourcemap: !!process.env.TAURI_DEBUG
   },
-  plugins: [react()]
+  plugins: [TanStackRouterVite(), react()]
 });

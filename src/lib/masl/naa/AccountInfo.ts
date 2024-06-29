@@ -4,13 +4,13 @@
  */
 
 export type AccountInfo = {
-  homeAccountId?: string;
-  environment: string;
-  tenantId?: string;
-  username: string;
-  localAccountId?: string;
-  name?: string;
-  idToken?: string; // idTokenClaims can be parsed from idToken in MSAL.js
-  platformBrokerId?: string; // Used by WAM previous called nativeAccountId
-  idTokenClaims?: object;
+	homeAccountId?: string;
+	environment: string;
+	tenantId?: string;
+	username: string;
+	localAccountId?: string;
+	name?: string;
+	idToken?: string; // idTokenClaims can be parsed from idToken in MSAL.js
+	platformBrokerId?: string; // Used by WAM previous called nativeAccountId
+	idTokenClaims?: object;
 };

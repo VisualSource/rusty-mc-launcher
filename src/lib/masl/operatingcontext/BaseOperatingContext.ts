@@ -5,15 +5,15 @@
 
 import { Logger, LogLevel } from "@azure/msal-common";
 import {
-  BrowserConfiguration,
-  buildConfiguration,
-  Configuration,
+	type BrowserConfiguration,
+	buildConfiguration,
+	type Configuration,
 } from "../config/Configuration";
 import { version, name } from "../packageMetadata";
 import {
-  BrowserCacheLocation,
-  LOG_LEVEL_CACHE_KEY,
-  LOG_PII_CACHE_KEY,
+	BrowserCacheLocation,
+	LOG_LEVEL_CACHE_KEY,
+	LOG_PII_CACHE_KEY,
 } from "../utils/BrowserConstants";
 
 /**
@@ -24,116 +24,116 @@ import {
  * For example: Some operating contexts will pre-cache tokens impacting performance telemetry
  */
 export abstract class BaseOperatingContext {
-  protected logger: Logger;
-  protected config: BrowserConfiguration;
-  protected available: boolean;
-  protected browserEnvironment: boolean;
+	protected logger: Logger;
+	protected config: BrowserConfiguration;
+	protected available: boolean;
+	protected browserEnvironment: boolean;
 
-  protected static loggerCallback(level: LogLevel, message: string): void {
-    switch (level) {
-      case LogLevel.Error:
-        // eslint-disable-next-line no-console
-        console.error(message);
-        return;
-      case LogLevel.Info:
-        // eslint-disable-next-line no-console
-        console.info(message);
-        return;
-      case LogLevel.Verbose:
-        // eslint-disable-next-line no-console
-        console.debug(message);
-        return;
-      case LogLevel.Warning:
-        // eslint-disable-next-line no-console
-        console.warn(message);
-        return;
-      default:
-        // eslint-disable-next-line no-console
-        console.log(message);
-        return;
-    }
-  }
+	protected static loggerCallback(level: LogLevel, message: string): void {
+		switch (level) {
+			case LogLevel.Error:
+				// eslint-disable-next-line no-console
+				console.error(message);
+				return;
+			case LogLevel.Info:
+				// eslint-disable-next-line no-console
+				console.info(message);
+				return;
+			case LogLevel.Verbose:
+				// eslint-disable-next-line no-console
+				console.debug(message);
+				return;
+			case LogLevel.Warning:
+				// eslint-disable-next-line no-console
+				console.warn(message);
+				return;
+			default:
+				// eslint-disable-next-line no-console
+				console.log(message);
+				return;
+		}
+	}
 
-  constructor(config: Configuration) {
-    /*
-     * If loaded in an environment where window is not available,
-     * set internal flag to false so that further requests fail.
-     * This is to support server-side rendering environments.
-     */
-    this.browserEnvironment = typeof window !== "undefined";
-    this.config = buildConfiguration(config, this.browserEnvironment);
+	constructor(config: Configuration) {
+		/*
+		 * If loaded in an environment where window is not available,
+		 * set internal flag to false so that further requests fail.
+		 * This is to support server-side rendering environments.
+		 */
+		this.browserEnvironment = typeof window !== "undefined";
+		this.config = buildConfiguration(config, this.browserEnvironment);
 
-    let sessionStorage: Storage | undefined;
-    try {
-      sessionStorage = window[BrowserCacheLocation.SessionStorage];
-      // Mute errors if it's a non-browser environment or cookies are blocked.
-    } catch (e) {}
+		let sessionStorage: Storage | undefined;
+		try {
+			sessionStorage = window[BrowserCacheLocation.SessionStorage];
+			// Mute errors if it's a non-browser environment or cookies are blocked.
+		} catch (e) {}
 
-    const logLevelKey = sessionStorage?.getItem(LOG_LEVEL_CACHE_KEY);
-    const piiLoggingKey = sessionStorage
-      ?.getItem(LOG_PII_CACHE_KEY)
-      ?.toLowerCase();
+		const logLevelKey = sessionStorage?.getItem(LOG_LEVEL_CACHE_KEY);
+		const piiLoggingKey = sessionStorage
+			?.getItem(LOG_PII_CACHE_KEY)
+			?.toLowerCase();
 
-    const piiLoggingEnabled =
-      piiLoggingKey === "true"
-        ? true
-        : piiLoggingKey === "false"
-          ? false
-          : undefined;
-    const loggerOptions = { ...this.config.system.loggerOptions };
+		const piiLoggingEnabled =
+			piiLoggingKey === "true"
+				? true
+				: piiLoggingKey === "false"
+					? false
+					: undefined;
+		const loggerOptions = { ...this.config.system.loggerOptions };
 
-    const logLevel =
-      logLevelKey && Object.keys(LogLevel).includes(logLevelKey)
-        ? LogLevel[logLevelKey as keyof typeof LogLevel]
-        : undefined;
-    if (logLevel) {
-      loggerOptions.loggerCallback = BaseOperatingContext.loggerCallback;
-      loggerOptions.logLevel = logLevel;
-    }
-    if (piiLoggingEnabled !== undefined) {
-      loggerOptions.piiLoggingEnabled = piiLoggingEnabled;
-    }
+		const logLevel =
+			logLevelKey && Object.keys(LogLevel).includes(logLevelKey)
+				? LogLevel[logLevelKey as keyof typeof LogLevel]
+				: undefined;
+		if (logLevel) {
+			loggerOptions.loggerCallback = BaseOperatingContext.loggerCallback;
+			loggerOptions.logLevel = logLevel;
+		}
+		if (piiLoggingEnabled !== undefined) {
+			loggerOptions.piiLoggingEnabled = piiLoggingEnabled;
+		}
 
-    this.logger = new Logger(loggerOptions, name, version);
-    this.available = false;
-  }
+		this.logger = new Logger(loggerOptions, name, version);
+		this.available = false;
+	}
 
-  /**
-   * returns the name of the module containing the API controller associated with this operating context
-   */
-  abstract getModuleName(): string;
+	/**
+	 * returns the name of the module containing the API controller associated with this operating context
+	 */
+	abstract getModuleName(): string;
 
-  /**
-   * returns the string identifier of this operating context
-   */
-  abstract getId(): string;
+	/**
+	 * returns the string identifier of this operating context
+	 */
+	abstract getId(): string;
 
-  /**
-   * returns a boolean indicating whether this operating context is present
-   */
-  abstract initialize(): Promise<boolean>;
+	/**
+	 * returns a boolean indicating whether this operating context is present
+	 */
+	abstract initialize(): Promise<boolean>;
 
-  /**
-   * Return the MSAL config
-   * @returns BrowserConfiguration
-   */
-  getConfig(): BrowserConfiguration {
-    return this.config;
-  }
+	/**
+	 * Return the MSAL config
+	 * @returns BrowserConfiguration
+	 */
+	getConfig(): BrowserConfiguration {
+		return this.config;
+	}
 
-  /**
-   * Returns the MSAL Logger
-   * @returns Logger
-   */
-  getLogger(): Logger {
-    return this.logger;
-  }
+	/**
+	 * Returns the MSAL Logger
+	 * @returns Logger
+	 */
+	getLogger(): Logger {
+		return this.logger;
+	}
 
-  isAvailable(): boolean {
-    return this.available;
-  }
+	isAvailable(): boolean {
+		return this.available;
+	}
 
-  isBrowserEnvironment(): boolean {
-    return this.browserEnvironment;
-  }
+	isBrowserEnvironment(): boolean {
+		return this.browserEnvironment;
+	}
 }

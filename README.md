@@ -43,6 +43,13 @@ See [Relase Notes](RELEASE_NOTES.md)
 Click releases and select the latest release and download
 the installer for your platform
 
+## Acknowledgements
+ - [Mojang API Documentation](https://mojang-api-docs.gapple.pw/)
+ - [minecraft-launcher-lib (Python)](https://codeberg.org/JakobDev/minecraft-launcher-lib)
+ - [Modrinth](https://modrinth.com/)
+ - [Modrinth Theseus](https://github.com/modrinth/theseus)
+ - [CFWidget](https://cfwidget.com/)
+
 ## Feedback
 
 If you have any feedback, please reach out to us at support@visualsource.us

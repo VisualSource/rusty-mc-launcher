@@ -9,24 +9,24 @@ import { AuthError } from "@azure/msal-common";
  * NestedAppAuthErrorMessage class containing string constants used by error codes and messages.
  */
 export const NestedAppAuthErrorMessage = {
-  unsupportedMethod: {
-    code: "unsupported_method",
-    desc: "The PKCE code challenge and verifier could not be generated.",
-  },
+	unsupportedMethod: {
+		code: "unsupported_method",
+		desc: "The PKCE code challenge and verifier could not be generated.",
+	},
 };
 
 export class NestedAppAuthError extends AuthError {
-  constructor(errorCode: string, errorMessage?: string) {
-    super(errorCode, errorMessage);
+	constructor(errorCode: string, errorMessage?: string) {
+		super(errorCode, errorMessage);
 
-    Object.setPrototypeOf(this, NestedAppAuthError.prototype);
-    this.name = "NestedAppAuthError";
-  }
+		Object.setPrototypeOf(this, NestedAppAuthError.prototype);
+		this.name = "NestedAppAuthError";
+	}
 
-  public static createUnsupportedError(): NestedAppAuthError {
-    return new NestedAppAuthError(
-      NestedAppAuthErrorMessage.unsupportedMethod.code,
-      NestedAppAuthErrorMessage.unsupportedMethod.desc,
-    );
-  }
+	public static createUnsupportedError(): NestedAppAuthError {
+		return new NestedAppAuthError(
+			NestedAppAuthErrorMessage.unsupportedMethod.code,
+			NestedAppAuthErrorMessage.unsupportedMethod.desc,
+		);
+	}
 }

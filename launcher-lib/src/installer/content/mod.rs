@@ -1,3 +1,4 @@
+pub mod external;
 mod mrpack;
 use std::{path::PathBuf, str::FromStr};
 
@@ -14,6 +15,17 @@ pub enum ContentType {
     Shader,
     Mod,
     Modpack,
+}
+
+impl ContentType {
+    pub fn as_string(&self) -> String {
+        match self {
+            ContentType::Resourcepack => "Resourcepack".to_string(),
+            ContentType::Shader => "Shader".to_string(),
+            ContentType::Mod => "Mod".to_string(),
+            ContentType::Modpack => "Modpack".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
