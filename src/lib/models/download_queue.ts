@@ -9,7 +9,7 @@ const contentTypeSchema = z.enum([
 	"Resourcepack",
 	"Shader",
 	"Datapack",
-	"CurseforgeModpack"
+	"CurseforgeModpack",
 ]);
 
 export type ContentType = z.infer<typeof contentTypeSchema>;

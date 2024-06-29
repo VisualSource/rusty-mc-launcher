@@ -7,7 +7,13 @@ import type { AppContext } from "@/types";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/Footer";
 
-const TanStackRouterDevtools = import.meta.env.DEV ? lazy(() => import("@tanstack/router-devtools").then(res => ({ default: res.TanStackRouterDevtools }))) : () => null;
+const TanStackRouterDevtools = import.meta.env.DEV
+	? lazy(() =>
+			import("@tanstack/router-devtools").then((res) => ({
+				default: res.TanStackRouterDevtools,
+			})),
+		)
+	: () => null;
 
 const Index: React.FC = () => {
 	return (

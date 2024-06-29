@@ -44,8 +44,20 @@ function Screenshots() {
 	return (
 		<div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 grid-rows-none grid-flow-dense h-full overflow-y-scroll gap-4 p-2">
 			{query.data.length >= 1 ? (
-				query.data.map(e => (
-					<Avatar onClick={() => showInFolder(decodeURIComponent(e.replace("asset://", "").replace("https://asset.localhost/", "")))} className="my-2 aspect-square h-36 rounded-lg w-full hover:scale-105 transition-all" key={e}>
+				query.data.map((e) => (
+					<Avatar
+						onClick={() =>
+							showInFolder(
+								decodeURIComponent(
+									e
+										.replace("asset://", "")
+										.replace("https://asset.localhost/", ""),
+								),
+							)
+						}
+						className="my-2 aspect-square h-36 rounded-lg w-full hover:scale-105 transition-all"
+						key={e}
+					>
 						<AvatarFallback className="rounded-lg">
 							<FileImage />
 						</AvatarFallback>

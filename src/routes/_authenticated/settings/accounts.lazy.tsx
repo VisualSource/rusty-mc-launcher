@@ -14,12 +14,10 @@ export const Route = createLazyFileRoute("/_authenticated/settings/accounts")({
 });
 
 function AccountsSettings() {
-	const modrinth = useModrinth()
+	const modrinth = useModrinth();
 	const modrinthAccount = useModrinthAccount();
 	const account = useAccount();
 	const masl = useMsal();
-
-
 
 	return (
 		<div className="space-y-6">
@@ -64,12 +62,21 @@ function AccountsSettings() {
 				<div>
 					<div className="flex justify-between items-center mb-4 ">
 						<h3 className="text-lg font-medium">Modrinth Account</h3>
-						<Button onClick={() => modrinthAccount ? modrinth.logout() : modrinth.loginPopup()} size="sm">
-							{modrinthAccount ? (<>
-								<LogOut className="h-4 w-4 mr-2" /> Logout
-							</>) : (<>
-								<LogIn className="h-4 w-4 mr-2" /> Login
-							</>)}
+						<Button
+							onClick={() =>
+								modrinthAccount ? modrinth.logout() : modrinth.loginPopup()
+							}
+							size="sm"
+						>
+							{modrinthAccount ? (
+								<>
+									<LogOut className="h-4 w-4 mr-2" /> Logout
+								</>
+							) : (
+								<>
+									<LogIn className="h-4 w-4 mr-2" /> Login
+								</>
+							)}
 						</Button>
 					</div>
 					<ul className="space-y-4">

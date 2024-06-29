@@ -25,7 +25,11 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Suspense } from "react";
 
-import { useIsModrinthAuthed, useModrinth, useModrinthFollows } from "@/hooks/useModrinth";
+import {
+	useIsModrinthAuthed,
+	useModrinth,
+	useModrinthFollows,
+} from "@/hooks/useModrinth";
 import { TypographyH1, TypographyH4 } from "@/components/ui/typography";
 import { projectQueryOptions } from "@/lib/query/modrinthProjectQuery";
 import SelectProfile from "@/components/dialog/ProfileSelection";
@@ -35,8 +39,6 @@ import { Button } from "@/components/ui/button";
 import { install } from "@/lib/system/install";
 import { Loading } from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
-
-
 
 export const Route = createLazyFileRoute(
 	"/_authenticated/workshop/project/$id",
@@ -126,23 +128,23 @@ function Project() {
 						) : null}
 						{project.donation_urls
 							? project.donation_urls.map((value) => (
-								<a
-									href={value.url}
-									target="_blank"
-									key={value.id}
-									className="flex items-center"
-									rel="noopener noreferrer"
-								>
-									<DollarSign className="pr-2" />
-									<span className="text-blue-600 underline">
-										{value.platform
-											? "Donate"
-											: value.platform === "Other"
+									<a
+										href={value.url}
+										target="_blank"
+										key={value.id}
+										className="flex items-center"
+										rel="noopener noreferrer"
+									>
+										<DollarSign className="pr-2" />
+										<span className="text-blue-600 underline">
+											{value.platform
 												? "Donate"
-												: value.platform}
-									</span>
-								</a>
-							))
+												: value.platform === "Other"
+													? "Donate"
+													: value.platform}
+										</span>
+									</a>
+								))
 							: null}
 					</div>
 				</section>
@@ -153,15 +155,38 @@ function Project() {
 							<TypographyH4>{project.title}</TypographyH4>
 
 							<div className="flex items-center gap-2">
-								<Button onClick={() => toast.promise(follows.data?.findIndex(e => e.id === project.id) !== -1 ? modrinth.unfollowProject(project.id) : modrinth.followProject(project.id), { pending: "Updating", success: "Updated", error: "Failed to update." })} disabled={!isModrinthAuthed} variant="secondary">
-									{isModrinthAuthed && follows.data?.findIndex(e => e.id === project.id) !== -1 ? (<>
-										<HeartOff className="mr-2 h-5 w-5" /> Unfollow
-									</>) : (<>
-										<Heart className="mr-2 h-5 w-5" /> Follow
-									</>)}
+								<Button
+									onClick={() =>
+										toast.promise(
+											follows.data?.findIndex((e) => e.id === project.id) !== -1
+												? modrinth.unfollowProject(project.id)
+												: modrinth.followProject(project.id),
+											{
+												pending: "Updating",
+												success: "Updated",
+												error: "Failed to update.",
+											},
+										)
+									}
+									disabled={!isModrinthAuthed}
+									variant="secondary"
+								>
+									{isModrinthAuthed &&
+									follows.data?.findIndex((e) => e.id === project.id) !== -1 ? (
+										<>
+											<HeartOff className="mr-2 h-5 w-5" /> Unfollow
+										</>
+									) : (
+										<>
+											<Heart className="mr-2 h-5 w-5" /> Follow
+										</>
+									)}
 								</Button>
 
-								<Button title="Install content" onClick={() => install(project)}>
+								<Button
+									title="Install content"
+									onClick={() => install(project)}
+								>
 									<Plus className="mr-1" /> Install
 								</Button>
 							</div>

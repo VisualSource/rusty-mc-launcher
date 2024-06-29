@@ -14,7 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import logger from "@system/logger";
 import { workshop_content } from "@/lib/models/content";
-import { getProjects, versionsFromHashes } from "@/lib/api/modrinth/services.gen";
+import {
+	getProjects,
+	versionsFromHashes,
+} from "@/lib/api/modrinth/services.gen";
 import { modrinthClient } from "@/lib/api/modrinthClient";
 
 export const Route = createFileRoute(
@@ -25,7 +28,9 @@ export const Route = createFileRoute(
 });
 
 function ProfileContent() {
-	const [selected, setSelected] = useState<"Mod" | "Resourcepack" | "Shader">("Mod");
+	const [selected, setSelected] = useState<"Mod" | "Resourcepack" | "Shader">(
+		"Mod",
+	);
 	const params = Route.useParams();
 	const profile = useSuspenseQuery(profileQueryOptions(params.id));
 	const content = useQuery({
@@ -105,7 +110,9 @@ function ProfileContent() {
 						continue;
 					}
 
-					const project = projects.data.find((e) => e.id === projectId.version.project_id);
+					const project = projects.data.find(
+						(e) => e.id === projectId.version.project_id,
+					);
 					if (!project) {
 						output.push({ record: content, project: null });
 						continue;
@@ -113,8 +120,16 @@ function ProfileContent() {
 
 					if (!content.id.length) {
 						await db.execute({
-							query: "UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?",
-							args: [project.id, projectId.version.version_number, content.file_name, content.type, content.profile, content.sha1]
+							query:
+								"UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?",
+							args: [
+								project.id,
+								projectId.version.version_number,
+								content.file_name,
+								content.type,
+								content.profile,
+								content.sha1,
+							],
 						});
 						content.version = projectId.version.version_number ?? null;
 					}
@@ -135,13 +150,19 @@ function ProfileContent() {
 			return results
 				.map((e) => (e.status === "fulfilled" ? e.value : null))
 				.filter(Boolean)
-				.flat(2)
+				.flat(2);
 		},
 	});
 
 	return (
 		<div className="h-full space-y-4 overflow-hidden rounded-lg bg-zinc-900 px-4 py-2 shadow-lg">
-			<Tabs value={selected} onValueChange={(e) => setSelected(e as "Mod" | "Resourcepack" | "Shader")} className="flex h-full w-full flex-col">
+			<Tabs
+				value={selected}
+				onValueChange={(e) =>
+					setSelected(e as "Mod" | "Resourcepack" | "Shader")
+				}
+				className="flex h-full w-full flex-col"
+			>
 				<TabsList className="w-full">
 					<TabsTrigger value="Mod">Mods</TabsTrigger>
 					<TabsTrigger value="Resourcepack">Resource Packs</TabsTrigger>
@@ -151,38 +172,59 @@ function ProfileContent() {
 					<div>
 						<span>{content.data?.length ?? 0} Items</span>
 					</div>
-					<Button variant="secondary" size="sm" onClick={async () => {
-						const file = await open({
-							title: "Import Content",
-							filters: [
-								{
-									name: "Mod",
-									extensions: ["jar"]
-								},
-								{
-									name: "Resource Pack | Shader Pack",
-									extensions: ["zip"]
-								}
-							]
-						})
-						if (!file || Array.isArray(file)) return;
+					<Button
+						variant="secondary"
+						size="sm"
+						onClick={async () => {
+							const file = await open({
+								title: "Import Content",
+								filters: [
+									{
+										name: "Mod",
+										extensions: ["jar"],
+									},
+									{
+										name: "Resource Pack | Shader Pack",
+										extensions: ["zip"],
+									},
+								],
+							});
+							if (!file || Array.isArray(file)) return;
 
-						const id = toast.loading("Importing Content");
-						try {
-							await importContentExternal(file, profile.data.id, selected);
-							await queryClient.invalidateQueries({ queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id] });
-							toast.update(id, { render: "Imported Content", type: "success", isLoading: false, autoClose: 5000 });
-						} catch (error) {
-							console.error(error);
-							logger.error((error as Error).message);
-							toast.update(id, { render: "Failed to import content", type: "error", isLoading: false, autoClose: 5000 });
-						}
-					}}>
+							const id = toast.loading("Importing Content");
+							try {
+								await importContentExternal(file, profile.data.id, selected);
+								await queryClient.invalidateQueries({
+									queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
+								});
+								toast.update(id, {
+									render: "Imported Content",
+									type: "success",
+									isLoading: false,
+									autoClose: 5000,
+								});
+							} catch (error) {
+								console.error(error);
+								logger.error((error as Error).message);
+								toast.update(id, {
+									render: "Failed to import content",
+									type: "error",
+									isLoading: false,
+									autoClose: 5000,
+								});
+							}
+						}}
+					>
 						<Import className="h-4 w-4 mr-2" />
-						Import External</Button>
+						Import External
+					</Button>
 				</div>
 				<div className="pb-2 overflow-y-auto scrollbar h-full">
-					<ContentTab content_type={selected} profile={profile.data} content={content} />
+					<ContentTab
+						content_type={selected}
+						profile={profile.data}
+						content={content}
+					/>
 				</div>
 			</Tabs>
 		</div>

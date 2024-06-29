@@ -40,17 +40,17 @@ const sterilize = (_key: string, value: unknown) => {
 	}
 
 	return value;
-}
+};
 
 const desterilize = (_key: string, value: unknown) => {
 	if (typeof value === "string" && value.startsWith("Date(")) {
 		return new Date(value.replace("Date(", "").replace(")", ""));
 	}
 	return value;
-}
+};
 
 export class ModrinthClientApplication extends EventTarget {
-	private data: AuthenticationResult | null = null;;
+	private data: AuthenticationResult | null = null;
 
 	public static async createPublicClientApplication(
 		_configuration?: Configuration,
@@ -65,147 +65,183 @@ export class ModrinthClientApplication extends EventTarget {
 	}
 
 	async followProject(id: string) {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 
 		const { error, response } = await followProject({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			path: {
-				"id|slug": id
-			}
+				"id|slug": id,
+			},
 		});
 		if (error) throw error;
-		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 
-		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] })
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] });
 	}
 
 	async unfollowProject(id: string) {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 
 		const { error, response } = await unfollowProject({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			path: {
-				"id|slug": id
-			}
+				"id|slug": id,
+			},
 		});
 		if (error) throw error;
-		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 
-		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] })
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] });
 	}
 
 	async getFollowed() {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 
 		const { error, data, response } = await getFollowedProjects({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			path: {
-				"id|username": this.data?.account.id
-			}
+				"id|username": this.data?.account.id,
+			},
 		});
 
 		if (error) throw error;
-		if (!response.ok || !data) throw new Error("Failed to get user followed projects.", { cause: response });
+		if (!response.ok || !data)
+			throw new Error("Failed to get user followed projects.", {
+				cause: response,
+			});
 
 		return data;
 	}
 
 	async getNotifications() {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 
 		const { error, data, response } = await getUserNotifications({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			path: {
-				"id|username": this.data.account.id
-			}
+				"id|username": this.data.account.id,
+			},
 		});
 
 		if (error) throw error;
-		if (!response.ok || !data) throw new Error("Failed to get user notifications", { cause: response });
+		if (!response.ok || !data)
+			throw new Error("Failed to get user notifications", { cause: response });
 
 		return data;
 	}
 
 	async readNotification(id: string) {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 
 		const { response, error } = await readNotification({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			path: {
-				id
-			}
+				id,
+			},
 		});
 
 		if (error) throw error;
-		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 	}
 	async readNotifications(ids: string[]) {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 		const { response, error } = await readNotifications({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			query: {
-				ids: JSON.stringify(ids)
+				ids: JSON.stringify(ids),
 			},
 		});
 
 		if (error) throw error;
-		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 	}
 	async deleteNotification(id: string) {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 		const { response, error } = await deleteNotification({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			path: {
-				id
-			}
+				id,
+			},
 		});
 
 		if (error) throw error;
-		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 	}
 	async deleteNotifications(ids: string) {
-		if (!this.data?.account) throw new BrowserAuthError(BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired);
+		if (!this.data?.account)
+			throw new BrowserAuthError(
+				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
+			);
 		const { response, error } = await deleteNotifications({
 			client: modrinthClient,
 			headers: {
-				"Authorization": this.data.accessToken
+				Authorization: this.data.accessToken,
 			},
 			query: {
-				ids: JSON.stringify(ids)
+				ids: JSON.stringify(ids),
 			},
 		});
 
 		if (error) throw error;
-		if (!response.ok) throw new Error("Failed to read notification", { cause: response });
-
+		if (!response.ok)
+			throw new Error("Failed to read notification", { cause: response });
 	}
 
 	async initialize(): Promise<void> {
 		try {
 			this.data = this.readCache();
 		} catch (error) {
-			auth.error(`Failed to load modrinth cache: ${(error as Error).message}`, error);
+			auth.error(
+				`Failed to load modrinth cache: ${(error as Error).message}`,
+				error,
+			);
 		}
 	}
 	async acquireTokenPopup(): Promise<AuthenticationResult> {
@@ -226,8 +262,7 @@ export class ModrinthClientApplication extends EventTarget {
 		return this.data;
 	}
 	async acquireTokenSilent(): Promise<string> {
-		if (this.data)
-			return this.data.accessToken;
+		if (this.data) return this.data.accessToken;
 
 		throw new BrowserAuthError(BrowserAuthErrorCodes.unableToLoadToken);
 	}
@@ -239,14 +274,15 @@ export class ModrinthClientApplication extends EventTarget {
 		const response = await getUserFromAuth({
 			client: modrinthClient,
 			headers: {
-				"Authorization": account.accessToken
-			}
+				Authorization: account.accessToken,
+			},
 		});
 		if (response.error) throw response.error;
-		if (!response.response.ok || !response.data) throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
+		if (!response.response.ok || !response.data)
+			throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
 
-
-		if (!this.data) throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
+		if (!this.data)
+			throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
 		this.data.account = response.data;
 
 		this.writeCache(this.data);
@@ -255,17 +291,18 @@ export class ModrinthClientApplication extends EventTarget {
 
 		return this.data;
 	}
-	public async logout(_logoutRequest?: EndSessionRequest | undefined): Promise<void> {
+	public async logout(
+		_logoutRequest?: EndSessionRequest | undefined,
+	): Promise<void> {
 		this.data = null;
 		this.clearCache();
-		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] })
+		await queryClient.invalidateQueries({ queryKey: ["MODRINTH", "FOLLOWS"] });
 		this.dispatchEvent(new Event("update-data"));
 	}
 	public getActiveAccount(): User | null {
-		if (this.data?.account)
-			return this.data.account;
+		if (this.data?.account) return this.data.account;
 
-		return null
+		return null;
 	}
 	public clearCache(): void {
 		localStorage.removeItem(ACCOUNT_KEY);

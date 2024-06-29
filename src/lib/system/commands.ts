@@ -97,8 +97,13 @@ export const uninstallContent = async (profile: string, id: string) => {
 	});
 };
 
-export const importContentExternal = async (src: string, profile: string, contentType: "Resourcepack" | "Shader" | "Mod") => invoke<void>("import_external", {
-	contentType,
-	profile,
-	src
-})
+export const importContentExternal = async (
+	src: string,
+	profile: string,
+	contentType: "Resourcepack" | "Shader" | "Mod",
+) =>
+	invoke<void>("import_external", {
+		contentType,
+		profile,
+		src,
+	});

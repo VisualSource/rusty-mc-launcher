@@ -18,14 +18,14 @@ export type Skin = {
 	state: "ACTIVE" | "INACTIVE";
 	url: string;
 	variant: "CLASSIC" | "SLIM";
-}
+};
 
 export type Cape = {
 	alias: string;
 	id: string;
 	state: "ACTIVE" | "INACTIVE";
 	url: string;
-}
+};
 
 export type MinecraftAccount = {
 	exp: string;

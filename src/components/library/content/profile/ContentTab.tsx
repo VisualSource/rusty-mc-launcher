@@ -18,9 +18,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-	getProjectVersions,
-} from "@lib/api/modrinth/services.gen";
+import { getProjectVersions } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
 import type { ContentType } from "@/lib/models/content";
@@ -59,21 +57,23 @@ async function uninstall(filename: string, type: string, profile: string) {
 export const ContentTab: React.FC<{
 	profile: MinecraftProfile;
 	content_type: ContentType;
-	content: UseQueryResult<{
-		record: {
-			id: string;
-			version: string | null;
-			type: "Mod" | "Resourcepack" | "Shader" | "Datapack";
-			profile: string;
-			file_name: string;
-			sha1: string;
-		};
-		project: Project | null;
-	}[], Error>
+	content: UseQueryResult<
+		{
+			record: {
+				id: string;
+				version: string | null;
+				type: "Mod" | "Resourcepack" | "Shader" | "Datapack";
+				profile: string;
+				file_name: string;
+				sha1: string;
+			};
+			project: Project | null;
+		}[],
+		Error
+	>;
 }> = ({ profile, content_type, content }) => {
 	const { data, error, isError, isLoading } = content;
 	const container = useRef<HTMLDivElement>(null);
-
 
 	const rowVirtualizer = useVirtualizer({
 		count: data?.length ?? 0,

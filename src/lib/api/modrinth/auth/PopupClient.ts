@@ -41,14 +41,17 @@ export class PopupClient {
 			const login_params = new URLSearchParams({
 				client_id: import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID,
 				redirect_uri: MODRINTH_REDIRECT,
-				scope: import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES
+				scope: import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES,
 			});
 
-			const popupWindow = this.openPopup(`${MODRITH_AUTHORIZE}?${login_params.toString()}`, {
-				popupName,
-				popup,
-				popupWindowAttributes: {},
-			});
+			const popupWindow = this.openPopup(
+				`${MODRITH_AUTHORIZE}?${login_params.toString()}`,
+				{
+					popupName,
+					popup,
+					popupWindowAttributes: {},
+				},
+			);
 
 			const responseString = await this.monitorPopupForHash(popupWindow);
 

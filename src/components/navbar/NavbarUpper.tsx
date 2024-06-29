@@ -77,7 +77,13 @@ export const NavbarUpper: React.FC = () => {
 				<Notifications />
 
 				<Avatar className="h-8 rounded-none rounded-s-lg border-y border-l">
-					<AvatarImage src={account?.details.id ? `https://visage.surgeplay.com/face/256/${account.details.id}` : undefined} />
+					<AvatarImage
+						src={
+							account?.details.id
+								? `https://visage.surgeplay.com/face/256/${account.details.id}`
+								: undefined
+						}
+					/>
 					<AvatarFallback className="rounded-none">
 						<User2 />
 					</AvatarFallback>

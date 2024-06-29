@@ -15,28 +15,34 @@ export const useModrinthFollows = () => {
 	return useQuery({
 		enabled: isAuthed,
 		queryKey: ["MODRINTH", "FOLLOWS"],
-		queryFn: async () => ctx.getFollowed()
+		queryFn: async () => ctx.getFollowed(),
 	});
-}
+};
 
 export const useIsModrinthAuthed = () => {
 	const ctx = useModrinth();
-	const event = useCallback((callback: () => void) => {
-		ctx.addEventListener("update-data", callback);
-		return () => {
-			ctx.removeEventListener("update-data", callback);
-		}
-	}, [ctx])
+	const event = useCallback(
+		(callback: () => void) => {
+			ctx.addEventListener("update-data", callback);
+			return () => {
+				ctx.removeEventListener("update-data", callback);
+			};
+		},
+		[ctx],
+	);
 	return useSyncExternalStore(event, () => ctx.isAuthed);
-}
+};
 
 export const useModrinthAccount = () => {
 	const ctx = useModrinth();
-	const event = useCallback((callback: () => void) => {
-		ctx.addEventListener("update-data", callback);
-		return () => {
-			ctx.removeEventListener("update-data", callback);
-		}
-	}, [ctx])
+	const event = useCallback(
+		(callback: () => void) => {
+			ctx.addEventListener("update-data", callback);
+			return () => {
+				ctx.removeEventListener("update-data", callback);
+			};
+		},
+		[ctx],
+	);
 	return useSyncExternalStore(event, () => ctx.getActiveAccount());
-}
+};

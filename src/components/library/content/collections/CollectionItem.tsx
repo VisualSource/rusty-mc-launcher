@@ -53,7 +53,7 @@ const CollectionItem: React.FC<{
 					}}
 				>
 					{collection.metadata &&
-						DEFAULT_GROUP.includes(collection.metadata) ? (
+					DEFAULT_GROUP.includes(collection.metadata) ? (
 						<div className="mb-4">
 							<TypographyMuted>This colletion is not editable.</TypographyMuted>
 						</div>
@@ -73,7 +73,7 @@ const CollectionItem: React.FC<{
 						</div>
 					)}
 					{collection.metadata &&
-						DEFAULT_GROUP.includes(collection.metadata) ? null : (
+					DEFAULT_GROUP.includes(collection.metadata) ? null : (
 						<DialogFooter>
 							<div className="flex w-full justify-between">
 								<Button

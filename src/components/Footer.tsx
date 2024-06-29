@@ -5,7 +5,10 @@ import {
 	PackagePlus,
 	PlusSquare,
 } from "lucide-react";
-import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
+import {
+	AuthenticatedTemplate,
+	UnauthenticatedTemplate,
+} from "@azure/msal-react";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/api/dialog";
 import { Link } from "@tanstack/react-router";
@@ -18,7 +21,16 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@component/ui/dropdown-menu";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "./ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { download_queue } from "@/lib/models/download_queue";
@@ -34,7 +46,7 @@ import { Form, FormField } from "./ui/form";
 import useDownload from "@hook/useDownload";
 import { Label } from "./ui/label";
 
-type FormState = { importFrom: "modrinth" | "curseforge" }
+type FormState = { importFrom: "modrinth" | "curseforge" };
 
 const Footer = () => {
 	const [openDialog, setOpen] = useState(false);
@@ -43,49 +55,51 @@ const Footer = () => {
 
 	const form = useForm<FormState>({
 		defaultValues: {
-			importFrom: "modrinth"
-		}
+			importFrom: "modrinth",
+		},
 	});
 
 	const onSubmit = async (state: FormState) => {
 		setOpen(false);
 
-		const display = state.importFrom === "modrinth" ? {
-			queue: {
-				name: "MrPack($PACK_PATH)",
-				type: "Modpack"
-			},
-			dialog: {
-				title: "Import Mrpack",
-				filters: [
-					{
-						name: "Mrpack",
-						extensions: ["mrpack"],
-					},
-				]
-			}
-
-		} : {
-			queue: {
-				name: "Curseforge Modpack ($PACK_PATH)",
-				type: "CurseforgeModpack"
-			},
-			dialog: {
-				title: "Import Modpack",
-				filters: [
-					{
-						name: "Zip",
-						extensions: ["zip"],
-					},
-				],
-			}
-		}
+		const display =
+			state.importFrom === "modrinth"
+				? {
+						queue: {
+							name: "MrPack($PACK_PATH)",
+							type: "Modpack",
+						},
+						dialog: {
+							title: "Import Mrpack",
+							filters: [
+								{
+									name: "Mrpack",
+									extensions: ["mrpack"],
+								},
+							],
+						},
+					}
+				: {
+						queue: {
+							name: "Curseforge Modpack ($PACK_PATH)",
+							type: "CurseforgeModpack",
+						},
+						dialog: {
+							title: "Import Modpack",
+							filters: [
+								{
+									name: "Zip",
+									extensions: ["zip"],
+								},
+							],
+						},
+					};
 
 		const result = await open({
 			multiple: false,
 			defaultPath: await downloadDir(),
 			title: display.dialog.title,
-			filters: display.dialog.filters
+			filters: display.dialog.filters,
 		});
 
 		if (!result || Array.isArray(result)) return;
@@ -120,7 +134,7 @@ const Footer = () => {
 		});
 
 		form.reset();
-	}
+	};
 
 	return (
 		<footer className="flex h-16 flex-shrink-0 flex-grow-0 bg-zinc-950 text-zinc-400 shadow">
@@ -129,32 +143,56 @@ const Footer = () => {
 					<Dialog open={openDialog} onOpenChange={setOpen}>
 						<DialogContent>
 							<Form {...form}>
-								<form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+								<form
+									className="space-y-4"
+									onSubmit={form.handleSubmit(onSubmit)}
+								>
 									<DialogHeader>
 										<DialogTitle>Import Modpack</DialogTitle>
-										<DialogDescription>Import a modpack from modrinth or Curseforge</DialogDescription>
+										<DialogDescription>
+											Import a modpack from modrinth or Curseforge
+										</DialogDescription>
 										<DialogClose />
 									</DialogHeader>
-									<FormField name="importFrom" control={form.control} render={({ field }) => (
-										<RadioGroup onValueChange={field.onChange} defaultValue={field.value} value={field.value} className="grid grid-cols-2 gap-4">
-											<div>
-												<RadioGroupItem value="modrinth" id="modrinth" className="peer sr-only" />
-												<Label htmlFor="modrinth" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-													Modrinth
-												</Label>
-											</div>
-											<div>
-												<RadioGroupItem
-													value="curseforge"
-													id="curseforge"
-													className="peer sr-only"
-												/>
-												<Label htmlFor="curseforge" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-													CurseForge
-												</Label>
-											</div>
-										</RadioGroup>
-									)} />
+									<FormField
+										name="importFrom"
+										control={form.control}
+										render={({ field }) => (
+											<RadioGroup
+												onValueChange={field.onChange}
+												defaultValue={field.value}
+												value={field.value}
+												className="grid grid-cols-2 gap-4"
+											>
+												<div>
+													<RadioGroupItem
+														value="modrinth"
+														id="modrinth"
+														className="peer sr-only"
+													/>
+													<Label
+														htmlFor="modrinth"
+														className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+													>
+														Modrinth
+													</Label>
+												</div>
+												<div>
+													<RadioGroupItem
+														value="curseforge"
+														id="curseforge"
+														className="peer sr-only"
+													/>
+													<Label
+														htmlFor="curseforge"
+														className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+													>
+														CurseForge
+													</Label>
+												</div>
+											</RadioGroup>
+										)}
+									/>
 									<DialogFooter>
 										<Button type="submit">Ok</Button>
 									</DialogFooter>
@@ -163,7 +201,10 @@ const Footer = () => {
 						</DialogContent>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="ghost" className="group dark:hover:bg-transparent">
+								<Button
+									variant="ghost"
+									className="group dark:hover:bg-transparent"
+								>
 									<PlusSquare className="pr-2" />
 									<TypographyMuted className="transition-colors dark:group-hover:text-zinc-300">
 										Add a Profile
@@ -178,9 +219,7 @@ const Footer = () => {
 									Import Profiles
 								</DropdownMenuItem>
 								<DropdownMenuItem>
-									<DialogTrigger>
-										Import Modpack
-									</DialogTrigger>
+									<DialogTrigger>Import Modpack</DialogTrigger>
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
