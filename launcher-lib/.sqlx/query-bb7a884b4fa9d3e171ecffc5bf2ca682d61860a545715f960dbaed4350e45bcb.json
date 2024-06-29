@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "bb7a884b4fa9d3e171ecffc5bf2ca682d61860a545715f960dbaed4350e45bcb"
+}
