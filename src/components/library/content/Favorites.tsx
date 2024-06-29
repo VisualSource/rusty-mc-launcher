@@ -1,14 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layers3 } from "lucide-react";
 
-import { FAVORITES_GUID } from "@/lib/models/categories";
-import { Skeleton } from "@/components/ui/skeleton";
-import { profile } from "@lib/models/profiles";
+import { Button } from "@/components/ui/button";
 import PlayButton from "@/components/ui/play";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FAVORITES_GUID } from "@/lib/models/categories";
 import { CATEGORY_KEY } from "@hook/keys";
+import { profile } from "@lib/models/profiles";
 import { db } from "@system/commands";
 import { Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
 
 export const FavoritesLoading: React.FC = () => {
 	return (
@@ -70,10 +70,7 @@ const Favorites: React.FC = () => {
 									height={256}
 									width={256}
 									className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-square"
-									src={
-										value.icon ??
-										"https://images.unsplash.com/photo-1446185250204-f94591f7d702?w=300&dpr=2&q=80&w=256&q=75"
-									}
+									src={value.icon}
 									alt={value.name}
 								/>
 							) : (

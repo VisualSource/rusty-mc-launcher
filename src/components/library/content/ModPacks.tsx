@@ -2,11 +2,11 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { FileImage } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { searchProjects } from "@lib/api/modrinth/services.gen";
-import { modrinthClient } from "@/lib/api/modrinthClient";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 
 export const ModPacksSkeleton: React.FC = () => {
 	return (
@@ -31,7 +31,7 @@ export const ModPacksSkeleton: React.FC = () => {
 
 const ModPacks: React.FC = () => {
 	const { data, error } = useSuspenseQuery({
-		queryKey: ["modrinth", "modpacks", "popular"],
+		queryKey: ["MODRINTH", "MODPACKS", "POPULAR"],
 		queryFn: async () => {
 			const response = await searchProjects({
 				client: modrinthClient,

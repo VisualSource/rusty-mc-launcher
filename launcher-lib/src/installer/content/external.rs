@@ -254,6 +254,7 @@ pub async fn install_curseforge_modpack(
         &mut archive,
         &pack.overrides,
         &profile_direcotry,
+        // TODO: use pack.overrides prop to replace the file path rather then have it had coded
         Some(|file| file.replace("overrides", "")),
     )
     .await?;
