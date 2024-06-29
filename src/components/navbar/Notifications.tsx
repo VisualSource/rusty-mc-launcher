@@ -52,7 +52,7 @@ export const Notifications = () => {
 									</h1>
 
 									{value.data && (value.data as { error: Error })?.error ? (
-										<pre className="text-xs text-destructive">
+										<pre className="text-xs text-destructive text-wrap">
 											<code>
 												{(value.data as { error: Error }).error?.message ??
 													(value.data as { error: unknown }).error}

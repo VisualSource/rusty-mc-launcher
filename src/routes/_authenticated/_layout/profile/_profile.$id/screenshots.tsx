@@ -9,6 +9,7 @@ import { useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { settings } from "@/lib/models/settings";
 import { Loading } from "@/components/Loading";
+import { showInFolder } from "@/lib/system/commands";
 
 const profileScreenshotsQueryOptions = (id: string) =>
 	queryOptions({
@@ -37,41 +38,20 @@ export const Route = createFileRoute(
 });
 
 function Screenshots() {
-	const container = useRef<HTMLDivElement>(null);
 	const params = Route.useParams();
 	const query = useSuspenseQuery(profileScreenshotsQueryOptions(params.id));
-	const rowVirtualizer = useVirtualizer({
-		count: query.data.length ?? 0,
-		getScrollElement: () => container.current,
-		estimateSize: () => 400,
-		overscan: 5,
-	});
 
 	return (
-		<div ref={container} className="h-full overflow-y-scroll">
+		<div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 grid-rows-none grid-flow-dense h-full overflow-y-scroll gap-4 p-2">
 			{query.data.length >= 1 ? (
-				<div
-					className="relative w-full"
-					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-				>
-					{rowVirtualizer.getVirtualItems().map((virtualItem) => (
-						<div
-							key={virtualItem.key}
-							className="absolute left-0 top-0 inline-flex w-full items-center gap-2"
-							style={{
-								height: `${virtualItem.size}px`,
-								transform: `translateY(${virtualItem.start}px)`,
-							}}
-						>
-							<Avatar className="my-2 aspect-square h-96 w-full rounded-md">
-								<AvatarFallback className="rounded-md">
-									<FileImage />
-								</AvatarFallback>
-								<AvatarImage src={query.data[virtualItem.index]} />
-							</Avatar>
-						</div>
-					))}
-				</div>
+				query.data.map(e => (
+					<Avatar onClick={() => showInFolder(decodeURIComponent(e.replace("asset://", "").replace("https://asset.localhost/", "")))} className="my-2 aspect-square h-36 rounded-lg w-full hover:scale-105 transition-all" key={e}>
+						<AvatarFallback className="rounded-lg">
+							<FileImage />
+						</AvatarFallback>
+						<AvatarImage src={e} />
+					</Avatar>
+				))
 			) : (
 				<div className="flex flex-col justify-center items-center h-full">
 					No Screenshots!

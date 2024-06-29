@@ -1,7 +1,7 @@
 import { AlertTriangle, Box, LoaderCircle, Trash2 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { UpdateIcon } from "@radix-ui/react-icons";
-import { useQuery } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ask } from "@tauri-apps/api/dialog";
 import { toast } from "react-toastify";
@@ -19,20 +19,19 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-	getProjects,
-	versionsFromHashes,
 	getProjectVersions,
 } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
-import { type ContentType, workshop_content } from "@/lib/models/content";
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { ContentType } from "@/lib/models/content";
 import { modrinthClient } from "@/lib/api/modrinthClient";
 import { db, uninstallItem } from "@/lib/system/commands";
 import { install_known } from "@/lib/system/install";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import logger from "@system/logger";
+import type { Project } from "@/lib/api/modrinth/types.gen";
+import type { MinecraftProfile } from "@/lib/models/profiles";
 
 async function uninstall(filename: string, type: string, profile: string) {
 	try {
@@ -60,117 +59,21 @@ async function uninstall(filename: string, type: string, profile: string) {
 export const ContentTab: React.FC<{
 	profile: MinecraftProfile;
 	content_type: ContentType;
-}> = ({ profile, content_type }) => {
+	content: UseQueryResult<{
+		record: {
+			id: string;
+			version: string | null;
+			type: "Mod" | "Resourcepack" | "Shader" | "Datapack";
+			profile: string;
+			file_name: string;
+			sha1: string;
+		};
+		project: Project | null;
+	}[], Error>
+}> = ({ profile, content_type, content }) => {
+	const { data, error, isError, isLoading } = content;
 	const container = useRef<HTMLDivElement>(null);
-	const { data, isLoading, isError, error } = useQuery({
-		queryKey: ["WORKSHOP_CONTENT", content_type, profile.id],
-		queryFn: async () => {
-			const data = await db.select({
-				query: "SELECT * FROM profile_content WHERE profile = ? AND type = ?; ",
-				args: [profile.id, content_type],
-				schema: workshop_content.schema,
-			});
 
-			const { unknownContent, hashesContent, idsContent } = data.reduce(
-				(prev, cur) => {
-					if (cur.id.length) {
-						prev.idsContent.push(cur);
-					} else if (cur.sha1) {
-						prev.hashesContent.push(cur);
-					} else {
-						prev.unknownContent.push(cur);
-					}
-					return prev;
-				},
-				{ unknownContent: [], hashesContent: [], idsContent: [] } as {
-					unknownContent: typeof data;
-					hashesContent: typeof data;
-					idsContent: typeof data;
-				},
-			);
-
-			const loadIdContent = async () => {
-				const ids = JSON.stringify(idsContent.map((e) => e.id));
-				const projects = await getProjects({
-					client: modrinthClient,
-					query: {
-						ids,
-					},
-				});
-				if (projects.error) throw projects.error;
-				if (!projects.data) throw new Error("Failed to load projects.");
-				return idsContent.map((item) => {
-					const project = projects.data.find((e) => e.id === item.id);
-					return { record: item, project: project ?? null };
-				});
-			};
-
-			const loadHashContent = async () => {
-				const hashes = await versionsFromHashes({
-					client: modrinthClient,
-					body: {
-						algorithm: "sha1",
-						hashes: hashesContent.map((e) => e.sha1),
-					},
-				});
-				if (hashes.error) throw hashes.error;
-				if (!hashes.data) throw new Error("Failed to load versions from hashs");
-
-				const items = Object.entries(hashes.data).map(([hash, version]) => ({
-					hash,
-					version,
-				}));
-
-				const projects = await getProjects({
-					client: modrinthClient,
-					query: {
-						ids: JSON.stringify(items.map((e) => e.version.project_id)),
-					},
-				});
-				if (projects.error) throw projects.error;
-				if (!projects.data) throw new Error("Failed to load projects");
-
-				const output = [];
-				for (const content of hashesContent) {
-					const projectId = items.find((e) => e.hash === content.sha1);
-					if (!projectId) {
-						output.push({ record: content, project: null });
-						continue;
-					}
-
-					const project = projects.data.find((e) => e.id === projectId.version.project_id);
-					if (!project) {
-						output.push({ record: content, project: null });
-						continue;
-					}
-
-					if (!content.id.length) {
-						await db.execute({
-							query: "UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?",
-							args: [project.id, projectId.version.version_number, content.file_name, content.type, content.profile, content.sha1]
-						});
-						content.version = projectId.version.version_number ?? null;
-					}
-					output.push({ record: content, project });
-				}
-
-				return output;
-			};
-			const c = async () => {
-				return unknownContent.map((e) => ({ record: e, project: null }));
-			};
-
-			const results = await Promise.allSettled([
-				loadIdContent(),
-				loadHashContent(),
-				c(),
-			]);
-			return results
-				.map((e) => (e.status === "fulfilled" ? e.value : null))
-				.filter(Boolean)
-				.flat(2)
-		},
-	});
 
 	const rowVirtualizer = useVirtualizer({
 		count: data?.length ?? 0,
@@ -354,7 +257,7 @@ export const ContentTab: React.FC<{
 					))}
 				</div>
 			) : (
-				<div className="w-full h-full flex flex-col justify-center items-center">
+				<div className="w-full h-full flex-1 flex flex-col justify-center items-center">
 					No content installed
 				</div>
 			)}

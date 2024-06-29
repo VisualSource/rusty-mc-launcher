@@ -224,7 +224,7 @@ pub async fn install_curseforge_modpack(
             let hash = get_file_hash(&output).await?;
 
             event!(&event_channel,"update",{ "progress": 1 });
-            tokio::time::sleep(Duration::from_secs(2)).await;
+            tokio::time::sleep(Duration::from_secs(5)).await;
             Ok((version.name.clone(), hash, content_type.to_owned()))
         }
     }))
