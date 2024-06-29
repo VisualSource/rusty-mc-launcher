@@ -62,8 +62,7 @@ pub fn init_logger() -> TauriPlugin<Wry> {
                     .unwrap_or_else(|_| timestamp.to_string());
 
                 out.finish(format_args!(
-                    "rmcl:core:{}{} [{}] : {}",
-                    record.module_path().unwrap_or_default(),
+                    "rmcl:core:{} [{}] : {}",
                     record.level().to_string().to_lowercase(),
                     timed,
                     message
@@ -160,7 +159,6 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         loop {
             tokio::time::sleep(Duration::from_secs(5)).await;
             let state = dlq.state::<AppState>();
-
             match state.get_next_item(running).await {
                 Ok(Some(item)) => {
                     log::debug!("PROCESSING ITEM: {:#?}", item);
@@ -238,14 +236,20 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
 
-                        QueueType::Datapack => {}
+                        QueueType::Datapack => {
+                            if let Err(error) =
+                                state.set_queue_item_state(&item.id, "ERRORED").await
+                            {
+                                log::error!("{}", error);
+                            }
+                        }
                     }
                     send_event!(tx, "refresh", {});
                     send_event!(tx, "reset", {});
                     tokio::time::sleep(Duration::from_secs(30)).await;
                 }
                 Ok(None) => {}
-                Err(err) => log::error!("{}", err),
+                Err(err) => log::error!("Queue Error: {}", err),
             }
         }
     });

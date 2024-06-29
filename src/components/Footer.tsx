@@ -5,6 +5,7 @@ import {
 	PackagePlus,
 	PlusSquare,
 } from "lucide-react";
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/api/dialog";
 import { Link } from "@tanstack/react-router";
@@ -23,13 +24,15 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { download_queue } from "@/lib/models/download_queue";
 import { TypographyMuted } from "@component/ui/typography";
 import import_profiles from "@/lib/system/import_profiles";
+import { QueueItemState } from "@/lib/QueueItemState";
+import { queryClient } from "@/lib/api/queryClient";
 import { useCurrentQueue } from "@/hooks/useQueue";
+import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import { Form, FormField } from "./ui/form";
 import useDownload from "@hook/useDownload";
 import { Label } from "./ui/label";
-import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
 
 type FormState = { importFrom: "modrinth" | "curseforge" }
 
@@ -99,19 +102,24 @@ const Footer = () => {
 			profile_id,
 			display.queue.type as never as "Modpack" | "CurseforgeModpack",
 			{
-				content_type: display.queue.type,
+				content_type: "Modpack",
 				profile: profile_id,
 				files: [
 					{
-						sha1: "",
+						sha1: "UNKNOWN",
 						url: result,
-						version: "",
-						filename: "",
-						id: "",
+						version: "UNKNOWN",
+						filename: "UNKOWN",
+						id: "UNKOWN",
 					},
 				],
 			},
 		);
+		await queryClient.invalidateQueries({
+			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
+		});
+
+		form.reset();
 	}
 
 	return (

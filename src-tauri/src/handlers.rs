@@ -27,8 +27,6 @@ pub async fn handle_external_pack_install(
     app: &AppState,
     tx: &tokio::sync::mpsc::Sender<ChannelMessage>,
 ) -> Result<(), Error> {
-    app.set_profile_state(&item.profile_id, "INSTALLING")
-        .await?;
     let config = if let Some(metadata) = &item.metadata {
         serde_json::from_str::<InstallContent>(metadata)
             .map_err(|e| Error::Generic(e.to_string()))?
@@ -40,7 +38,6 @@ pub async fn handle_external_pack_install(
 
     minecraft_launcher_lib::content::external::install_curseforge_modpack(app, config, tx).await?;
 
-    app.set_profile_state(&item.profile_id, "INSTALLED").await?;
     app.set_queue_item_state(&item.id, "COMPLETED").await?;
 
     Ok(())

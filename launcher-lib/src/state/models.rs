@@ -26,6 +26,7 @@ impl From<String> for QueueType {
             "mod" => Self::Mod,
             "resourcepack" => Self::Resourcepack,
             "shader" => Self::Shader,
+            "curseforgemodpack" => Self::CurseforgeModpack,
             _ => Self::Client,
         }
     }

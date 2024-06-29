@@ -13,6 +13,7 @@ use futures::StreamExt;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::{os::windows::fs::MetadataExt, path::PathBuf, str::FromStr, time::Duration};
+use urlencoding::encode;
 use uuid::Uuid;
 
 pub async fn install_external(
@@ -93,9 +94,10 @@ struct CFMLoader {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct CFMFile {
+    #[serde(rename = "projectID")]
     project_id: usize,
+    #[serde(rename = "fileID")]
     file_id: usize,
 }
 #[derive(Debug, Deserialize)]
@@ -108,7 +110,6 @@ struct CFProject {
 #[derive(Debug, Deserialize)]
 struct CFProjectFile {
     id: usize,
-    url: String,
     filesize: u64,
     name: String,
 }
@@ -200,14 +201,23 @@ pub async fn install_curseforge_modpack(
 
             let output = content_dir.join(&version.name).normalize();
 
-            utils::download_file(&version.url, &output, None, None).await?;
+            let id_s = version.id.to_string();
+            let url_a = id_s.get(0..4).ok_or_else(||LauncherError::Generic("Failed to get first file id part".to_string()))?;
+            let url_b = id_s.get(4..)
+                .ok_or_else(||LauncherError::Generic("Failed to get file id part 2".to_string()))?
+                .parse::<u64>().map_err(|err|LauncherError::Generic(format!("{}",err)))?;
+
+            // https://mediafilez.forgecdn.net/files/5083/619/lambdynamiclights-2.3.4%2B1.20.4.jar
+            let download_url = format!("https://mediafilez.forgecdn.net/files/{}/{}/{}",url_a,url_b, encode(&version.name));
+
+            utils::download_file(&download_url, &output, None, None).await?;
 
             let file_meta = tokio::fs::metadata(&output).await?;
             let on_disk = file_meta.file_size();
             if on_disk != version.filesize {
                 return Err(LauncherError::Generic(format!(
-                    "On disk file size does not match expected file size. {} bytes | {} butes",
-                    on_disk, version.filesize
+                    "On disk file size does not match expected file size. {} bytes | {} bytes for {}",
+                    on_disk, version.filesize, version.name
                 )));
             }
 
