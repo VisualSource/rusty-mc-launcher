@@ -1,13 +1,14 @@
 use log::LevelFilter;
 use minecraft_launcher_lib::{
-    content,
-    errors::LauncherError,
-    models::{QueueItem, QueueType},
-    AppState, ChannelMessage, Database, InstallConfig,
+    errors::LauncherError, models::QueueType, AppState, ChannelMessage, Database,
 };
 use std::time::Duration;
 use tauri::{plugin::TauriPlugin, App, AppHandle, Manager, Wry};
 use tauri_plugin_log::{LogTarget, TimezoneStrategy};
+
+use crate::handlers::{
+    handle_client_install, handle_content_install, handle_external_pack_install,
+};
 
 use crate::errors::Error;
 
@@ -61,7 +62,8 @@ pub fn init_logger() -> TauriPlugin<Wry> {
                     .unwrap_or_else(|_| timestamp.to_string());
 
                 out.finish(format_args!(
-                    "rmcl:core:{} [{}] : {}",
+                    "rmcl:core:{}{} [{}] : {}",
+                    record.module_path().unwrap_or_default(),
                     record.level().to_string().to_lowercase(),
                     timed,
                     message
@@ -72,53 +74,6 @@ pub fn init_logger() -> TauriPlugin<Wry> {
         .build();
 
     logger
-}
-
-async fn handle_content_install(
-    item: &QueueItem,
-    app: &AppState,
-    tx: &tokio::sync::mpsc::Sender<ChannelMessage>,
-) -> Result<(), Error> {
-    let config = if let Some(metadata) = &item.metadata {
-        serde_json::from_str::<content::InstallContent>(metadata)
-            .map_err(|e| Error::Generic(e.to_string()))?
-    } else {
-        return Err(Error::Generic("No metadata for config".to_string()));
-    };
-
-    minecraft_launcher_lib::content::install_content(app, config, item.icon.clone(), tx).await?;
-
-    app.set_queue_item_state(&item.id, "COMPLETED").await?;
-    Ok(())
-}
-
-async fn handle_client_install(
-    item: &QueueItem,
-    app: &AppState,
-    tx: &tokio::sync::mpsc::Sender<ChannelMessage>,
-) -> Result<(), Error> {
-    app.set_profile_state(&item.profile_id, "INSTALLING")
-        .await?;
-
-    let config = if let Some(metadata) = &item.metadata {
-        serde_json::from_str::<InstallConfig>(metadata)
-            .map_err(|e| Error::Generic(e.to_string()))?
-    } else {
-        return Err(Error::Generic(
-            "No metadata was provide for client install.".to_string(),
-        ));
-    };
-
-    if let Some(loader_version) = minecraft_launcher_lib::install_minecraft(app, config, tx).await?
-    {
-        app.set_profile_loader_version(&item.profile_id, &loader_version)
-            .await?;
-    }
-
-    app.set_profile_state(&item.profile_id, "INSTALLED").await?;
-    app.set_queue_item_state(&item.id, "COMPLETED").await?;
-
-    Ok(())
 }
 
 macro_rules! send_event {
@@ -234,6 +189,27 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                                 });
                                 send_event!(tx,"notify",{
                                     "message": "Client Installed!",
+                                    "type": "ok"
+                                });
+                            }
+                        }
+                        QueueType::CurseforgeModpack => {
+                            if let Err(err) = handle_external_pack_install(&item, &state, &tx).await
+                            {
+                                if let Err(error) =
+                                    state.set_queue_item_state(&item.id, "ERRORED").await
+                                {
+                                    log::error!("{}", error);
+                                }
+                                log::error!("{}", err);
+                                send_event!(tx,"notify",{
+                                    "message": "Install Error",
+                                    "error": err.to_string(),
+                                    "type": "error"
+                                });
+                            } else {
+                                send_event!(tx,"notify",{
+                                    "message": "Content Installed!",
                                     "type": "ok"
                                 });
                             }

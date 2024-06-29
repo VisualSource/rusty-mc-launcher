@@ -20,10 +20,12 @@ import { formatRelative } from "date-fns/formatRelative";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { DiscordLogoIcon } from "@radix-ui/react-icons";
 import ReactMarkdown from "react-markdown";
+import { toast } from "react-toastify";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Suspense } from "react";
 
+import { useIsModrinthAuthed, useModrinth, useModrinthFollows } from "@/hooks/useModrinth";
 import { TypographyH1, TypographyH4 } from "@/components/ui/typography";
 import { projectQueryOptions } from "@/lib/query/modrinthProjectQuery";
 import SelectProfile from "@/components/dialog/ProfileSelection";
@@ -33,8 +35,8 @@ import { Button } from "@/components/ui/button";
 import { install } from "@/lib/system/install";
 import { Loading } from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
-import { useIsModrinthAuthed, useModrinth, useModrinthFollows } from "@/hooks/useModrinth";
-import { toast } from "react-toastify";
+
+
 
 export const Route = createLazyFileRoute(
 	"/_authenticated/workshop/project/$id",
@@ -62,7 +64,7 @@ function Project() {
 	const project = query.data;
 
 	return (
-		<div>
+		<div className="bg-accent/50">
 			<SelectProfile />
 			<div className="p-3">
 				<Button onClick={() => router.history.back()}>Back</Button>
@@ -72,7 +74,7 @@ function Project() {
 					<TypographyH1>{project.title}</TypographyH1>
 				</div>
 
-				<section className="rounded-md bg-blue-900/10 p-2 shadow-2xl">
+				<section className="rounded-lg bg-blue-900/10 p-2 shadow-2xl">
 					{project.gallery?.length ? (
 						<Gallery gallery={project.gallery} />
 					) : null}
@@ -147,7 +149,7 @@ function Project() {
 
 				<div className="grid grid-cols-4 gap-8 pt-4">
 					<div className="col-span-3 flex flex-col gap-4">
-						<section className="flex justify-between rounded-md bg-blue-900/10 p-4 shadow-2xl">
+						<section className="flex justify-between rounded-lg bg-blue-900/10 p-4 shadow-2xl">
 							<TypographyH4>{project.title}</TypographyH4>
 
 							<div className="flex items-center gap-2">

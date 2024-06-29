@@ -9,6 +9,7 @@ pub enum QueueType {
     Resourcepack,
     Shader,
     Datapack,
+    CurseforgeModpack,
 }
 
 impl Default for QueueType {

@@ -290,7 +290,7 @@ function MinecraftSkinControl() {
       <div className={cn("hidden h-full", { "block": !content.isReady })}>
         <Loading />
       </div>
-      <div className={cn('flex h-full', { "hidden": !content.isReady })}>
+      <div className={cn('flex h-full bg-accent/25', { "hidden": !content.isReady })}>
         <div className="flex flex-col justify-center items-center w-full relative">
           <canvas className="w-full h-full" ref={target} />
           <div className="flex items-center space-x-2 absolute top-0 left-2">

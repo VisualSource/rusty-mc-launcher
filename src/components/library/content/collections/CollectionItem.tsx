@@ -29,7 +29,7 @@ const CollectionItem: React.FC<{
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<button
-					className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800"
+					className="flex aspect-square h-44 items-center justify-center rounded-lg bg-accent shadow-lg hover:scale-105"
 					type="button"
 				>
 					<TypographyH4 className="line-clamp-3 text-wrap text-lg text-zinc-50">
@@ -53,7 +53,7 @@ const CollectionItem: React.FC<{
 					}}
 				>
 					{collection.metadata &&
-					DEFAULT_GROUP.includes(collection.metadata) ? (
+						DEFAULT_GROUP.includes(collection.metadata) ? (
 						<div className="mb-4">
 							<TypographyMuted>This colletion is not editable.</TypographyMuted>
 						</div>
@@ -73,7 +73,7 @@ const CollectionItem: React.FC<{
 						</div>
 					)}
 					{collection.metadata &&
-					DEFAULT_GROUP.includes(collection.metadata) ? null : (
+						DEFAULT_GROUP.includes(collection.metadata) ? null : (
 						<DialogFooter>
 							<div className="flex w-full justify-between">
 								<Button

@@ -33,9 +33,9 @@ function Layout() {
 				ref={panel}
 				defaultSize={22}
 				maxSize={22}
-				className="@container/main"
+				className="@container/main bg-accent/25"
 			>
-				<div className="overflow-hidden animate-in fade-in-5">
+				<div className="overflow-hidden animate-in fade-in-5 ">
 					{panel.current?.isExpanded() ?? true ? (
 						<div>
 							<div className="flex gap-1 bg-zinc-950 p-2 shadow-lg">

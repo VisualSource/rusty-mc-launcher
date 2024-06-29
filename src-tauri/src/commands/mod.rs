@@ -2,6 +2,7 @@ use crate::errors;
 use std::path::PathBuf;
 
 pub mod auth;
+pub mod external;
 pub mod game;
 pub mod profile;
 pub mod query;

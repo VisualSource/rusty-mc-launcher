@@ -4,6 +4,7 @@
 )]
 mod commands;
 mod errors;
+mod handlers;
 mod oauth;
 mod setup;
 
@@ -29,7 +30,8 @@ fn main() {
             commands::profile::delete_profile,
             commands::profile::copy_profile,
             commands::profile::create_profile,
-            commands::profile::uninstall_content
+            commands::profile::uninstall_content,
+            commands::external::import_external,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

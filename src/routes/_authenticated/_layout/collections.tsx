@@ -38,7 +38,7 @@ function Collections() {
 				<DialogTrigger asChild>
 					<button
 						type="button"
-						className="flex aspect-square h-44 items-center justify-center rounded-md bg-zinc-800 shadow-lg hover:bg-slate-800"
+						className="flex aspect-square h-44 items-center justify-center rounded-lg bg-accent shadow-lg hover:hover:scale-105"
 						title="Add Collection"
 					>
 						<Plus className="h-12 w-12 text-zinc-50" />

@@ -118,27 +118,43 @@ export const ContentTab: React.FC<{
 
 				const items = Object.entries(hashes.data).map(([hash, version]) => ({
 					hash,
-					id: version.project_id,
+					version,
 				}));
 
 				const projects = await getProjects({
 					client: modrinthClient,
 					query: {
-						ids: JSON.stringify(items.map((e) => e.id)),
+						ids: JSON.stringify(items.map((e) => e.version.project_id)),
 					},
 				});
 				if (projects.error) throw projects.error;
 				if (!projects.data) throw new Error("Failed to load projects");
 
-				return hashesContent.map((content) => {
+				const output = [];
+				for (const content of hashesContent) {
 					const projectId = items.find((e) => e.hash === content.sha1);
-					if (!projectId) return { record: content, project: null };
+					if (!projectId) {
+						output.push({ record: content, project: null });
+						continue;
+					}
 
-					const project = projects.data.find((e) => e.id === projectId.id);
-					if (!project) return { record: content, project: null };
+					const project = projects.data.find((e) => e.id === projectId.version.project_id);
+					if (!project) {
+						output.push({ record: content, project: null });
+						continue;
+					}
 
-					return { record: content, project };
-				});
+					if (!content.id.length) {
+						await db.execute({
+							query: "UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?",
+							args: [project.id, projectId.version.version_number, content.file_name, content.type, content.profile, content.sha1]
+						});
+						content.version = projectId.version.version_number ?? null;
+					}
+					output.push({ record: content, project });
+				}
+
+				return output;
 			};
 			const c = async () => {
 				return unknownContent.map((e) => ({ record: e, project: null }));
@@ -149,11 +165,10 @@ export const ContentTab: React.FC<{
 				loadHashContent(),
 				c(),
 			]);
-
 			return results
 				.map((e) => (e.status === "fulfilled" ? e.value : null))
 				.filter(Boolean)
-				.flat(2);
+				.flat(2)
 		},
 	});
 
@@ -164,7 +179,7 @@ export const ContentTab: React.FC<{
 	});
 
 	return (
-		<div ref={container} className="h-full">
+		<div ref={container} className="h-full overflow-y-auto scrollbar">
 			{isLoading ? (
 				<div className="flex h-full w-full flex-col items-center justify-center">
 					<div className="flex gap-2">
@@ -186,7 +201,7 @@ export const ContentTab: React.FC<{
 					{rowVirtualizer.getVirtualItems().map((virtualItem) => (
 						<div
 							key={virtualItem.key}
-							className="absolute left-0 top-0 inline-flex w-full items-center gap-2"
+							className="absolute left-0 top-0 inline-flex w-full items-center gap-2 pr-2"
 							style={{
 								height: `${virtualItem.size}px`,
 								transform: `translateY(${virtualItem.start}px)`,

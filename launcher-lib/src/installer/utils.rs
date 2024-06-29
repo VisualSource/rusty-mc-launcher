@@ -73,6 +73,19 @@ pub mod event_internal {
     }
 }
 
+pub async fn get_file_hash(path: &Path) -> Result<String, LauncherError> {
+    let mut file = File::open(path)
+        .await?
+        .try_into_std()
+        .map_err(|_| LauncherError::Generic("".to_string()))?;
+    let mut hasher = Sha1::new();
+    let size = std::io::copy(&mut file, &mut hasher)?;
+    let file_hash = hasher.finalize();
+    info!("Current size of file on disk: {}", size);
+
+    Ok(hex::encode(file_hash))
+}
+
 pub async fn download_file(
     source_url: &str,
     output_directory: &Path,

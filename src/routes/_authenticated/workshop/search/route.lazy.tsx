@@ -154,7 +154,7 @@ function WorkshopHome() {
 	}, [queryValue, navigate, location.pathname]);
 
 	return (
-		<div className="flex h-full overflow-hidden">
+		<div className="flex h-full overflow-hidden bg-accent/35">
 			<aside className="w-60 overflow-y-scroll h-full pl-4 space-y-4">
 				<div className="space-y-2">
 					<TypographyH3>Project Type</TypographyH3>
@@ -260,9 +260,9 @@ function WorkshopHome() {
 											xmlns="http://www.w3.org/2000/svg"
 											fill="none"
 											stroke="currentColor"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth="2"
 											viewBox="0 0 24 24"
 											aria-hidden="true"
 										>
@@ -291,9 +291,9 @@ function WorkshopHome() {
 											xmlns="http://www.w3.org/2000/svg"
 											fill="none"
 											stroke="currentColor"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth="2"
 											viewBox="0 0 24 24"
 											aria-hidden="true"
 										>

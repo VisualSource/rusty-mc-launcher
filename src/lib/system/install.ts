@@ -264,7 +264,7 @@ export async function install(data: Project) {
 				if (versions.error) throw versions.error;
 				if (!versions.data) throw new Error("Failed to project versions");
 				const version = versions.data.at(0);
-				if (!version) throw new Error("No versions are avaiable");
+				if (!version) throw new Error("No versions are available");
 
 				const file =
 					version.files.find((e) => e.primary) ?? version.files.at(0);
@@ -275,7 +275,7 @@ export async function install(data: Project) {
 				const files = [
 					{
 						sha1: file?.hashes.sha1,
-						url: file?.url,
+						url: decodeURIComponent(file?.url),
 						filename: file.filename,
 						version: version.version_number,
 						id: data.id,
@@ -351,7 +351,7 @@ export async function install(data: Project) {
 				const files = [
 					{
 						sha1: file?.hashes.sha1,
-						url: file?.url,
+						url: decodeURIComponent(file?.url),
 						filename: file.filename,
 						version: version.version_number,
 						id: data.id,
@@ -376,7 +376,7 @@ export async function install(data: Project) {
 
 								files.push({
 									sha1: dep.file?.hashes.sha1,
-									url: dep.file?.url,
+									url: decodeURIComponent(dep.file?.url),
 									id: dep.id,
 									filename: dep.file?.filename,
 									version: dep.version,
