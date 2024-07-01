@@ -2,7 +2,6 @@ import {
 	createLazyFileRoute,
 	Link,
 	ErrorComponent,
-	useLocation,
 } from "@tanstack/react-router";
 import {
 	Activity,
@@ -12,16 +11,13 @@ import {
 	Sparkles,
 	TriangleAlert,
 } from "lucide-react";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { formatRelative } from "date-fns/formatRelative";
-import { useEffect, useState } from "react";
-import { useDebounce } from "use-debounce";
+import { useQuery } from "@tanstack/react-query";
+import { Suspense, useCallback } from "react";
+
 
 import {
-	categoryList,
-	loaderList,
 	searchProjects,
-	projectTypeList,
 } from "@lib/api/modrinth/services.gen";
 import {
 	Select,
@@ -30,31 +26,22 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { WorkshopPagination } from "@/components/workshop/WorkshopPagination";
+import { WorkshopPagination, getPaginationItems, getPage, getOffset } from "@/components/workshop/WorkshopPagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { CategoryTag, LoaderTag } from "@/lib/api/modrinth/types.gen";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { TypographyH3, TypographyH4 } from "@/components/ui/typography";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Selectable } from "@/components/workshop/Selectable";
+
 import { modrinthClient } from "@/lib/api/modrinthClient";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ModrinthSearchParams } from "./route";
 import { Loading } from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const ALLOWED_MOD_LOADERS = ["forge", "fabric", "quilt", "neoforge"] as const;
-const SHOW_LOADERS_ON = ["mod", "modpack", "shader"] as const;
-
-function filterOn(name: string, list: LoaderTag[]): LoaderTag[] {
-	if (name === "modpack" || name === "mod") {
-		return list.filter((e) => ALLOWED_MOD_LOADERS.includes(e.name));
-	}
-	return list.filter((e) => e.supported_project_types.includes("shader"));
-}
+import debounce from "lodash.debounce";
+import { SearchFilters } from "@/components/workshop/SearchFilters";
 
 export const Route = createLazyFileRoute("/_authenticated/workshop/search")({
 	component: WorkshopHome,
@@ -64,61 +51,27 @@ export const Route = createLazyFileRoute("/_authenticated/workshop/search")({
 
 function WorkshopHome() {
 	const search = Route.useSearch();
-	const location = useLocation();
-	const [query, setQuery] = useState<string>(search.query ?? "");
-	const [queryValue] = useDebounce(query, 500);
 	const navigate = Route.useNavigate();
-	const categoires = useSuspenseQuery({
-		queryKey: ["MODRINTH", "TAGS", "CATEGORIES"],
-		queryFn: async () => {
-			const list = await categoryList({
-				client: modrinthClient,
-			});
-			if (list.error) throw list.error;
-			if (!list.data) throw new Error("Failed to load categories");
+	const queryHandler = useCallback(debounce((ev: React.FormEvent<HTMLFormElement> | React.ChangeEvent<HTMLInputElement>) => {
+		let query = "";
+		if (ev.type === "submit") {
+			const data = new FormData(ev.target as HTMLFormElement);
+			query = data.get("query")?.toString() ?? "";
 
-			const headers = Object.groupBy(list.data, (e) => e.header);
+		} else {
+			query = (ev.target as HTMLInputElement).value;
+		}
 
-			const output: Record<string, Record<string, CategoryTag[]>> = {};
-			for (const [header, values] of Object.entries(headers)) {
-				if (!values) continue;
+		navigate({
+			search: (prev) => ({
+				...prev,
+				query,
+				offset: 0
+			})
+		})
+	}, 500), []);
 
-				const groups: Record<string, CategoryTag[]> = {};
-				for (const value of values) {
-					if (!groups[value.project_type]) groups[value.project_type] = [];
-					groups[value.project_type].push(value);
-				}
-
-				output[header] = groups;
-			}
-
-			return output;
-		},
-	});
-	const modrinthLoaders = useSuspenseQuery({
-		queryKey: ["MODRINTH", "TAGS", "LOADERS"],
-		queryFn: async () => {
-			const list = await loaderList({
-				client: modrinthClient,
-			});
-			if (list.error) throw list.error;
-			if (!list.data) throw new Error("Failed to load categories");
-			return list.data;
-		},
-	});
-	const modrinthProjectTypes = useSuspenseQuery({
-		queryKey: ["MODRINTH", "TAGS", "PROJECT_TYPES"],
-		queryFn: async () => {
-			const list = await projectTypeList({
-				client: modrinthClient,
-			});
-			if (list.error) throw list.error;
-			if (!list.data) throw new Error("Failed to load categories");
-			return list.data.filter((e) => !["plugin", "datapack"].includes(e));
-		},
-	});
-
-	const results = useQuery({
+	const { isError, isLoading, data, error } = useQuery({
 		queryKey: [
 			"MODRINTH",
 			"SEARCH",
@@ -129,7 +82,7 @@ function WorkshopHome() {
 			search.offset,
 		],
 		queryFn: async () => {
-			const results = await searchProjects({
+			const { error, data, response } = await searchProjects({
 				client: modrinthClient,
 				query: {
 					query: search.query,
@@ -139,183 +92,47 @@ function WorkshopHome() {
 					index: search.index,
 				},
 			});
-			if (results.error) throw results.error;
-			if (!results.data) throw new Error("Failed to load");
-			return results.data;
+			if (error) throw error;
+			if (!response.ok || !data) throw new Error("Failed to load search results", { cause: response });
+
+			const maxPages = getPage(data.total_hits, data.limit, data.total_hits - data.limit);
+			const currentPage = getPage(data.total_hits, data.limit, data.offset);
+			const items = getPaginationItems(maxPages, data.limit, data.total_hits, currentPage, data.offset);
+			const prev = getOffset(data.offset - data.limit, data.total_hits);
+			const next = getOffset(data.offset + data.limit, data.total_hits);
+
+			return {
+				prev,
+				next,
+				currentPage,
+				maxPages,
+				hits: data.hits,
+				totalHits: data.total_hits,
+				links: items
+			};
 		},
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-	useEffect(() => {
-		/*if (location.pathname === "/workshop/search" && location.search.query) {
-			navigate({
-				search: (prev) => ({ ...prev, query: queryValue }),
-			});
-		}*/
-	}, [queryValue, navigate, location.pathname]);
-
 	return (
 		<div className="flex h-full overflow-hidden bg-accent/35">
-			<aside className="w-60 overflow-y-scroll h-full pl-4 space-y-4">
-				<div className="space-y-2">
-					<TypographyH3>Project Type</TypographyH3>
-					<RadioGroup
-						onValueChange={(e) => {
-							setQuery("");
-							navigate({
-								search: (prev) => ({
-									...prev,
-									facets: prev?.facets?.setProjectType(e),
-									offset: 0,
-									query: "",
-								}),
-							});
-						}}
-						defaultValue={search.facets.getDisplayProjectType()}
-					>
-						{modrinthProjectTypes.data?.map((item) => (
-							<div key={item} className="flex items-center space-x-2">
-								<RadioGroupItem value={item} id={`${item}_radio_opt`} />
-								<Label htmlFor={`${item}_radio_opt`}>
-									{item.replace(/^\w/, item[0].toUpperCase())}
-								</Label>
-							</div>
-						))}
-					</RadioGroup>
-				</div>
-
-				{Object.entries(categoires.data).map(([key, values]) => {
-					return Object.entries(values)
-						.filter((e) => e[0] === search.facets.getProjectType())
-						.map(([_, item]) => (
-							<div className="space-y-2" key={key}>
-								<TypographyH3>
-									{key.replace(/^\w/, key[0].toUpperCase())}
-								</TypographyH3>
-								<ul className="space-y-2">
-									{item.map((item) => (
-										<Selectable
-											key={item.name}
-											name={item.name}
-											checked={search.facets.hasCategory(item.name)}
-											onChange={() =>
-												navigate({
-													search: (prev) => ({
-														...prev,
-														facets: prev?.facets?.toggleCategory(item.name),
-													}),
-												})
-											}
-										/>
-									))}
-								</ul>
-							</div>
-						));
-				})}
-
-				{search.facets.isAnyProject(SHOW_LOADERS_ON) ? (
-					<div className="space-y-2">
-						<TypographyH3>Loaders</TypographyH3>
-						<ul className="space-y-2">
-							{filterOn(
-								search.facets.getProjectType(),
-								modrinthLoaders.data,
-							)?.map((item) => (
-								<Selectable
-									key={item.name}
-									name={item.name}
-									checked={search.facets.hasLoader(item.name)}
-									onChange={() =>
-										navigate({
-											search: (prev) => ({
-												...prev,
-												facets: prev?.facets?.toggleLoader(item.name),
-											}),
-										})
-									}
-								/>
-							))}
-						</ul>
-					</div>
-				) : null}
-
-				{search.facets.isAnyProject(["mod", "modpack"]) ? (
-					<div className="space-y-2">
-						<TypographyH4>Environments</TypographyH4>
-						<ul className="space-y-2">
-							<li className="flex items-center space-x-2">
-								<Checkbox
-									onClick={() =>
-										navigate({
-											search: (prev) => ({
-												...prev,
-												facets: prev?.facets?.toggleEnv("client"),
-											}),
-										})
-									}
-								/>
-								<Label className="inline-flex items-center gap-1">
-									<span className="inline-block h-4 w-4">
-										<svg
-											data-v-33894821=""
-											xmlns="http://www.w3.org/2000/svg"
-											fill="none"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth="2"
-											viewBox="0 0 24 24"
-											aria-hidden="true"
-										>
-											<rect width="20" height="14" x="2" y="3" rx="2" ry="2" />
-											<path d="M8 21h8m-4-4v4" />
-										</svg>
-									</span>
-									Client
-								</Label>
-							</li>
-							<li className="flex items-center space-x-2">
-								<Checkbox
-									onCheckedChange={() =>
-										navigate({
-											search: (prev) => ({
-												...prev,
-												facets: prev?.facets?.toggleEnv("server"),
-											}),
-										})
-									}
-								/>
-								<Label className="inline-flex items-center gap-1">
-									<span className="inline-block h-4 w-4">
-										<svg
-											data-v-33894821=""
-											xmlns="http://www.w3.org/2000/svg"
-											fill="none"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth="2"
-											viewBox="0 0 24 24"
-											aria-hidden="true"
-										>
-											<path d="M22 12H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11M6 16h.01M10 16h.01" />
-										</svg>
-									</span>
-									Server
-								</Label>
-							</li>
-						</ul>
-					</div>
-				) : null}
+			<aside className="w-60 overflow-y-scroll h-full pl-4 space-y-4 scrollbar pb-4">
+				<Suspense fallback={<Loading />}>
+					<SearchFilters search={search} navigate={navigate} />
+				</Suspense>
 			</aside>
-			<div className="w-full h-full overflow-y-scroll flex flex-col">
+			<div className="w-full h-full overflow-y-scroll flex flex-col scrollbar">
 				<header className="flex px-4 pt-4">
 					<search className="flex w-full gap-4 items-center">
-						<Input
-							value={query}
-							onChange={(ev) => setQuery(ev.target.value)}
-							placeholder="Search..."
-						/>
+						<form className="w-full" onSubmit={(ev) => {
+							ev.preventDefault();
+							queryHandler(ev);
+						}}>
+							<Input name="query" id="search-box"
+								defaultValue={search.query}
+								placeholder="Search..."
+								onChange={queryHandler}
+							/>
+						</form>
 
 						<Label className="text-nowrap">Sort By</Label>
 						<Select
@@ -369,14 +186,9 @@ function WorkshopHome() {
 						</Select>
 					</search>
 				</header>
-				<WorkshopPagination
-					hits={results.data?.hits.length ?? 0}
-					offset={results.data?.offset ?? 0}
-					total_hits={results.data?.total_hits ?? 0}
-					limit={results.data?.limit ?? 0}
-				/>
-				<div className="grid flex-1 grid-flow-row grid-cols-1 gap-4 px-4 sm:grid-cols-3 xl:grid-cols-3  flex-grow">
-					{results.isLoading ? (
+				<WorkshopPagination offsetNext={data?.next ?? 0} offsetPrev={data?.prev ?? 0} isLoading={isLoading} isError={isError} totalHits={data?.totalHits ?? 0} currentPage={data?.currentPage ?? 0} maxPages={data?.maxPages ?? 0} items={data?.links ?? []} />
+				<div className="grid flex-1 grid-flow-row grid-cols-1 gap-4 px-4 sm:grid-cols-3 xl:grid-cols-3 flex-grow">
+					{isLoading ? (
 						<>
 							{Array.from({ length: search.limit }).map((_, i) => (
 								<Card key={`skeletion_${i + 1}`}>
@@ -405,21 +217,21 @@ function WorkshopHome() {
 								</Card>
 							))}
 						</>
-					) : results.isError ? (
+					) : isError ? (
 						<div className="col-span-full row-span-full flex flex-col items-center justify-center">
 							<TriangleAlert className="h-20 w-20" />
 							<TypographyH3>Failed to load search results!</TypographyH3>
 							<pre className="text-sm">
-								<code>{results.error.message}</code>
+								<code>{error.message}</code>
 							</pre>
 						</div>
-					) : !results.data?.hits.length ? (
+					) : !data?.hits.length ? (
 						<div className="col-span-full row-span-full flex flex-col items-center justify-center">
 							<Sparkles className="h-20 w-20" />
 							<TypographyH3>No results found!</TypographyH3>
 						</div>
 					) : (
-						results.data?.hits.map((project) => (
+						data?.hits.map((project) => (
 							<Link
 								search={{} as ModrinthSearchParams}
 								key={project.project_id}
@@ -493,12 +305,7 @@ function WorkshopHome() {
 						))
 					)}
 				</div>
-				<WorkshopPagination
-					hits={results.data?.hits.length ?? 0}
-					offset={results.data?.offset ?? 0}
-					total_hits={results.data?.total_hits ?? 0}
-					limit={results.data?.limit ?? 0}
-				/>
+				<WorkshopPagination offsetNext={data?.next ?? 0} offsetPrev={data?.prev ?? 0} isLoading={isLoading} isError={isError} totalHits={data?.totalHits ?? 0} currentPage={data?.currentPage ?? 0} maxPages={data?.maxPages ?? 0} items={data?.links ?? []} />
 			</div>
 		</div>
 	);

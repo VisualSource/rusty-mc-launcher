@@ -3,7 +3,7 @@ Fix content delete from unknown content
 Todo:
   ☐ Add i18n
   ☐ Fix typo some where?
-  ☐ Fix workshop search
+  ✔ Fix workshop search @started(24-07-01 10:19) @done(24-07-01 10:58) @lasted(39m30s)
   ✔ Fix update content @started(24-06-30 23:33) @done(24-06-30 23:52) @lasted(19m25s)
   ✔ Fix content delete button for unknown content @done(24-06-30 23:22)
   ☐ add copy profile options
