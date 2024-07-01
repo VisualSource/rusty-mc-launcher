@@ -142,7 +142,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         }
     })?;
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(50);
+    let (ev_q, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(50);
     let event = app.handle();
     tauri::async_runtime::spawn(async move {
         while let Some(msg) = rx.recv().await {
@@ -154,6 +154,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let dlq = app.handle();
+    let tx = ev_q.clone();
     tauri::async_runtime::spawn(async move {
         let mut running = false;
         loop {
@@ -256,6 +257,40 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     });
+
+    /*let cc = app.handle();
+    tauri::async_runtime::spawn(async move {
+        loop {
+            tokio::time::sleep(Duration::from_secs(10)).await;
+
+            let state = cc.state::<AppState>();
+
+            match state.instances.running_profiles_ids().await {
+                Ok(instances) => {
+                    log::info!("{:#?}", instances);
+                    /*for instance in instances {
+                        match state.instances.exit_status(&instance).await {
+                            Ok(status) => {
+                                if let Some(status) = status {
+                                    if status != 0 {
+                                        send_event!(ev_q, "game_crash", { "status": status, "instance": instance });
+                                    }
+
+                                    if let Err(err) =
+                                        state.instances.stop_process(&state, instance).await
+                                    {
+                                        log::error!("{}", err);
+                                    };
+                                }
+                            }
+                            Err(err) => log::error!("{}", err),
+                        }
+                    }*/
+                }
+                Err(err) => log::error!("{}", err),
+            }
+        }
+    });*/
 
     Ok(())
 }

@@ -20,7 +20,14 @@ type Progress = {
 };
 
 type DownloadEvent = {
-	event: "group" | "update" | "notify" | "refresh" | "reset" | "done";
+	event:
+		| "group"
+		| "update"
+		| "notify"
+		| "refresh"
+		| "reset"
+		| "done"
+		| "game_crash";
 	value: string;
 };
 
@@ -37,6 +44,10 @@ class DownloadManager extends EventTarget {
 		const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
 
 		switch (ev.payload.event) {
+			case "game_crash": {
+				console.log(data);
+				break;
+			}
 			case "group":
 				this.current_progress = {
 					message: (data?.message as string | undefined) ?? "",

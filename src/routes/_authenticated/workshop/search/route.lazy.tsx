@@ -15,10 +15,7 @@ import { formatRelative } from "date-fns/formatRelative";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useCallback } from "react";
 
-
-import {
-	searchProjects,
-} from "@lib/api/modrinth/services.gen";
+import { searchProjects } from "@lib/api/modrinth/services.gen";
 import {
 	Select,
 	SelectContent,
@@ -26,7 +23,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { WorkshopPagination, getPaginationItems, getPage, getOffset } from "@/components/workshop/WorkshopPagination";
+import {
+	WorkshopPagination,
+	getPaginationItems,
+	getPage,
+	getOffset,
+} from "@/components/workshop/WorkshopPagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { TypographyH3, TypographyH4 } from "@/components/ui/typography";
@@ -52,24 +54,33 @@ export const Route = createLazyFileRoute("/_authenticated/workshop/search")({
 function WorkshopHome() {
 	const search = Route.useSearch();
 	const navigate = Route.useNavigate();
-	const queryHandler = useCallback(debounce((ev: React.FormEvent<HTMLFormElement> | React.ChangeEvent<HTMLInputElement>) => {
-		let query = "";
-		if (ev.type === "submit") {
-			const data = new FormData(ev.target as HTMLFormElement);
-			query = data.get("query")?.toString() ?? "";
+	const queryHandler = useCallback(
+		debounce(
+			(
+				ev:
+					| React.FormEvent<HTMLFormElement>
+					| React.ChangeEvent<HTMLInputElement>,
+			) => {
+				let query = "";
+				if (ev.type === "submit") {
+					const data = new FormData(ev.target as HTMLFormElement);
+					query = data.get("query")?.toString() ?? "";
+				} else {
+					query = (ev.target as HTMLInputElement).value;
+				}
 
-		} else {
-			query = (ev.target as HTMLInputElement).value;
-		}
-
-		navigate({
-			search: (prev) => ({
-				...prev,
-				query,
-				offset: 0
-			})
-		})
-	}, 500), []);
+				navigate({
+					search: (prev) => ({
+						...prev,
+						query,
+						offset: 0,
+					}),
+				});
+			},
+			500,
+		),
+		[],
+	);
 
 	const { isError, isLoading, data, error } = useQuery({
 		queryKey: [
@@ -93,11 +104,22 @@ function WorkshopHome() {
 				},
 			});
 			if (error) throw error;
-			if (!response.ok || !data) throw new Error("Failed to load search results", { cause: response });
+			if (!response.ok || !data)
+				throw new Error("Failed to load search results", { cause: response });
 
-			const maxPages = getPage(data.total_hits, data.limit, data.total_hits - data.limit);
+			const maxPages = getPage(
+				data.total_hits,
+				data.limit,
+				data.total_hits - data.limit,
+			);
 			const currentPage = getPage(data.total_hits, data.limit, data.offset);
-			const items = getPaginationItems(maxPages, data.limit, data.total_hits, currentPage, data.offset);
+			const items = getPaginationItems(
+				maxPages,
+				data.limit,
+				data.total_hits,
+				currentPage,
+				data.offset,
+			);
 			const prev = getOffset(data.offset - data.limit, data.total_hits);
 			const next = getOffset(data.offset + data.limit, data.total_hits);
 
@@ -108,7 +130,7 @@ function WorkshopHome() {
 				maxPages,
 				hits: data.hits,
 				totalHits: data.total_hits,
-				links: items
+				links: items,
 			};
 		},
 	});
@@ -123,11 +145,16 @@ function WorkshopHome() {
 			<div className="w-full h-full overflow-y-scroll flex flex-col scrollbar">
 				<header className="flex px-4 pt-4">
 					<search className="flex w-full gap-4 items-center">
-						<form className="w-full" onSubmit={(ev) => {
-							ev.preventDefault();
-							queryHandler(ev);
-						}}>
-							<Input name="query" id="search-box"
+						<form
+							className="w-full"
+							onSubmit={(ev) => {
+								ev.preventDefault();
+								queryHandler(ev);
+							}}
+						>
+							<Input
+								name="query"
+								id="search-box"
 								defaultValue={search.query}
 								placeholder="Search..."
 								onChange={queryHandler}
@@ -186,7 +213,16 @@ function WorkshopHome() {
 						</Select>
 					</search>
 				</header>
-				<WorkshopPagination offsetNext={data?.next ?? 0} offsetPrev={data?.prev ?? 0} isLoading={isLoading} isError={isError} totalHits={data?.totalHits ?? 0} currentPage={data?.currentPage ?? 0} maxPages={data?.maxPages ?? 0} items={data?.links ?? []} />
+				<WorkshopPagination
+					offsetNext={data?.next ?? 0}
+					offsetPrev={data?.prev ?? 0}
+					isLoading={isLoading}
+					isError={isError}
+					totalHits={data?.totalHits ?? 0}
+					currentPage={data?.currentPage ?? 0}
+					maxPages={data?.maxPages ?? 0}
+					items={data?.links ?? []}
+				/>
 				<div className="grid flex-1 grid-flow-row grid-cols-1 gap-4 px-4 sm:grid-cols-3 xl:grid-cols-3 flex-grow">
 					{isLoading ? (
 						<>
@@ -305,7 +341,16 @@ function WorkshopHome() {
 						))
 					)}
 				</div>
-				<WorkshopPagination offsetNext={data?.next ?? 0} offsetPrev={data?.prev ?? 0} isLoading={isLoading} isError={isError} totalHits={data?.totalHits ?? 0} currentPage={data?.currentPage ?? 0} maxPages={data?.maxPages ?? 0} items={data?.links ?? []} />
+				<WorkshopPagination
+					offsetNext={data?.next ?? 0}
+					offsetPrev={data?.prev ?? 0}
+					isLoading={isLoading}
+					isError={isError}
+					totalHits={data?.totalHits ?? 0}
+					currentPage={data?.currentPage ?? 0}
+					maxPages={data?.maxPages ?? 0}
+					items={data?.links ?? []}
+				/>
 			</div>
 		</div>
 	);

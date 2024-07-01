@@ -1,23 +1,24 @@
-Fix content delete from unknown content
-
 Todo:
-  ☐ Add i18n
+  ☐ crash reporting
   ☐ Fix typo some where?
-  ✔ Fix workshop search @started(24-07-01 10:19) @done(24-07-01 10:58) @lasted(39m30s)
-  ✔ Fix update content @started(24-06-30 23:33) @done(24-06-30 23:52) @lasted(19m25s)
-  ✔ Fix content delete button for unknown content @done(24-06-30 23:22)
-  ☐ add copy profile options
+  ☐ Update content check deps
   ☐ latest version
-  ☐ default icons
   ☐ Validate Content
   ☐ Working neoforge
   ☐ log viewer
-  ☐ theme selector
-  ☐ crash reporting
+
   ☐ editable home page
   ☐ button to check for app updates
 
+Ignore:
+  ☐ default icons
+
 Archive:
+  ✔ theme selector @done(24-07-01 16:13)
+  ✔ add copy profile options @done(24-07-01 16:00)
+  ✔ Fix workshop search @started(24-07-01 10:19) @done(24-07-01 10:58) @lasted(39m30s)
+  ✔ Fix update content @started(24-06-30 23:33) @done(24-06-30 23:52) @lasted(19m25s)
+  ✔ Fix content delete button for unknown content @done(24-06-30 23:22)
   ✔ content version update check @done(24-06-21 14:13)
   ✔ Modrinth login @done(24-06-28 15:41)
   ✔ import third party mods @started(24-06-28 15:42) @done(24-06-29 01:54) @lasted(10h12m39s)

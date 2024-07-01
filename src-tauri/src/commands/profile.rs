@@ -22,15 +22,22 @@ pub async fn delete_profile(
 pub async fn create_profile(
     state: tauri::State<'_, AppState>,
     profile: String,
+    copy_options: Option<String>,
 ) -> Result<(), Error> {
-    let app_dir = state
-        .get_path("path.app")
-        .await?
-        .join("profiles")
-        .join(&profile);
+    let root_dir = state.get_path("path.app").await?.join("profiles");
 
-    if !app_dir.exists() {
-        tokio::fs::create_dir_all(app_dir).await?;
+    let new_profile = root_dir.join(&profile);
+
+    if !root_dir.exists() {
+        tokio::fs::create_dir_all(&new_profile).await?;
+    }
+
+    if let Some(options) = copy_options {
+        let op = root_dir.join(options).join("options.txt");
+        let out = new_profile.join("options.txt");
+        if op.exists() && op.is_file() && !out.exists() {
+            tokio::fs::copy(op, out).await?;
+        }
     }
 
     Ok(())

@@ -64,8 +64,8 @@ export const showInFolder = (path: string) =>
 
 export const deleteProfile = (profile: string) =>
 	invoke("delete_profile", { profile });
-export const createProfile = (profile: string) =>
-	invoke("create_profile", { profile });
+export const createProfile = (profile: string, copyOptions?: string) =>
+	invoke("create_profile", { profile, copyOptions });
 
 export const uninstallItem = async (
 	content_type: string,

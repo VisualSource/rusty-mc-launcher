@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layers3 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import PlayButton from "@/components/ui/play";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,20 +63,18 @@ const Favorites: React.FC = () => {
 								{value.version}
 							</p>
 						</div>
-						<div className="overflow-hidden rounded-md">
-							{value.icon ? (
-								<img
-									height={256}
-									width={256}
-									className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-square"
-									src={value.icon}
-									alt={value.name}
-								/>
-							) : (
-								<div className="flex justify-center bg-accent rounded-lg items-center h-64 w-64">
+						<div className="overflow-hidden rounded-md ">
+							<div className="bg-accent rounded-lg h-64 w-64 flex items-center justify-center">
+								{value.icon ? (
+									<img
+										className="h-full object-fill transition-all hover:scale-105 aspect-square"
+										src={value.icon}
+										alt={value.name}
+									/>
+								) : (
 									<Layers3 />
-								</div>
-							)}
+								)}
+							</div>
 						</div>
 						<div className="flex gap-4">
 							<Button className="w-full" variant="secondary" asChild>

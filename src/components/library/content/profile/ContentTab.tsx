@@ -54,7 +54,11 @@ async function uninstall(filename: string, type: string, profile: string) {
 	}
 }
 
-const checkForUpdate = async (profile: MinecraftProfile, project: Project | null, item: ProfileContentItem) => {
+const checkForUpdate = async (
+	profile: MinecraftProfile,
+	project: Project | null,
+	item: ProfileContentItem,
+) => {
 	if (!project) return;
 	const toastId = toast.loading("Checking for update.");
 	try {
@@ -66,13 +70,12 @@ const checkForUpdate = async (profile: MinecraftProfile, project: Project | null
 			query: {
 				gameVersions: `["${profile.version}"]`,
 				loaders:
-					profile.loader !== "vanilla"
-						? `["${profile.loader}"]`
-						: undefined,
+					profile.loader !== "vanilla" ? `["${profile.loader}"]` : undefined,
 			},
 		});
 		if (error) throw error;
-		if (!data || !response.ok) throw new Error("Failed to load project versions", { cause: response });
+		if (!data || !response.ok)
+			throw new Error("Failed to load project versions", { cause: response });
 
 		const version = data.at(0);
 		const currentInstalledVersion = item.version;
@@ -92,7 +95,13 @@ const checkForUpdate = async (profile: MinecraftProfile, project: Project | null
 			);
 
 			if (doUpdate) {
-				toast.update(toastId, { render: "Installing new version", type: "info", isLoading: false, closeButton: true, autoClose: 5000 });
+				toast.update(toastId, {
+					render: "Installing new version",
+					type: "info",
+					isLoading: false,
+					closeButton: true,
+					autoClose: 5000,
+				});
 				await install_known(
 					version,
 					{
@@ -106,12 +115,26 @@ const checkForUpdate = async (profile: MinecraftProfile, project: Project | null
 			return;
 		}
 
-		toast.update(toastId, { render: "Lastest version installed", data: `Lastest version installed for ${project.title}`, isLoading: false, type: "info", closeButton: true, autoClose: 5000 })
+		toast.update(toastId, {
+			render: "Lastest version installed",
+			data: `Lastest version installed for ${project.title}`,
+			isLoading: false,
+			type: "info",
+			closeButton: true,
+			autoClose: 5000,
+		});
 	} catch (error) {
 		console.error(error);
-		toast.update(toastId, { render: "Failed to update content", data: error, type: "error", isLoading: false, closeButton: true, autoClose: 5000 });
+		toast.update(toastId, {
+			render: "Failed to update content",
+			data: error,
+			type: "error",
+			isLoading: false,
+			closeButton: true,
+			autoClose: 5000,
+		});
 	}
-}
+};
 
 export const ContentTab: React.FC<{
 	profile: MinecraftProfile;
@@ -201,7 +224,13 @@ export const ContentTab: React.FC<{
 							<div className="ml-auto">
 								{data?.[virtualItem.index].project?.id ? (
 									<Button
-										onClick={async () => checkForUpdate(profile, data[virtualItem.index].project, data[virtualItem.index].record)}
+										onClick={async () =>
+											checkForUpdate(
+												profile,
+												data[virtualItem.index].project,
+												data[virtualItem.index].record,
+											)
+										}
 										title="Check for update"
 										variant="ghost"
 										className="mr-2 h-5 w-5"
@@ -212,7 +241,11 @@ export const ContentTab: React.FC<{
 								) : null}
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
-										<Button variant="destructive" size="icon" title="Delete Mod">
+										<Button
+											variant="destructive"
+											size="icon"
+											title="Delete Mod"
+										>
 											<Trash2 className="h-5 w-5" />
 										</Button>
 									</AlertDialogTrigger>
@@ -223,8 +256,8 @@ export const ContentTab: React.FC<{
 											</AlertDialogTitle>
 											<AlertDialogDescription>
 												This action will delete this content, and can not be
-												undone. Deleting this may also break this install if this
-												content is a dependency of other content that is
+												undone. Deleting this may also break this install if
+												this content is a dependency of other content that is
 												installed.
 											</AlertDialogDescription>
 										</AlertDialogHeader>

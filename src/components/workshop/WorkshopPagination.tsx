@@ -11,7 +11,7 @@ import { range } from "@/lib/range";
 import { useId } from "react";
 import { Skeleton } from "../ui/skeleton";
 
-type PaginationLinkItem = { key: string; offset: number, page: number };
+type PaginationLinkItem = { key: string; offset: number; page: number };
 
 export const getOffset = (offset: number, max: number): number => {
 	if (offset < 0) return 0;
@@ -19,21 +19,33 @@ export const getOffset = (offset: number, max: number): number => {
 	return offset;
 };
 
-export const getPage = (total: number, limit: number, offset: number): number => {
+export const getPage = (
+	total: number,
+	limit: number,
+	offset: number,
+): number => {
 	return offset >= total ? 1 : Math.ceil(offset / limit) + 1;
 };
 
-export const getPaginationItems = (maxPages: number, limit: number, total_hits: number, currentPage: number, offset: number): PaginationLinkItem[] => {
+export const getPaginationItems = (
+	maxPages: number,
+	limit: number,
+	total_hits: number,
+	currentPage: number,
+	offset: number,
+): PaginationLinkItem[] => {
 	if (maxPages < 5) {
-		return Array(maxPages - 1).fill(0).map((_, i_offset) => {
-			const page_offset = (i_offset + 1) * limit;
-			const page = getPage(total_hits, limit, page_offset);
-			return {
-				page,
-				key: `page_${page}-offset_${page_offset}`,
-				offset: getOffset(page_offset, total_hits)
-			}
-		})
+		return Array(maxPages - 1)
+			.fill(0)
+			.map((_, i_offset) => {
+				const page_offset = (i_offset + 1) * limit;
+				const page = getPage(total_hits, limit, page_offset);
+				return {
+					page,
+					key: `page_${page}-offset_${page_offset}`,
+					offset: getOffset(page_offset, total_hits),
+				};
+			});
 	}
 	if (currentPage <= 5) {
 		return range(1, 5).map((i_offset) => {
@@ -42,8 +54,8 @@ export const getPaginationItems = (maxPages: number, limit: number, total_hits: 
 			return {
 				page,
 				key: `page_${page}-offset_${page_offset}`,
-				offset: getOffset(page_offset, total_hits)
-			}
+				offset: getOffset(page_offset, total_hits),
+			};
 		});
 	}
 	if (currentPage >= maxPages - 4) {
@@ -53,8 +65,8 @@ export const getPaginationItems = (maxPages: number, limit: number, total_hits: 
 			return {
 				page,
 				key: `offset_${i}`,
-				offset: getOffset(i, total_hits)
-			}
+				offset: getOffset(i, total_hits),
+			};
 		});
 	}
 	return range(-1, 1).map((i_offset) => {
@@ -63,22 +75,38 @@ export const getPaginationItems = (maxPages: number, limit: number, total_hits: 
 		return {
 			page,
 			key: `page_${page}-offset_${page_offset}`,
-			offset: getOffset(page_offset, total_hits)
-		}
+			offset: getOffset(page_offset, total_hits),
+		};
 	});
-}
+};
 
 export function WorkshopPagination({
-	isLoading, isError,
-	maxPages, currentPage, items, offsetPrev, offsetNext, totalHits
-}: { currentPage: number, maxPages: number, items: PaginationLinkItem[], totalHits: number, offsetPrev: number, offsetNext: number, isLoading: boolean, isError: boolean }) {
+	isLoading,
+	isError,
+	maxPages,
+	currentPage,
+	items,
+	offsetPrev,
+	offsetNext,
+	totalHits,
+}: {
+	currentPage: number;
+	maxPages: number;
+	items: PaginationLinkItem[];
+	totalHits: number;
+	offsetPrev: number;
+	offsetNext: number;
+	isLoading: boolean;
+	isError: boolean;
+}) {
 	const componentId = useId();
 	if (isError) return null;
-	if (isLoading) return (
-		<div className="py-2 px-4 flex justify-center">
-			<Skeleton className="h-10 w-full" />
-		</div>
-	);
+	if (isLoading)
+		return (
+			<div className="py-2 px-4 flex justify-center">
+				<Skeleton className="h-10 w-full" />
+			</div>
+		);
 
 	return (
 		<Pagination className="py-2">
@@ -105,10 +133,8 @@ export function WorkshopPagination({
 						<PaginationEllipsis />
 					</PaginationItem>
 				) : null}
-				{items.map(item => (
-					<PaginationItem
-						key={`${componentId}_${item.key}`}
-					>
+				{items.map((item) => (
+					<PaginationItem key={`${componentId}_${item.key}`}>
 						<PaginationLink
 							isActive={currentPage === item.page}
 							search={(prev) => ({

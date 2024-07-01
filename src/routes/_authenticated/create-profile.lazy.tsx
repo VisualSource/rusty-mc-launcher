@@ -15,6 +15,7 @@ import {
 } from "@component/ui/form";
 import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CopyProfileOptions } from "@/components/library/CopyProfileOptions";
 import { UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
 import type { MinecraftProfile } from "@lib/models/profiles";
 import { createProfile, db } from "@/lib/system/commands";
@@ -35,7 +36,7 @@ const resolver = zodResolver(profile.schema);
 
 function CreateProfile() {
 	const navigate = useNavigate();
-	const form = useForm<MinecraftProfile>({
+	const form = useForm<MinecraftProfile & { copyOptions?: string }>({
 		resolver,
 		defaultValues: {
 			id: crypto.randomUUID(),
@@ -48,7 +49,7 @@ function CreateProfile() {
 		},
 	});
 
-	const onSubmit = async (ev: MinecraftProfile) => {
+	const onSubmit = async (ev: MinecraftProfile & { copyOptions?: string }) => {
 		try {
 			const queue_id = crypto.randomUUID();
 
@@ -98,7 +99,7 @@ function CreateProfile() {
 				],
 			});
 
-			await createProfile(ev.id);
+			await createProfile(ev.id, ev.copyOptions);
 
 			await queryClient.invalidateQueries({
 				queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
@@ -111,7 +112,7 @@ function CreateProfile() {
 				},
 			});
 		} catch (error) {
-			toast.error("Failed to create profile", { data: { error } });
+			toast.error("Failed to create profile", { data: error });
 			logger.error(error);
 		}
 	};
@@ -247,6 +248,8 @@ function CreateProfile() {
 								</FormItem>
 							)}
 						/>
+
+						<CopyProfileOptions form={form} />
 					</section>
 
 					<div className="absolute bottom-4 right-4">
