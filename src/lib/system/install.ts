@@ -170,8 +170,8 @@ export async function install_known(
 	const files = [
 		{
 			sha1: file?.hashes.sha1,
-			url: file?.url,
-			filename: file.filename,
+			url: decodeURIComponent(file?.url),
+			filename: decodeURIComponent(file.filename),
 			version: version.version_number,
 			id: version.project_id,
 		},
@@ -198,9 +198,9 @@ export async function install_known(
 
 						files.push({
 							sha1: dep.file?.hashes.sha1,
-							url: dep.file?.url,
+							url: decodeURIComponent(dep.file?.url),
 							id: dep.id,
-							filename: dep.file?.filename,
+							filename: decodeURIComponent(dep.file?.filename),
 							version: dep.version,
 						});
 						break;

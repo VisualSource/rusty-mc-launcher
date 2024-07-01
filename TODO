@@ -1,26 +1,30 @@
-
+Fix content delete from unknown content
 
 Todo:
-  ✔ content version update check @done(24-06-21 14:13)
+  ☐ Add i18n
+  ☐ Fix typo some where?
+  ☐ Fix workshop search
+  ✔ Fix update content @started(24-06-30 23:33) @done(24-06-30 23:52) @lasted(19m25s)
+  ✔ Fix content delete button for unknown content @done(24-06-30 23:22)
+  ☐ add copy profile options
   ☐ latest version
   ☐ default icons
   ☐ Validate Content
-  ✔ Modrinth login @done(24-06-28 15:41)
   ☐ Working neoforge
   ☐ log viewer
-  ✔ import third party mods @started(24-06-28 15:42) @done(24-06-29 01:54) @lasted(10h12m39s)
-  ✔ import curseforge modpack @started(24-06-28 15:42) @done(24-06-29 02:11) @lasted(10h29m34s)
   ☐ theme selector
-  ✔ installed version managment @done(24-06-26 22:26)
-  ✔ check if msa has minecraft @done(24-06-29 11:45)
   ☐ crash reporting
   ☐ editable home page
-  ✔ skin viewer @done(24-06-27 21:06)
   ☐ button to check for app updates
 
-
-
 Archive:
+  ✔ content version update check @done(24-06-21 14:13)
+  ✔ Modrinth login @done(24-06-28 15:41)
+  ✔ import third party mods @started(24-06-28 15:42) @done(24-06-29 01:54) @lasted(10h12m39s)
+  ✔ import curseforge modpack @started(24-06-28 15:42) @done(24-06-29 02:11) @lasted(10h29m34s)
+  ✔ installed version managment @done(24-06-26 22:26)
+  ✔ check if msa has minecraft @done(24-06-29 11:45)
+  ✔ skin viewer @done(24-06-27 21:06)
   ✔ Clean up for process table process @done(24-05-26 15:05) @project(Todo)
   ✔ Loader version selector @done(24-05-26 16:39) @project(Todo)
   ✔ Mod/Shader/Resource/Modpack content install @started(24-05-27 12:42) @done(24-05-28 02:04) @lasted(13h22m30s) @project(Todo)

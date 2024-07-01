@@ -145,12 +145,13 @@ function WorkshopHome() {
 		},
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		if (location.pathname === "/_authenticated/workshop/search") {
+		/*if (location.pathname === "/workshop/search" && location.search.query) {
 			navigate({
 				search: (prev) => ({ ...prev, query: queryValue }),
 			});
-		}
+		}*/
 	}, [queryValue, navigate, location.pathname]);
 
 	return (

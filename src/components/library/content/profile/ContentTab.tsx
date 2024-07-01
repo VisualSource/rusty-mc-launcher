@@ -21,7 +21,7 @@ import {
 import { getProjectVersions } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
-import type { ContentType } from "@/lib/models/content";
+import type { ContentType, ProfileContentItem } from "@/lib/models/content";
 import { modrinthClient } from "@/lib/api/modrinthClient";
 import { db, uninstallItem } from "@/lib/system/commands";
 import { install_known } from "@/lib/system/install";
@@ -51,6 +51,65 @@ async function uninstall(filename: string, type: string, profile: string) {
 		toast.error("Failed to uninstall content", {
 			data: { error: (error as Error).message },
 		});
+	}
+}
+
+const checkForUpdate = async (profile: MinecraftProfile, project: Project | null, item: ProfileContentItem) => {
+	if (!project) return;
+	const toastId = toast.loading("Checking for update.");
+	try {
+		const { data, error, response } = await getProjectVersions({
+			client: modrinthClient,
+			path: {
+				"id|slug": project.id,
+			},
+			query: {
+				gameVersions: `["${profile.version}"]`,
+				loaders:
+					profile.loader !== "vanilla"
+						? `["${profile.loader}"]`
+						: undefined,
+			},
+		});
+		if (error) throw error;
+		if (!data || !response.ok) throw new Error("Failed to load project versions", { cause: response });
+
+		const version = data.at(0);
+		const currentInstalledVersion = item.version;
+
+		if (!version?.version_number?.length) {
+			throw new Error("No latest version could be found");
+		}
+		if (version.version_number !== currentInstalledVersion) {
+			const doUpdate = await ask(
+				`Would you like to update ${project.title} to version "${version.version_number}" currently installed is "${item.version}"`,
+				{
+					title: "Update Avaliable",
+					cancelLabel: "No",
+					okLabel: "Update",
+					type: "info",
+				},
+			);
+
+			if (doUpdate) {
+				toast.update(toastId, { render: "Installing new version", type: "info", isLoading: false, closeButton: true, autoClose: 5000 });
+				await install_known(
+					version,
+					{
+						title: project.title ?? "Unknown content name",
+						type: project.project_type,
+						icon: project?.icon_url,
+					},
+					profile,
+				);
+			}
+			return;
+		}
+
+		toast.update(toastId, { render: "Lastest version installed", data: `Lastest version installed for ${project.title}`, isLoading: false, type: "info", closeButton: true, autoClose: 5000 })
+	} catch (error) {
+		console.error(error);
+		toast.update(toastId, { render: "Failed to update content", data: error, type: "error", isLoading: false, closeButton: true, autoClose: 5000 });
 	}
 }
 
@@ -139,120 +198,53 @@ export const ContentTab: React.FC<{
 										"Unknown"}
 								</TypographyMuted>
 							</div>
-
-							{data?.[virtualItem.index].project?.id ? (
-								<Button
-									onClick={async () =>
-										toast.promise(
-											async () => {
-												const project = data[virtualItem.index].project;
-												if (!project) throw new Error("Missing project!");
-												const id = await getProjectVersions({
-													client: modrinthClient,
-													path: {
-														"id|slug": project.id,
-													},
-													query: {
-														gameVersions: `["${profile.version}"]`,
-														loaders:
-															profile.loader !== "vanilla"
-																? `["${profile.loader}"]`
-																: undefined,
-													},
-												});
-												if (id.error) throw id.error;
-												if (!id.data)
-													throw new Error("Failed to load project versions");
-												const version = id.data.at(0);
-												const currentVersionId =
-													data?.[virtualItem.index].record?.version;
-												if (
-													version &&
-													currentVersionId &&
-													version.version_number !== currentVersionId
-												) {
-													const doUpdate = await ask(
-														`Would you like to update ${project.title} to version (${id.data.at(0)?.version_number}) current is ${data?.[virtualItem.index].record?.version}`,
-														{
-															title: "Update Avaliable",
-															cancelLabel: "No",
-															okLabel: "Update",
-															type: "info",
-														},
-													);
-
-													if (doUpdate) {
-														await install_known(
-															version,
-															{
-																title: project.title ?? "Unknown content name",
-																type: project.project_type,
-																icon: project?.icon_url,
-															},
-															profile,
-														);
-													}
-
-													return { didUpdate: doUpdate };
-												}
-
-												return { didUpdate: false };
-											},
-											{
-												pending: "Checking for update",
-												success: {
-													render({ data }) {
-														return data.didUpdate
-															? "Updating content"
-															: "Up to date!";
-													},
-												},
-												error: "Failed to check for update",
-											},
-										)
-									}
-									title="Check for update"
-									variant="ghost"
-									className="ml-auto mr-2 h-5 w-5"
-									size="icon"
-								>
-									<UpdateIcon className="h-5 w-5 hover:animate-spin" />
-								</Button>
-							) : null}
-							<AlertDialog>
-								<AlertDialogTrigger asChild>
-									<Button variant="destructive" size="icon" title="Delete Mod">
-										<Trash2 className="h-5 w-5" />
+							<div className="ml-auto">
+								{data?.[virtualItem.index].project?.id ? (
+									<Button
+										onClick={async () => checkForUpdate(profile, data[virtualItem.index].project, data[virtualItem.index].record)}
+										title="Check for update"
+										variant="ghost"
+										className="mr-2 h-5 w-5"
+										size="icon"
+									>
+										<UpdateIcon className="h-5 w-5 hover:animate-spin" />
 									</Button>
-								</AlertDialogTrigger>
-								<AlertDialogContent className="text-white">
-									<AlertDialogHeader>
-										<AlertDialogTitle>
-											Are you absolutely sure?
-										</AlertDialogTitle>
-										<AlertDialogDescription>
-											This action will delete this content, and can not be
-											undone. Deleting this may also break this install if this
-											content is a dependency of other content that is
-											installed.
-										</AlertDialogDescription>
-									</AlertDialogHeader>
-									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
-										<AlertDialogAction
-											onClick={() => {
-												const filename =
-													data?.[virtualItem.index].record?.file_name;
-												if (filename) {
-													uninstall(filename, content_type, profile.id);
-												}
-											}}
-										>
-											Ok
-										</AlertDialogAction>
-									</AlertDialogFooter>
-								</AlertDialogContent>
-							</AlertDialog>
+								) : null}
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button variant="destructive" size="icon" title="Delete Mod">
+											<Trash2 className="h-5 w-5" />
+										</Button>
+									</AlertDialogTrigger>
+									<AlertDialogContent className="text-white">
+										<AlertDialogHeader>
+											<AlertDialogTitle>
+												Are you absolutely sure?
+											</AlertDialogTitle>
+											<AlertDialogDescription>
+												This action will delete this content, and can not be
+												undone. Deleting this may also break this install if this
+												content is a dependency of other content that is
+												installed.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+											<AlertDialogAction
+												onClick={() => {
+													const filename =
+														data?.[virtualItem.index].record?.file_name;
+													if (filename) {
+														uninstall(filename, content_type, profile.id);
+													}
+												}}
+											>
+												Ok
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							</div>
 						</div>
 					))}
 				</div>

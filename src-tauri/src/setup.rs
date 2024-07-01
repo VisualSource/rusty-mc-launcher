@@ -233,6 +233,9 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                                     "message": "Content Installed!",
                                     "type": "ok"
                                 });
+                                send_event!(tx,"done",{
+                                    "keys": ["WORKSHOP_CONTENT",item.content_type,item.profile_id],
+                                });
                             }
                         }
 

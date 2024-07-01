@@ -15,3 +15,5 @@ export const workshop_content = {
 		type: contentTypeSchema,
 	}),
 };
+
+export type ProfileContentItem = z.infer<typeof workshop_content.schema>;
