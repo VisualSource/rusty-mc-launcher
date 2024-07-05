@@ -17,6 +17,8 @@ import {
 	LogIn,
 	LogOut,
 	DoorOpen,
+	Bug,
+	ScrollText,
 } from "lucide-react";
 import { appWindow } from "@tauri-apps/api/window";
 import { exit } from "@tauri-apps/api/process";
@@ -62,6 +64,12 @@ export const NavbarUpper: React.FC = () => {
 								Settings
 							</Link>
 						</DropdownMenuItem>
+						<DropdownMenuItem>
+							<Link to="/bug-report" className="flex items-center">
+								<Bug className="h-4 w-4 mr-2" />
+								Bug Report
+							</Link>
+						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={exit as () => void}>
 							<DoorOpen className="h-4 w-4 mr-2" />
@@ -69,9 +77,21 @@ export const NavbarUpper: React.FC = () => {
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
-				<Button size="sm" variant="ghost" className="h-full rounded-none">
-					View
-				</Button>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button size="sm" variant="ghost" className="h-full rounded-none">
+							View
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="start">
+						<DropdownMenuItem>
+							<Link to="/patch-notes" className="flex items-center">
+								<ScrollText className="h-4 w-4 mr-2" />
+								Patch Notes
+							</Link>
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 			<div className="flex h-full" data-tauri-drag-region>
 				<Notifications />

@@ -192,7 +192,7 @@ pub async fn install_curseforge_modpack(
             let project_file = project
                 .files
                 .binary_search_by(|prob| prob.id.cmp(&file.file_id))
-                .map_err(|_| LauncherError::Generic("Failed to file project file".to_string()))?;
+                .map_err(|_| LauncherError::Generic(format!("Failed to find project file, Project: {} File: {}",file.project_id,file.file_id)))?;
 
             let version = project
                 .files

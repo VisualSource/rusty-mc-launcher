@@ -42,16 +42,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: install frontend dependencies
         run: pnpm install
-      - name: Rust Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/src-tauri/.cargo/bin/
-            ~/src-tauri/.cargo/registry/index/
-            ~/src-tauri/.cargo/registry/cache/
-            ~/src-tauri/.cargo/git/db/
-            src-tauri/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/src-tauri/Cargo.lock') }}
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
       - uses: tauri-apps/tauri-action@dev
         env:
           MCL_LOG: "INFO"
@@ -62,10 +54,9 @@ jobs:
           PUBLIC_VITE_REDIRECT_URI: ${{ secrets.PUBLIC_VITE_AUTHORITY  }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          updaterJsonPreferNsis: false
           includeUpdaterJson: true
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
           releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
+          releaseBody: "View patch on Github or View > Patch Notes in app"
           releaseDraft: true
           prerelease: false

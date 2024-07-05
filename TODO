@@ -1,17 +1,19 @@
 Todo:
   ☐ crash reporting
-  ☐ Fix typo some where?
   ☐ Update content check deps
-  ☐ latest version
+  ☐ update to latest version (for vanilla)
   ☐ Validate Content
-  ☐ Working neoforge
+  ☐ Working neoforge install
   ☐ log viewer
 
   ☐ editable home page
   ☐ button to check for app updates
+  ☐ Bug report system
+  ☐ performance changes
 
 Ignore:
   ☐ default icons
+  ☐ Fix typo some where?
 
 Archive:
   ✔ theme selector @done(24-07-01 16:13)

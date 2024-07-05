@@ -27,11 +27,17 @@ import { Route as AuthenticatedLayoutProfileProfileIdEditImport } from './routes
 
 // Create Virtual Routes
 
+const AuthenticatedPatchNotesLazyImport = createFileRoute(
+  '/_authenticated/patch-notes',
+)()
 const AuthenticatedDownloadsLazyImport = createFileRoute(
   '/_authenticated/downloads',
 )()
 const AuthenticatedCreateProfileLazyImport = createFileRoute(
   '/_authenticated/create-profile',
+)()
+const AuthenticatedBugReportLazyImport = createFileRoute(
+  '/_authenticated/bug-report',
 )()
 const AuthenticatedLayoutIndexLazyImport = createFileRoute(
   '/_authenticated/_layout/',
@@ -56,6 +62,14 @@ const AuthenticatedRoute = AuthenticatedImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AuthenticatedPatchNotesLazyRoute =
+  AuthenticatedPatchNotesLazyImport.update({
+    path: '/patch-notes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/patch-notes.lazy').then((d) => d.Route),
+  )
+
 const AuthenticatedDownloadsLazyRoute = AuthenticatedDownloadsLazyImport.update(
   {
     path: '/downloads',
@@ -72,6 +86,15 @@ const AuthenticatedCreateProfileLazyRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/create-profile.lazy').then((d) => d.Route),
   )
+
+const AuthenticatedBugReportLazyRoute = AuthenticatedBugReportLazyImport.update(
+  {
+    path: '/bug-report',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any,
+).lazy(() =>
+  import('./routes/_authenticated/bug-report.lazy').then((d) => d.Route),
+)
 
 const AuthenticatedSettingsRoute = AuthenticatedSettingsImport.update({
   path: '/settings',
@@ -209,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/bug-report': {
+      id: '/_authenticated/bug-report'
+      path: '/bug-report'
+      fullPath: '/bug-report'
+      preLoaderRoute: typeof AuthenticatedBugReportLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/create-profile': {
       id: '/_authenticated/create-profile'
       path: '/create-profile'
@@ -221,6 +251,13 @@ declare module '@tanstack/react-router' {
       path: '/downloads'
       fullPath: '/downloads'
       preLoaderRoute: typeof AuthenticatedDownloadsLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/patch-notes': {
+      id: '/_authenticated/patch-notes'
+      path: '/patch-notes'
+      fullPath: '/patch-notes'
+      preLoaderRoute: typeof AuthenticatedPatchNotesLazyImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/workshop/search': {
@@ -338,8 +375,10 @@ export const routeTree = rootRoute.addChildren({
       AuthenticatedSettingsGameLazyRoute,
       AuthenticatedSettingsIndexRoute,
     }),
+    AuthenticatedBugReportLazyRoute,
     AuthenticatedCreateProfileLazyRoute,
     AuthenticatedDownloadsLazyRoute,
+    AuthenticatedPatchNotesLazyRoute,
     AuthenticatedWorkshopSearchRouteRoute,
     AuthenticatedWorkshopProjectIdRouteRoute,
   }),
@@ -361,8 +400,10 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/_authenticated/_layout",
         "/_authenticated/settings",
+        "/_authenticated/bug-report",
         "/_authenticated/create-profile",
         "/_authenticated/downloads",
+        "/_authenticated/patch-notes",
         "/_authenticated/workshop/search",
         "/_authenticated/workshop/project/$id"
       ]
@@ -387,12 +428,20 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/settings/"
       ]
     },
+    "/_authenticated/bug-report": {
+      "filePath": "_authenticated/bug-report.lazy.tsx",
+      "parent": "/_authenticated"
+    },
     "/_authenticated/create-profile": {
       "filePath": "_authenticated/create-profile.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/downloads": {
       "filePath": "_authenticated/downloads.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/patch-notes": {
+      "filePath": "_authenticated/patch-notes.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/workshop/search": {

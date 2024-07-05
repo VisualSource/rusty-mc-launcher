@@ -1,9 +1,10 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { compareDesc } from "date-fns/compareDesc";
+import { AlertTriangle, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import { useState } from "react";
-import { AlertTriangle, Loader2, X } from "lucide-react";
+
 import {
 	Drawer,
 	DrawerClose,
