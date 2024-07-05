@@ -3,12 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import type {
-	AccountInfo,
-	CommonSilentFlowRequest,
-	StringDict,
+import {
+    AccountInfo,
+    CommonSilentFlowRequest,
+    StringDict,
 } from "@azure/msal-common";
-import type { CacheLookupPolicy } from "../utils/BrowserConstants";
+import { CacheLookupPolicy } from "../utils/BrowserConstants";
 
 /**
  * SilentRequest: Request object passed by user to retrieve tokens from the
@@ -30,21 +30,21 @@ import type { CacheLookupPolicy } from "../utils/BrowserConstants";
  *          no_session: will not read existing session token when authenticating the user. Upon user being successfully authenticated, EVO won’t create a new session for the user. FOR INTERNAL USE ONLY.
  */
 export type SilentRequest = Omit<
-	CommonSilentFlowRequest,
-	| "authority"
-	| "correlationId"
-	| "forceRefresh"
-	| "account"
-	| "requestedClaimsHash"
+    CommonSilentFlowRequest,
+    | "authority"
+    | "correlationId"
+    | "forceRefresh"
+    | "account"
+    | "requestedClaimsHash"
 > & {
-	redirectUri?: string;
-	extraQueryParameters?: StringDict;
-	authority?: string;
-	account?: AccountInfo;
-	correlationId?: string;
-	forceRefresh?: boolean;
-	cacheLookupPolicy?: CacheLookupPolicy;
-	prompt?: string;
-	state?: string;
-	tokenBodyParameters?: StringDict;
+    redirectUri?: string;
+    extraQueryParameters?: StringDict;
+    authority?: string;
+    account?: AccountInfo;
+    correlationId?: string;
+    forceRefresh?: boolean;
+    cacheLookupPolicy?: CacheLookupPolicy;
+    prompt?: string;
+    state?: string;
+    tokenBodyParameters?: StringDict;
 };

@@ -5,36 +5,36 @@
 
 import { NestedAppOperatingContext } from "../operatingcontext/NestedAppOperatingContext";
 import { StandardOperatingContext } from "../operatingcontext/StandardOperatingContext";
-import type { IController } from "./IController";
-import type { Configuration } from "../config/Configuration";
+import { IController } from "./IController";
+import { Configuration } from "../config/Configuration";
 import { StandardController } from "./StandardController";
 import { NestedAppAuthController } from "./NestedAppAuthController";
 
 export async function createV3Controller(
-	config: Configuration,
+    config: Configuration
 ): Promise<IController> {
-	const standard = new StandardOperatingContext(config);
+    const standard = new StandardOperatingContext(config);
 
-	await standard.initialize();
-	return StandardController.createController(standard);
+    await standard.initialize();
+    return StandardController.createController(standard);
 }
 
 export async function createController(
-	config: Configuration,
+    config: Configuration
 ): Promise<IController | null> {
-	const standard = new StandardOperatingContext(config);
-	const nestedApp = new NestedAppOperatingContext(config);
+    const standard = new StandardOperatingContext(config);
+    const nestedApp = new NestedAppOperatingContext(config);
 
-	const operatingContexts = [standard.initialize(), nestedApp.initialize()];
+    const operatingContexts = [standard.initialize(), nestedApp.initialize()];
 
-	await Promise.all(operatingContexts);
+    await Promise.all(operatingContexts);
 
-	if (nestedApp.isAvailable() && config.auth.supportsNestedAppAuth) {
-		return NestedAppAuthController.createController(nestedApp);
-	} else if (standard.isAvailable()) {
-		return StandardController.createController(standard);
-	} else {
-		// Since neither of the actual operating contexts are available keep the UnknownOperatingContextController
-		return null;
-	}
+    if (nestedApp.isAvailable() && config.auth.supportsNestedAppAuth) {
+        return NestedAppAuthController.createController(nestedApp);
+    } else if (standard.isAvailable()) {
+        return StandardController.createController(standard);
+    } else {
+        // Since neither of the actual operating contexts are available keep the UnknownOperatingContextController
+        return null;
+    }
 }

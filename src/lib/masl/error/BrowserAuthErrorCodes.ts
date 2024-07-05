@@ -9,7 +9,7 @@ export const emptyNavigateUri = "empty_navigate_uri";
 export const hashEmptyError = "hash_empty_error";
 export const noStateInHash = "no_state_in_hash";
 export const hashDoesNotContainKnownProperties =
-	"hash_does_not_contain_known_properties";
+    "hash_does_not_contain_known_properties";
 export const unableToParseState = "unable_to_parse_state";
 export const stateInteractionTypeMismatch = "state_interaction_type_mismatch";
 export const interactionInProgress = "interaction_in_progress";
@@ -27,7 +27,7 @@ export const noAccountError = "no_account_error";
 export const silentPromptValueError = "silent_prompt_value_error";
 export const noTokenRequestCacheError = "no_token_request_cache_error";
 export const unableToParseTokenRequestCacheError =
-	"unable_to_parse_token_request_cache_error";
+    "unable_to_parse_token_request_cache_error";
 export const noCachedAuthorityError = "no_cached_authority_error";
 export const authRequestNotSetError = "auth_request_not_set_error";
 export const invalidCacheType = "invalid_cache_type";
@@ -41,18 +41,18 @@ export const unableToLoadToken = "unable_to_load_token";
 export const cryptoKeyNotFound = "crypto_key_not_found";
 export const authCodeRequired = "auth_code_required";
 export const authCodeOrNativeAccountIdRequired =
-	"auth_code_or_nativeAccountId_required";
+    "auth_code_or_nativeAccountId_required";
 export const spaCodeAndNativeAccountIdPresent =
-	"spa_code_and_nativeAccountId_present";
+    "spa_code_and_nativeAccountId_present";
 export const databaseUnavailable = "database_unavailable";
 export const unableToAcquireTokenFromNativePlatform =
-	"unable_to_acquire_token_from_native_platform";
+    "unable_to_acquire_token_from_native_platform";
 export const nativeHandshakeTimeout = "native_handshake_timeout";
 export const nativeExtensionNotInstalled = "native_extension_not_installed";
 export const nativeConnectionNotEstablished =
-	"native_connection_not_established";
+    "native_connection_not_established";
 export const uninitializedPublicClientApplication =
-	"uninitialized_public_client_application";
+    "uninitialized_public_client_application";
 export const nativePromptNotSupported = "native_prompt_not_supported";
 export const invalidBase64String = "invalid_base64_string";
 export const invalidPopTokenRequest = "invalid_pop_token_request";

@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import type { AccountInfo, AccountFilter, Logger } from "@azure/msal-common";
-import type { BrowserCacheManager } from "./BrowserCacheManager";
+import { AccountInfo, AccountFilter, Logger } from "@azure/msal-common";
+import { BrowserCacheManager } from "./BrowserCacheManager";
 
 /**
  * Returns all the accounts in the cache that match the optional filter. If no filter is provided, all accounts are returned.
@@ -12,13 +12,13 @@ import type { BrowserCacheManager } from "./BrowserCacheManager";
  * @returns Array of AccountInfo objects in cache
  */
 export function getAllAccounts(
-	logger: Logger,
-	browserStorage: BrowserCacheManager,
-	isInBrowser: boolean,
-	accountFilter?: AccountFilter,
+    logger: Logger,
+    browserStorage: BrowserCacheManager,
+    isInBrowser: boolean,
+    accountFilter?: AccountFilter
 ): AccountInfo[] {
-	logger.verbose("getAllAccounts called");
-	return isInBrowser ? browserStorage.getAllAccounts(accountFilter) : [];
+    logger.verbose("getAllAccounts called");
+    return isInBrowser ? browserStorage.getAllAccounts(accountFilter) : [];
 }
 
 /**
@@ -27,28 +27,28 @@ export function getAllAccounts(
  * @returns The first account found in the cache matching the provided filter or null if no account could be found.
  */
 export function getAccount(
-	accountFilter: AccountFilter,
-	logger: Logger,
-	browserStorage: BrowserCacheManager,
+    accountFilter: AccountFilter,
+    logger: Logger,
+    browserStorage: BrowserCacheManager
 ): AccountInfo | null {
-	logger.trace("getAccount called");
-	if (Object.keys(accountFilter).length === 0) {
-		logger.warning("getAccount: No accountFilter provided");
-		return null;
-	}
+    logger.trace("getAccount called");
+    if (Object.keys(accountFilter).length === 0) {
+        logger.warning("getAccount: No accountFilter provided");
+        return null;
+    }
 
-	const account: AccountInfo | null =
-		browserStorage.getAccountInfoFilteredBy(accountFilter);
+    const account: AccountInfo | null =
+        browserStorage.getAccountInfoFilteredBy(accountFilter);
 
-	if (account) {
-		logger.verbose(
-			"getAccount: Account matching provided filter found, returning",
-		);
-		return account;
-	} else {
-		logger.verbose("getAccount: No matching account found, returning null");
-		return null;
-	}
+    if (account) {
+        logger.verbose(
+            "getAccount: Account matching provided filter found, returning"
+        );
+        return account;
+    } else {
+        logger.verbose("getAccount: No matching account found, returning null");
+        return null;
+    }
 }
 
 /**
@@ -60,33 +60,33 @@ export function getAccount(
  * @returns The account object stored in MSAL
  */
 export function getAccountByUsername(
-	username: string,
-	logger: Logger,
-	browserStorage: BrowserCacheManager,
+    username: string,
+    logger: Logger,
+    browserStorage: BrowserCacheManager
 ): AccountInfo | null {
-	logger.trace("getAccountByUsername called");
-	if (!username) {
-		logger.warning("getAccountByUsername: No username provided");
-		return null;
-	}
+    logger.trace("getAccountByUsername called");
+    if (!username) {
+        logger.warning("getAccountByUsername: No username provided");
+        return null;
+    }
 
-	const account = browserStorage.getAccountInfoFilteredBy({
-		username,
-	});
-	if (account) {
-		logger.verbose(
-			"getAccountByUsername: Account matching username found, returning",
-		);
-		logger.verbosePii(
-			`getAccountByUsername: Returning signed-in accounts matching username: ${username}`,
-		);
-		return account;
-	} else {
-		logger.verbose(
-			"getAccountByUsername: No matching account found, returning null",
-		);
-		return null;
-	}
+    const account = browserStorage.getAccountInfoFilteredBy({
+        username,
+    });
+    if (account) {
+        logger.verbose(
+            "getAccountByUsername: Account matching username found, returning"
+        );
+        logger.verbosePii(
+            `getAccountByUsername: Returning signed-in accounts matching username: ${username}`
+        );
+        return account;
+    } else {
+        logger.verbose(
+            "getAccountByUsername: No matching account found, returning null"
+        );
+        return null;
+    }
 }
 
 /**
@@ -97,33 +97,33 @@ export function getAccountByUsername(
  * @returns The account object stored in MSAL
  */
 export function getAccountByHomeId(
-	homeAccountId: string,
-	logger: Logger,
-	browserStorage: BrowserCacheManager,
+    homeAccountId: string,
+    logger: Logger,
+    browserStorage: BrowserCacheManager
 ): AccountInfo | null {
-	logger.trace("getAccountByHomeId called");
-	if (!homeAccountId) {
-		logger.warning("getAccountByHomeId: No homeAccountId provided");
-		return null;
-	}
+    logger.trace("getAccountByHomeId called");
+    if (!homeAccountId) {
+        logger.warning("getAccountByHomeId: No homeAccountId provided");
+        return null;
+    }
 
-	const account = browserStorage.getAccountInfoFilteredBy({
-		homeAccountId,
-	});
-	if (account) {
-		logger.verbose(
-			"getAccountByHomeId: Account matching homeAccountId found, returning",
-		);
-		logger.verbosePii(
-			`getAccountByHomeId: Returning signed-in accounts matching homeAccountId: ${homeAccountId}`,
-		);
-		return account;
-	} else {
-		logger.verbose(
-			"getAccountByHomeId: No matching account found, returning null",
-		);
-		return null;
-	}
+    const account = browserStorage.getAccountInfoFilteredBy({
+        homeAccountId,
+    });
+    if (account) {
+        logger.verbose(
+            "getAccountByHomeId: Account matching homeAccountId found, returning"
+        );
+        logger.verbosePii(
+            `getAccountByHomeId: Returning signed-in accounts matching homeAccountId: ${homeAccountId}`
+        );
+        return account;
+    } else {
+        logger.verbose(
+            "getAccountByHomeId: No matching account found, returning null"
+        );
+        return null;
+    }
 }
 
 /**
@@ -134,33 +134,33 @@ export function getAccountByHomeId(
  * @returns The account object stored in MSAL
  */
 export function getAccountByLocalId(
-	localAccountId: string,
-	logger: Logger,
-	browserStorage: BrowserCacheManager,
+    localAccountId: string,
+    logger: Logger,
+    browserStorage: BrowserCacheManager
 ): AccountInfo | null {
-	logger.trace("getAccountByLocalId called");
-	if (!localAccountId) {
-		logger.warning("getAccountByLocalId: No localAccountId provided");
-		return null;
-	}
+    logger.trace("getAccountByLocalId called");
+    if (!localAccountId) {
+        logger.warning("getAccountByLocalId: No localAccountId provided");
+        return null;
+    }
 
-	const account = browserStorage.getAccountInfoFilteredBy({
-		localAccountId,
-	});
-	if (account) {
-		logger.verbose(
-			"getAccountByLocalId: Account matching localAccountId found, returning",
-		);
-		logger.verbosePii(
-			`getAccountByLocalId: Returning signed-in accounts matching localAccountId: ${localAccountId}`,
-		);
-		return account;
-	} else {
-		logger.verbose(
-			"getAccountByLocalId: No matching account found, returning null",
-		);
-		return null;
-	}
+    const account = browserStorage.getAccountInfoFilteredBy({
+        localAccountId,
+    });
+    if (account) {
+        logger.verbose(
+            "getAccountByLocalId: Account matching localAccountId found, returning"
+        );
+        logger.verbosePii(
+            `getAccountByLocalId: Returning signed-in accounts matching localAccountId: ${localAccountId}`
+        );
+        return account;
+    } else {
+        logger.verbose(
+            "getAccountByLocalId: No matching account found, returning null"
+        );
+        return null;
+    }
 }
 
 /**
@@ -168,17 +168,17 @@ export function getAccountByLocalId(
  * @param account
  */
 export function setActiveAccount(
-	account: AccountInfo | null,
-	browserStorage: BrowserCacheManager,
+    account: AccountInfo | null,
+    browserStorage: BrowserCacheManager
 ): void {
-	browserStorage.setActiveAccount(account);
+    browserStorage.setActiveAccount(account);
 }
 
 /**
  * Gets the currently active account
  */
 export function getActiveAccount(
-	browserStorage: BrowserCacheManager,
+    browserStorage: BrowserCacheManager
 ): AccountInfo | null {
-	return browserStorage.getActiveAccount();
+    return browserStorage.getActiveAccount();
 }

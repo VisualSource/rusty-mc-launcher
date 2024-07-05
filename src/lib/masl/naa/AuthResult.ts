@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import type { AccountInfo } from "./AccountInfo";
-import type { TokenResponse } from "./TokenResponse";
+import { AccountInfo } from "./AccountInfo";
+import { TokenResponse } from "./TokenResponse";
 
 export type AuthResult = {
-	token: TokenResponse;
-	account: AccountInfo;
+    token: TokenResponse;
+    account: AccountInfo;
 };

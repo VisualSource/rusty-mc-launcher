@@ -4,16 +4,16 @@
  */
 
 import {
-	type IPerformanceClient,
-	type Logger,
-	PerformanceEvents,
-	type PkceCodes,
-	invoke,
-	invokeAsync,
+    IPerformanceClient,
+    Logger,
+    PerformanceEvents,
+    PkceCodes,
+    invoke,
+    invokeAsync,
 } from "@azure/msal-common";
 import {
-	createBrowserAuthError,
-	BrowserAuthErrorCodes,
+    createBrowserAuthError,
+    BrowserAuthErrorCodes,
 } from "../error/BrowserAuthError";
 import { urlEncodeArr } from "../encode/Base64Encode";
 import { getRandomValues, sha256Digest } from "./BrowserCrypto";
@@ -29,32 +29,32 @@ const RANDOM_BYTE_ARR_LENGTH = 32;
  * Generates PKCE Codes. See the RFC for more information: https://tools.ietf.org/html/rfc7636
  */
 export async function generatePkceCodes(
-	performanceClient: IPerformanceClient,
-	logger: Logger,
-	correlationId: string,
+    performanceClient: IPerformanceClient,
+    logger: Logger,
+    correlationId: string
 ): Promise<PkceCodes> {
-	performanceClient.addQueueMeasurement(
-		PerformanceEvents.GeneratePkceCodes,
-		correlationId,
-	);
-	const codeVerifier = invoke(
-		generateCodeVerifier,
-		PerformanceEvents.GenerateCodeVerifier,
-		logger,
-		performanceClient,
-		correlationId,
-	)(performanceClient, logger, correlationId);
-	const codeChallenge = await invokeAsync(
-		generateCodeChallengeFromVerifier,
-		PerformanceEvents.GenerateCodeChallengeFromVerifier,
-		logger,
-		performanceClient,
-		correlationId,
-	)(codeVerifier, performanceClient, logger, correlationId);
-	return {
-		verifier: codeVerifier,
-		challenge: codeChallenge,
-	};
+    performanceClient.addQueueMeasurement(
+        PerformanceEvents.GeneratePkceCodes,
+        correlationId
+    );
+    const codeVerifier = invoke(
+        generateCodeVerifier,
+        PerformanceEvents.GenerateCodeVerifier,
+        logger,
+        performanceClient,
+        correlationId
+    )(performanceClient, logger, correlationId);
+    const codeChallenge = await invokeAsync(
+        generateCodeChallengeFromVerifier,
+        PerformanceEvents.GenerateCodeChallengeFromVerifier,
+        logger,
+        performanceClient,
+        correlationId
+    )(codeVerifier, performanceClient, logger, correlationId);
+    return {
+        verifier: codeVerifier,
+        challenge: codeChallenge,
+    };
 }
 
 /**
@@ -62,26 +62,26 @@ export async function generatePkceCodes(
  * encoded string to be used as a PKCE Code Verifier
  */
 function generateCodeVerifier(
-	performanceClient: IPerformanceClient,
-	logger: Logger,
-	correlationId: string,
+    performanceClient: IPerformanceClient,
+    logger: Logger,
+    correlationId: string
 ): string {
-	try {
-		// Generate random values as utf-8
-		const buffer: Uint8Array = new Uint8Array(RANDOM_BYTE_ARR_LENGTH);
-		invoke(
-			getRandomValues,
-			PerformanceEvents.GetRandomValues,
-			logger,
-			performanceClient,
-			correlationId,
-		)(buffer);
-		// encode verifier as base64
-		const pkceCodeVerifierB64: string = urlEncodeArr(buffer);
-		return pkceCodeVerifierB64;
-	} catch (e) {
-		throw createBrowserAuthError(BrowserAuthErrorCodes.pkceNotCreated);
-	}
+    try {
+        // Generate random values as utf-8
+        const buffer: Uint8Array = new Uint8Array(RANDOM_BYTE_ARR_LENGTH);
+        invoke(
+            getRandomValues,
+            PerformanceEvents.GetRandomValues,
+            logger,
+            performanceClient,
+            correlationId
+        )(buffer);
+        // encode verifier as base64
+        const pkceCodeVerifierB64: string = urlEncodeArr(buffer);
+        return pkceCodeVerifierB64;
+    } catch (e) {
+        throw createBrowserAuthError(BrowserAuthErrorCodes.pkceNotCreated);
+    }
 }
 
 /**
@@ -89,27 +89,27 @@ function generateCodeVerifier(
  * hash created from the PKCE Code Verifier supplied
  */
 async function generateCodeChallengeFromVerifier(
-	pkceCodeVerifier: string,
-	performanceClient: IPerformanceClient,
-	logger: Logger,
-	correlationId: string,
+    pkceCodeVerifier: string,
+    performanceClient: IPerformanceClient,
+    logger: Logger,
+    correlationId: string
 ): Promise<string> {
-	performanceClient.addQueueMeasurement(
-		PerformanceEvents.GenerateCodeChallengeFromVerifier,
-		correlationId,
-	);
-	try {
-		// hashed verifier
-		const pkceHashedCodeVerifier = await invokeAsync(
-			sha256Digest,
-			PerformanceEvents.Sha256Digest,
-			logger,
-			performanceClient,
-			correlationId,
-		)(pkceCodeVerifier, performanceClient, correlationId);
-		// encode hash as base64
-		return urlEncodeArr(new Uint8Array(pkceHashedCodeVerifier));
-	} catch (e) {
-		throw createBrowserAuthError(BrowserAuthErrorCodes.pkceNotCreated);
-	}
+    performanceClient.addQueueMeasurement(
+        PerformanceEvents.GenerateCodeChallengeFromVerifier,
+        correlationId
+    );
+    try {
+        // hashed verifier
+        const pkceHashedCodeVerifier = await invokeAsync(
+            sha256Digest,
+            PerformanceEvents.Sha256Digest,
+            logger,
+            performanceClient,
+            correlationId
+        )(pkceCodeVerifier, performanceClient, correlationId);
+        // encode hash as base64
+        return urlEncodeArr(new Uint8Array(pkceHashedCodeVerifier));
+    } catch (e) {
+        throw createBrowserAuthError(BrowserAuthErrorCodes.pkceNotCreated);
+    }
 }

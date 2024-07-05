@@ -13,12 +13,12 @@
  * @param input
  */
 export function urlEncode(input: string): string {
-	return encodeURIComponent(
-		base64Encode(input)
-			.replace(/=/g, "")
-			.replace(/\+/g, "-")
-			.replace(/\//g, "_"),
-	);
+    return encodeURIComponent(
+        base64Encode(input)
+            .replace(/=/g, "")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+    );
 }
 
 /**
@@ -26,10 +26,10 @@ export function urlEncode(input: string): string {
  * @param inputArr
  */
 export function urlEncodeArr(inputArr: Uint8Array): string {
-	return base64EncArr(inputArr)
-		.replace(/=/g, "")
-		.replace(/\+/g, "-")
-		.replace(/\//g, "_");
+    return base64EncArr(inputArr)
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
 }
 
 /**
@@ -37,7 +37,7 @@ export function urlEncodeArr(inputArr: Uint8Array): string {
  * @param input
  */
 export function base64Encode(input: string): string {
-	return base64EncArr(new TextEncoder().encode(input));
+    return base64EncArr(new TextEncoder().encode(input));
 }
 
 /**
@@ -45,6 +45,8 @@ export function base64Encode(input: string): string {
  * @param aBytes
  */
 function base64EncArr(aBytes: Uint8Array): string {
-	const binString = Array.from(aBytes, (x) => String.fromCodePoint(x)).join("");
-	return btoa(binString);
+    const binString = Array.from(aBytes, (x) => String.fromCodePoint(x)).join(
+        ""
+    );
+    return btoa(binString);
 }

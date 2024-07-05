@@ -12,64 +12,64 @@ import * as BrowserUtils from "./utils/BrowserUtils";
 export { BrowserUtils };
 
 export {
-	PublicClientApplication,
-	createNestablePublicClientApplication,
-	createStandardPublicClientApplication,
+    PublicClientApplication,
+    createNestablePublicClientApplication,
+    createStandardPublicClientApplication,
 } from "./app/PublicClientApplication";
 export { PublicClientNext } from "./app/PublicClientNext";
-export type { IController } from "./controllers/IController";
+export { IController } from "./controllers/IController";
 export {
-	type Configuration,
-	type BrowserAuthOptions,
-	type CacheOptions,
-	type BrowserSystemOptions,
-	type BrowserTelemetryOptions,
-	type BrowserConfiguration,
-	DEFAULT_IFRAME_TIMEOUT_MS,
+    Configuration,
+    BrowserAuthOptions,
+    CacheOptions,
+    BrowserSystemOptions,
+    BrowserTelemetryOptions,
+    BrowserConfiguration,
+    DEFAULT_IFRAME_TIMEOUT_MS,
 } from "./config/Configuration";
 export {
-	InteractionType,
-	InteractionStatus,
-	BrowserCacheLocation,
-	WrapperSKU,
-	ApiId,
-	CacheLookupPolicy,
+    InteractionType,
+    InteractionStatus,
+    BrowserCacheLocation,
+    WrapperSKU,
+    ApiId,
+    CacheLookupPolicy,
 } from "./utils/BrowserConstants";
 
 // Browser Errors
 export {
-	BrowserAuthError,
-	BrowserAuthErrorMessage,
-	BrowserAuthErrorCodes,
+    BrowserAuthError,
+    BrowserAuthErrorMessage,
+    BrowserAuthErrorCodes,
 } from "./error/BrowserAuthError";
 export {
-	BrowserConfigurationAuthError,
-	BrowserConfigurationAuthErrorCodes,
-	BrowserConfigurationAuthErrorMessage,
+    BrowserConfigurationAuthError,
+    BrowserConfigurationAuthErrorCodes,
+    BrowserConfigurationAuthErrorMessage,
 } from "./error/BrowserConfigurationAuthError";
 
 // Interfaces
 export {
-	type IPublicClientApplication,
-	stubbedPublicClientApplication,
+    IPublicClientApplication,
+    stubbedPublicClientApplication,
 } from "./app/IPublicClientApplication";
-export type { INavigationClient } from "./navigation/INavigationClient";
+export { INavigationClient } from "./navigation/INavigationClient";
 export { NavigationClient } from "./navigation/NavigationClient";
-export type { NavigationOptions } from "./navigation/NavigationOptions";
-export type { PopupRequest } from "./request/PopupRequest";
-export type { RedirectRequest } from "./request/RedirectRequest";
-export type { SilentRequest } from "./request/SilentRequest";
-export type { SsoSilentRequest } from "./request/SsoSilentRequest";
-export type { EndSessionRequest } from "./request/EndSessionRequest";
-export type { EndSessionPopupRequest } from "./request/EndSessionPopupRequest";
-export type { AuthorizationUrlRequest } from "./request/AuthorizationUrlRequest";
-export type { AuthorizationCodeRequest } from "./request/AuthorizationCodeRequest";
-export type { AuthenticationResult } from "./response/AuthenticationResult";
-export type { ClearCacheRequest } from "./request/ClearCacheRequest";
+export { NavigationOptions } from "./navigation/NavigationOptions";
+export { PopupRequest } from "./request/PopupRequest";
+export { RedirectRequest } from "./request/RedirectRequest";
+export { SilentRequest } from "./request/SilentRequest";
+export { SsoSilentRequest } from "./request/SsoSilentRequest";
+export { EndSessionRequest } from "./request/EndSessionRequest";
+export { EndSessionPopupRequest } from "./request/EndSessionPopupRequest";
+export { AuthorizationUrlRequest } from "./request/AuthorizationUrlRequest";
+export { AuthorizationCodeRequest } from "./request/AuthorizationCodeRequest";
+export { AuthenticationResult } from "./response/AuthenticationResult";
+export { ClearCacheRequest } from "./request/ClearCacheRequest";
 
 // Cache
-export type { LoadTokenOptions } from "./cache/TokenCache";
-export type { ITokenCache } from "./cache/ITokenCache";
+export { LoadTokenOptions } from "./cache/TokenCache";
+export { ITokenCache } from "./cache/ITokenCache";
 
 // Storage
 export { MemoryStorage } from "./cache/MemoryStorage";
@@ -77,24 +77,24 @@ export { BrowserStorage } from "./cache/BrowserStorage";
 
 // Events
 export {
-	type EventMessage,
-	type EventPayload,
-	type EventError,
-	type EventCallbackFunction,
-	EventMessageUtils,
-	type PopupEvent,
+    EventMessage,
+    EventPayload,
+    EventError,
+    EventCallbackFunction,
+    EventMessageUtils,
+    PopupEvent,
 } from "./event/EventMessage";
 export { EventType } from "./event/EventType";
 
 export {
-	SignedHttpRequest,
-	type SignedHttpRequestOptions,
+    SignedHttpRequest,
+    SignedHttpRequestOptions,
 } from "./crypto/SignedHttpRequest";
 
 export {
-	type PopupWindowAttributes,
-	type PopupSize,
-	type PopupPosition,
+    PopupWindowAttributes,
+    PopupSize,
+    PopupPosition,
 } from "./request/PopupWindowAttributes";
 
 // Telemetry
@@ -103,56 +103,56 @@ export { BrowserPerformanceMeasurement } from "./telemetry/BrowserPerformanceMea
 
 // Common Object Formats
 export {
-	AuthenticationScheme,
-	// Account
-	type AccountInfo,
-	AccountEntity,
-	type IdTokenClaims,
-	// Error
-	AuthError,
-	AuthErrorCodes,
-	AuthErrorMessage,
-	ClientAuthError,
-	ClientAuthErrorCodes,
-	ClientAuthErrorMessage,
-	ClientConfigurationError,
-	ClientConfigurationErrorCodes,
-	ClientConfigurationErrorMessage,
-	InteractionRequiredAuthError,
-	InteractionRequiredAuthErrorCodes,
-	InteractionRequiredAuthErrorMessage,
-	ServerError,
-	// Network
-	type INetworkModule,
-	type NetworkResponse,
-	type NetworkRequestOptions,
-	// Logger Object
-	type ILoggerCallback,
-	Logger,
-	LogLevel,
-	// Protocol Mode
-	ProtocolMode,
-	ServerResponseType,
-	PromptValue,
-	// Server Response
-	type ExternalTokenResponse,
-	// Utils
-	StringUtils,
-	UrlString,
-	JsonWebTokenTypes,
-	// AzureCloudInstance enum
-	AzureCloudInstance,
-	type AzureCloudOptions,
-	AuthenticationHeaderParser,
-	OIDC_DEFAULT_SCOPES,
-	type PerformanceCallbackFunction,
-	type PerformanceEvent,
-	PerformanceEvents,
-	// Telemetry
-	type InProgressPerformanceEvent,
-	type TenantProfile,
-	type IPerformanceClient,
-	StubPerformanceClient,
+    AuthenticationScheme,
+    // Account
+    AccountInfo,
+    AccountEntity,
+    IdTokenClaims,
+    // Error
+    AuthError,
+    AuthErrorCodes,
+    AuthErrorMessage,
+    ClientAuthError,
+    ClientAuthErrorCodes,
+    ClientAuthErrorMessage,
+    ClientConfigurationError,
+    ClientConfigurationErrorCodes,
+    ClientConfigurationErrorMessage,
+    InteractionRequiredAuthError,
+    InteractionRequiredAuthErrorCodes,
+    InteractionRequiredAuthErrorMessage,
+    ServerError,
+    // Network
+    INetworkModule,
+    NetworkResponse,
+    NetworkRequestOptions,
+    // Logger Object
+    ILoggerCallback,
+    Logger,
+    LogLevel,
+    // Protocol Mode
+    ProtocolMode,
+    ServerResponseType,
+    PromptValue,
+    // Server Response
+    ExternalTokenResponse,
+    // Utils
+    StringUtils,
+    UrlString,
+    JsonWebTokenTypes,
+    // AzureCloudInstance enum
+    AzureCloudInstance,
+    AzureCloudOptions,
+    AuthenticationHeaderParser,
+    OIDC_DEFAULT_SCOPES,
+    PerformanceCallbackFunction,
+    PerformanceEvent,
+    PerformanceEvents,
+    // Telemetry
+    InProgressPerformanceEvent,
+    TenantProfile,
+    IPerformanceClient,
+    StubPerformanceClient,
 } from "@azure/msal-common";
 
 export { version } from "./packageMetadata";

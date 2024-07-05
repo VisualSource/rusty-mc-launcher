@@ -11,7 +11,7 @@
  * is recreated for a new NAA instance in the same auth session.
  */
 export interface AccountContext {
-	homeAccountId: string;
-	environment: string;
-	tenantId: string;
+    homeAccountId: string;
+    environment: string;
+    tenantId: string;
 }

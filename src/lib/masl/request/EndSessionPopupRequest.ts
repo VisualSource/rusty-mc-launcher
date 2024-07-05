@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import type { CommonEndSessionRequest } from "@azure/msal-common";
-import type { PopupWindowAttributes } from "./PopupWindowAttributes";
+import { CommonEndSessionRequest } from "@azure/msal-common";
+import { PopupWindowAttributes } from "./PopupWindowAttributes";
 
 /**
  * EndSessionPopupRequest
@@ -18,9 +18,9 @@ import type { PopupWindowAttributes } from "./PopupWindowAttributes";
  * - logoutHint             - A string that specifies the account that is being logged out in order to skip the server account picker on logout
  */
 export type EndSessionPopupRequest = Partial<
-	Omit<CommonEndSessionRequest, "tokenQueryParameters">
+    Omit<CommonEndSessionRequest, "tokenQueryParameters">
 > & {
-	authority?: string;
-	mainWindowRedirectUri?: string;
-	popupWindowAttributes?: PopupWindowAttributes;
+    authority?: string;
+    mainWindowRedirectUri?: string;
+    popupWindowAttributes?: PopupWindowAttributes;
 };

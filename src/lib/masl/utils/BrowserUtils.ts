@@ -5,60 +5,60 @@
 
 import { UrlString, invoke, invokeAsync } from "@azure/msal-common";
 import {
-	createBrowserAuthError,
-	BrowserAuthErrorCodes,
+    createBrowserAuthError,
+    BrowserAuthErrorCodes,
 } from "../error/BrowserAuthError";
 import { BrowserConstants, BrowserCacheLocation } from "./BrowserConstants";
 import * as BrowserCrypto from "../crypto/BrowserCrypto";
 import {
-	BrowserConfigurationAuthErrorCodes,
-	createBrowserConfigurationAuthError,
+    BrowserConfigurationAuthErrorCodes,
+    createBrowserConfigurationAuthError,
 } from "../error/BrowserConfigurationAuthError";
-import type { BrowserConfiguration } from "../config/Configuration";
+import { BrowserConfiguration } from "../config/Configuration";
 
 /**
  * Clears hash from window url.
  */
 export function clearHash(contentWindow: Window): void {
-	// Office.js sets history.replaceState to null
-	contentWindow.location.hash = "";
-	if (typeof contentWindow.history.replaceState === "function") {
-		// Full removes "#" from url
-		contentWindow.history.replaceState(
-			null,
-			"",
-			`${contentWindow.location.origin}${contentWindow.location.pathname}${contentWindow.location.search}`,
-		);
-	}
+    // Office.js sets history.replaceState to null
+    contentWindow.location.hash = "";
+    if (typeof contentWindow.history.replaceState === "function") {
+        // Full removes "#" from url
+        contentWindow.history.replaceState(
+            null,
+            "",
+            `${contentWindow.location.origin}${contentWindow.location.pathname}${contentWindow.location.search}`
+        );
+    }
 }
 
 /**
  * Replaces current hash with hash from provided url
  */
 export function replaceHash(url: string): void {
-	const urlParts = url.split("#");
-	urlParts.shift(); // Remove part before the hash
-	window.location.hash = urlParts.length > 0 ? urlParts.join("#") : "";
+    const urlParts = url.split("#");
+    urlParts.shift(); // Remove part before the hash
+    window.location.hash = urlParts.length > 0 ? urlParts.join("#") : "";
 }
 
 /**
  * Returns boolean of whether the current window is in an iframe or not.
  */
 export function isInIframe(): boolean {
-	return window.parent !== window;
+    return window.parent !== window;
 }
 
 /**
  * Returns boolean of whether or not the current window is a popup opened by msal
  */
 export function isInPopup(): boolean {
-	return (
-		typeof window !== "undefined" &&
-		!!window.opener &&
-		window.opener !== window &&
-		typeof window.name === "string" &&
-		window.name.indexOf(`${BrowserConstants.POPUP_NAME_PREFIX}.`) === 0
-	);
+    return (
+        typeof window !== "undefined" &&
+        !!window.opener &&
+        window.opener !== window &&
+        typeof window.name === "string" &&
+        window.name.indexOf(`${BrowserConstants.POPUP_NAME_PREFIX}.`) === 0
+    );
 }
 
 // #endregion
@@ -67,16 +67,16 @@ export function isInPopup(): boolean {
  * Returns current window URL as redirect uri
  */
 export function getCurrentUri(): string {
-	return window.location.href.split("?")[0].split("#")[0];
+    return window.location.href.split("?")[0].split("#")[0];
 }
 
 /**
  * Gets the homepage url for the current window location.
  */
 export function getHomepage(): string {
-	const currentUrl = new UrlString(window.location.href);
-	const urlComponents = currentUrl.getUrlComponents();
-	return `${urlComponents.Protocol}//${urlComponents.HostNameAndPort}/`;
+    const currentUrl = new UrlString(window.location.href);
+    const urlComponents = currentUrl.getUrlComponents();
+    return `${urlComponents.Protocol}//${urlComponents.HostNameAndPort}/`;
 }
 
 /**
@@ -84,13 +84,13 @@ export function getHomepage(): string {
  * attempting another auth request inside an iframe.
  */
 export function blockReloadInHiddenIframes(): void {
-	const isResponseHash = UrlString.hashContainsKnownProperties(
-		window.location.hash,
-	);
-	// return an error if called from the hidden iframe created by the msal js silent calls
-	if (isResponseHash && isInIframe()) {
-		throw createBrowserAuthError(BrowserAuthErrorCodes.blockIframeReload);
-	}
+    const isResponseHash = UrlString.hashContainsKnownProperties(
+        window.location.hash
+    );
+    // return an error if called from the hidden iframe created by the msal js silent calls
+    if (isResponseHash && isInIframe()) {
+        throw createBrowserAuthError(BrowserAuthErrorCodes.blockIframeReload);
+    }
 }
 
 /**
@@ -99,20 +99,20 @@ export function blockReloadInHiddenIframes(): void {
  * @param allowRedirectInIframe Config value to allow redirects when app is inside an iframe
  */
 export function blockRedirectInIframe(allowRedirectInIframe: boolean): void {
-	if (isInIframe() && !allowRedirectInIframe) {
-		// If we are not in top frame, we shouldn't redirect. This is also handled by the service.
-		throw createBrowserAuthError(BrowserAuthErrorCodes.redirectInIframe);
-	}
+    if (isInIframe() && !allowRedirectInIframe) {
+        // If we are not in top frame, we shouldn't redirect. This is also handled by the service.
+        throw createBrowserAuthError(BrowserAuthErrorCodes.redirectInIframe);
+    }
 }
 
 /**
  * Block redirectUri loaded in popup from calling AcquireToken APIs
  */
 export function blockAcquireTokenInPopups(): void {
-	// Popups opened by msal popup APIs are given a name that starts with "msal."
-	if (isInPopup()) {
-		throw createBrowserAuthError(BrowserAuthErrorCodes.blockNestedPopups);
-	}
+    // Popups opened by msal popup APIs are given a name that starts with "msal."
+    if (isInPopup()) {
+        throw createBrowserAuthError(BrowserAuthErrorCodes.blockNestedPopups);
+    }
 }
 
 /**
@@ -120,9 +120,11 @@ export function blockAcquireTokenInPopups(): void {
  * @param isBrowserEnvironment Flag indicating if environment is a browser.
  */
 export function blockNonBrowserEnvironment(): void {
-	if (typeof window === "undefined") {
-		throw createBrowserAuthError(BrowserAuthErrorCodes.nonBrowserEnvironment);
-	}
+    if (typeof window === "undefined") {
+        throw createBrowserAuthError(
+            BrowserAuthErrorCodes.nonBrowserEnvironment
+        );
+    }
 }
 
 /**
@@ -130,11 +132,11 @@ export function blockNonBrowserEnvironment(): void {
  * @param initialized
  */
 export function blockAPICallsBeforeInitialize(initialized: boolean): void {
-	if (!initialized) {
-		throw createBrowserAuthError(
-			BrowserAuthErrorCodes.uninitializedPublicClientApplication,
-		);
-	}
+    if (!initialized) {
+        throw createBrowserAuthError(
+            BrowserAuthErrorCodes.uninitializedPublicClientApplication
+        );
+    }
 }
 
 /**
@@ -142,17 +144,17 @@ export function blockAPICallsBeforeInitialize(initialized: boolean): void {
  * @param initialized
  */
 export function preflightCheck(initialized: boolean): void {
-	// Block request if not in browser environment
-	blockNonBrowserEnvironment();
+    // Block request if not in browser environment
+    blockNonBrowserEnvironment();
 
-	// Block auth requests inside a hidden iframe
-	blockReloadInHiddenIframes();
+    // Block auth requests inside a hidden iframe
+    blockReloadInHiddenIframes();
 
-	// Block redirectUri opened in a popup from calling MSAL APIs
-	blockAcquireTokenInPopups();
+    // Block redirectUri opened in a popup from calling MSAL APIs
+    blockAcquireTokenInPopups();
 
-	// Block token acquisition before initialize has been called
-	blockAPICallsBeforeInitialize(initialized);
+    // Block token acquisition before initialize has been called
+    blockAPICallsBeforeInitialize(initialized);
 }
 
 /**
@@ -161,20 +163,20 @@ export function preflightCheck(initialized: boolean): void {
  * @param config
  */
 export function redirectPreflightCheck(
-	initialized: boolean,
-	config: BrowserConfiguration,
+    initialized: boolean,
+    config: BrowserConfiguration
 ): void {
-	preflightCheck(initialized);
-	blockRedirectInIframe(config.system.allowRedirectInIframe);
-	// Block redirects if memory storage is enabled but storeAuthStateInCookie is not
-	if (
-		config.cache.cacheLocation === BrowserCacheLocation.MemoryStorage &&
-		!config.cache.storeAuthStateInCookie
-	) {
-		throw createBrowserConfigurationAuthError(
-			BrowserConfigurationAuthErrorCodes.inMemRedirectUnavailable,
-		);
-	}
+    preflightCheck(initialized);
+    blockRedirectInIframe(config.system.allowRedirectInIframe);
+    // Block redirects if memory storage is enabled but storeAuthStateInCookie is not
+    if (
+        config.cache.cacheLocation === BrowserCacheLocation.MemoryStorage &&
+        !config.cache.storeAuthStateInCookie
+    ) {
+        throw createBrowserConfigurationAuthError(
+            BrowserConfigurationAuthErrorCodes.inMemRedirectUnavailable
+        );
+    }
 }
 
 /**
@@ -183,18 +185,18 @@ export function redirectPreflightCheck(
  * @returns
  */
 export function preconnect(authority: string): void {
-	const link = document.createElement("link");
-	link.rel = "preconnect";
-	link.href = new URL(authority).origin;
-	link.crossOrigin = "anonymous";
-	document.head.appendChild(link);
+    const link = document.createElement("link");
+    link.rel = "preconnect";
+    link.href = new URL(authority).origin;
+    link.crossOrigin = "anonymous";
+    document.head.appendChild(link);
 
-	// The browser will close connection if not used within a few seconds, remove element from the header after 10s
-	window.setTimeout(() => {
-		try {
-			document.head.removeChild(link);
-		} catch {}
-	}, 10000); // 10s Timeout
+    // The browser will close connection if not used within a few seconds, remove element from the header after 10s
+    window.setTimeout(() => {
+        try {
+            document.head.removeChild(link);
+        } catch {}
+    }, 10000); // 10s Timeout
 }
 
 /**
@@ -202,7 +204,7 @@ export function preconnect(authority: string): void {
  * @returns {string}
  */
 export function createGuid(): string {
-	return BrowserCrypto.createNewGuid();
+    return BrowserCrypto.createNewGuid();
 }
 
 export { invoke };

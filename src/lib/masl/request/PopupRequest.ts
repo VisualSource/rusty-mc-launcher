@@ -3,11 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import type {
-	CommonAuthorizationUrlRequest,
-	StringDict,
-} from "@azure/msal-common";
-import type { PopupWindowAttributes } from "./PopupWindowAttributes";
+import { CommonAuthorizationUrlRequest, StringDict } from "@azure/msal-common";
+import { PopupWindowAttributes } from "./PopupWindowAttributes";
 
 /**
  * PopupRequest: Request object passed by user to retrieve a Code from the
@@ -38,17 +35,17 @@ import type { PopupWindowAttributes } from "./PopupWindowAttributes";
  */
 
 export type PopupRequest = Partial<
-	Omit<
-		CommonAuthorizationUrlRequest,
-		| "responseMode"
-		| "scopes"
-		| "codeChallenge"
-		| "codeChallengeMethod"
-		| "requestedClaimsHash"
-		| "nativeBroker"
-	>
+    Omit<
+        CommonAuthorizationUrlRequest,
+        | "responseMode"
+        | "scopes"
+        | "codeChallenge"
+        | "codeChallengeMethod"
+        | "requestedClaimsHash"
+        | "nativeBroker"
+    >
 > & {
-	scopes: Array<string>;
-	popupWindowAttributes?: PopupWindowAttributes;
-	tokenBodyParameters?: StringDict;
+    scopes: Array<string>;
+    popupWindowAttributes?: PopupWindowAttributes;
+    tokenBodyParameters?: StringDict;
 };
