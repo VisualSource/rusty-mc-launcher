@@ -1,4 +1,10 @@
-import { Root, Item, Trigger, Header, Content } from "@radix-ui/react-accordion";
+import {
+	Root,
+	Item,
+	Trigger,
+	Header,
+	Content,
+} from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
@@ -9,11 +15,7 @@ export const AccordionItem = forwardRef<
 	React.ElementRef<typeof Item>,
 	React.ComponentPropsWithoutRef<typeof Item>
 >(({ className, ...props }, ref) => (
-	<Item
-		ref={ref}
-		className={cn("border-b", className)}
-		{...props}
-	/>
+	<Item ref={ref} className={cn("border-b", className)} {...props} />
 ));
 AccordionItem.displayName = "AccordionItem";
 

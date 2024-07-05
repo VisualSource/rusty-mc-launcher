@@ -14,32 +14,30 @@ const DisplayToastData = ({ value }: { value: unknown }) => {
 	if (value instanceof Error) {
 		return (
 			<pre className="text-xs text-destructive text-wrap">
-				<code>
-					{value.message}
-				</code>
+				<code>{value.message}</code>
 			</pre>
-		)
+		);
 	}
-	if (typeof value === "object" && "error" in value && value.error instanceof Error) {
+	if (
+		typeof value === "object" &&
+		"error" in value &&
+		value.error instanceof Error
+	) {
 		return (
 			<pre className="text-xs text-destructive text-wrap">
-				<code>
-					{value.error.message}
-				</code>
+				<code>{value.error.message}</code>
 			</pre>
-		)
+		);
 	}
 
 	if (typeof value === "string") {
 		return (
-			<pre className="text-xs text-muted-foreground text-wrap">
-				{value}
-			</pre>
-		)
+			<pre className="text-xs text-muted-foreground text-wrap">{value}</pre>
+		);
 	}
 
 	return null;
-}
+};
 
 export const Notifications = () => {
 	const { notifications, unreadCount, markAllAsRead, remove, clear } =

@@ -21,5 +21,3 @@ export const Progress = forwardRef<
 	</Root>
 ));
 Progress.displayName = Root.displayName;
-
-
