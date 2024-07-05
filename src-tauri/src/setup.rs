@@ -250,7 +250,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                     }
                     send_event!(tx, "refresh", {});
                     send_event!(tx, "reset", {});
-                    tokio::time::sleep(Duration::from_secs(30)).await;
+                    tokio::time::sleep(Duration::from_secs(5)).await;
                 }
                 Ok(None) => {}
                 Err(err) => log::error!("Queue Error: {}", err),

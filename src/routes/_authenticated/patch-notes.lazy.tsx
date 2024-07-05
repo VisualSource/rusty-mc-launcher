@@ -14,7 +14,7 @@ function PatchNotes() {
   const { data, error } = useSuspenseQuery({
     queryKey: ["APP_PATCH_NOTES"],
     queryFn: async () => {
-      const response = await fetch("");
+      const response = await fetch("https://raw.githubusercontent.com/VisualSource/rusty-mc-launcher/master/PATCHNOTES.md");
       const content = await response.text();
       return content;
     }
@@ -22,8 +22,9 @@ function PatchNotes() {
   if (error) throw error;
 
   return (
-    <div className='w-full flex flex-col h-full'>
+    <div className='w-full h-full flex flex-col bg-accent/50 overflow-y-auto scrollbar'>
       <ReactMarkdown
+        className="prose prose-invert container max-w-screen-md"
         components={{
           a: ({ children, href }) => (
             <a target="_blank" rel="noopener noreferrer" href={href}>

@@ -8,7 +8,6 @@ Todo:
 
   ☐ editable home page
   ☐ button to check for app updates
-  ☐ Bug report system
   ☐ performance changes
 
 Ignore:
@@ -16,6 +15,7 @@ Ignore:
   ☐ Fix typo some where?
 
 Archive:
+  ✔ Bug report system @started(24-07-05 15:39) @done(24-07-05 16:12) @lasted(33m21s)
   ✔ theme selector @done(24-07-01 16:13)
   ✔ add copy profile options @done(24-07-01 16:00)
   ✔ Fix workshop search @started(24-07-01 10:19) @done(24-07-01 10:58) @lasted(39m30s)

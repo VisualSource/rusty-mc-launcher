@@ -8,6 +8,39 @@ import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
+const DisplayToastData = ({ value }: { value: unknown }) => {
+	if (!value) return null;
+
+	if (value instanceof Error) {
+		return (
+			<pre className="text-xs text-destructive text-wrap">
+				<code>
+					{value.message}
+				</code>
+			</pre>
+		)
+	}
+	if (typeof value === "object" && "error" in value && value.error instanceof Error) {
+		return (
+			<pre className="text-xs text-destructive text-wrap">
+				<code>
+					{value.error.message}
+				</code>
+			</pre>
+		)
+	}
+
+	if (typeof value === "string") {
+		return (
+			<pre className="text-xs text-muted-foreground text-wrap">
+				{value}
+			</pre>
+		)
+	}
+
+	return null;
+}
+
 export const Notifications = () => {
 	const { notifications, unreadCount, markAllAsRead, remove, clear } =
 		useNotificationCenter();
@@ -51,14 +84,7 @@ export const Notifications = () => {
 										{value.content as React.ReactNode}
 									</h1>
 
-									{value.data && (value.data as { error: Error })?.error ? (
-										<pre className="text-xs text-destructive text-wrap">
-											<code>
-												{(value.data as { error: Error }).error?.message ??
-													(value.data as { error: unknown }).error}
-											</code>
-										</pre>
-									) : null}
+									<DisplayToastData value={value.data} />
 
 									<span className="text-muted-foreground text-xs">
 										{formatRelative(new Date(value.createdAt), new Date())}

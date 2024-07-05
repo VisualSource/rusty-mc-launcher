@@ -2,7 +2,7 @@ import { Root, Indicator } from "@radix-ui/react-progress";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-const Progress = forwardRef<
+export const Progress = forwardRef<
 	React.ElementRef<typeof Root>,
 	React.ComponentPropsWithoutRef<typeof Root>
 >(({ className, value, ...props }, ref) => (
@@ -22,4 +22,4 @@ const Progress = forwardRef<
 ));
 Progress.displayName = Root.displayName;
 
-export { Progress };
+
