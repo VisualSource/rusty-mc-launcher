@@ -16,7 +16,7 @@ import { router } from "./router";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
 
-await attachLogger().catch(() => exit(1));
+attachLogger().catch(() => exit(1));
 const msa = await getPCA().catch(() => exit(1) as never);
 const mca =
 	await ModrinthClientApplication.createPublicClientApplication().catch(

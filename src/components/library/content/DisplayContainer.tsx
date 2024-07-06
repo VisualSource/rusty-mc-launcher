@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Settings2 } from "lucide-react";
 import { Suspense } from "react";
 
-import { type Card, OPTIONS, STORAGE_KEY } from "./edit/EditConsts";
+import { type Card, DEFAULT_LAYOUT, OPTIONS, STORAGE_KEY } from "./edit/EditConsts";
 import { Button } from "@/components/ui/button";
 
 export const DisplayContainer: React.FC<{ setEditMode: React.Dispatch<React.SetStateAction<boolean>> }> = ({ setEditMode }) => {
@@ -10,12 +10,15 @@ export const DisplayContainer: React.FC<{ setEditMode: React.Dispatch<React.SetS
         queryKey: ["HOME_LAYOUT"],
         queryFn: () => {
             const data = localStorage.getItem(STORAGE_KEY);
-            if (!data) return [];
+            if (!data) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_LAYOUT));
+                return DEFAULT_LAYOUT;
+            }
             try {
                 return JSON.parse(data) as Card[];
             } catch (error) {
                 console.error(error);
-                return [];
+                return DEFAULT_LAYOUT;
             }
         }
     });
@@ -29,7 +32,7 @@ export const DisplayContainer: React.FC<{ setEditMode: React.Dispatch<React.SetS
             {data.map(e => {
                 const Content = OPTIONS[e.type].Content;
                 return (<Suspense key={e.id}>
-                    <Content params={e.params} />
+                    <Content params={e.params as Record<string, string>} />
                 </Suspense>)
             })}
         </>
