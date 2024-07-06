@@ -5,10 +5,10 @@
 #### New
 - Added Report bug form page
 - Added Patch notes page
-- Add MIT license file
-- Add bug report template
-- Add feature request template
-- Add editable home page
+- Added MIT license file
+- Added bug report template
+- Added feature request template
+- Added editable home page
 
 #### Changes
 - Change delay between installs from 30 sec to 5 sec
