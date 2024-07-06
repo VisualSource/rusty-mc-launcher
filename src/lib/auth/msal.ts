@@ -1,10 +1,9 @@
-import {
-	PublicClientApplication,
-	EventType,
-	type AuthenticationResult,
-	type Configuration,
-	LogLevel,
-} from "@masl/index";
+import { LogLevel } from "@azure/msal-common";
+
+import type { AuthenticationResult } from "@masl/response/AuthenticationResult";
+import { PublicClientApplication } from "@masl/app/PublicClientApplication";
+import type { Configuration } from "@masl/config/Configuration";
+import { EventType } from "@masl/event/EventType"
 import { auth } from "@system/logger";
 
 const configuration: Configuration = {

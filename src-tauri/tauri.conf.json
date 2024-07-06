@@ -157,7 +157,8 @@
         "minWidth": 1080,
         "title": "Minecraft Launcher",
         "width": 1080,
-        "decorations": false
+        "decorations": false,
+        "fileDropEnabled": false
       }
     ]
   }

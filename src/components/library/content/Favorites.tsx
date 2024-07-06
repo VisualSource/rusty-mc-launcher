@@ -1,13 +1,9 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Layers3 } from "lucide-react";
+import useCategoryGroup from "@/hooks/useCategoryGroup";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import PlayButton from "@/components/ui/play";
-import { Skeleton } from "@/components/ui/skeleton";
-import { FAVORITES_GUID } from "@/lib/models/categories";
-import { CATEGORY_KEY } from "@hook/keys";
-import { profile } from "@lib/models/profiles";
-import { db } from "@system/commands";
-import { Link } from "@tanstack/react-router";
 
 export const FavoritesLoading: React.FC = () => {
 	return (
@@ -31,25 +27,14 @@ export const FavoritesLoading: React.FC = () => {
 	);
 };
 
-const Favorites: React.FC = () => {
-	const { data, error } = useSuspenseQuery({
-		queryKey: [CATEGORY_KEY, FAVORITES_GUID],
-		queryFn: () =>
-			db.select<typeof profile.schema>({
-				query:
-					"SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?",
-				args: [FAVORITES_GUID],
-				schema: profile.schema,
-			}),
-	});
-
-	if (error) throw error;
+const Favorites: React.FC<{ cat: string }> = ({ cat }) => {
+	const data = useCategoryGroup(cat);
 
 	return (
 		<>
 			{data.length === 0 ? (
 				<div className="flex h-full w-full items-center justify-center">
-					No Favorites Yet!
+					No Profiles Yet!
 				</div>
 			) : (
 				data.map((value) => (

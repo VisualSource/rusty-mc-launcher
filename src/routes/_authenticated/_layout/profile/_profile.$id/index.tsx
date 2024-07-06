@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { Import } from "lucide-react";
 import { useState } from "react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContentTab } from "@/components/library/content/profile/ContentTab";
 import { db, importContentExternal } from "@/lib/system/commands";
 import { profileQueryOptions } from "../_profile.$id";

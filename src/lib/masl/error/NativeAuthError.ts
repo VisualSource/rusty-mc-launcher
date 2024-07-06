@@ -107,7 +107,7 @@ export function createNativeAuthError(
 
     return new NativeAuthError(
         code,
-        NativeAuthErrorMessages[code] || description,
+        NativeAuthErrorMessages[code as keyof typeof NativeAuthErrorMessages] || description,
         ext
     );
 }

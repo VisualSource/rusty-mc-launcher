@@ -5,12 +5,20 @@
 #### New
 - Added Report bug form page
 - Added Patch notes page
+- Add MIT license file
+- Add bug report template
+- Add feature request template
+- Add editable home page
 
 #### Changes
 - Change delay between installs from 30 sec to 5 sec
 - Notifications list now displays content under title
 - Update Tauri from 1.6.8 to 1.7.0
-- Update app deps
+- Update javascript deps
+- Update Rust deps
+- Update Readme
+- Dev only react dev tools script
+- Update rust version 1.78.0 to 1.79.0
 
 #### Fixes
 - fix typo in curseforge modpack install error

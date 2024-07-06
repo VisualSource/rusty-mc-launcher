@@ -1,15 +1,12 @@
 # Rusty Minecraft Launcher
 
-[<img src="https://img.shields.io/github/v/release/VisualSource/rusty-mc-launcher?include_prereleases" alt="GitHub release (latest SemVer including pre-releases"/>](publish)
+![GitHub License](https://img.shields.io/github/license/VisualSource/rusty-mc-launcher?style=flat-square) ![GitHub Release](https://img.shields.io/github/v/release/VisualSource/rusty-mc-launcher?include_prereleases&style=flat-square) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/VisualSource/rusty-mc-launcher/publish.yml?style=flat-square)
 
-[<img src="https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml/badge.svg" alt="MIT License"/>](https://github.com/VisualSource/rusty-mc-launcher/actions/workflows/publish.yml)
-
-[<img src="https://img.shields.io/apm/l/atomic-design-ui.svg" alt="LICENSE"/>](https://github.com/VisualSource/rusty-mc-launcher/blob/master/LICENSE)
 
 Rusty Minecraft Launcher is a Minecraft Client launcher and a simple one click mod installer.
 Supports Forge, Fabric, Vanilla, and OptiFine clients
 
-![Logo](https://raw.githubusercontent.com/VisualSource/rusty-mc-launcher/master/src-tauri/icons/Square310x310Logo.png)
+![Logo](./public/logo.svg)
 
 ## Releases
 

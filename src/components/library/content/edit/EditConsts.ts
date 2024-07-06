@@ -1,0 +1,39 @@
+import { lazy } from "react"
+
+export const OPTIONS: Record<string, { id: string, title: string, Content: React.LazyExoticComponent<(props: { params: Record<string, string> }) => React.ReactNode>, Opts?: React.LazyExoticComponent<({ card, updateCard }: OptsProps) => JSX.Element> }> = {
+    "collection-display": {
+        id: "collection-display",
+        title: "Collection: Display",
+        Opts: lazy(() => import("@component/library/content/edit/CollectionOptions")),
+        Content: lazy(() => import("./CollectionDisplay"))
+    },
+    "modrinth-workshop": {
+        id: "modrinth-workshop",
+        title: "Modrinth: Workshop",
+        Opts: lazy(() => import("@component/library/content/edit/ModrinthOptions")),
+        Content: lazy(() => import("./ModrinthWorkshopDisplay"))
+    },
+    "mojang-patch-notes": {
+        id: "mojang-patch-notes",
+        title: "Mojang: Patch Notes",
+        Content: lazy(() => import("./MojangPatchNotesDisplay"))
+    }
+} as const
+
+export const STORAGE_KEY = "home-layout" as const;
+
+export const ItemTypes = {
+    CARD: "card"
+} as const;
+
+export type Card = {
+    id: string,
+    type: keyof typeof OPTIONS,
+    params: Record<string, string>
+}
+
+export type OptsProps = {
+    card: Card,
+    updateCard: (id: string, key: Record<string, unknown>) => void,
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>
+}

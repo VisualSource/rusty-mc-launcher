@@ -32,9 +32,9 @@ import {
 	DropdownMenuTrigger,
 } from "@component/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
+import { InteractionStatus } from "@masl/utils/BrowserConstants";
 import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
-import { InteractionStatus } from "@/lib/masl";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
 

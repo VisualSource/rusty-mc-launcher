@@ -1,13 +1,10 @@
 import { type UnlistenFn, once } from "@tauri-apps/api/event";
-import {
-	type PopupWindowAttributes,
-	BrowserAuthErrorCodes,
-	BrowserUtils,
-	type AuthError,
-} from "@masl/index";
-import { createBrowserAuthError } from "@masl/error/BrowserAuthError";
+import type { AuthError } from "@azure/msal-common";
+import { BrowserAuthErrorCodes, createBrowserAuthError } from "@masl/error/BrowserAuthError";
+import type { PopupWindowAttributes } from "@masl/request/PopupWindowAttributes";
 import type { PopupParams } from "@masl/interaction_client/PopupClient";
 import { BrowserConstants } from "@masl/utils/BrowserConstants";
+import { preconnect } from "@masl/utils/BrowserUtils";
 import { auth } from "@system/logger";
 
 export type AuthResponse = {
@@ -36,7 +33,7 @@ export class PopupClient {
 		popupName: string,
 		popup?: Window | null,
 	) {
-		BrowserUtils.preconnect(MODRITH_AUTHORIZE);
+		preconnect(MODRITH_AUTHORIZE);
 		try {
 			const login_params = new URLSearchParams({
 				client_id: import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID,

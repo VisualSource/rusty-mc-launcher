@@ -1,13 +1,5 @@
 import { addSeconds } from "date-fns/addSeconds";
 import {
-	BrowserAuthError,
-	BrowserAuthErrorCodes,
-	type Configuration,
-	type EndSessionRequest,
-	type PopupRequest,
-} from "@masl/index";
-import { modrinthClient } from "../../modrinthClient";
-import {
 	getUserFromAuth,
 	getUserNotifications,
 	getFollowedProjects,
@@ -18,10 +10,15 @@ import {
 	followProject,
 	unfollowProject,
 } from "../services.gen";
+import { BrowserAuthError, BrowserAuthErrorCodes } from "@/lib/masl/error/BrowserAuthError";
+import type { EndSessionRequest } from "@/lib/masl/request/EndSessionRequest";
+import type { Configuration } from "@/lib/masl/config/Configuration";
+import type { PopupRequest } from "@/lib/masl/request/PopupRequest";
+import { modrinthClient } from "../../modrinthClient";
+import { queryClient } from "../../queryClient";
 import { PopupClient } from "./PopupClient";
 import { auth } from "@/lib/system/logger";
 import type { User } from "../types.gen";
-import { queryClient } from "../../queryClient";
 
 export type AuthenticationResult = {
 	tokenType: string;

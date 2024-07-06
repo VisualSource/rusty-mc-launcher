@@ -1,11 +1,9 @@
 import { ErrorComponent, createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { exists, readDir } from "@tauri-apps/api/fs";
 import { join } from "@tauri-apps/api/path";
 import { FileImage } from "lucide-react";
-import { useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { settings } from "@/lib/models/settings";
 import { Loading } from "@/components/Loading";

@@ -29,20 +29,20 @@ export const ModPacksSkeleton: React.FC = () => {
 	);
 };
 
-const ModPacks: React.FC = () => {
+const ModPacks: React.FC<{ content: string, sort: string }> = ({ content, sort }) => {
 	const { data, error } = useSuspenseQuery({
-		queryKey: ["MODRINTH", "MODPACKS", "POPULAR"],
+		queryKey: ["MODRINTH", content, sort],
 		queryFn: async () => {
-			const response = await searchProjects({
+			const { error, data } = await searchProjects({
 				client: modrinthClient,
 				query: {
 					limit: 10,
-					facets: '[["project_type:modpack"]]',
-					index: "follows",
+					facets: `[["project_type:${content}"]]`,
+					index: sort as "relevance" | "downloads" | "follows" | "newest" | "updated",
 				},
 			});
-			if (response.error) throw response.error;
-			return response.data;
+			if (error) throw error;
+			return data;
 		},
 	});
 	if (error) throw error;
