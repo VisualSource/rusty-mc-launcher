@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { NavbarLower } from "./NavbarLower";
 import { NavbarUpper } from "./NavbarUpper";
 
-const Navbar = () => {
+const Navbar = memo(() => {
 	return (
 		<header
 			className="z-50 flex-shrink-0 flex-grow-0 bg-zinc-950 text-zinc-400 shadow-md"
@@ -11,6 +12,6 @@ const Navbar = () => {
 			<NavbarLower />
 		</header>
 	);
-};
+});
 
 export default Navbar;

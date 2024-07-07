@@ -1,4 +1,4 @@
-import { Link, MatchRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import {
 	NavigationMenu,
 	NavigationMenuContent,
@@ -9,7 +9,6 @@ import {
 import type { ModrinthSearchParams } from "@/routes/_authenticated/workshop/search/route";
 import { Separator } from "@component/ui/separator";
 import { Button } from "@component/ui/button";
-import { cn } from "@/lib/utils";
 
 export const NavbarLower: React.FC = () => {
 	return (
@@ -24,18 +23,8 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/">
-								<MatchRoute to="/">
-									{(match) => (
-										<span
-											className={cn("transition-colors", {
-												"border-b-2 border-blue-300 text-blue-300": match,
-											})}
-										>
-											LIBRARY
-										</span>
-									)}
-								</MatchRoute>
+							<Link to="/" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }}>
+								LIBRARY
 							</Link>
 						</NavigationMenuTrigger>
 						<NavigationMenuContent>
@@ -56,18 +45,8 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/skins">
-								<MatchRoute to="/skins">
-									{(match) => (
-										<span
-											className={cn("transition-colors", {
-												"border-b-2 border-blue-300 text-blue-300": match,
-											})}
-										>
-											SKINS
-										</span>
-									)}
-								</MatchRoute>
+							<Link to="/skins" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }}>
+								SKINS
 							</Link>
 						</NavigationMenuTrigger>
 					</NavigationMenuItem>
@@ -76,18 +55,8 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/workshop/search" search={{} as ModrinthSearchParams}>
-								<MatchRoute to="/workshop/search">
-									{(match) => (
-										<span
-											className={cn("transition-colors", {
-												"border-b-2 border-blue-300 text-blue-300": match,
-											})}
-										>
-											WORKSHOP
-										</span>
-									)}
-								</MatchRoute>
+							<Link to="/workshop/search" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }} search={{} as ModrinthSearchParams}>
+								WORKSHOP
 							</Link>
 						</NavigationMenuTrigger>
 					</NavigationMenuItem>
@@ -96,18 +65,8 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/downloads">
-								<MatchRoute to="/downloads">
-									{(match) => (
-										<span
-											className={cn("transition-colors", {
-												"border-b-2 border-blue-300 text-blue-300": match,
-											})}
-										>
-											DOWNLOADS
-										</span>
-									)}
-								</MatchRoute>
+							<Link to="/downloads" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }}>
+								DOWNLOADS
 							</Link>
 						</NavigationMenuTrigger>
 					</NavigationMenuItem>

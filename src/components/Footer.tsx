@@ -13,7 +13,7 @@ import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/api/dialog";
 import { Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import {
 	DropdownMenu,
@@ -48,7 +48,7 @@ import { Label } from "./ui/label";
 
 type FormState = { importFrom: "modrinth" | "curseforge" };
 
-const Footer = () => {
+const Footer = memo(() => {
 	const [openDialog, setOpen] = useState(false);
 	const { progress } = useDownload();
 	const queueCurrent = useCurrentQueue();
@@ -65,35 +65,35 @@ const Footer = () => {
 		const display =
 			state.importFrom === "modrinth"
 				? {
-						queue: {
-							name: "MrPack($PACK_PATH)",
-							type: "Modpack",
-						},
-						dialog: {
-							title: "Import Mrpack",
-							filters: [
-								{
-									name: "Mrpack",
-									extensions: ["mrpack"],
-								},
-							],
-						},
-					}
+					queue: {
+						name: "MrPack($PACK_PATH)",
+						type: "Modpack",
+					},
+					dialog: {
+						title: "Import Mrpack",
+						filters: [
+							{
+								name: "Mrpack",
+								extensions: ["mrpack"],
+							},
+						],
+					},
+				}
 				: {
-						queue: {
-							name: "Curseforge Modpack ($PACK_PATH)",
-							type: "CurseforgeModpack",
-						},
-						dialog: {
-							title: "Import Modpack",
-							filters: [
-								{
-									name: "Zip",
-									extensions: ["zip"],
-								},
-							],
-						},
-					};
+					queue: {
+						name: "Curseforge Modpack ($PACK_PATH)",
+						type: "CurseforgeModpack",
+					},
+					dialog: {
+						title: "Import Modpack",
+						filters: [
+							{
+								name: "Zip",
+								extensions: ["zip"],
+							},
+						],
+					},
+				};
 
 		const result = await open({
 			multiple: false,
@@ -287,6 +287,6 @@ const Footer = () => {
 			<div className="flex h-full w-full shrink items-center justify-end" />
 		</footer>
 	);
-};
+});
 
 export default Footer;
