@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { formatRelative } from "date-fns/formatRelative";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, useCallback } from "react";
+import { memo, Suspense, useCallback } from "react";
 
 import { searchProjects } from "@lib/api/modrinth/services.gen";
 import {
@@ -45,13 +45,7 @@ import { Label } from "@/components/ui/label";
 import debounce from "lodash.debounce";
 import { SearchFilters } from "@/components/workshop/SearchFilters";
 
-export const Route = createLazyFileRoute("/_authenticated/workshop/search")({
-	component: WorkshopHome,
-	errorComponent: (error) => <ErrorComponent error={error} />,
-	pendingComponent: Loading,
-});
-
-function WorkshopHome() {
+const WorkshopHome: React.FC = memo(() => {
 	const search = Route.useSearch();
 	const navigate = Route.useNavigate();
 	const queryHandler = useCallback(
@@ -354,4 +348,13 @@ function WorkshopHome() {
 			</div>
 		</div>
 	);
-}
+});
+WorkshopHome.displayName = "WorkshopRoot";
+
+export const Route = createLazyFileRoute("/_authenticated/workshop/search")({
+	component: WorkshopHome,
+	errorComponent: (error) => <ErrorComponent error={error} />,
+	pendingComponent: Loading,
+});
+
+

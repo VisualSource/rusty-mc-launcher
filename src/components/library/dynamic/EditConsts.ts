@@ -9,19 +9,19 @@ export const OPTIONS: Record<string, { id: string, title: string, Content: React
     "collection-display": {
         id: "collection-display",
         title: "Collection: Display",
-        Opts: lazy(() => import("@component/library/content/edit/CollectionOptions")),
-        Content: lazy(() => import("./CollectionDisplay"))
+        Opts: lazy(() => import("@component/library/dynamic/options/CollectionOptions")),
+        Content: lazy(() => import("@component/library/dynamic/display/CollectionDisplay"))
     },
     "modrinth-workshop": {
         id: "modrinth-workshop",
         title: "Modrinth: Workshop",
-        Opts: lazy(() => import("@component/library/content/edit/ModrinthOptions")),
-        Content: lazy(() => import("./ModrinthWorkshopDisplay"))
+        Opts: lazy(() => import("@component/library/dynamic/options/ModrinthOptions")),
+        Content: lazy(() => import("@component/library/dynamic/display/ModrinthWorkshopDisplay"))
     },
     "mojang-patch-notes": {
         id: "mojang-patch-notes",
         title: "Mojang: Patch Notes",
-        Content: lazy(() => import("./MojangPatchNotesDisplay"))
+        Content: lazy(() => import("@component/library/dynamic/display/MojangPatchNotesDisplay"))
     }
 } as const
 

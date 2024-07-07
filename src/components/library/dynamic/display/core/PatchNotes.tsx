@@ -3,7 +3,7 @@ import { compareDesc } from "date-fns/compareDesc";
 import { AlertTriangle, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import {
 	Drawer,
@@ -49,7 +49,7 @@ const PatchNotesRead: React.FC<{
 	contentPath?: string;
 	open: boolean;
 	setOpen: (value: boolean) => void;
-}> = ({ contentPath, open, setOpen }) => {
+}> = memo(({ contentPath, open, setOpen }) => {
 	const query = useQuery({
 		enabled: !!contentPath?.length,
 		queryKey: ["MINECRAFT", "PATCH_NODES", contentPath],
@@ -107,9 +107,10 @@ const PatchNotesRead: React.FC<{
 			</DrawerContent>
 		</Drawer>
 	);
-};
+});
+PatchNotesRead.displayName = "PatchNotesRead";
 
-export const PatchNotesSkeletons: React.FC = () => {
+export const PatchNotesSkeletons: React.FC = memo(() => {
 	return (
 		<>
 			{Array.from({ length: 8 }).map((_, i) => (
@@ -125,7 +126,8 @@ export const PatchNotesSkeletons: React.FC = () => {
 			))}
 		</>
 	);
-};
+});
+PatchNotesSkeletons.displayName = "PatchNotesSkeletion"
 
 const PatchNotes: React.FC = () => {
 	const [openNotes, setOpenNotes] = useState(false);

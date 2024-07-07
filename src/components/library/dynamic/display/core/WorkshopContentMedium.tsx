@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { FileImage } from "lucide-react";
+import { memo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +9,7 @@ import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { searchProjects } from "@lib/api/modrinth/services.gen";
 
-export const ModPacksSkeleton: React.FC = () => {
+export const WorkshopContentMediumSkeleton: React.FC = memo(() => {
 	return (
 		<>
 			{Array.from({ length: 8 }).map((_, i) => (
@@ -27,9 +28,9 @@ export const ModPacksSkeleton: React.FC = () => {
 			))}
 		</>
 	);
-};
+});
 
-const ModPacks: React.FC<{ content: string, sort: string }> = ({ content, sort }) => {
+const WorkshopContentMedium: React.FC<{ content: string, sort: string }> = ({ content, sort }) => {
 	const { data, error } = useSuspenseQuery({
 		queryKey: ["MODRINTH", content, sort],
 		queryFn: async () => {
@@ -85,4 +86,4 @@ const ModPacks: React.FC<{ content: string, sort: string }> = ({ content, sort }
 	);
 };
 
-export default ModPacks;
+export default WorkshopContentMedium;

@@ -1,7 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { Suspense, useState, lazy } from "react";
 
-import { DisplayContainer } from "@/components/library/content/DisplayContainer";
+import { DisplayContainer } from "@component/library/dynamic/DisplayContainer";
 import { Loading } from "@/components/Loading";
 
 export const Route = createLazyFileRoute("/_authenticated/_layout/")({
@@ -9,7 +9,7 @@ export const Route = createLazyFileRoute("/_authenticated/_layout/")({
 	pendingComponent: Loading,
 });
 
-const EditContainer = lazy(() => import("@/components/library/content/EditContainerLazy"));
+const EditContainer = lazy(() => import("@component/library/dynamic/EditContainerLazy"));
 
 function Index() {
 	const [editMode, setEditMode] = useState(false);

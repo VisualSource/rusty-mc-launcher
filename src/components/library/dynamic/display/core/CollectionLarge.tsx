@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { Layers3 } from "lucide-react";
+import { memo } from "react";
 import useCategoryGroup from "@/hooks/useCategoryGroup";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import PlayButton from "@/components/ui/play";
 
-export const FavoritesLoading: React.FC = () => {
+export const CollectionLargeLoading: React.FC = memo(() => {
 	return (
 		<>
 			{Array.from({ length: 8 }).map((_, i) => (
@@ -25,9 +26,9 @@ export const FavoritesLoading: React.FC = () => {
 			))}
 		</>
 	);
-};
+});
 
-const Favorites: React.FC<{ cat: string }> = ({ cat }) => {
+const CollectionLarge: React.FC<{ cat: string }> = ({ cat }) => {
 	const data = useCategoryGroup(cat);
 
 	return (
@@ -76,4 +77,4 @@ const Favorites: React.FC<{ cat: string }> = ({ cat }) => {
 	);
 };
 
-export default Favorites;
+export default CollectionLarge;

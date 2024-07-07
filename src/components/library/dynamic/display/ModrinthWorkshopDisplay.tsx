@@ -1,12 +1,12 @@
 import { ErrorBoundary } from "react-error-boundary";
-import { Suspense } from "react";
+import { memo, Suspense } from "react";
 
+import WorkshopContentMedium, { WorkshopContentMediumSkeleton } from "./core/WorkshopContentMedium";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import ModPacks, { ModPacksSkeleton } from "../ModPacks";
+import { ErrorFallback } from "../../content/ErrorFallback";
 import { Separator } from "@/components/ui/separator";
-import { ErrorFallback } from "../ErrorFallback";
 
-function ModrinthWorkshopDisplay({ params }: { params: Record<string, string> }) {
+const ModrinthWorkshopDisplay = memo(({ params }: { params: Record<string, string> }) => {
     return (
         <section className="mt-6 space-y-4">
             <h2 className="text-2xl font-semibold tracking-tight">
@@ -17,8 +17,8 @@ function ModrinthWorkshopDisplay({ params }: { params: Record<string, string> })
                 <ScrollArea>
                     <div className="flex space-x-4 pb-4">
                         <ErrorBoundary fallbackRender={ErrorFallback}>
-                            <Suspense fallback={<ModPacksSkeleton />}>
-                                <ModPacks content={params.content} sort={params.sort} />
+                            <Suspense fallback={<WorkshopContentMediumSkeleton />}>
+                                <WorkshopContentMedium content={params.content} sort={params.sort} />
                             </Suspense>
                         </ErrorBoundary>
                     </div>
@@ -27,6 +27,7 @@ function ModrinthWorkshopDisplay({ params }: { params: Record<string, string> })
             </div>
         </section>
     );
-}
+});
+ModrinthWorkshopDisplay.displayName = "ModrinthWorkshopDisplay";
 
 export default ModrinthWorkshopDisplay;

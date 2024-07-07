@@ -1,10 +1,11 @@
-import { memo, Suspense, useState } from "react";
-import { type Card, ItemTypes, OPTIONS } from "./EditConsts";
-import { useDrag, useDrop } from "react-dnd";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Settings2, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "react-error-boundary";
+import { memo, Suspense, useState } from "react";
+import { Settings2, Trash2 } from "lucide-react";
+import { useDrag, useDrop } from "react-dnd";
+
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { type Card, ItemTypes, OPTIONS } from "../EditConsts";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Item = { id: string, originalIndex: number }

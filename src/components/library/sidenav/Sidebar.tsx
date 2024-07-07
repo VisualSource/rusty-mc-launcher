@@ -1,7 +1,7 @@
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AlertTriangle, RefreshCcw } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
-import { Suspense } from "react";
+import { memo, Suspense } from "react";
 
 import { FAVORITES_GUID, UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
 import { CollectionLoading, CollectionError } from "./CollectionStatus";
@@ -39,7 +39,7 @@ export const SidebarError: React.FC<{
 	);
 };
 
-const Sidebar = () => {
+const Sidebar = memo(() => {
 	const collections = useCategories();
 
 	return (
@@ -47,39 +47,39 @@ const Sidebar = () => {
 			<Accordion type="multiple">
 				{collections.length
 					? collections.map((category) => (
-							<QueryErrorResetBoundary key={category.metadata}>
-								{({ reset }) => (
-									<ErrorBoundary
-										onReset={reset}
-										fallback={<CollectionError name={category?.value ?? ""} />}
-									>
-										<Suspense fallback={<CollectionLoading />}>
-											<Collection
-												name={category.value ?? "Unknown Name"}
-												id={category.metadata}
-											/>
-										</Suspense>
-									</ErrorBoundary>
-								)}
-							</QueryErrorResetBoundary>
-						))
+						<QueryErrorResetBoundary key={category.metadata}>
+							{({ reset }) => (
+								<ErrorBoundary
+									onReset={reset}
+									fallback={<CollectionError name={category?.value ?? ""} />}
+								>
+									<Suspense fallback={<CollectionLoading />}>
+										<Collection
+											name={category.value ?? "Unknown Name"}
+											id={category.metadata}
+										/>
+									</Suspense>
+								</ErrorBoundary>
+							)}
+						</QueryErrorResetBoundary>
+					))
 					: EMPTY_DATA.map((item) => (
-							<QueryErrorResetBoundary key={`${item.name}_${item.id}`}>
-								{({ reset }) => (
-									<ErrorBoundary
-										onReset={reset}
-										fallback={<CollectionError name={item.name} />}
-									>
-										<Suspense fallback={<CollectionLoading />}>
-											<Collection id={item.name} name={item.name} />
-										</Suspense>
-									</ErrorBoundary>
-								)}
-							</QueryErrorResetBoundary>
-						))}
+						<QueryErrorResetBoundary key={`${item.name}_${item.id}`}>
+							{({ reset }) => (
+								<ErrorBoundary
+									onReset={reset}
+									fallback={<CollectionError name={item.name} />}
+								>
+									<Suspense fallback={<CollectionLoading />}>
+										<Collection id={item.name} name={item.name} />
+									</Suspense>
+								</ErrorBoundary>
+							)}
+						</QueryErrorResetBoundary>
+					))}
 			</Accordion>
 		</ScrollArea>
 	);
-};
+});
 
 export default Sidebar;

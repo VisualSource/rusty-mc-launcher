@@ -1,7 +1,7 @@
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DndProvider } from "react-dnd";
 
-import { EditContainer } from "./EditContainer";
+import { EditContainer } from "./edit/EditContainer";
 
 function EditContainerLazy({ setEditMode }: { setEditMode: React.Dispatch<React.SetStateAction<boolean>> }) {
     return (

@@ -1,19 +1,18 @@
 import { ErrorBoundary } from "react-error-boundary";
-import { Suspense } from "react";
+import { Suspense, memo } from "react";
 
+import CollectionLarge, { CollectionLargeLoading } from "./core/CollectionLarge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import Favorites, { FavoritesLoading } from "../Favorites";
+import { ErrorFallback } from "../../content/ErrorFallback";
 import { Separator } from "@/components/ui/separator";
 import useCategories from "@/hooks/useCategories";
-import { ErrorFallback } from "../ErrorFallback";
 
-function CollectionDisplay({ params }: { params: Record<string, string> }) {
+const CollectionDisplay = memo(({ params }: { params: Record<string, string> }) => {
     const cats = useCategories();
 
     const cat = cats.find(e => e.metadata === params.id);
 
     return (
-
         <section className="mt-6 space-y-4">
             <h2 className="text-2xl font-semibold tracking-tight line-clamp-1">{cat?.value}</h2>
             <Separator className="my-4" />
@@ -21,8 +20,8 @@ function CollectionDisplay({ params }: { params: Record<string, string> }) {
                 <ScrollArea>
                     <div className="flex space-x-4 pb-4">
                         <ErrorBoundary fallbackRender={ErrorFallback}>
-                            <Suspense fallback={<FavoritesLoading />}>
-                                <Favorites cat={params.id} />
+                            <Suspense fallback={<CollectionLargeLoading />}>
+                                <CollectionLarge cat={params.id} />
                             </Suspense>
                         </ErrorBoundary>
                     </div>
@@ -31,6 +30,7 @@ function CollectionDisplay({ params }: { params: Record<string, string> }) {
             </div>
         </section>
     );
-}
+});
+CollectionDisplay.displayName = "CollectionDisplay";
 
 export default CollectionDisplay;

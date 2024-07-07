@@ -1,6 +1,6 @@
-# v0.6.5
+# v0.7.0
 
-**Full Changelog**: https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.6.5
+**Full Changelog**: https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.0
 
 #### New
 - Added Report bug form page
@@ -19,6 +19,7 @@
 - Update Readme
 - Dev only react dev tools script
 - Update rust version 1.78.0 to 1.79.0
+- Minor performance improvements
 
 #### Fixes
 - fix typo in curseforge modpack install error

@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import useCategories from "@/hooks/useCategories";
-import type { OptsProps } from "./EditConsts";
+import type { OptsProps } from "../EditConsts";
 import { cn } from "@/lib/utils";
 
 function CollectionOptions({ card, updateCard }: OptsProps) {

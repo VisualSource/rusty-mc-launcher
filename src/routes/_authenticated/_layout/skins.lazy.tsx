@@ -1,9 +1,9 @@
 import { ErrorComponent, createLazyFileRoute } from "@tanstack/react-router";
 import { Body, ResponseType, getClient } from "@tauri-apps/api/http";
+import { memo, useEffect, useReducer, useRef } from "react";
 import { downloadDir, sep } from "@tauri-apps/api/path";
 import { SkinViewer, IdleAnimation } from "skinview3d";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { useEffect, useReducer, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { readBinaryFile } from "@tauri-apps/api/fs";
 import { useAccount } from "@azure/msal-react";
@@ -52,12 +52,6 @@ const isUpload = (url: string): boolean => {
 		url.startsWith("https://asset.localhost") || url.startsWith("asset://")
 	);
 };
-
-export const Route = createLazyFileRoute("/_authenticated/_layout/skins")({
-	component: MinecraftSkinControl,
-	errorComponent: (error) => <ErrorComponent error={error} />,
-	pendingComponent: Loading,
-});
 
 const reducer = (state: Content, payload: Action) => {
 	switch (payload.type) {
@@ -114,12 +108,12 @@ const reducer = (state: Content, payload: Action) => {
 	}
 };
 
-function DisplayItem({
+const DisplayItem = memo(({
 	cape,
 	skin,
 	state,
 	onClick,
-}: { onClick: () => void; state: string; skin?: string; cape?: string }) {
+}: { onClick: () => void; state: string; skin?: string; cape?: string }) => {
 	const target = useRef<HTMLCanvasElement>(null);
 	const viewer = useRef<SkinViewer>();
 
@@ -152,9 +146,9 @@ function DisplayItem({
 			/>
 		</button>
 	);
-}
+})
 
-function MinecraftSkinControl() {
+const MinecraftSkinControl: React.FC = memo(() => {
 	const msAccount = useAccount();
 	const target = useRef<HTMLCanvasElement>(null);
 	const viewer = useRef<SkinViewer>();
@@ -462,4 +456,14 @@ function MinecraftSkinControl() {
 			</div>
 		</>
 	);
-}
+});
+
+MinecraftSkinControl.displayName = "MinecraftSkinControl";
+
+export const Route = createLazyFileRoute("/_authenticated/_layout/skins")({
+	component: MinecraftSkinControl,
+	errorComponent: (error) => <ErrorComponent error={error} />,
+	pendingComponent: Loading,
+});
+
+

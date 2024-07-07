@@ -4,11 +4,11 @@ import { Plus, } from "lucide-react";
 import { useDrop } from "react-dnd";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { OPTIONS, ItemTypes, type Card, STORAGE_KEY } from "./edit/EditConsts";
+import { OPTIONS, ItemTypes, type Card, STORAGE_KEY } from "../EditConsts";
 import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
-import { CardItem } from "./edit/CardItem";
+import { CardItem } from "./CardItem";
 import { nanoid } from "@/lib/nanoid";
 
 const getLocalState = () => {

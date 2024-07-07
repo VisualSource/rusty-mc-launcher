@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Settings2 } from "lucide-react";
 import { Suspense } from "react";
 
-import { type Card, DEFAULT_LAYOUT, OPTIONS, STORAGE_KEY } from "./edit/EditConsts";
+import { type Card, DEFAULT_LAYOUT, OPTIONS, STORAGE_KEY } from "./EditConsts";
 import { Button } from "@/components/ui/button";
 
 export const DisplayContainer: React.FC<{ setEditMode: React.Dispatch<React.SetStateAction<boolean>> }> = ({ setEditMode }) => {
