@@ -49,6 +49,11 @@ const desterilize = (_key: string, value: unknown) => {
 export class ModrinthClientApplication extends EventTarget {
 	private data: AuthenticationResult | null = null;
 
+	constructor() {
+		super();
+		this.initialize();
+	}
+
 	public static async createPublicClientApplication(
 		_configuration?: Configuration,
 	): Promise<ModrinthClientApplication> {
@@ -231,7 +236,7 @@ export class ModrinthClientApplication extends EventTarget {
 			throw new Error("Failed to read notification", { cause: response });
 	}
 
-	async initialize(): Promise<void> {
+	initialize(): void {
 		try {
 			this.data = this.readCache();
 		} catch (error) {

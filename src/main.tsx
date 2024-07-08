@@ -17,11 +17,8 @@ import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
 
 attachLogger().catch(() => exit(1));
-const msa = await getPCA().catch(() => exit(1) as never);
-const mca =
-	await ModrinthClientApplication.createPublicClientApplication().catch(
-		() => exit(1) as never,
-	);
+const msa = getPCA();
+const mca = new ModrinthClientApplication();
 
 // biome-ignore lint/style/noNonNullAssertion: The dom element with id "root" shall be there.
 const root = createRoot(document.getElementById("root")!);
