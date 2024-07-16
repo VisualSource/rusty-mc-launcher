@@ -8,6 +8,11 @@ pub mod profile;
 pub mod query;
 
 #[tauri::command]
+pub async fn get_system_ram() -> u64 {
+    minecraft_launcher_lib::get_ram()
+}
+
+#[tauri::command]
 pub async fn show_in_folder(path: PathBuf) -> Result<(), errors::Error> {
     #[cfg(target_os = "windows")]
     {

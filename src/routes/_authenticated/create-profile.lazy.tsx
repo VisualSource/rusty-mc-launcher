@@ -27,6 +27,8 @@ import { profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_KEY } from "@/hooks/keys";
 import logger from "@/lib/system/logger";
+import { JVMArgForm } from "@/components/JVMArgForm";
+import { Suspense } from "react";
 
 export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 	component: CreateProfile,
@@ -227,6 +229,8 @@ function CreateProfile() {
 							)}
 						/>
 
+						<CopyProfileOptions form={form} />
+
 						<FormField
 							control={form.control}
 							name="java_args"
@@ -234,12 +238,9 @@ function CreateProfile() {
 								<FormItem>
 									<FormLabel>Java Args</FormLabel>
 									<FormControl>
-										<Input
-											autoComplete="false"
-											placeholder="Java Args"
-											value={field.value ?? ""}
-											onChange={(e) => field.onChange(e.target.value)}
-										/>
+										<Suspense>
+											<JVMArgForm controller={field} />
+										</Suspense>
 									</FormControl>
 									<FormDescription>
 										Command line arguments to pass to java on startup.
@@ -249,7 +250,7 @@ function CreateProfile() {
 							)}
 						/>
 
-						<CopyProfileOptions form={form} />
+
 					</section>
 
 					<div className="absolute bottom-4 right-4">

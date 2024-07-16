@@ -97,6 +97,8 @@ export const uninstallContent = async (profile: string, id: string) => {
 	});
 };
 
+export const getSystemRaw = async () => invoke<number>("get_system_ram");
+
 export const importContentExternal = async (
 	src: string,
 	profile: string,

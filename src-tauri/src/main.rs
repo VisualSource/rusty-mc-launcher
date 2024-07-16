@@ -1,7 +1,4 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod commands;
 mod errors;
 mod handlers;
@@ -26,6 +23,7 @@ fn main() {
             commands::game::launch_game,
             commands::game::is_running,
             commands::game::stop,
+            commands::get_system_ram,
             commands::show_in_folder,
             commands::profile::delete_profile,
             commands::profile::copy_profile,

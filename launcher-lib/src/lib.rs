@@ -7,6 +7,13 @@ mod manifest;
 mod state;
 //mod utils;
 
+/// Get ram in GB
+pub fn get_ram() -> u64 {
+    let info = sysinfo::System::new_all();
+
+    info.total_memory() / 1000000000
+}
+
 pub use installer::{content, install_minecraft, ChannelMessage, InstallConfig};
 pub use launcher::{start_game, LaunchConfig};
 pub use state::{models, profile, AppState, Database};

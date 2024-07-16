@@ -1,3 +1,13 @@
+# v0.7.1
+
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.1)
+
+#### New
+- Added JVM arg form control
+
+#### Changes
+- Update javascript deps
+
 # v0.7.0
 
 **Full Changelog**: https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.0
