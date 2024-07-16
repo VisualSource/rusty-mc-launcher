@@ -52,6 +52,7 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
 import logger from "@/lib/system/logger";
+import { JVMArgForm } from "@/components/JVMArgForm";
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/edit",
@@ -249,12 +250,7 @@ function ProfileEdit() {
 								<FormItem>
 									<FormLabel>Java Args</FormLabel>
 									<FormControl>
-										<Input
-											autoComplete="false"
-											placeholder="Java Args"
-											value={field.value ?? ""}
-											onChange={(e) => field.onChange(e.target.value)}
-										/>
+										<JVMArgForm controller={field} />
 									</FormControl>
 									<FormDescription>
 										Cmd arguments to pass to java on startup.

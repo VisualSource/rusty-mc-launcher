@@ -3,10 +3,16 @@
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.1)
 
 #### New
-- Added JVM arg form control
+- Added JVM args form control
+- Added Crash Notice Dialog
 
 #### Changes
 - Update javascript deps
+- No long bind logger at frontend startup
+
+#### Fixes
+- Fix stop process "no such column: id" error
+- Fix play button being stuck in "Installing" state after install
 
 # v0.7.0
 

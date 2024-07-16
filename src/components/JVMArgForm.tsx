@@ -1,27 +1,27 @@
-import type { ControllerRenderProps, UseFormReturn } from "react-hook-form";
-import type { MinecraftProfile } from "@/lib/models/profiles";
-import { MarkedSlider } from "@/components/ui/slider"
-import { Label } from "./ui/label";
-import { Checkbox } from "./ui/checkbox";
-import { Button } from "./ui/button";
-import { Plus, Trash2 } from "lucide-react";
-import { Input } from "./ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select";
-import { cn } from "@/lib/utils";
-import { range } from "@/lib/range";
-import { useMemo, useRef, useState } from "react";
-import JVMArgs from "@/lib/JvmArgs";
-import { getSystemRaw } from "@/lib/system/commands";
+import type { ControllerRenderProps } from "react-hook-form";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import update from "immutability-helper";
+import { Plus } from "lucide-react";
 
-const TickedSilder: React.FC<{ min: number, max: number, disabled?: boolean }> = ({ min, max, disabled }) => {
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import type { MinecraftProfile } from "@/lib/models/profiles";
+import { parseJVMArgs, argsToString } from "@/lib/JvmArgs";
+import { MarkedSlider } from "@/components/ui/slider";
+import { getSystemRam } from "@/lib/system/commands";
+import { Separator } from "./ui/separator";
+import { Button } from "./ui/button";
+import { range } from "@/lib/range";
+import { Label } from "./ui/label";
+import { Badge } from "./ui/badge";
+import { Input } from "./ui/input";
+import { cn } from "@/lib/utils";
+
+const TickedSilder: React.FC<{ onValueChange: (value: number[]) => void, value: number[], min: number, max: number, disabled?: boolean }> = ({ min, max, disabled, value, onValueChange }) => {
     const tickRange = useMemo(() => range(min, max, 1), [min, max]);
     return (
         <div className="flex-grow items-center">
-            <MarkedSlider disabled={disabled} defaultValue={[2]} min={min} max={max} step={1} />
+            <MarkedSlider onValueChange={onValueChange} value={value} disabled={disabled} min={min} max={max} step={1} />
             <div className='mt-1.5 flex flex-row justify-between items-center relative'>
                 {tickRange.map((_, i) => (
                     <span
@@ -42,18 +42,64 @@ const TickedSilder: React.FC<{ min: number, max: number, disabled?: boolean }> =
 export const JVMArgForm: React.FC<{
     controller: ControllerRenderProps<MinecraftProfile>
 
-}> = ({ controller }) => {
+}> = ({ controller: { value, onChange } }) => {
+    const { data: ram } = useSuspenseQuery({
+        networkMode: "offlineFirst",
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        refetchOnWindowFocus: false,
+        queryKey: ["SYSTEM_RAM"],
+        queryFn: () => getSystemRam()
+    });
+    const ref = useRef<HTMLDivElement>(null);
     const [showDialog, setShowDialog] = useState(false);
     const [argValue, setArgValue] = useState("");
-    const { data: ram } = useSuspenseQuery({ queryKey: ["SYSTEM_RAW"], queryFn: () => getSystemRaw() })
-    const state = useRef(new JVMArgs(controller?.value ?? ""));
+    const [_, setHistory] = useState<{ index: number, value: string }[]>([]);
+    const [state, setState] = useState(() => parseJVMArgs(value));
+
+    const change = useCallback((data: ReturnType<typeof parseJVMArgs>) => {
+        onChange(argsToString(data));
+        ref.current?.dispatchEvent(
+            new Event("change", { bubbles: true }),
+        );
+    }, [onChange]);
+
+    useEffect(() => {
+        const callback = (ev: KeyboardEvent) => {
+            if (!ev.ctrlKey) return;
+            switch (ev.code) {
+                case "KeyZ": {
+                    setHistory((e) => {
+                        if (!e.length) return e;
+                        const target = e.pop();
+                        if (!target) return e;
+                        setState(d => {
+                            const data = update(d, { args: { $splice: [[target.index, 0, target.value]] } });
+                            change(data);
+                            return data;
+                        })
+                        return [...e];
+                    });
+                    break;
+                }
+            }
+        }
+        window.addEventListener("keypress", callback);
+        return () => {
+            window.removeEventListener("keypress", callback);
+        }
+    }, [change]);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4" ref={ref}>
             <Separator />
             <div className="flex gap-4 items-center mb-8">
                 <Label>Max Memory</Label>
-                <TickedSilder min={2} max={ram - 5} />
+                <TickedSilder value={state.memory} onValueChange={(v) => setState(e => {
+                    const data = update(e, { memory: { $set: v } });
+                    change(data);
+                    return data;
+                })} min={2} max={ram - 5} />
             </div>
 
             <div className="space-y-4 mt-4">
@@ -71,8 +117,13 @@ export const JVMArgForm: React.FC<{
                             <Input value={argValue} onChange={(e) => setArgValue(e.target.value)} placeholder="-XX:+UseG1GC" />
                             <DialogFooter>
                                 <Button type="button" onClick={() => {
-                                    setArgs((e) => [...e, argValue]);
+                                    setState(e => {
+                                        const data = update(e, { args: { $push: [argValue] } });
+                                        change(data);
+                                        return data;
+                                    });
                                     setArgValue("");
+                                    setShowDialog(false);
                                 }}>Ok</Button>
                             </DialogFooter>
                         </DialogContent>
@@ -80,8 +131,17 @@ export const JVMArgForm: React.FC<{
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                    {args.map((e, i) => (
-                        <Badge className="select-none cursor-not-allowed" key={`${i + 1}`}>{e}</Badge>
+                    {state.args.map((e, i) => (
+                        <Badge onClick={() => {
+                            setState(s => {
+                                const idx = s.args.indexOf(e);
+                                if (idx === -1) return s;
+                                setHistory(e => [...e, { index: idx, value: s.args[idx] }]);
+                                const data = update(s, { args: { $splice: [[idx, 1]] } });
+                                change(data);
+                                return data;
+                            });
+                        }} className="select-none cursor-not-allowed" key={`${i + 1}`}>{e}</Badge>
                     ))}
                 </div>
             </div>

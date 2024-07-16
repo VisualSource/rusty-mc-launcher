@@ -15,7 +15,10 @@ export type AuthResponse = {
 
 const MODRINTH_REDIRECT = "rmcl://modrinth_auth/authorize";
 const MODRINTH_GET_TOKEN = "https://api.modrinth.com/_internal/oauth/token";
-const MODRITH_AUTHORIZE = "https://modrinth.com/auth/authorize";
+const MODRITH_AUTHORIZE = "https://modrinth.com/auth/sign-in";
+
+// https://modrinth.com/auth/sign-in?redirect=/auth/authorize?client_id=TpBn4YFs&redirect_uri=rmcl://modrinth_auth/authorize&scope=NOTIFICATION_READ+NOTIFICATION_WRITE+USER_READ+USER_WRITE
+
 
 export class PopupClient {
 	currentWindow: Window | undefined;
@@ -36,11 +39,11 @@ export class PopupClient {
 		preconnect(MODRITH_AUTHORIZE);
 		try {
 			const login_params = new URLSearchParams({
+				redirect: "/auth/authorize",
 				client_id: import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID,
 				redirect_uri: MODRINTH_REDIRECT,
 				scope: import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES,
 			});
-
 			const popupWindow = this.openPopup(
 				`${MODRITH_AUTHORIZE}?${login_params.toString()}`,
 				{

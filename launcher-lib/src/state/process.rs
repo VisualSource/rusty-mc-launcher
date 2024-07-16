@@ -40,6 +40,19 @@ impl Instances {
         self.0.write().await.insert(uuid, instance);
     }
 
+    pub async fn remove_process(&self, app: &AppState, uuid: String) -> Result<(), LauncherError> {
+        if let Some(process) = self.get(&uuid).await {
+            let a = process.write().await;
+            let instance = a.current_child.write().await;
+
+            instance.remove_cache(app, &uuid).await?;
+
+            self.0.write().await.remove(&uuid);
+        }
+
+        Ok(())
+    }
+
     pub async fn stop_process(&self, app: &AppState, uuid: String) -> Result<(), LauncherError> {
         if let Some(process) = self.get(&uuid).await {
             let a = process.write().await;
@@ -261,7 +274,7 @@ impl InstanceType {
         app: &AppState,
         process_uuid: &str,
     ) -> Result<(), LauncherError> {
-        let query = sqlx::query("DELETE FROM processes WHERE id = ?").bind(process_uuid);
+        let query = sqlx::query("DELETE FROM processes WHERE uuid = ?").bind(process_uuid);
         query.execute(&app.database.0).await?;
 
         Ok(())

@@ -8,24 +8,28 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 
-const KEY = "mcl::game-exit-status";
+const CRASH_EVENT = "rmcl://profile_crash_event";
 
 const GameCrash: React.FC = () => {
 	const [exitCode, setExitCode] = useState(1);
-	const [exitMessage, setExitMessage] = useState<string>();
 	const [open, setOpen] = useState(false);
 
 	useEffect(() => {
-		const handler = (ev: Event) => {
-			const data = (ev as CustomEvent<{ exitCode: number; msg?: string }>)
-				.detail;
-			setExitCode(data.exitCode);
-			setExitMessage(data?.msg);
-			setOpen(true);
-		};
-		window.addEventListener(KEY, handler, { passive: true });
-		return () => window.removeEventListener(KEY, handler);
+		const eventHandler = listen<string>(CRASH_EVENT, (ev) => {
+			try {
+				const data = JSON.parse(ev.payload) as { status: number };
+				setExitCode(data.status);
+				setOpen(true);
+			} catch (error) {
+				console.error(error);
+			}
+		});
+
+		return () => {
+			eventHandler.then(unsub => unsub());
+		}
 	}, []);
 
 	return (
@@ -33,12 +37,10 @@ const GameCrash: React.FC = () => {
 			<AlertDialogContent className="text-zinc-50">
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{!exitMessage ? "Game Crash" : "Failed To Start"}
+						Crash Notice
 					</AlertDialogTitle>
-					<AlertDialogDescription>
-						{!exitMessage
-							? `The game did not exit successfully. (Exit Code: ${exitCode})`
-							: `Error starting game: ${exitMessage}`}
+					<AlertDialogDescription className="text-center p-4">
+						The game did not start/exit successfully. (Exit Code: {exitCode})
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

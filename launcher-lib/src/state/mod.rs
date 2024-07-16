@@ -33,6 +33,30 @@ impl AppState {
         })
     }
 
+    pub async fn watch_process_status(&self) -> Result<Option<i32>, LauncherError> {
+        let keys = self.instances.keys().await;
+
+        for key in keys {
+            let status = self.instances.exit_status(&key).await?;
+            if status.is_none() {
+                continue;
+            }
+
+            let status = status.unwrap_or_default();
+
+            if status > 0 {
+                log::info!("Profile Status: {}, {}", status, key);
+                self.instances.remove_process(self, key).await?;
+
+                return Ok(Some(status));
+            } else {
+                self.instances.remove_process(self, key).await?;
+            }
+        }
+
+        Ok(None)
+    }
+
     pub async fn rescue_instances_cache(&mut self) -> Result<(), LauncherError> {
         let processes: Vec<ProcessCache> =
             sqlx::query_as!(ProcessCache, "SELECT * FROM processes;")

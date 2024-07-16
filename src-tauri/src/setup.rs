@@ -184,7 +184,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                                 });
                             } else {
                                 send_event!(tx,"done",{
-                                    "keys": ["profile",item.id],
+                                    "keys": ["profile",item.profile_id],
                                 });
                                 send_event!(tx,"notify",{
                                     "message": "Client Installed!",
@@ -210,6 +210,9 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                                 send_event!(tx,"notify",{
                                     "message": "Content Installed!",
                                     "type": "ok"
+                                });
+                                send_event!(tx,"done",{
+                                    "keys": ["profile",item.profile_id],
                                 });
                             }
                         }
@@ -258,39 +261,29 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    /*let cc = app.handle();
+    let ph = app.handle();
     tauri::async_runtime::spawn(async move {
         loop {
-            tokio::time::sleep(Duration::from_secs(10)).await;
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            let state = ph.state::<AppState>();
 
-            let state = cc.state::<AppState>();
-
-            match state.instances.running_profiles_ids().await {
-                Ok(instances) => {
-                    log::info!("{:#?}", instances);
-                    /*for instance in instances {
-                        match state.instances.exit_status(&instance).await {
-                            Ok(status) => {
-                                if let Some(status) = status {
-                                    if status != 0 {
-                                        send_event!(ev_q, "game_crash", { "status": status, "instance": instance });
-                                    }
-
-                                    if let Err(err) =
-                                        state.instances.stop_process(&state, instance).await
-                                    {
-                                        log::error!("{}", err);
-                                    };
-                                }
-                            }
-                            Err(err) => log::error!("{}", err),
+            match state.watch_process_status().await {
+                Ok(status) => {
+                    if status.is_some() {
+                        if let Err(err) = ph.emit_to(
+                            "main",
+                            "rmcl://profile_crash_event",
+                            format!("{{ \"status\": {} }}", status.unwrap_or_default()),
+                        ) {
+                            log::error!("{}", err);
                         }
-                    }*/
+                        tokio::time::sleep(Duration::from_secs(5)).await;
+                    }
                 }
                 Err(err) => log::error!("{}", err),
             }
         }
-    });*/
+    });
 
     Ok(())
 }

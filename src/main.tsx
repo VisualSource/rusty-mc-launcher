@@ -1,14 +1,13 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { MsalProvider } from "@azure/msal-react";
-import { exit } from "@tauri-apps/api/process";
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 
 import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
 import { ModrinthProvider } from "./components/providers/ModrinthProvider";
 import { DownloadProvider } from "@context/DownloadContext";
-import { attachLogger } from "@lib/system/logger";
+import GameCrash from "./components/dialog/GameCrash";
 import { queryClient } from "@lib/api/queryClient";
 import { getPCA } from "@auth/msal";
 import { router } from "./router";
@@ -16,7 +15,7 @@ import { router } from "./router";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
 
-attachLogger().catch(() => exit(1));
+
 const msa = getPCA();
 const mca = new ModrinthClientApplication();
 
@@ -28,6 +27,7 @@ root.render(
 			<MsalProvider instance={msa}>
 				<ModrinthProvider client={mca}>
 					<DownloadProvider>
+						<GameCrash />
 						<RouterProvider
 							router={router}
 							context={{
