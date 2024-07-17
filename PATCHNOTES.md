@@ -6,6 +6,7 @@
 - Modrinth account notifications
 
 #### Changes
+- Updated Javascript deps
 
 #### Fixes
 - Fixed Modrinth account login
