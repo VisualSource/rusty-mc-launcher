@@ -23,7 +23,12 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }}>
+							<Link
+								to="/"
+								activeProps={{
+									className: "border-b-2 border-blue-300 text-blue-300",
+								}}
+							>
 								LIBRARY
 							</Link>
 						</NavigationMenuTrigger>
@@ -45,7 +50,12 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/skins" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }}>
+							<Link
+								to="/skins"
+								activeProps={{
+									className: "border-b-2 border-blue-300 text-blue-300",
+								}}
+							>
 								SKINS
 							</Link>
 						</NavigationMenuTrigger>
@@ -55,7 +65,13 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/workshop/search" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }} search={{} as ModrinthSearchParams}>
+							<Link
+								to="/workshop/search"
+								activeProps={{
+									className: "border-b-2 border-blue-300 text-blue-300",
+								}}
+								search={{} as ModrinthSearchParams}
+							>
 								WORKSHOP
 							</Link>
 						</NavigationMenuTrigger>
@@ -65,7 +81,12 @@ export const NavbarLower: React.FC = () => {
 							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-[active]:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
-							<Link to="/downloads" activeProps={{ className: "border-b-2 border-blue-300 text-blue-300" }}>
+							<Link
+								to="/downloads"
+								activeProps={{
+									className: "border-b-2 border-blue-300 text-blue-300",
+								}}
+							>
 								DOWNLOADS
 							</Link>
 						</NavigationMenuTrigger>

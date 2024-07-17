@@ -9,7 +9,9 @@ export const Route = createLazyFileRoute("/_authenticated/_layout/")({
 	pendingComponent: Loading,
 });
 
-const EditContainer = lazy(() => import("@component/library/dynamic/EditContainerLazy"));
+const EditContainer = lazy(
+	() => import("@component/library/dynamic/EditContainerLazy"),
+);
 
 function Index() {
 	const [editMode, setEditMode] = useState(false);

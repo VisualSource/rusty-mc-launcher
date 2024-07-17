@@ -249,8 +249,6 @@ function CreateProfile() {
 								</FormItem>
 							)}
 						/>
-
-
 					</section>
 
 					<div className="absolute bottom-4 right-4">

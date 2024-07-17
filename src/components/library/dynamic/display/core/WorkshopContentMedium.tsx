@@ -30,7 +30,10 @@ export const WorkshopContentMediumSkeleton: React.FC = memo(() => {
 	);
 });
 
-const WorkshopContentMedium: React.FC<{ content: string, sort: string }> = ({ content, sort }) => {
+const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
+	content,
+	sort,
+}) => {
 	const { data, error } = useSuspenseQuery({
 		queryKey: ["MODRINTH", content, sort],
 		queryFn: async () => {
@@ -39,7 +42,12 @@ const WorkshopContentMedium: React.FC<{ content: string, sort: string }> = ({ co
 				query: {
 					limit: 10,
 					facets: `[["project_type:${content}"]]`,
-					index: sort as "relevance" | "downloads" | "follows" | "newest" | "updated",
+					index: sort as
+						| "relevance"
+						| "downloads"
+						| "follows"
+						| "newest"
+						| "updated",
 				},
 			});
 			if (error) throw error;

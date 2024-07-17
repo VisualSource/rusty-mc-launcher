@@ -356,5 +356,3 @@ export const Route = createLazyFileRoute("/_authenticated/workshop/search")({
 	errorComponent: (error) => <ErrorComponent error={error} />,
 	pendingComponent: Loading,
 });
-
-

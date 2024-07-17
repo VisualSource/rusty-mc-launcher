@@ -1,6 +1,9 @@
 import { type UnlistenFn, once } from "@tauri-apps/api/event";
 import type { AuthError } from "@azure/msal-common";
-import { BrowserAuthErrorCodes, createBrowserAuthError } from "@masl/error/BrowserAuthError";
+import {
+	BrowserAuthErrorCodes,
+	createBrowserAuthError,
+} from "@masl/error/BrowserAuthError";
 import type { PopupWindowAttributes } from "@masl/request/PopupWindowAttributes";
 import type { PopupParams } from "@masl/interaction_client/PopupClient";
 import { BrowserConstants } from "@masl/utils/BrowserConstants";
@@ -18,7 +21,6 @@ const MODRINTH_GET_TOKEN = "https://api.modrinth.com/_internal/oauth/token";
 const MODRITH_AUTHORIZE = "https://modrinth.com/auth/sign-in";
 
 // https://modrinth.com/auth/sign-in?redirect=/auth/authorize?client_id=TpBn4YFs&redirect_uri=rmcl://modrinth_auth/authorize&scope=NOTIFICATION_READ+NOTIFICATION_WRITE+USER_READ+USER_WRITE
-
 
 export class PopupClient {
 	currentWindow: Window | undefined;

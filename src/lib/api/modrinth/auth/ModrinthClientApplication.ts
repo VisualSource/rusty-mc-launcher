@@ -10,7 +10,10 @@ import {
 	followProject,
 	unfollowProject,
 } from "../services.gen";
-import { BrowserAuthError, BrowserAuthErrorCodes } from "@/lib/masl/error/BrowserAuthError";
+import {
+	BrowserAuthError,
+	BrowserAuthErrorCodes,
+} from "@/lib/masl/error/BrowserAuthError";
 import type { EndSessionRequest } from "@/lib/masl/request/EndSessionRequest";
 import type { Configuration } from "@/lib/masl/config/Configuration";
 import type { PopupRequest } from "@/lib/masl/request/PopupRequest";

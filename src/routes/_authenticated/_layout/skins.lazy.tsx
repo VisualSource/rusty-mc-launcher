@@ -108,45 +108,47 @@ const reducer = (state: Content, payload: Action) => {
 	}
 };
 
-const DisplayItem = memo(({
-	cape,
-	skin,
-	state,
-	onClick,
-}: { onClick: () => void; state: string; skin?: string; cape?: string }) => {
-	const target = useRef<HTMLCanvasElement>(null);
-	const viewer = useRef<SkinViewer>();
+const DisplayItem = memo(
+	({
+		cape,
+		skin,
+		state,
+		onClick,
+	}: { onClick: () => void; state: string; skin?: string; cape?: string }) => {
+		const target = useRef<HTMLCanvasElement>(null);
+		const viewer = useRef<SkinViewer>();
 
-	useEffect(() => {
-		if (target.current) {
-			viewer.current = new SkinViewer({
-				canvas: target.current,
-				enableControls: false,
-				cape,
-				width: 125,
-				height: 125,
-				skin,
-			});
-		}
-		return () => {
-			viewer.current?.dispose();
-		};
-	}, [skin, cape]);
+		useEffect(() => {
+			if (target.current) {
+				viewer.current = new SkinViewer({
+					canvas: target.current,
+					enableControls: false,
+					cape,
+					width: 125,
+					height: 125,
+					skin,
+				});
+			}
+			return () => {
+				viewer.current?.dispose();
+			};
+		}, [skin, cape]);
 
-	return (
-		<button type="button" onClick={onClick}>
-			<canvas
-				className={cn(
-					"border rounded-lg transition-all hover:scale-105 aspect-square",
-					{ "bg-accent bg-opacity-50": state === "ACTIVE" },
-				)}
-				width={150}
-				height={150}
-				ref={target}
-			/>
-		</button>
-	);
-})
+		return (
+			<button type="button" onClick={onClick}>
+				<canvas
+					className={cn(
+						"border rounded-lg transition-all hover:scale-105 aspect-square",
+						{ "bg-accent bg-opacity-50": state === "ACTIVE" },
+					)}
+					width={150}
+					height={150}
+					ref={target}
+				/>
+			</button>
+		);
+	},
+);
 
 const MinecraftSkinControl: React.FC = memo(() => {
 	const msAccount = useAccount();
@@ -465,5 +467,3 @@ export const Route = createLazyFileRoute("/_authenticated/_layout/skins")({
 	errorComponent: (error) => <ErrorComponent error={error} />,
 	pendingComponent: Loading,
 });
-
-

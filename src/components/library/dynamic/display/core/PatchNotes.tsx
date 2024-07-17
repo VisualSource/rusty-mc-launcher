@@ -127,7 +127,7 @@ export const PatchNotesSkeletons: React.FC = memo(() => {
 		</>
 	);
 });
-PatchNotesSkeletons.displayName = "PatchNotesSkeletion"
+PatchNotesSkeletons.displayName = "PatchNotesSkeletion";
 
 const PatchNotes: React.FC = () => {
 	const [openNotes, setOpenNotes] = useState(false);

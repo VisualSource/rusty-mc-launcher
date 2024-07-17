@@ -28,17 +28,15 @@ const GameCrash: React.FC = () => {
 		});
 
 		return () => {
-			eventHandler.then(unsub => unsub());
-		}
+			eventHandler.then((unsub) => unsub());
+		};
 	}, []);
 
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<AlertDialogContent className="text-zinc-50">
 				<AlertDialogHeader>
-					<AlertDialogTitle>
-						Crash Notice
-					</AlertDialogTitle>
+					<AlertDialogTitle>Crash Notice</AlertDialogTitle>
 					<AlertDialogDescription className="text-center p-4">
 						The game did not start/exit successfully. (Exit Code: {exitCode})
 					</AlertDialogDescription>
