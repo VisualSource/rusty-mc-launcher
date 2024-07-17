@@ -4,6 +4,7 @@ mod download;
 mod fabric;
 mod forge;
 mod metadata;
+mod neoforge;
 pub mod utils;
 use crate::state::profile::Loader;
 
@@ -98,13 +99,12 @@ pub async fn install_minecraft(
                 return Err(LauncherError::Generic("Should not be here".to_string()))
             }
             Loader::Neoforge => {
-                forge::run_installer(
+                neoforge::run_installer(
                     event_channel,
                     &config.version,
                     config.loader_version,
                     &runtime_directory,
                     &java_exe,
-                    true,
                 )
                 .await?
             }

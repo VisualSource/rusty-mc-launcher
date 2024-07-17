@@ -1,14 +1,11 @@
 import { type UnlistenFn, once } from "@tauri-apps/api/event";
-import type { AuthError } from "@azure/msal-common";
+import { open } from "@tauri-apps/api/shell";
 import {
 	BrowserAuthErrorCodes,
 	createBrowserAuthError,
 } from "@masl/error/BrowserAuthError";
-import type { PopupWindowAttributes } from "@masl/request/PopupWindowAttributes";
-import type { PopupParams } from "@masl/interaction_client/PopupClient";
-import { BrowserConstants } from "@masl/utils/BrowserConstants";
-import { preconnect } from "@masl/utils/BrowserUtils";
 import { auth } from "@system/logger";
+import { toast } from "react-toastify";
 
 export type AuthResponse = {
 	access_token: string;
@@ -16,89 +13,66 @@ export type AuthResponse = {
 	expires_in: number;
 };
 
+const TEN_MINS = 600_000;
 const MODRINTH_REDIRECT = "rmcl://modrinth_auth/authorize";
 const MODRINTH_GET_TOKEN = "https://api.modrinth.com/_internal/oauth/token";
-const MODRITH_AUTHORIZE = "https://modrinth.com/auth/sign-in";
-
-// https://modrinth.com/auth/sign-in?redirect=/auth/authorize?client_id=TpBn4YFs&redirect_uri=rmcl://modrinth_auth/authorize&scope=NOTIFICATION_READ+NOTIFICATION_WRITE+USER_READ+USER_WRITE
-
+const MODRITH_AUTHORIZE = "https://modrinth.com/auth/authorize";
 export class PopupClient {
 	currentWindow: Window | undefined;
 	public acquireToken() {
 		try {
-			const popupName = this.generatePopupName();
-			const popup = this.openSizedPopup("about:blank", popupName, {});
-			return this.acquireTokenPopupAsync(popupName, popup);
+			const res = this.acquireTokenPopupAsync();
+			toast.success("Logged into Modrinth");
+			return res;
 		} catch (error) {
+			toast.error("Modrinth Login failed", { data: error });
 			return Promise.reject(error);
 		}
 	}
 
-	private async acquireTokenPopupAsync(
-		popupName: string,
-		popup?: Window | null,
-	) {
-		preconnect(MODRITH_AUTHORIZE);
-		try {
-			const login_params = new URLSearchParams({
-				redirect: "/auth/authorize",
-				client_id: import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID,
-				redirect_uri: MODRINTH_REDIRECT,
-				scope: import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES,
-			});
-			const popupWindow = this.openPopup(
-				`${MODRITH_AUTHORIZE}?${login_params.toString()}`,
-				{
-					popupName,
-					popup,
-					popupWindowAttributes: {},
-				},
-			);
+	private async acquireTokenPopupAsync() {
+		await open(
+			`${MODRITH_AUTHORIZE}?client_id=${import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID}&redirect_uri=${MODRINTH_REDIRECT}&scope=${import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES}`,
+		);
 
-			const responseString = await this.monitorPopupForHash(popupWindow);
+		const responseString = await this.waitForCode();
 
-			const params = new URLSearchParams(responseString);
+		const params = new URLSearchParams(responseString);
 
-			if (!params.get("code"))
-				throw createBrowserAuthError(BrowserAuthErrorCodes.unableToLoadToken);
+		if (!params.get("code"))
+			throw createBrowserAuthError(BrowserAuthErrorCodes.unableToLoadToken);
 
-			params.set("grant_type", "authorization_code");
-			params.set("client_id", import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID);
-			params.set("redirect_uri", MODRINTH_REDIRECT);
+		params.set("grant_type", "authorization_code");
+		params.set("client_id", import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID);
+		params.set("redirect_uri", MODRINTH_REDIRECT);
 
-			/**
-			 * For how to send and format the request
-			 * @see https://stackoverflow.com/questions/40998133/content-type-for-token-request-in-oauth2
-			 * @see https://auth0.com/docs/api/authentication#get-token45
-			 *
-			 *
-			 * For where "client_secret" is set
-			 * @see https://github.com/modrinth/labrinth/blob/master/src/auth/oauth/mod.rs#L202-L204
-			 */
+		/**
+		 * For how to send and format the request
+		 * @see https://stackoverflow.com/questions/40998133/content-type-for-token-request-in-oauth2
+		 * @see https://auth0.com/docs/api/authentication#get-token45
+		 *
+		 *
+		 * For where "client_secret" is set
+		 * @see https://github.com/modrinth/labrinth/blob/master/src/auth/oauth/mod.rs#L202-L204
+		 */
 
-			const response = await fetch(MODRINTH_GET_TOKEN, {
-				method: "POST",
-				headers: {
-					Authorization: import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_SECRET,
-					"Content-Type": "application/x-www-form-urlencoded",
-				},
-				body: params,
-			});
+		const response = await fetch(MODRINTH_GET_TOKEN, {
+			method: "POST",
+			headers: {
+				Authorization: import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_SECRET,
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+			body: params,
+		});
 
-			if (!response.ok) {
-				throw createBrowserAuthError(BrowserAuthErrorCodes.postRequestFailed);
-			}
-
-			return response.json() as Promise<AuthResponse>;
-		} catch (error) {
-			if (popup) {
-				popup.close();
-			}
-			throw error;
+		if (!response.ok) {
+			throw createBrowserAuthError(BrowserAuthErrorCodes.postRequestFailed);
 		}
+
+		return response.json() as Promise<AuthResponse>;
 	}
 
-	private monitorPopupForHash(popupWindow: Window) {
+	private waitForCode() {
 		let intervalId: NodeJS.Timeout | undefined;
 		let unlisten: Promise<UnlistenFn> | undefined;
 
@@ -109,119 +83,16 @@ export class PopupClient {
 		});
 
 		const closeHandler = new Promise<string>((_, reject) => {
-			intervalId = setInterval(() => {
-				// Window is closed
-				if (popupWindow.closed) {
-					auth.error("PopupHandler.monitorPopupForHash - window closed");
-					clearInterval(intervalId);
-					reject(createBrowserAuthError(BrowserAuthErrorCodes.userCancelled));
-					return;
-				}
-			}, 30);
+			intervalId = setTimeout(() => {
+				auth.error("PopupHandler.monitorPopupForHash - window closed");
+				reject(createBrowserAuthError(BrowserAuthErrorCodes.userCancelled));
+				return;
+			}, TEN_MINS);
 		});
 
 		return Promise.race([closeHandler, hasHandler]).finally(() => {
 			clearInterval(intervalId);
-			this.cleanPopup(popupWindow);
 			unlisten?.then((unsub) => unsub()).catch((e) => auth.error(e));
 		});
-	}
-	private openSizedPopup(
-		urlNaviate: string,
-		popupName: string,
-		popupWindowAttributes: PopupWindowAttributes,
-	): Window | null {
-		/**
-		 * adding winLeft and winTop to account for dual monitor
-		 * using screenLeft and screenTop for IE8 and earlier
-		 */
-		const winLeft = window.screenLeft ? window.screenLeft : window.screenX;
-		const winTop = window.screenTop ? window.screenTop : window.screenY;
-		/**
-		 * window.innerWidth displays browser window"s height and width excluding toolbars
-		 * using document.documentElement.clientWidth for IE8 and earlier
-		 */
-		const winWidth =
-			window.innerWidth ||
-			document.documentElement.clientWidth ||
-			document.body.clientWidth;
-		const winHeight =
-			window.innerHeight ||
-			document.documentElement.clientHeight ||
-			document.body.clientHeight;
-
-		let width = popupWindowAttributes.popupSize?.width;
-		let height = popupWindowAttributes.popupSize?.height;
-		let top = popupWindowAttributes.popupPosition?.top;
-		let left = popupWindowAttributes.popupPosition?.left;
-		if (!width || width < 0 || width > winWidth) {
-			width = BrowserConstants.POPUP_WIDTH;
-		}
-
-		if (!height || height < 0 || height > winHeight) {
-			height = BrowserConstants.POPUP_HEIGHT;
-		}
-
-		if (!top || top < 0 || top > winHeight) {
-			top = Math.max(
-				0,
-				winHeight / 2 - BrowserConstants.POPUP_HEIGHT / 2 + winTop,
-			);
-		}
-
-		if (!left || left < 0 || left > winWidth) {
-			left = Math.max(
-				0,
-				winWidth / 2 - BrowserConstants.POPUP_WIDTH / 2 + winLeft,
-			);
-		}
-
-		return window.open(
-			urlNaviate,
-			popupName,
-			`width=${width}, height=${height}, top=${top}, left=${left}, scrollbars=yes`,
-		);
-	}
-	private openPopup(urlNaviagge: string, popupParams: PopupParams) {
-		try {
-			let popupWindow: Window | undefined | null;
-
-			if (popupParams.popup) {
-				popupWindow = popupParams.popup;
-				popupWindow.location.assign(urlNaviagge);
-			} else if (typeof popupParams.popup === "undefined") {
-				popupWindow = this.openSizedPopup(
-					urlNaviagge,
-					popupParams.popupName,
-					popupParams.popupWindowAttributes,
-				);
-			}
-			if (!popupWindow) {
-				throw createBrowserAuthError(BrowserAuthErrorCodes.emptyWindowError);
-			}
-			if (popupWindow) popupWindow.focus();
-
-			this.currentWindow = popupWindow;
-			window.addEventListener("beforeunload", this.unloadWindow);
-
-			return popupWindow;
-		} catch (error) {
-			auth.error(`Error opening popup ${(error as AuthError)?.message}`);
-			throw createBrowserAuthError(BrowserAuthErrorCodes.popupWindowError);
-		}
-	}
-	private unloadWindow = (e: Event) => {
-		if (this.currentWindow) {
-			this.currentWindow.close();
-		}
-		e.preventDefault();
-	};
-	private cleanPopup(popupWindow?: Window): void {
-		if (popupWindow) popupWindow.close();
-
-		window.removeEventListener("beforeunload", this.unloadWindow);
-	}
-	private generatePopupName() {
-		return `modrinth.${import.meta.env.PUBLIC_VIE_MODRINTH_CLIENT_ID}.${import.meta.env.PUBLIC_VIE_MODRINTH_SCOPES}`;
 	}
 }

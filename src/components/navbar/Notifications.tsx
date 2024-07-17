@@ -7,6 +7,12 @@ import { TypographyH4 } from "../ui/typography";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { useModrinth } from "@/hooks/useModrinth";
+import { useQuery } from "@tanstack/react-query";
+import { getProjects, getVersions } from "@/lib/api/modrinth";
+import { modrinthClient } from "@/lib/api/modrinthClient";
+import { queryClient } from "@/lib/api/queryClient";
+import { useModrinthNotifications } from "@/hooks/useModrinthNoitications";
 
 const DisplayToastData = ({ value }: { value: unknown }) => {
 	if (!value) return null;
@@ -40,8 +46,11 @@ const DisplayToastData = ({ value }: { value: unknown }) => {
 };
 
 export const Notifications = () => {
-	const { notifications, unreadCount, markAllAsRead, remove, clear } =
-		useNotificationCenter();
+	const modrinth = useModrinthNotifications();
+	const system = useNotificationCenter();
+
+	const unreadCount = system.unreadCount + modrinth.unreadCount;
+
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
@@ -68,7 +77,7 @@ export const Notifications = () => {
 				<Separator className="mb-4 mt-2" />
 				<div className="max-h-56 pt-4 overflow-y-auto scrollbar">
 					<ul className="min-h-[200px] space-y-2">
-						{notifications.map((value) => (
+						{system.notifications.map((value) => (
 							<li
 								key={value.id}
 								className="flex items-center justify-between rounded-lg px-4 py-1 border relative"
@@ -90,7 +99,34 @@ export const Notifications = () => {
 								</div>
 								<Button
 									title="Archive notification"
-									onClick={() => remove(value.id)}
+									onClick={() => system.remove(value.id)}
+									size="icon"
+									variant="ghost"
+								>
+									<Archive className="h-4 w-4" />
+								</Button>
+							</li>
+						))}
+						{modrinth.notifications.map((n) => (
+							<li
+								className="flex items-center justify-between rounded-lg px-4 py-1 border relative"
+								key={n.id}
+							>
+								{n.read ? null : (
+									<div className="absolute top-0.5 left-0.5 rounded-full bg-destructive h-2 w-2" />
+								)}
+								<div>
+									<h1 className="line-clamp-2 font-medium">{n.title}</h1>
+									<p className="text-xs text-muted-foreground text-wrap">
+										{n.text}
+									</p>
+									<span className="text-muted-foreground text-xs">
+										{formatRelative(new Date(n.created), new Date())}
+									</span>
+								</div>
+								<Button
+									title="Archive notification"
+									onClick={() => modrinth.remove(n.id)}
 									size="icon"
 									variant="ghost"
 								>
@@ -102,10 +138,23 @@ export const Notifications = () => {
 				</div>
 				<Separator className="mb-4" />
 				<div className="flex justify-between">
-					<Button size="sm" onClick={clear} variant="secondary">
+					<Button
+						size="sm"
+						onClick={() => {
+							system.clear();
+							modrinth.clear();
+						}}
+						variant="secondary"
+					>
 						Clear All
 					</Button>
-					<Button size="sm" onClick={markAllAsRead}>
+					<Button
+						size="sm"
+						onClick={() => {
+							system.markAllAsRead();
+							modrinth.markAllAsRead();
+						}}
+					>
 						Mark All Read
 					</Button>
 				</div>

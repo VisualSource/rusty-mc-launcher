@@ -1,18 +1,20 @@
 Todo:
-  ☐ crash reporting
   ☐ Update content check deps
   ☐ update to latest version (for vanilla)
   ☐ Validate Content
   ☐ Working neoforge install
-  ☐ log viewer
   ☐ performance changes
 
+  
 Ignore:
   ☐ default icons
   ☐ button to check for app updates
   ☐ Fix typo some where?
+  ☐ log viewer
 
 Archive:
+  ✔ modrinth login fix @done(24-07-17 13:59)
+  ✔ crash reporting @done(24-07-17 00:02)
   ✔ editable home page @started(24-07-06 11:49) @done(24-07-06 17:28) @lasted(5h39m17s)
   ✔ Bug report system @started(24-07-05 15:39) @done(24-07-05 16:12) @lasted(33m21s)
   ✔ theme selector @done(24-07-01 16:13)

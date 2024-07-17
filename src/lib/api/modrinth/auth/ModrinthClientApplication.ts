@@ -219,7 +219,7 @@ export class ModrinthClientApplication extends EventTarget {
 		if (!response.ok)
 			throw new Error("Failed to read notification", { cause: response });
 	}
-	async deleteNotifications(ids: string) {
+	async deleteNotifications(ids: string[]) {
 		if (!this.data?.account)
 			throw new BrowserAuthError(
 				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,

@@ -101,9 +101,8 @@ export const LoaderVersionSelector: React.FC<{
 					if (errorNode) return [];
 
 					const [_, minor, patch] = version.split(".");
-
 					const output = [];
-					const target = `${minor}.${patch.length ? patch : "0"}`;
+					const target = `${minor}.${patch?.length ? patch : "0"}`;
 					for (const item of doc.querySelectorAll("version")) {
 						if (item.textContent?.startsWith(target)) {
 							output.push(item.textContent);
@@ -112,7 +111,7 @@ export const LoaderVersionSelector: React.FC<{
 					return output.toReversed();
 				}
 				default:
-					throw new Error("There are no loader version for vanilla");
+					return [];
 			}
 		},
 	});

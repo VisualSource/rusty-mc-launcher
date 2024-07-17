@@ -136,7 +136,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
             ))
         })?;
 
-    log::debug!("Profile {:#?}", profile);
+    //log::debug!("Profile {:#?}", profile);
 
     let version_id = match profile.loader {
         crate::profile::Loader::Vanilla => profile.version.to_owned(),
@@ -215,7 +215,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
 
     let manifest = Manifest::read_manifest(&manifest_directory, true).await?;
 
-    log::debug!("{:?}", manifest);
+    //log::debug!("{:?}", manifest);
 
     let classpath = manifest.libs_as_string(&runtime_directory, &version_id)?;
 
@@ -279,7 +279,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
     args.push(manifest.main_class);
     args.extend(game_args);
 
-    debug!("{:#?}", args);
+    //debug!("{} {:#?}", java_exe, args);
 
     app.instances
         .insert_new_process(app, game_directory, profile.id, &java_exe, args)

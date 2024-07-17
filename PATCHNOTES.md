@@ -1,6 +1,21 @@
+# v0.7.3
+
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.7.2...v0.7.3)
+
+#### New
+- Modrinth account notifications
+
+#### Changes
+
+#### Fixes
+- Fixed Modrinth account login
+- Fixed Neoforge loader version select 'undefined' error
+- Fixed Neoforge install
+- Fixed Neoforge start
+
 # v0.7.2
 
-Fix deployment
+Fix version deployment
 
 # v0.7.1
 

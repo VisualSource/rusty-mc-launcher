@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use std::env::consts;
 use std::path::PathBuf;
 
 use crate::errors::LauncherError;
 use crate::launcher::arguments::{parse_rules, Arguments, RuleCondition};
+use itertools::Itertools;
 use log::info;
 use normalize_path::NormalizePath;
 use serde::{self, Deserialize, Serialize};
@@ -89,7 +91,20 @@ impl Manifest {
 
         self.arguments.game.extend(manifest.arguments.game);
         self.arguments.jvm.extend(manifest.arguments.jvm);
-        self.libraries.extend(manifest.libraries);
+
+        let lib_names = self
+            .libraries
+            .iter()
+            .map(|lib| lib.name.replace("@jar", "").clone())
+            .collect::<Vec<_>>();
+
+        for lib in manifest.libraries {
+            if !lib_names.contains(&lib.name.replace("@jar", "")) {
+                self.libraries.push(lib);
+                continue;
+            }
+            log::info!("Ignoring {}", lib.name);
+        }
 
         self
     }

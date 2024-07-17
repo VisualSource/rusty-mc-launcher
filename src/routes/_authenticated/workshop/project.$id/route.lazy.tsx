@@ -156,18 +156,41 @@ function Project() {
 
 							<div className="flex items-center gap-2">
 								<Button
-									onClick={() =>
-										toast.promise(
-											follows.data?.findIndex((e) => e.id === project.id) !== -1
-												? modrinth.unfollowProject(project.id)
-												: modrinth.followProject(project.id),
-											{
-												pending: "Updating",
-												success: "Updated",
-												error: "Failed to update.",
-											},
-										)
-									}
+									onClick={async () => {
+										const toastId = toast.loading("Updating");
+										try {
+											const state =
+												follows.data?.findIndex((e) => e.id === project.id) !==
+												-1;
+											if (state) {
+												await modrinth.unfollowProject(project.id);
+											} else {
+												await modrinth.followProject(project.id);
+											}
+											toast.update(toastId, {
+												isLoading: false,
+												type: "success",
+												render: state
+													? "Unfollowed project"
+													: "Followed Project",
+												data: state
+													? `Unfollowed project: ${project.title}`
+													: `Followed project: ${project.title}`,
+												closeButton: true,
+												autoClose: 5000,
+											});
+										} catch (error) {
+											console.error(error);
+											toast.update(toastId, {
+												isLoading: false,
+												type: "error",
+												render: "Failed to update project follow",
+												data: error,
+												closeButton: true,
+												autoClose: 5000,
+											});
+										}
+									}}
 									disabled={!isModrinthAuthed}
 									variant="secondary"
 								>

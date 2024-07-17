@@ -77,8 +77,6 @@ impl Instances {
     ) -> Result<Arc<RwLock<MinecraftInstance>>, LauncherError> {
         let uuid = Uuid::new_v4().to_string();
 
-        log::debug!("{exe} {}", args.join(" "));
-
         let proc = Command::new(exe)
             .current_dir(game_direcotry)
             .args(args)

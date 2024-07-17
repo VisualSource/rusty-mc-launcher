@@ -8,7 +8,7 @@ export function useCurrentQueue() {
 	return useQuery({
 		queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.CURRENT],
 		initialData: null,
-		refetchInterval: 60_000,
+		refetchInterval: 30_000,
 		queryFn: () =>
 			db
 				.select({
