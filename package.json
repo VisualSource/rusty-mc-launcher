@@ -6,7 +6,7 @@
   "scripts": {
     "tauri": "tauri",
     "dev": "vite",
-    "test": "vitest",
+    "test": "vitest run",
     "check": "pnpm biome check --write ./src",
     "format": "pnpm biome format --write ./src",
     "lint": "pnpm biome lint --write ./src",
