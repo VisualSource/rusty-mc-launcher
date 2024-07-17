@@ -4,7 +4,6 @@ use self::arguments::Arguments;
 use crate::manifest::Library;
 use crate::state::AppState;
 use crate::{errors::LauncherError, manifest::Manifest};
-use log::debug;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use tokio::fs;

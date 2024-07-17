@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 use std::env::consts;
 use std::path::PathBuf;
 
 use crate::errors::LauncherError;
 use crate::launcher::arguments::{parse_rules, Arguments, RuleCondition};
-use itertools::Itertools;
 use log::info;
 use normalize_path::NormalizePath;
 use serde::{self, Deserialize, Serialize};

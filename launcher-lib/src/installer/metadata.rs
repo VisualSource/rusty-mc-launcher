@@ -7,13 +7,13 @@ const LAUNCHER_META: &str = "https://launchermeta.mojang.com/mc/game/version_man
 pub struct VersionManifestItem {
     pub id: String,
     pub url: String,
-    #[serde(alias = "type")]
-    pub version_type: String,
-    #[serde(alias = "releaseTime")]
-    pub release_time: String,
+    // #[serde(alias = "type")]
+    //pub version_type: String,
+    // #[serde(alias = "releaseTime")]
+    // pub release_time: String,
     pub sha1: String,
-    #[serde(alias = "complianceLevel")]
-    pub compliance_level: usize,
+    //#[serde(alias = "complianceLevel")]
+    //pub compliance_level: usize,
 }
 
 #[derive(Deserialize, Debug)]

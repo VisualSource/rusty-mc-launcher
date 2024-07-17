@@ -7,12 +7,15 @@
 
 #### Changes
 - Updated Javascript deps
+- Removed unused struct fields in rust laucher library
+- Switched current queue item interval check from 60_000 ms to 30_000 ms
 
 #### Fixes
 - Fixed Modrinth account login
 - Fixed Neoforge loader version select 'undefined' error
 - Fixed Neoforge install
 - Fixed Neoforge start
+- Laucher lib now dedups libraries when inheriting
 
 # v0.7.2
 
