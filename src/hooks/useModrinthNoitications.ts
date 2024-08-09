@@ -136,13 +136,11 @@ export const useModrinthNotifications = () => {
 	const remove = useCallback(
 		(id: string) => {
 			if (!modrinthUser) return;
-			modrinth
-				.deleteNotification(id)
-				.then(() =>
-					queryClient.invalidateQueries({
-						queryKey: ["MODRINTH_NOTIFICATIONS"],
-					}),
-				);
+			modrinth.deleteNotification(id).then(() =>
+				queryClient.invalidateQueries({
+					queryKey: ["MODRINTH_NOTIFICATIONS"],
+				}),
+			);
 		},
 		[modrinthUser, modrinth.deleteNotification],
 	);

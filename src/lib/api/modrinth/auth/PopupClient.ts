@@ -31,9 +31,8 @@ export class PopupClient {
 	}
 
 	private async acquireTokenPopupAsync() {
-		await open(
-			`${MODRITH_AUTHORIZE}?client_id=${import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID}&redirect_uri=${MODRINTH_REDIRECT}&scope=${import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES}`,
-		);
+		const signinURL = `${MODRITH_AUTHORIZE}?client_id=${encodeURIComponent(import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID)}&redirect_uri=${encodeURIComponent(MODRINTH_REDIRECT)}&scope=${encodeURIComponent(import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES)}`;
+		await open(signinURL);
 
 		const responseString = await this.waitForCode();
 
