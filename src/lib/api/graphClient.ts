@@ -3,10 +3,10 @@ import {
 	BaseDirectory,
 	writeBinaryFile,
 	createDir,
-} from "@tauri-apps/api/fs";
+} from "@tauri-apps/plugin-fs";
 import { resolve, appDataDir } from "@tauri-apps/api/path";
 import { Client } from "@microsoft/microsoft-graph-client";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 export const getGraphClient = (accessToken: string) => {
 	const graphClient = Client.init({

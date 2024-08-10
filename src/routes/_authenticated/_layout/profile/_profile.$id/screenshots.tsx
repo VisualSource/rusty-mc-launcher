@@ -1,7 +1,7 @@
 import { ErrorComponent, createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { exists, readDir } from "@tauri-apps/api/fs";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { exists, readDir } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
 import { FileImage } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,8 +18,9 @@ const profileScreenshotsQueryOptions = (id: string) =>
 			if (!path) throw new Error("Missing app directory");
 			const screenshot_dir = await join(path, "profiles", id, "screenshots");
 			if (!(await exists(screenshot_dir))) return [];
-			const entries = await readDir(screenshot_dir, { recursive: false });
-			return entries.map((item) => convertFileSrc(item.path));
+			const entries = await readDir(screenshot_dir);
+			// TODO: full file path?
+			return entries.map((item) => convertFileSrc(item.name));
 		},
 	});
 

@@ -1,6 +1,6 @@
-import { BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
+import { BaseDirectory, readTextFile } from "@tauri-apps/plugin-fs";
 import { dataDir, join } from "@tauri-apps/api/path";
-import { open } from "@tauri-apps/api/dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import { toast } from "react-toastify";
 import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
@@ -45,13 +45,13 @@ const import_profiles = async () => {
 		],
 	});
 
-	if (!result || Array.isArray(result)) {
+	if (!result) {
 		toast.error("Failed to import profiles");
 		return;
 	}
 
 	try {
-		const content = await readTextFile(result, { dir: BaseDirectory.AppData });
+		const content = await readTextFile(result.path, { baseDir: BaseDirectory.AppData });
 		const data = JSON.parse(content) as {
 			profiles: Record<
 				string,
@@ -80,10 +80,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-						version.replace(
-							"latest-",
-							"",
-						) as keyof (typeof latest_data)["latest"]
+					version.replace(
+						"latest-",
+						"",
+					) as keyof (typeof latest_data)["latest"]
 					];
 			}
 

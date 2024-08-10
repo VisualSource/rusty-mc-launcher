@@ -1,5 +1,5 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
-import { exit } from "@tauri-apps/api/process";
+import { exit } from "@tauri-apps/plugin-process";
 import { toast } from "react-toastify";
 
 import type { MinecraftProfile } from "@/lib/models/profiles";

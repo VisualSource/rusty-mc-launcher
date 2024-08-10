@@ -1,7 +1,7 @@
 use crate::errors::Error;
 use crate::oauth::{cancel, start};
 use log::{debug, error};
-use tauri::Window;
+use tauri::{Emitter, Window};
 
 #[tauri::command]
 pub async fn start_auth_server(window: Window) -> Result<u16, Error> {

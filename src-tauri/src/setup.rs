@@ -1,16 +1,17 @@
 use log::LevelFilter;
 use minecraft_launcher_lib::{
-    errors::LauncherError, models::QueueType, AppState, ChannelMessage, Database,
+    errors::LauncherError, /*models::QueueType*/ AppState, /*ChannelMessage*/ Database,
 };
-use std::time::Duration;
+//use std::time::Duration;
+use tauri::Emitter;
 use tauri::{plugin::TauriPlugin, App, AppHandle, Manager, Wry};
-use tauri_plugin_log::{LogTarget, TimezoneStrategy};
+use tauri_plugin_log::{Target, TargetKind, TimezoneStrategy};
 
-use crate::handlers::{
+/*use crate::handlers::{
     handle_client_install, handle_content_install, handle_external_pack_install,
-};
+};*/
 
-use crate::errors::Error;
+//use crate::errors::Error;
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -19,7 +20,7 @@ struct Payload {
 }
 
 pub fn single_instance(app: &AppHandle, argv: Vec<String>, cwd: String) {
-    if let Err(err) = app.emit_all("rmcl://start", Payload { args: argv, cwd }) {
+    if let Err(err) = app.emit("rmcl://start", Payload { args: argv, cwd }) {
         log::error!("{}", err);
     }
 }
@@ -69,13 +70,16 @@ pub fn init_logger() -> TauriPlugin<Wry> {
                 ))
             }
         })
-        .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
+        .targets([
+            Target::new(TargetKind::LogDir { file_name: None }),
+            Target::new(TargetKind::Stdout),
+        ])
         .build();
 
     logger
 }
 
-macro_rules! send_event {
+/*macro_rules! send_event {
     ($event_channel:expr,$event_name:literal, $($json:tt)+) => {
         if let Err(error) = $event_channel
         .send(ChannelMessage::new(
@@ -87,13 +91,13 @@ macro_rules! send_event {
         log::error!("{}", error);
     }
     };
-}
+}*/
 
 pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let app_dir = app
-        .path_resolver()
+        .path()
         .app_config_dir()
-        .ok_or_else(|| Error::Generic("Failed to get config directory".to_string()))?;
+        .map_err(|err| format!("Failed to get config directory: {}", err))?;
 
     log::debug!("App config directory {:?}", app_dir);
 
@@ -108,9 +112,11 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         let mut state = AppState::new(&fqdb)?;
 
         let migrations = app
-            .path_resolver()
-            .resolve_resource("./migrations")
-            .ok_or_else(|| LauncherError::Generic("Failed to get config directory".to_string()))?;
+            .path()
+            .resolve("migrations", tauri::path::BaseDirectory::Executable)
+            .map_err(|err| {
+                LauncherError::Generic(format!("Failed to get migrations directory: {}", err))
+            })?;
         state.database.run_migrator(&migrations).await?;
 
         if !state.has_setting("path.app").await? {
@@ -126,7 +132,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
     app.manage(state);
 
-    let handle = app.handle();
+    /* let handle = app.handle();
     tauri_plugin_deep_link::register("rmcl", move |request| {
         let items = request.split('?').collect::<Vec<&str>>();
 
@@ -140,10 +146,10 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         if let Err(err) = handle.emit_all(root, payload) {
             log::error!("{}", err);
         }
-    })?;
+    })?;*/
 
-    let (ev_q, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(50);
-    let event = app.handle();
+    //let (ev_q, mut rx) = tokio::sync::mpsc::channel::<ChannelMessage>(50);
+    /*let event = app.handle();
     tauri::async_runtime::spawn(async move {
         while let Some(msg) = rx.recv().await {
             log::debug!("{:#?}", msg);
@@ -151,9 +157,9 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 log::error!("Failed to notify window: {}", err);
             }
         }
-    });
+    });*/
 
-    let dlq = app.handle();
+    /*let dlq = app.handle();
     let tx = ev_q.clone();
     tauri::async_runtime::spawn(async move {
         let mut running = false;
@@ -259,9 +265,9 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 Err(err) => log::error!("Queue Error: {}", err),
             }
         }
-    });
+    });*/
 
-    let ph = app.handle();
+    /*let ph = app.handle();
     tauri::async_runtime::spawn(async move {
         loop {
             tokio::time::sleep(Duration::from_secs(5)).await;
@@ -283,7 +289,7 @@ pub fn setup_tauri(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 Err(err) => log::error!("{}", err),
             }
         }
-    });
+    });*/
 
     Ok(())
 }

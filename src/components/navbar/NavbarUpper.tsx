@@ -20,8 +20,8 @@ import {
 	Bug,
 	ScrollText,
 } from "lucide-react";
-import { appWindow } from "@tauri-apps/api/window";
-import { exit } from "@tauri-apps/api/process";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { exit } from "@tauri-apps/plugin-process";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -37,6 +37,7 @@ import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
+const appWindow = getCurrentWebviewWindow()
 
 export const NavbarUpper: React.FC = () => {
 	const msal = useMsal();

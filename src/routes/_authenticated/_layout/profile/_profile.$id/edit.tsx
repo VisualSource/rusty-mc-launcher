@@ -2,7 +2,7 @@ import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ask } from "@tauri-apps/api/dialog";
+import { ask } from "@tauri-apps/plugin-dialog";
 import { join } from "@tauri-apps/api/path";
 import { useForm } from "react-hook-form";
 import { useEffect, useRef } from "react";

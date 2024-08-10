@@ -1,5 +1,5 @@
 import { type UnlistenFn, once } from "@tauri-apps/api/event";
-import { open } from "@tauri-apps/api/shell";
+import { open } from "@tauri-apps/plugin-shell";
 import {
 	BrowserAuthErrorCodes,
 	createBrowserAuthError,

@@ -1,13 +1,13 @@
 import { ErrorComponent, createLazyFileRoute } from "@tanstack/react-router";
-import { Body, ResponseType, getClient } from "@tauri-apps/api/http";
+import { Body, ResponseType, getClient } from "@tauri-apps/plugin-http";
 import { memo, useEffect, useReducer, useRef } from "react";
 import { downloadDir, sep } from "@tauri-apps/api/path";
 import { SkinViewer, IdleAnimation } from "skinview3d";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMutation } from "@tanstack/react-query";
-import { readBinaryFile } from "@tauri-apps/api/fs";
+import { readBinaryFile } from "@tauri-apps/plugin-fs";
 import { useAccount } from "@azure/msal-react";
-import { open } from "@tauri-apps/api/dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import { toast } from "react-toastify";
 import { Plus } from "lucide-react";
 

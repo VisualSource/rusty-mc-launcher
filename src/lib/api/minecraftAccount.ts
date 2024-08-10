@@ -1,8 +1,8 @@
-import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
+import { getClient, Body, ResponseType } from "@tauri-apps/plugin-http";
 import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
 import { auth } from "@system/logger";
-import { message } from "@tauri-apps/api/dialog";
+import { message } from "@tauri-apps/plugin-dialog";
 
 const MINECRAFT_LOGIN =
 	"https://api.minecraftservices.com/authentication/login_with_xbox";

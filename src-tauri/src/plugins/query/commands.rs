@@ -1,7 +1,8 @@
-/*use std::collections::HashMap;
+use std::collections::HashMap;
 
 use crate::errors::Error;
 use minecraft_launcher_lib::AppState;
+
 #[tauri::command]
 pub async fn select(
     state: tauri::State<'_, AppState>,
@@ -18,4 +19,4 @@ pub async fn execute(
     args: Vec<serde_json::Value>,
 ) -> Result<(u64, i64), Error> {
     Ok(state.database.ececute(&query, args).await?)
-}*/
+}

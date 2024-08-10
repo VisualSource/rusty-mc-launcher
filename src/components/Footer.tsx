@@ -10,7 +10,7 @@ import {
 	UnauthenticatedTemplate,
 } from "@azure/msal-react";
 import { downloadDir } from "@tauri-apps/api/path";
-import { open } from "@tauri-apps/api/dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import { Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { memo, useState } from "react";

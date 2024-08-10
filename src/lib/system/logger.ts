@@ -1,5 +1,5 @@
 import createDebug, { type Debugger } from "debug";
-import { warn, error, debug, info, attachConsole } from "tauri-plugin-log-api";
+import { warn, error, debug, info, attachConsole } from "@tauri-apps/plugin-log";
 
 const levels = [
 	{ name: "error", color: "red", logger: error },
