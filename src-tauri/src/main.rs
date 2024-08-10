@@ -1,11 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-mod commands;
-mod errors;
-mod handlers;
-mod oauth;
+mod error;
 mod plugins;
-mod setup;
-
 use tauri_plugin_log::{Target, TargetKind};
 
 fn main() {

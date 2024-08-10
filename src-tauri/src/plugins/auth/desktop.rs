@@ -3,15 +3,13 @@
 //!
 //! custom version of FabianLars oauth plugin.
 //!
+use crate::error::Error;
+use log::error;
 use std::{
     io::{Read, Write},
     net::{SocketAddr, TcpListener, TcpStream},
     thread,
 };
-
-use log::error;
-
-use crate::errors::Error;
 
 const EXIT: [u8; 4] = [1, 3, 3, 7];
 const HTTP_RESPONSE: &str = "
@@ -150,10 +148,7 @@ pub fn start<F: FnMut(String) + Send + 'static>(mut handler: F) -> Result<u16, E
     Ok(port)
 }
 //error!("Error reading incoming connection: {}", err.to_string());
-fn handle_connection(
-    mut conn: TcpStream,
-    port: u16,
-) -> Result<RequestResult, crate::errors::Error> {
+fn handle_connection(mut conn: TcpStream, port: u16) -> Result<RequestResult, Error> {
     let mut buffer = [0; 4048];
     let _ = conn.read(&mut buffer)?;
 
@@ -163,9 +158,7 @@ fn handle_connection(
 
     let mut headers = [httparse::EMPTY_HEADER; 16];
     let mut request = httparse::Request::new(&mut headers);
-    request
-        .parse(&buffer)
-        .map_err(|e| crate::errors::Error::Auth(e.to_string()))?;
+    request.parse(&buffer)?;
 
     let path = request.path.unwrap_or_default();
 
@@ -218,7 +211,7 @@ fn handle_connection(
     Ok(result)
 }
 
-pub fn cancel(port: u16) -> Result<(), std::io::Error> {
+pub fn cancel(port: u16) -> Result<(), Error> {
     // Using tcp instead of something global-ish like an AtomicBool,
     // so we don't have to dive into the set_nonblocking madness.
     let mut stream = TcpStream::connect(SocketAddr::from(([127, 0, 0, 1], port)))?;

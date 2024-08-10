@@ -1,4 +1,5 @@
 mod commands;
+mod desktop;
 use tauri::{
     plugin::{Builder, TauriPlugin},
     Manager, Runtime,

@@ -1,6 +1,6 @@
 use minecraft_launcher_lib::content::{external, ContentType};
+use minecraft_launcher_lib::models::QueueType;
 use minecraft_launcher_lib::AppState;
-use minecraft_launcher_lib::{models::QueueType, AppState};
 use std::path::PathBuf;
 
 #[tauri::command]
@@ -26,7 +26,7 @@ pub async fn create_profile(
     state: tauri::State<'_, AppState>,
     profile: String,
     copy_options: Option<String>,
-) -> Result<(), Error> {
+) -> Result<(), String> {
     /*let root_dir = state.get_path("path.app").await?.join("profiles");
 
     let new_profile = root_dir.join(&profile);
@@ -82,7 +82,7 @@ pub async fn copy_profile(
     state: tauri::State<'_, AppState>,
     profile: String,
     new_profile: String,
-) -> Result<(), Error> {
+) -> Result<(), String> {
     /*  let root = state.get_path("path.app").await?.join("profiles");
 
     let a = root.join(profile);
@@ -109,7 +109,9 @@ pub async fn import_external(
     profile: String,
     src: PathBuf,
     content_type: ContentType,
-) -> Result<(), Error> {
+) -> Result<(), String> {
+    // TODO: rework to use tauri channels
+
     /*if let Err(err) = external::install_external(&state, src, profile, content_type).await {
         log::error!("{}", err);
         return Err(err.into());

@@ -1,4 +1,6 @@
-use crate::oauth::{cancel, start};
+//use crate::oauth::{cancel, start};
+
+use super::desktop::cancel;
 use log::{debug, error};
 use tauri::{command, Emitter, Window};
 
