@@ -5,16 +5,14 @@ use tauri::{
 };
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    Builder::<R>::new("rmcl-game")
+    Builder::<R>::new("rmcl-auth")
         .setup(|_app, _api| {
-            log::debug!("Setup <rmcl-game> plugin");
-            // TODO: load process cache
+            log::debug!("Setup <rmcl-auth> plugin");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            commands::launch_game,
-            commands::is_running,
-            commands::stop
+            commands::start_auth_server,
+            commands::close_auth_server
         ])
         .build()
 }

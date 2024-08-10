@@ -9,7 +9,7 @@ pub async fn select(
     query: String,
     args: Vec<serde_json::Value>,
 ) -> Result<Vec<HashMap<String, serde_json::Value>>, Error> {
-    Ok(state.database.select(&query, args).await?)
+    todo!("Execute select query")
 }
 
 #[tauri::command]
@@ -18,5 +18,5 @@ pub async fn execute(
     query: String,
     args: Vec<serde_json::Value>,
 ) -> Result<(u64, i64), Error> {
-    Ok(state.database.ececute(&query, args).await?)
+    todo!("Execute query")
 }

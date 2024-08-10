@@ -30,6 +30,7 @@ fn main() {
         )
         .plugin(plugins::query::init())
         .plugin(plugins::game::init())
+        .plugin(plugins::auth::init())
         //.setup(setup::setup_tauri)
         /*.invoke_handler(tauri::generate_handler![
             commands::auth::start_auth_server,

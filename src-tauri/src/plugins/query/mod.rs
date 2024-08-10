@@ -17,7 +17,8 @@ fn create_db_path(path: &std::path::Path) -> String {
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-query")
-        .setup(|app, api| {
+        .setup(|app, _api| {
+            log::debug!("Setup <rmcl-game> plugin");
             // setup mirgraions
             let config_dir = app.path().app_config_dir()?;
             let fqdb = create_db_path(&config_dir);

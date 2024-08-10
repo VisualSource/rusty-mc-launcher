@@ -1,7 +1,7 @@
 use crate::errors::Error;
 use minecraft_launcher_lib::{start_game, AppState, LaunchConfig};
 
-#[tauri::command]
+/*tauri::command]
 pub async fn launch_game(
     state: tauri::State<'_, AppState>,
     config: LaunchConfig,
@@ -28,4 +28,4 @@ pub async fn stop(state: tauri::State<'_, AppState>, profile: String) -> Result<
     }
 
     Ok(())
-}
+}*/
