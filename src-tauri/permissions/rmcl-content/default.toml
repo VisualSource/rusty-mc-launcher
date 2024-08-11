@@ -1,0 +1,14 @@
+[default]
+description = "Default permissions for the rmcl-content plugin"
+permissions = ["allow-get-system-ram","downloads-listener"]
+
+[[permission]]
+identifier = "allow-get-system-ram"
+description = "Allow quering os for installed ram amount"
+commands.allow = ["get_system_ram"]
+
+
+[[permission]]
+identifier = "downloads-listener"
+description = "Allow for listening to download events via channel"
+commands.allow = ["downloads_listener"]

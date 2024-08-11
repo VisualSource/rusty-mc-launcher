@@ -33,7 +33,7 @@
 					"cmd": "explorer",
 					"args": [
 						{
-							"validator": "^[a-zA-Z]:\\(((?![<>:\"/\\|?*]).)+((?<![ .])\\)?)*$"
+							"validator": "[a-zA-Z]:\\\\.+"
 						}
 					]
 				}
@@ -72,6 +72,10 @@
 		},
 		"process:allow-exit",
 		"updater:default",
-		"log:default"
+		"log:default",
+		"rmcl-auth:default",
+		"rmcl-content:default",
+		"rmcl-game:default",
+		"rmcl-query:default"
 	]
 }

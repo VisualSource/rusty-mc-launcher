@@ -1,7 +1,15 @@
 use minecraft_launcher_lib::content::{external, ContentType};
+use minecraft_launcher_lib::events::DownloadEvent;
 use minecraft_launcher_lib::models::QueueType;
 use minecraft_launcher_lib::AppState;
 use std::path::PathBuf;
+use tauri::ipc::Channel;
+
+#[tauri::command]
+pub async fn downloads_listener(on_event: Channel<DownloadEvent>) {
+
+    // do stuff pass on_event to caller
+}
 
 #[tauri::command]
 pub async fn delete_profile(

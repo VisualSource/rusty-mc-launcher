@@ -1,6 +1,7 @@
 /// Minecraft rust launcher library for launcher minecraft with/without mods
 /// https://ryanccn.dev/posts/inside-a-minecraft-launcher/
 pub mod errors;
+pub mod events;
 pub mod installer;
 mod launcher;
 mod manifest;

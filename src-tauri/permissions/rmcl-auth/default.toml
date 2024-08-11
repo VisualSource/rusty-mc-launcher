@@ -1,0 +1,8 @@
+[default]
+description = "Default permissions for the rmcl-auth plugin"
+permissions = ["allow-start-auth-server"]
+
+[[permission]]
+identifier = "allow-start-auth-server"
+description = "Enables the startAuthServer command."
+commands.allow = ["start_auth_server"]

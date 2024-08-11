@@ -87,11 +87,11 @@ impl AppState {
                 LauncherError::NotFound(format!("Could not find proccess {}", cache.pid))
             })?;
 
-        if cache.name != process.name() {
+        let process_name = process.name().to_string_lossy().to_string();
+        if cache.name != process_name {
             return Err(LauncherError::Generic(format!(
                 "Cached process {} has different name than actual process {}",
-                cache.pid,
-                process.name()
+                cache.pid, process_name
             )));
         }
 

@@ -16,14 +16,12 @@ fn main() {
             plugins::single_instance::handle_instance,
         ))
         .plugin(
-            tauri_plugin_log::Builder::new()
-                .targets([
-                    Target::new(TargetKind::Stdout),
-                    Target::new(TargetKind::LogDir { file_name: None }),
-                ])
+            tauri_plugin_log::Builder::default()
+                .level_for("tao", log::LevelFilter::Off)
                 .build(),
         )
         .plugin(plugins::query::init())
+        .plugin(plugins::content::init())
         .plugin(plugins::game::init())
         .plugin(plugins::auth::init())
         //.setup(setup::setup_tauri)

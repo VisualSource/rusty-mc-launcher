@@ -1,8 +1,4 @@
-import {
-	type UnlistenFn,
-	listen,
-	type EventCallback,
-} from "@tauri-apps/api/event";
+import { Channel } from "@tauri-apps/api/core";
 import { createContext, useSyncExternalStore } from "react";
 import { toast } from "react-toastify";
 
@@ -10,40 +6,21 @@ import AskDialog from "@/components/dialog/AskDialog";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
-
-type Progress = {
-	message: string;
-	max_progress: number;
-	progress: number;
-
-	file: string;
-};
-
-type DownloadEvent = {
-	event:
-		| "group"
-		| "update"
-		| "notify"
-		| "refresh"
-		| "reset"
-		| "done"
-		| "game_crash";
-	value: string;
-};
+import type { DownloadEvent } from "../api/plugins/content";
 
 class DownloadManager extends EventTarget {
-	private unsubscribe: Promise<UnlistenFn>;
-	private current_progress: null | Progress = null;
+	private channel = new Channel<DownloadEvent>()
+	private progress = null;
 
 	constructor() {
 		super();
-		this.unsubscribe = listen<DownloadEvent>("rmcl://download", this.handler);
+		this.channel.onmessage = this.handler;
 	}
 
-	private handler: EventCallback<DownloadEvent> = (ev) => {
-		const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
+	private handler = (ev: DownloadEvent) => {
+		//const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
 
-		switch (ev.payload.event) {
+		/*switch (ev.event) {
 			case "game_crash": {
 				console.log(data);
 				break;
@@ -118,11 +95,11 @@ class DownloadManager extends EventTarget {
 				break;
 			}
 		}
-		this.dispatchEvent(new Event("update"));
+		this.dispatchEvent(new Event("update"));*/
 	};
 
 	public getSnapshot = () => {
-		return this.current_progress;
+		return this.progress;
 	};
 }
 
@@ -131,7 +108,7 @@ class DownloadManager extends EventTarget {
 /// 3. on shunt download save to localstorage
 
 export const DownloadContext = createContext<{
-	progress: Progress | null;
+	progress: unknown | null;
 } | null>(null);
 
 const download_manager = new DownloadManager();

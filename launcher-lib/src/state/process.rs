@@ -193,7 +193,7 @@ impl InstanceType {
             InstanceType::ResucedPID(pid) => {
                 let mut system = sysinfo::System::new();
                 let id = sysinfo::Pid::from_u32(*pid);
-                if !system.refresh_process(id) {
+                if system.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[id])) == 0 {
                     return Ok(Some(0));
                 }
 
@@ -215,7 +215,7 @@ impl InstanceType {
             InstanceType::ResucedPID(pid) => {
                 let mut system = sysinfo::System::new();
                 let id = sysinfo::Pid::from_u32(*pid);
-                if system.refresh_process(id) {
+                if system.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[id])) == 1 {
                     if let Some(process) = system.process(id) {
                         process.kill();
                     }
@@ -240,12 +240,12 @@ impl InstanceType {
         let pid = self.id().unwrap_or(0);
 
         let mut system = sysinfo::System::new();
-        system.refresh_processes();
+        system.refresh_processes(sysinfo::ProcessesToUpdate::All);
 
         let process = system
             .process(sysinfo::Pid::from_u32(pid))
             .ok_or_else(|| LauncherError::NotFound(format!("Could not find processes {}", pid)))?;
-        let name = process.name().to_string();
+        let name = process.name().to_string_lossy().to_string();
         let Some(path) = process.exe() else {
             return Err(LauncherError::Generic(format!(
                 "Cached process {} has no accessable path",

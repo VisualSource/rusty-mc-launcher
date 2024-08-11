@@ -1,0 +1,8 @@
+[default]
+description = "Default permissions for the rmcl-query plugin"
+permissions = ["allow-execute"]
+
+[[permission]]
+identifier = "allow-execute"
+description = "Enables the execute command."
+commands.allow = ["execute"]

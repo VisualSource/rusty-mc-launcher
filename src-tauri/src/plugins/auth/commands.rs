@@ -17,7 +17,7 @@ pub fn start_auth_server(/*window: Window*/) -> Result<u16, String> {
     .map_err(|err| err.to_string())?;
     debug!("Starting Auth Server on port: {}", port);
     Ok(port)*/
-    todo!("Fix start server")
+    Ok(5000)
 }
 
 #[command]

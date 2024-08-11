@@ -2485,6 +2485,41 @@
     "Identifier": {
       "oneOf": [
         {
+          "description": "default -> Default permissions for the rmcl-query plugin",
+          "type": "string",
+          "enum": [
+            "default"
+          ]
+        },
+        {
+          "description": "allow-execute -> Enables the execute command.",
+          "type": "string",
+          "enum": [
+            "allow-execute"
+          ]
+        },
+        {
+          "description": "allow-get-system-ram -> Allow quering os for installed ram amount",
+          "type": "string",
+          "enum": [
+            "allow-get-system-ram"
+          ]
+        },
+        {
+          "description": "allow-start-auth-server -> Enables the startAuthServer command.",
+          "type": "string",
+          "enum": [
+            "allow-start-auth-server"
+          ]
+        },
+        {
+          "description": "downloads-listener -> Allow for listening to download events via channel",
+          "type": "string",
+          "enum": [
+            "downloads-listener"
+          ]
+        },
+        {
           "description": "core:app:default -> Default permissions for the plugin.",
           "type": "string",
           "enum": [
@@ -6682,6 +6717,62 @@
           "type": "string",
           "enum": [
             "process:deny-restart"
+          ]
+        },
+        {
+          "description": "rmcl-auth:default -> Default permissions for the rmcl-auth plugin",
+          "type": "string",
+          "enum": [
+            "rmcl-auth:default"
+          ]
+        },
+        {
+          "description": "rmcl-auth:allow-start-auth-server -> Enables the startAuthServer command.",
+          "type": "string",
+          "enum": [
+            "rmcl-auth:allow-start-auth-server"
+          ]
+        },
+        {
+          "description": "rmcl-content:default -> Default permissions for the rmcl-content plugin",
+          "type": "string",
+          "enum": [
+            "rmcl-content:default"
+          ]
+        },
+        {
+          "description": "rmcl-content:allow-get-system-ram -> Allow quering os for installed ram amount",
+          "type": "string",
+          "enum": [
+            "rmcl-content:allow-get-system-ram"
+          ]
+        },
+        {
+          "description": "rmcl-content:downloads-listener -> Allow for listening to download events via channel",
+          "type": "string",
+          "enum": [
+            "rmcl-content:downloads-listener"
+          ]
+        },
+        {
+          "description": "rmcl-game:default -> Default permissions for the rmcl-game plugin",
+          "type": "string",
+          "enum": [
+            "rmcl-game:default"
+          ]
+        },
+        {
+          "description": "rmcl-query:default -> Default permissions for the rmcl-query plugin",
+          "type": "string",
+          "enum": [
+            "rmcl-query:default"
+          ]
+        },
+        {
+          "description": "rmcl-query:allow-execute -> Enables the execute command.",
+          "type": "string",
+          "enum": [
+            "rmcl-query:allow-execute"
           ]
         },
         {
