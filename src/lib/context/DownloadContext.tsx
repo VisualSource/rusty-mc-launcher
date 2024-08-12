@@ -6,18 +6,30 @@ import AskDialog from "@/components/dialog/AskDialog";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
-import type { DownloadEvent } from "../api/plugins/content";
+import { registerDownloadListener, type DownloadEvent } from "../api/plugins/content";
 
 class DownloadManager extends EventTarget {
-	private channel = new Channel<DownloadEvent>()
+	private channel = new Channel<DownloadEvent>();
 	private progress = null;
 
 	constructor() {
 		super();
 		this.channel.onmessage = this.handler;
+		registerDownloadListener(this.channel);
 	}
 
 	private handler = (ev: DownloadEvent) => {
+		switch (ev.event) {
+			case "started":
+				break;
+			case "progress":
+				break;
+			case "finished":
+				break;
+			default:
+				break;
+		}
+		console.log(ev);
 		//const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
 
 		/*switch (ev.event) {

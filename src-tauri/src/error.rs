@@ -4,6 +4,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("Unable to send message. No channel set.")]
+    NoChannel,
+    #[error(transparent)]
+    Tauri(#[from] tauri::Error),
+    #[error("{0}")]
+    Reason(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]

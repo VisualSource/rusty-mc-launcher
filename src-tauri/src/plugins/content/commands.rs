@@ -3,12 +3,25 @@ use minecraft_launcher_lib::events::DownloadEvent;
 use minecraft_launcher_lib::models::QueueType;
 use minecraft_launcher_lib::AppState;
 use std::path::PathBuf;
+use std::sync::Mutex;
 use tauri::ipc::Channel;
+use tauri::State;
+
+use crate::error::Error;
+
+use super::EventChannel;
 
 #[tauri::command]
-pub async fn downloads_listener(on_event: Channel<DownloadEvent>) {
-
+pub async fn downloads_listener(
+    state: State<'_, Mutex<EventChannel>>,
+    on_event: Channel<DownloadEvent>,
+) -> Result<(), Error> {
     // do stuff pass on_event to caller
+    let mut data = state.lock().map_err(|err| Error::Reason(err.to_string()))?;
+
+    data.0 = Some(on_event);
+
+    Ok(())
 }
 
 #[tauri::command]

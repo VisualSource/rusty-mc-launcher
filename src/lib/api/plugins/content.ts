@@ -1,9 +1,9 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, type Channel } from "@tauri-apps/api/core";
 
 export type DownloadEvent = { event: "started", data: unknown } | { event: "progress", data: { amount: number } } | { event: "finished", data: unknown }
 
-export async function registerDownloadListener() {
-
+export async function registerDownloadListener(channel: Channel<DownloadEvent>) {
+    return invoke<void>("plugin:rmcl-content|downloads_listener", { onEvent: channel });
 }
 
 export async function getSystemRam() {
