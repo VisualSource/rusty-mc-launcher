@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+use time::{Date, PrimitiveDateTime, Time};
 
-use chrono::Utc;
+use crate::errors::LauncherError;
+use indexmap::IndexMap;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions, SqliteValueRef};
 use sqlx::{migrate::Migrator, Column, Row, TypeInfo, Value, ValueRef};
 
-use crate::errors::LauncherError;
-
+pub type QueryResult = Vec<IndexMap<String, serde_json::Value>>;
 pub struct Database(pub SqlitePool);
 
 impl Database {
@@ -20,6 +20,17 @@ impl Database {
         sqlx::sqlite::Sqlite::create_database(path)
             .await
             .map_err(LauncherError::Sqlite)
+    }
+
+    pub fn new_from_path(path: &std::path::Path, db_name: &str) -> Result<Database, LauncherError> {
+        let database_file = path.join(db_name);
+        let db_str = database_file.to_string_lossy().to_string();
+        let no_dive = db_str
+            .split_once(':')
+            .expect("Failed to parse connection string for database!")
+            .1;
+        let conn_str = format!("sqlite:{}", no_dive);
+        Self::new(&conn_str)
     }
 
     pub fn new(url: &str) -> Result<Self, LauncherError> {
@@ -36,133 +47,121 @@ impl Database {
         Ok(())
     }
 
-    pub async fn select(
+    pub async fn execute(
         &self,
-        query: &str,
-        values: Vec<serde_json::Value>,
-    ) -> Result<Vec<HashMap<String, serde_json::Value>>, LauncherError> {
-        let mut query = sqlx::query(query);
+        query: String,
+        args: Vec<serde_json::Value>,
+    ) -> Result<(u64, i64), LauncherError> {
+        let mut stmt = sqlx::query(&query);
 
-        for value in values {
-            if value.is_null() {
-                query = query.bind(None::<serde_json::Value>);
-            } else if value.is_string() {
-                query = query.bind(
-                    value
-                        .as_str()
-                        .expect("Failed to convert value to str")
-                        .to_owned(),
-                );
-            } else if value.is_number() {
-                query = query.bind(value.as_f64().unwrap_or_default());
+        for arg in args {
+            if arg.is_null() {
+                stmt = stmt.bind(None::<serde_json::Value>);
+            } else if arg.is_string() {
+                stmt = stmt.bind(arg.as_str().unwrap().to_owned());
+            } else if arg.is_number() {
+                stmt = stmt.bind(arg.as_f64().unwrap_or_default())
             } else {
-                query = query.bind(value);
+                stmt = stmt.bind(arg)
             }
         }
 
-        let rows = query.fetch_all(&self.0).await?;
+        let result = stmt.execute(&self.0).await?;
+        Ok((result.rows_affected(), result.last_insert_rowid()))
+    }
+    pub async fn select(
+        &self,
+        query: String,
+        args: Vec<serde_json::Value>,
+    ) -> Result<QueryResult, LauncherError> {
+        let mut stmt = sqlx::query(&query);
 
+        for arg in args {
+            if arg.is_null() {
+                stmt = stmt.bind(None::<serde_json::Value>);
+            } else if arg.is_string() {
+                stmt = stmt.bind(arg.as_str().unwrap().to_owned())
+            } else if arg.is_number() {
+                stmt = stmt.bind(arg.as_f64().unwrap_or_default())
+            } else {
+                stmt = stmt.bind(arg);
+            }
+        }
+
+        let rows = stmt.fetch_all(&self.0).await?;
         let mut values = Vec::new();
         for row in rows {
-            let mut value = HashMap::new();
-            for (i, column) in row.columns().iter().enumerate() {
+            let mut value = IndexMap::default();
+            for (i, col) in row.columns().iter().enumerate() {
                 let v = row.try_get_raw(i)?;
-
-                let v = decode_to_json(v)?;
-
-                value.insert(column.name().to_string(), v);
+                let v = to_json(v)?;
+                value.insert(col.name().to_string(), v);
             }
-
             values.push(value);
         }
 
         Ok(values)
     }
-    pub async fn ececute(
-        &self,
-        query: &str,
-        values: Vec<serde_json::Value>,
-    ) -> Result<(u64, i64), LauncherError> {
-        let mut query = sqlx::query(query);
-
-        for value in values {
-            if value.is_null() {
-                query = query.bind(None::<serde_json::Value>);
-            } else if value.is_string() {
-                query = query.bind(value.as_str().expect("Failed to convert to str").to_owned());
-            } else if value.is_number() {
-                query = query.bind(value.as_f64().unwrap_or_default())
-            } else {
-                query = query.bind(value);
-            }
-        }
-
-        let result = query.execute(&self.0).await?;
-
-        Ok((result.rows_affected(), result.last_insert_rowid()))
-    }
 }
 
-fn decode_to_json(v: SqliteValueRef) -> Result<serde_json::Value, LauncherError> {
+fn to_json(v: SqliteValueRef) -> Result<serde_json::Value, LauncherError> {
     if v.is_null() {
         return Ok(serde_json::Value::Null);
     }
 
-    let res = match v.type_info().name() {
-        "TEXT" => {
-            if let Ok(v) = v.to_owned().try_decode() {
-                serde_json::Value::String(v)
-            } else {
-                serde_json::Value::Null
-            }
-        }
-        "REAL" => {
-            if let Ok(v) = v.to_owned().try_decode::<f64>() {
-                serde_json::Value::from(v)
-            } else {
-                serde_json::Value::Null
-            }
-        }
-        "INTEGER" | "NUMERIC" => {
-            if let Ok(v) = v.to_owned().try_decode::<i64>() {
-                serde_json::Value::Number(v.into())
-            } else {
-                serde_json::Value::Null
-            }
-        }
-        "BOOLEAN" => {
-            if let Ok(v) = v.to_owned().try_decode() {
-                serde_json::Value::Bool(v)
-            } else {
-                serde_json::Value::Null
-            }
-        }
-        "TIME" | "DATE" | "DATETIME" => {
-            if let Ok(v) = v.to_owned().try_decode::<chrono::DateTime<Utc>>() {
-                serde_json::Value::String(v.to_string())
-            } else {
-                serde_json::Value::Null
-            }
-        }
-        "BLOB" => {
-            if let Ok(v) = v.to_owned().try_decode::<Vec<u8>>() {
-                serde_json::Value::Array(
+    match v.type_info().name() {
+        "TEXT" => v
+            .to_owned()
+            .try_decode()
+            .and_then(|v| Ok(serde_json::Value::String(v)))
+            .or_else(|_| Ok(serde_json::Value::Null)),
+        "REAL" => v
+            .to_owned()
+            .try_decode::<f64>()
+            .and_then(|v| Ok(serde_json::Value::from(v)))
+            .or_else(|_| Ok(serde_json::Value::Null)),
+        "INTEGER" | "NUMERIC" => v
+            .to_owned()
+            .try_decode::<i64>()
+            .and_then(|v| Ok(serde_json::Value::Number(v.into())))
+            .or_else(|_err| Ok(serde_json::Value::Null)),
+        "BOOLEAN" => v
+            .to_owned()
+            .try_decode()
+            .and_then(|v| Ok(serde_json::Value::Bool(v)))
+            .or_else(|_| Ok(serde_json::Value::Null)),
+        "DATE" => v
+            .to_owned()
+            .try_decode::<Date>()
+            .and_then(|v| Ok(serde_json::Value::String(v.to_string())))
+            .or_else(|_| Ok(serde_json::Value::Null)),
+        "TIME" => v
+            .to_owned()
+            .try_decode::<Time>()
+            .and_then(|v| Ok(serde_json::Value::String(v.to_string())))
+            .or_else(|_| Ok(serde_json::Value::Null)),
+        "DATETIME" => v
+            .to_owned()
+            .try_decode::<PrimitiveDateTime>()
+            .and_then(|v| Ok(serde_json::Value::String(v.to_string())))
+            .or_else(|_| Ok(serde_json::Value::Null)),
+        "BLOB" => v
+            .to_owned()
+            .try_decode::<Vec<u8>>()
+            .and_then(|v| {
+                Ok(serde_json::Value::Array(
                     v.into_iter()
                         .map(|n| serde_json::Value::Number(n.into()))
                         .collect(),
-                )
-            } else {
-                serde_json::Value::Null
-            }
-        }
-        "NULL" => serde_json::Value::Null,
+                ))
+            })
+            .or_else(|_| Ok(serde_json::Value::Null)),
+        "NULL" => Ok(serde_json::Value::Null),
         _ => {
             return Err(LauncherError::Generic(format!(
-                "Unspported datatype: {}",
-                v.type_info().name()
+                "UnsupportedDatatype: {}",
+                v.type_info().name().to_string()
             )))
         }
-    };
-
-    Ok(res)
+    }
 }

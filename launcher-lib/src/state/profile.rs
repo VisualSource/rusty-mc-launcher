@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use time::PrimitiveDateTime;
 
 #[derive(
     Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, sqlx::Type,
@@ -54,12 +54,12 @@ pub struct Profile {
 
     pub name: String,
 
-    pub date_created: NaiveDateTime,
+    pub date_created: PrimitiveDateTime,
 
     pub version: String,
     pub loader: Loader,
 
-    pub last_played: Option<NaiveDateTime>,
+    pub last_played: Option<PrimitiveDateTime>,
     pub icon: Option<String>,
     pub loader_version: Option<String>,
 

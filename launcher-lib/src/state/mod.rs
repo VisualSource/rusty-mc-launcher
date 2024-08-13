@@ -16,7 +16,7 @@ use profile::Profile;
 use tokio::sync::RwLock;
 
 use crate::errors::LauncherError;
-pub use sqlite::Database;
+pub use sqlite::{Database, QueryResult};
 
 use self::process::{InstanceType, MinecraftInstance};
 

@@ -32,7 +32,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .setup(|app, _api| {
             app.manage(Mutex::new(EventChannel::new()));
 
-            let app_handle = app.app_handle().clone();
+            /*let app_handle = app.app_handle().clone();
             // downloads watcher
             let downloads_handle = tauri::async_runtime::spawn(async move {
                 // check database
@@ -77,17 +77,18 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                 Ok::<(), Error>(())
             });
 
-            app.manage([downloads_handle, process_watcher_handle]);
+            app.manage([downloads_handle, process_watcher_handle]);*/
 
             log::debug!("Plugin <rmcl-content> Ready");
             Ok(())
         })
-        .on_event(|app, event| {
-            if let RunEvent::Exit = event {
+        .on_event(|_app, _event| {
+            log::debug!("Abort tasks");
+            /*if let RunEvent::Exit = event {
                 let handles = app.state::<[JoinHandle<crate::error::Result<()>>; 2]>();
                 handles[0].abort();
                 handles[1].abort();
-            }
+            }*/
         })
         .invoke_handler(tauri::generate_handler![
             commands::delete_profile,

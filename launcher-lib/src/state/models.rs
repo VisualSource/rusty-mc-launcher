@@ -1,5 +1,5 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use time::PrimitiveDateTime;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum QueueType {
@@ -69,7 +69,7 @@ pub struct QueueItem {
     pub display_name: String,
     pub icon: Option<String>,
     pub profile_id: String,
-    pub created: NaiveDateTime,
+    pub created: PrimitiveDateTime,
     pub content_type: QueueType,
     pub metadata: Option<String>,
     pub state: QueueState,

@@ -4,17 +4,15 @@
 	"identifier": "us.visualsource.rmcl",
 	"version": "0.8.0",
 	"build": {
-		"beforeBuildCommand": "pnpm run build",
-		"beforeDevCommand": "pnpm run dev",
+		"beforeBuildCommand": "pnpm build",
+		"beforeDevCommand": "pnpm dev",
 		"frontendDist": "../dist",
 		"devUrl": "http://localhost:5173"
 	},
 	"bundle": {
 		"active": true,
 		"category": "Utility",
-		"copyright": "",
 		"targets": ["msi", "nsis"],
-		"externalBin": [],
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",
@@ -28,20 +26,8 @@
 			"timestampUrl": ""
 		},
 		"longDescription": "A Minecraft launcher and mod installer.",
-		"macOS": {
-			"entitlements": null,
-			"exceptionDomain": "",
-			"frameworks": [],
-			"providerShortName": null,
-			"signingIdentity": null
-		},
 		"resources": ["./migrations/*"],
 		"shortDescription": "Game Launcher",
-		"linux": {
-			"deb": {
-				"depends": []
-			}
-		},
 		"createUpdaterArtifacts": "v1Compatible"
 	},
 	"plugins": {

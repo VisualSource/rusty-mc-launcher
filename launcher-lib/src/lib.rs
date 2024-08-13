@@ -17,4 +17,4 @@ pub fn get_ram() -> u64 {
 
 pub use installer::{content, install_minecraft, ChannelMessage, InstallConfig};
 pub use launcher::{start_game, LaunchConfig};
-pub use state::{models, profile, AppState, Database};
+pub use state::{models, profile, AppState, Database, QueryResult};
