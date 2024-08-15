@@ -4,6 +4,7 @@ pub mod database;
 pub mod error;
 pub mod events;
 pub mod installer;
+pub mod java;
 mod launcher;
 mod manifest;
 pub mod process;

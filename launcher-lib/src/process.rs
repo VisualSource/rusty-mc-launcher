@@ -6,6 +6,10 @@ use crate::error::{Error, Result};
 pub struct Processes(HashMap<String, Process>);
 
 impl Processes {
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
+
     pub fn insert(&mut self, process: Process) {
         self.0.insert(process.uuid.clone(), process);
     }
@@ -19,6 +23,10 @@ impl Processes {
     pub fn get(&self, uuid: &str) -> Option<&Process> {
         self.0.get(uuid)
     }
+    pub fn get_mut(&mut self, uuid: &str) -> Option<&mut Process> {
+        self.0.get_mut(uuid)
+    }
+
     pub async fn is_running(&mut self, uuid: &str) -> Result<bool> {
         if let Some(process) = self.0.get_mut(uuid) {
             return Ok(process.try_wait().await?.is_none());

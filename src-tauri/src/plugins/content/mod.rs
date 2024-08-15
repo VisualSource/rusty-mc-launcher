@@ -96,7 +96,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::copy_profile,
             commands::uninstall_content,
             commands::import_external,
-            commands::get_system_ram,
             commands::downloads_listener
         ])
         .build()
