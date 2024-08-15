@@ -1,11 +1,11 @@
+use log::info;
+use normalize_path::NormalizePath;
+use serde::{self, Deserialize, Serialize};
 use std::env::consts;
 use std::path::PathBuf;
 
 use crate::error::Error;
 use crate::launcher::arguments::{parse_rules, Arguments, RuleCondition};
-use log::info;
-use normalize_path::NormalizePath;
-use serde::{self, Deserialize, Serialize};
 
 pub mod asset_index {
     use super::*;

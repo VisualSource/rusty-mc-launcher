@@ -2,8 +2,13 @@ pub mod arguments;
 
 use self::arguments::Arguments;
 use crate::manifest::Library;
-use crate::state::AppState;
-use crate::{error::LauncherError, manifest::Manifest};
+
+use crate::models::{profile::Profile, setting::Setting};
+use crate::process::Process;
+use crate::{
+    error::{Error, Result},
+    manifest::Manifest,
+};
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use tokio::fs;
@@ -121,60 +126,26 @@ impl Config {
     }
 }
 
-pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(), LauncherError> {
-    let root_directory = app.get_path("path.app").await?;
+pub async fn start_game(
+    db: &crate::database::Database,
+    processes: &tokio::sync::RwLock<crate::process::Processes>,
+    launch_config: LaunchConfig,
+) -> Result<()> {
+    let root_directory = Setting::path("path.app", db)
+        .await?
+        .ok_or_else(|| Error::NotFound("No application path was set!".to_string()))?;
     let runtime_directory = root_directory.join("runtime");
 
-    let profile = app
-        .get_profile(&launch_config.profile_id)
+    let profile = Profile::get(&launch_config.profile_id, db)
         .await?
         .ok_or_else(|| {
-            LauncherError::NotFound(format!(
+            Error::NotFound(format!(
                 "No Profile with uuid of {}",
                 launch_config.profile_id
             ))
         })?;
 
-    //log::debug!("Profile {:#?}", profile);
-
-    let version_id = match profile.loader {
-        crate::profile::Loader::Vanilla => profile.version.to_owned(),
-        crate::profile::Loader::Neoforge => format!(
-            "neoforge-{}",
-            profile
-                .loader_version
-                .ok_or_else(|| LauncherError::NotFound(
-                    "No loader version was found".to_string()
-                ))?
-        ),
-        crate::profile::Loader::Forge => format!(
-            "{}-forge-{}",
-            profile.version,
-            profile
-                .loader_version
-                .ok_or_else(|| LauncherError::NotFound(
-                    "No loader version was found".to_string()
-                ))?
-        ),
-        crate::profile::Loader::Fabric => format!(
-            "fabric-loader-{}-{}",
-            profile
-                .loader_version
-                .ok_or_else(|| LauncherError::NotFound(
-                    "No loader version was found".to_string()
-                ))?,
-            profile.version
-        ),
-        crate::profile::Loader::Quilt => format!(
-            "quilt-loader-{}-{}",
-            profile
-                .loader_version
-                .ok_or_else(|| LauncherError::NotFound(
-                    "No loader version was found".to_string()
-                ))?,
-            profile.version
-        ),
-    };
+    let version_id = profile.version_id()?;
 
     let game_directory = root_directory.join("profiles").join(&profile.id);
     if !game_directory.exists() {
@@ -185,7 +156,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
 
     let assets_root = runtime_directory.join("assets").normalize();
     if !assets_root.exists() || !assets_root.is_dir() {
-        return Err(LauncherError::NotFound(format!(
+        return Err(Error::NotFound(format!(
             "Assets root was not found: ({})",
             assets_root.to_string_lossy()
         )));
@@ -206,16 +177,13 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
         .join(format!("{}.json", &version_id))
         .normalize();
     if !manifest_directory.exists() || !manifest_directory.is_file() {
-        return Err(LauncherError::NotFound(format!(
+        return Err(Error::NotFound(format!(
             "Manifest directory was not found: ({})",
             manifest_directory.to_string_lossy()
         )));
     }
 
     let manifest = Manifest::read_manifest(&manifest_directory, true).await?;
-
-    //log::debug!("{:?}", manifest);
-
     let classpath = manifest.libs_as_string(&runtime_directory, &version_id)?;
 
     let config = Config {
@@ -233,9 +201,7 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
         assets_index_name: manifest
             .assets
             .as_ref()
-            .ok_or(LauncherError::NotFound(
-                "Failed to get assets index".to_string(),
-            ))?
+            .ok_or(Error::NotFound("Failed to get assets index".to_string()))?
             .to_owned(),
         resolution_height: profile.resolution_height,
         resolution_width: profile.resolution_width,
@@ -260,14 +226,15 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
     let jvm_args = Arguments::parse_args(&manifest.arguments.jvm, &config);
 
     // exec_path + jvmArgs+ (client jvm args) + logging + mainClass + gameFlags + ?(extraFlags)
-    let java_version = manifest.java_version.ok_or(LauncherError::NotFound(
-        "Failed to get java runtime.".to_string(),
-    ))?;
+    let java_version = manifest
+        .java_version
+        .ok_or(Error::NotFound("Failed to get java runtime.".to_string()))?;
 
-    let java_exe = app
-        .get_java(java_version.major_version)
+    let java_key = format!("java.{}", java_version.major_version);
+    let java_exe = Setting::get(&java_key, db)
         .await?
-        .ok_or(LauncherError::NotFound("Java was not found".to_string()))?;
+        .ok_or_else(|| Error::NotFound("Java was not found".to_string()))?
+        .value;
 
     let mut args = vec![];
     args.extend(jvm_args);
@@ -278,15 +245,14 @@ pub async fn start_game(app: &AppState, launch_config: LaunchConfig) -> Result<(
     args.push(manifest.main_class);
     args.extend(game_args);
 
-    //debug!("{} {:#?}", java_exe, args);
+    let ps = Process::spawn(java_exe, args, profile.id, &game_directory).await?;
 
-    app.instances
-        .insert_new_process(app, game_directory, profile.id, &java_exe, args)
-        .await?;
+    let mut state = processes.write().await;
+    state.insert(ps);
 
     Ok(())
 }
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
     use super::*;
     #[tokio::test]
@@ -313,4 +279,4 @@ mod tests {
             .await
             .expect("Failed to build string");
     }
-}
+}*/

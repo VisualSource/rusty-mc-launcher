@@ -1,5 +1,6 @@
-use std::collections::HashMap;
-use tokio::process::Child;
+use std::{collections::HashMap, path::Path};
+use tokio::process::{Child, Command};
+use uuid::Uuid;
 
 use crate::error::{Error, Result};
 
@@ -92,15 +93,54 @@ pub struct Process {
 }
 
 impl Process {
-    pub fn new(pid: i64, name: String, uuid: String, exe: String, profile_id: String) -> Self {
-        Self {
-            pid,
+    pub async fn spawn(
+        exe: String,
+        args: Vec<String>,
+        profile_id: String,
+        game_directory: &Path,
+    ) -> Result<Self> {
+        let uuid = Uuid::new_v4().to_string();
+
+        let ps = Command::new(&exe)
+            .current_dir(game_directory)
+            .args(args)
+            .spawn()?;
+
+        // =======================
+        // START: get-process-info
+        // =======================
+
+        let pid = sysinfo::Pid::from_u32(ps.id().unwrap_or_default());
+        let mut system = sysinfo::System::new();
+
+        system.refresh_processes(sysinfo::ProcessesToUpdate::All);
+
+        let process = system
+            .process(pid)
+            .ok_or_else(|| Error::NotFound("Failed to find process".to_string()))?;
+        let name = process.name().to_string_lossy().to_string();
+        let Some(path) = process.exe() else {
+            return Err(Error::NotFound(format!(
+                "Process {} has no accessable path.",
+                pid.as_u32(),
+            )));
+        };
+        let exe_path = path.to_string_lossy().to_string();
+
+        let child = InstanceType::Full(ps);
+
+        // =====================
+        // END: get-process-info
+        // =====================
+
+        Ok(Self {
+            pid: pid.as_u32() as i64,
             uuid,
             name,
-            exe,
+            exe: exe_path,
             profile_id,
-            child: InstanceType::Unknown,
-        }
+            child,
+        })
     }
     pub async fn try_wait(&mut self) -> Result<Option<i32>> {
         match &mut self.child {

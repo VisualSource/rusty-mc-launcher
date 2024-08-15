@@ -6,20 +6,18 @@ mod forge;
 mod metadata;
 mod neoforge;
 pub mod utils;
-use crate::state::profile::Loader;
-
-use download::{download_assets, download_client, download_java, download_libraries};
-use tokio::sync::mpsc;
-
+use crate::error::{Error, Result};
 use crate::manifest::Manifest;
-use crate::{error::LauncherError, state::AppState};
+use crate::models::profile::Loader;
+use crate::models::setting::Setting;
+use download::{download_assets, download_client, download_java, download_libraries};
 
 use metadata::get_launcher_manifest;
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
 
-use crate::event;
-pub use utils::ChannelMessage;
+//use crate::event;
+//pub use utils::ChannelMessage;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct InstallConfig {
     version: String,
@@ -38,15 +36,30 @@ impl InstallConfig {
 }
 
 pub async fn install_minecraft(
-    app: &AppState,
     config: InstallConfig,
-    event_channel: &mpsc::Sender<ChannelMessage>,
-) -> Result<Option<String>, LauncherError> {
-    event!(&event_channel, "group", { "progress": 0, "max_progress": 9, "message": "Starting minecraft install." });
+    db: &crate::database::Database,
+    on_event: &tauri::ipc::Channel<crate::events::DownloadEvent>,
+) -> Result<Option<String>> {
+    on_event
+        .send(crate::events::DownloadEvent::Started {
+            max_progress: 9,
+            message: "Starting minecraft install.".into(),
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
-    let runtime_directory = app.get_path("path.app").await?.join("runtime");
+    let root = Setting::path("path.app", db)
+        .await?
+        .ok_or_else(|| Error::NotFound("No runtime directory is avaiable.".into()))?;
+    let runtime_directory = root.join("runtime");
     let version_directory = runtime_directory.join("versions").join(&config.version);
-    event!(&event_channel,"update",{ "message": "Loading manifest" });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: None,
+            message: Some("Loading manifest".into()),
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let client_manfiest_file = version_directory
         .join(format!("{}.json", config.version))
         .normalize();
@@ -63,44 +76,64 @@ pub async fn install_minecraft(
     }
 
     let manifset = Manifest::read_manifest(&client_manfiest_file, false).await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     let java_version = manifset
         .java_version
-        .ok_or(LauncherError::NotFound("Java not found".to_string()))?
+        .ok_or(Error::NotFound("Java not found".to_string()))?
         .major_version;
 
-    if app.get_java(java_version).await?.is_none() {
-        event!(&event_channel,"update",{ "message": "Installing Java" });
-        let (build_version, path) =
-            download_java(event_channel, &runtime_directory, java_version).await?;
+    let java_key = format!("java.{}", java_version);
+    if Setting::get(&java_key, db).await?.is_none() {
+        on_event
+            .send(crate::events::DownloadEvent::Progress {
+                amount: None,
+                message: Some("Installing Java".into()),
+            })
+            .map_err(|err| Error::Generic(err.to_string()))?;
+        let (build_version, path) = download_java(&runtime_directory, java_version).await?;
 
-        app.insert_java(java_version, &build_version, &path).await?;
+        let java_exe = path.to_string_lossy().to_string();
+
+        Setting::insert(&java_key, java_exe, Some(build_version), db).await?;
     }
 
-    event!(&event_channel,"update",{ "progress": 1, "message": "Downloading client" });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: Some("Downloading client".into()),
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     tokio::try_join! {
-        download_client(event_channel, &config.version, &version_directory, manifset.downloads),
-        download_assets(event_channel, &runtime_directory, manifset.asset_index),
-        download_libraries(event_channel,&runtime_directory,&config.version,manifset.libraries)
+        download_client(on_event, &config.version, &version_directory, manifset.downloads),
+        download_assets(on_event, &runtime_directory, manifset.asset_index),
+        download_libraries(on_event,&runtime_directory,&config.version,manifset.libraries)
     }?;
 
     if config.loader != Loader::Vanilla {
-        event!(&event_channel,"update",{ "message": "Installing Mod loader" });
+        on_event
+            .send(crate::events::DownloadEvent::Progress {
+                amount: None,
+                message: Some("Installing Mod loader".into()),
+            })
+            .map_err(|err| Error::Generic(err.to_string()))?;
+
         let java_exe = app
             .get_java(java_version)
             .await?
-            .ok_or(LauncherError::NotFound(
-                "Java executable was not found".to_string(),
-            ))?;
+            .ok_or(Error::NotFound("Java executable was not found".to_string()))?;
 
         let version_id = match config.loader {
-            Loader::Vanilla => {
-                return Err(LauncherError::Generic("Should not be here".to_string()))
-            }
+            Loader::Vanilla => return Err(Error::Generic("Should not be here".to_string())),
             Loader::Neoforge => {
                 neoforge::run_installer(
-                    event_channel,
+                    on_event,
                     &config.version,
                     config.loader_version,
                     &runtime_directory,
@@ -110,18 +143,17 @@ pub async fn install_minecraft(
             }
             Loader::Forge => {
                 forge::run_installer(
-                    event_channel,
+                    on_event,
                     &config.version,
                     config.loader_version,
                     &runtime_directory,
                     &java_exe,
-                    false,
                 )
                 .await?
             }
             Loader::Fabric => {
                 fabric::run_installer(
-                    event_channel,
+                    on_event,
                     &runtime_directory,
                     &java_exe,
                     &config.version,
@@ -132,7 +164,7 @@ pub async fn install_minecraft(
             }
             Loader::Quilt => {
                 fabric::run_installer(
-                    event_channel,
+                    on_event,
                     &runtime_directory,
                     &java_exe,
                     &config.version,
@@ -145,7 +177,12 @@ pub async fn install_minecraft(
 
         Ok(Some(version_id))
     } else {
-        event!(&event_channel,"update",{ "progress": 4 });
+        on_event
+            .send(crate::events::DownloadEvent::Progress {
+                amount: Some(4),
+                message: None,
+            })
+            .map_err(|err| Error::Generic(err.to_string()))?;
         Ok(None)
     }
 }

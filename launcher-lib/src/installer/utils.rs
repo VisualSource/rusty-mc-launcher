@@ -1,12 +1,11 @@
 use log::{info, warn};
-use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::path::Path;
 use std::time::Duration;
 use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
 
-use crate::error::LauncherError;
+use crate::error::{Error, Result};
 
 lazy_static::lazy_static! {
     pub static ref REQUEST_CLIENT: reqwest::Client = {
@@ -25,7 +24,7 @@ lazy_static::lazy_static! {
     };
 }
 const FETCH_ATTEMPTS: usize = 5;
-
+/*
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChannelMessage {
     pub event: String,
@@ -51,9 +50,9 @@ macro_rules! event {
         )
         .await;
     };
-}
+}*/
 
-pub mod event_internal {
+/*pub mod event_internal {
     use super::ChannelMessage;
     use log::error;
 
@@ -71,13 +70,13 @@ pub mod event_internal {
             error!("{}", error);
         }
     }
-}
+}*/
 
-pub async fn get_file_hash(path: &Path) -> Result<String, LauncherError> {
+pub async fn get_file_hash(path: &Path) -> Result<String> {
     let mut file = File::open(path)
         .await?
         .try_into_std()
-        .map_err(|_| LauncherError::Generic("".to_string()))?;
+        .map_err(|_| Error::Generic("Failed to open file as std".to_string()))?;
     let mut hasher = Sha1::new();
     let size = std::io::copy(&mut file, &mut hasher)?;
     let file_hash = hasher.finalize();
@@ -91,7 +90,7 @@ pub async fn download_file(
     output_directory: &Path,
     auth: Option<&str>,
     sha1: Option<&str>,
-) -> Result<(), LauncherError> {
+) -> Result<()> {
     if let Some(parent) = output_directory.parent() {
         if !parent.exists() {
             create_dir_all(&parent).await?;
@@ -104,7 +103,7 @@ pub async fn download_file(
             let mut file = File::open(&output_directory)
                 .await?
                 .try_into_std()
-                .map_err(|_| LauncherError::Generic("".to_string()))?;
+                .map_err(|_| Error::Generic("".to_string()))?;
             let mut hasher = Sha1::new();
 
             let size = std::io::copy(&mut file, &mut hasher)?;
@@ -122,9 +121,7 @@ pub async fn download_file(
     }
 
     if source_url.is_empty() {
-        return Err(LauncherError::NotFound(
-            "No download url was provided".to_string(),
-        ));
+        return Err(Error::NotFound("No download url was provided".to_string()));
     }
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
@@ -161,7 +158,7 @@ pub async fn download_file(
                             if attempt <= 3 {
                                 continue;
                             }
-                            return Err(LauncherError::Sha1Error);
+                            return Err(Error::Sha1Error);
                         }
                     }
 

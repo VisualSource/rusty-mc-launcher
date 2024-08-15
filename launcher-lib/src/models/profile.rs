@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Error, Result};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -71,6 +71,39 @@ pub struct Profile {
 }
 
 impl Profile {
+    pub fn version_id(&self) -> Result<String> {
+        match &self.loader {
+            Loader::Vanilla => Ok(self.version.to_owned()),
+            Loader::Forge => Ok(format!(
+                "{}-forge-{}",
+                self.version,
+                self.loader_version
+                    .as_ref()
+                    .ok_or_else(|| Error::NotFound("No loader version was found".to_string()))?
+            )),
+            Loader::Fabric => Ok(format!(
+                "fabric-loader-{}-{}",
+                self.loader_version
+                    .as_ref()
+                    .ok_or_else(|| Error::NotFound("No loader version was found".to_string()))?,
+                self.version
+            )),
+            Loader::Quilt => Ok(format!(
+                "quilt-loader-{}-{}",
+                self.loader_version
+                    .as_ref()
+                    .ok_or_else(|| Error::NotFound("No loader version was found".to_string()))?,
+                self.version
+            )),
+            Loader::Neoforge => Ok(format!(
+                "neoforge-{}",
+                self.loader_version
+                    .as_ref()
+                    .ok_or_else(|| Error::NotFound("No loader version was found".to_string()))?
+            )),
+        }
+    }
+
     pub async fn get(id: &str, db: &crate::database::Database) -> Result<Option<Profile>> {
         let query = sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?;", id)
             .fetch_optional(&db.0)

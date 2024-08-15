@@ -4,12 +4,11 @@ pub mod database;
 pub mod error;
 pub mod events;
 pub mod installer;
-pub mod java;
+mod java;
 mod launcher;
 mod manifest;
+pub mod models;
 pub mod process;
-mod state;
-//mod utils;
 
 /// Get ram in GB
 pub fn get_ram() -> u64 {
@@ -17,7 +16,3 @@ pub fn get_ram() -> u64 {
 
     info.total_memory() / 1000000000
 }
-
-pub use installer::{content, install_minecraft, ChannelMessage, InstallConfig};
-pub use launcher::{start_game, LaunchConfig};
-pub use state::{models, profile, AppState};

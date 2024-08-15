@@ -1,4 +1,4 @@
-use crate::error::LauncherError;
+use crate::error::{Error, Result};
 use serde::Deserialize;
 
 const LAUNCHER_META: &str = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
@@ -28,9 +28,7 @@ struct VersionManifest {
     versions: Vec<VersionManifestItem>,
 }
 
-pub async fn get_launcher_manifest(
-    version: Option<&str>,
-) -> Result<VersionManifestItem, LauncherError> {
+pub async fn get_launcher_manifest(version: Option<&str>) -> Result<VersionManifestItem> {
     let resp = reqwest::get(LAUNCHER_META)
         .await?
         .json::<VersionManifest>()
@@ -42,7 +40,7 @@ pub async fn get_launcher_manifest(
         return Ok(data.to_owned());
     }
 
-    Err(LauncherError::NotFound("minecraft version".to_string()))
+    Err(Error::NotFound("minecraft version".to_string()))
 }
 
 #[cfg(test)]
@@ -50,7 +48,7 @@ mod tests {
     use super::*;
     //https://docs.rs/tokio/latest/tokio/attr.test.html
     #[tokio::test]
-    async fn test_get_launcher_manifest() -> Result<(), ()> {
+    async fn test_get_launcher_manifest() -> Result<()> {
         let version = "1.17.1".to_string();
 
         if let Ok(data) = get_launcher_manifest(Some(&version)).await {

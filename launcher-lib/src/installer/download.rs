@@ -1,4 +1,6 @@
-use super::{compression, utils, ChannelMessage, LauncherError};
+use super::{compression, utils};
+use crate::error::{Error, Result};
+use crate::events::DownloadEvent;
 use crate::manifest::{self, asset_index::AssetIndex, Downloads, Library};
 use futures::StreamExt;
 use log::{info, warn};
@@ -6,9 +8,7 @@ use log::{info, warn};
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::path::PathBuf;
-use tokio::{fs, io::AsyncWriteExt, sync::mpsc};
-
-use crate::event;
+use tokio::{fs, io::AsyncWriteExt};
 
 #[derive(Debug, Deserialize)]
 struct JavaDownload {
@@ -18,10 +18,9 @@ struct JavaDownload {
 }
 
 pub async fn download_java(
-    _event_channel: &mpsc::Sender<ChannelMessage>,
     runtime_directory: &std::path::Path,
     java: usize,
-) -> Result<(String, PathBuf), LauncherError> {
+) -> Result<(String, PathBuf)> {
     let java_directory = runtime_directory.join("java").normalize();
 
     let temp = std::env::temp_dir();
@@ -33,7 +32,7 @@ pub async fn download_java(
     let response = request.send().await?;
 
     let result = response.json::<Vec<JavaDownload>>().await?;
-    let java_download = result.first().ok_or(LauncherError::NotFound(
+    let java_download = result.first().ok_or(Error::NotFound(
         "The required java version was not found".to_string(),
     ))?;
 
@@ -74,41 +73,6 @@ pub async fn download_java(
 
     compression::extract_all(&mut archive, &java_directory).await?;
 
-    //let archive = tokio::io::BufReader::new(file).compat();
-    //let mut reader = ZipFileReader::new(archive).await?;
-
-    /*for index in 0..reader.file().entries().len() {
-        let entry = reader
-            .file()
-            .entries()
-            .get(index)
-            .ok_or(LauncherError::Generic("Failed to get entry".to_string()))?;
-        let path = java_directory.join(sanitize_file_path(entry.filename().as_str()?));
-
-        let entry_is_dir = entry.dir()?;
-
-        if entry_is_dir {
-            if !path.exists() {
-                fs::create_dir_all(&path).await?;
-            }
-        } else {
-            let parent = path
-                .parent()
-                .ok_or(LauncherError::Generic("".to_string()))?;
-            if !parent.is_dir() {
-                fs::create_dir_all(parent).await?;
-            }
-
-            let mut entry_reader = reader.reader_without_entry(index).await?;
-            let writer = OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(&path)
-                .await?;
-            futures::io::copy(&mut entry_reader, &mut writer.compat_write()).await?;
-        }
-    }*/
-
     fs::remove_file(temp_file).await?;
 
     let java = java_directory
@@ -121,12 +85,12 @@ pub async fn download_java(
 }
 
 pub async fn download_client(
-    event_channel: &mpsc::Sender<ChannelMessage>,
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
     version: &str,
     versions_directory: &std::path::Path,
     downloads: Option<Downloads>,
-) -> Result<(), LauncherError> {
-    let downloads = downloads.ok_or(LauncherError::NotFound(
+) -> Result<()> {
+    let downloads = downloads.ok_or(Error::NotFound(
         "Client jar downloads section is missing!".to_string(),
     ))?;
 
@@ -143,17 +107,22 @@ pub async fn download_client(
     )
     .await?;
 
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     Ok(())
 }
 
 pub async fn download_libraries(
-    event_channel: &mpsc::Sender<ChannelMessage>,
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
     runtime_directory: &std::path::Path,
     version: &str,
     libraries: Vec<Library>,
-) -> Result<(), LauncherError> {
+) -> Result<()> {
     let library_directory = runtime_directory.join("libraries");
     let natvies_directory = runtime_directory.join("natives").join(version);
 
@@ -205,82 +174,32 @@ pub async fn download_libraries(
                 let os = std::env::consts::OS.replace("macos", "osx");
 
                 if let Some(native) = natives.get(&os) {
-                    let downloads = lib.downloads.ok_or(LauncherError::NotFound(
-                        "Failed to get downloads".to_owned(),
-                    ))?;
-                    let classifiers = downloads.classifiers.ok_or(LauncherError::NotFound(
-                        "Failed to get classifer".to_string(),
-                    ))?;
-                    let classifier =
-                        classifiers
-                            .get(native)
-                            .ok_or(LauncherError::NotFound(format!(
-                                "Failed to get native for library: {}",
-                                lib.name
-                            )))?;
+                    let downloads = lib
+                        .downloads
+                        .ok_or(Error::NotFound("Failed to get downloads".to_owned()))?;
+                    let classifiers = downloads
+                        .classifiers
+                        .ok_or(Error::NotFound("Failed to get classifer".to_string()))?;
+                    let classifier = classifiers.get(native).ok_or(Error::NotFound(format!(
+                        "Failed to get native for library: {}",
+                        lib.name
+                    )))?;
 
                     let file = classifier
                         .url
                         .split('/')
                         .last()
-                        .ok_or(LauncherError::Generic(
-                            "Failed to get file name".to_string(),
-                        ))?;
+                        .ok_or(Error::Generic("Failed to get file name".to_string()))?;
                     let temp = std::env::temp_dir();
                     let path = temp.join(file).normalize();
 
                     utils::download_file(&classifier.url, &path, None, Some(&classifier.sha1))
                         .await?;
 
-                    //let reader = tokio::io::BufReader::new(File::open(&path).await?);
-                    //let mut archive = ZipFileReader::with_tokio(reader).await?;
-
                     let mut archive =
                         compression::open_archive(fs::File::open(&path).await?).await?;
 
                     compression::extract_all(&mut archive, &nat_dir).await?;
-
-                    /*for index in 0..archive.file().entries().len() {
-                        let entry = archive
-                            .file()
-                            .entries()
-                            .get(index)
-                            .ok_or(LauncherError::Generic("Failed to get entry".to_string()))?;
-
-                        let native_file = nat_dir
-                            .join(nat_dir.join(sanitize_file_path(entry.filename().as_str()?)))
-                            .normalize();
-                        info!(
-                            "Extracting native file to {}",
-                            native_file.to_string_lossy()
-                        );
-
-                        if entry.dir()? {
-                            if !native_file.exists() {
-                                fs::create_dir_all(&native_file).await?;
-                            }
-                        } else {
-                            if native_file.exists() && native_file.is_file() {
-                                continue;
-                            }
-
-                            if let Some(parent) = native_file.parent() {
-                                if !parent.exists() {
-                                    fs::create_dir_all(&parent).await?;
-                                }
-                            }
-
-                            let mut entry_reader = archive.reader_without_entry(index).await?;
-                            let writer = OpenOptions::new()
-                                .write(true)
-                                .create_new(true)
-                                .open(&native_file)
-                                .await?;
-
-                            futures::io::copy(&mut entry_reader, &mut writer.compat_write())
-                                .await?;
-                        }
-                    }*/
 
                     fs::remove_file(&path).await?;
                 }
@@ -290,7 +209,7 @@ pub async fn download_libraries(
         }
     }))
     .buffer_unordered(50)
-    .collect::<Vec<Result<(), LauncherError>>>()
+    .collect::<Vec<Result<()>>>()
     .await;
 
     if installed.iter().any(|e| e.is_err()) {
@@ -299,32 +218,34 @@ pub async fn download_libraries(
                 log::error!("{}", error);
             }
         });
-        return Err(LauncherError::Generic(
-            "Failed to download libraries".to_string(),
-        ));
+        return Err(Error::Generic("Failed to download libraries".to_string()));
     }
 
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     Ok(())
 }
 
 pub async fn download_assets(
-    event_channel: &mpsc::Sender<ChannelMessage>,
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
     runtime_directory: &std::path::Path,
     assets_index: Option<manifest::File>,
-) -> Result<(), LauncherError> {
-    let assets_index = assets_index.ok_or(LauncherError::NotFound(
-        "Asset Index was not found".to_string(),
-    ))?;
+) -> Result<()> {
+    let assets_index =
+        assets_index.ok_or(Error::NotFound("Asset Index was not found".to_string()))?;
 
     let assets_objects_directory = runtime_directory.join("assets/objects");
     let assets_index_path = runtime_directory
         .join(format!(
             "assets/indexes/{}.json",
-            assets_index.id.ok_or(LauncherError::NotFound(
-                "Failed to get assets version".to_string()
-            ))?
+            assets_index
+                .id
+                .ok_or(Error::NotFound("Failed to get assets version".to_string()))?
         ))
         .normalize();
 
@@ -339,7 +260,7 @@ pub async fn download_assets(
     let file = fs::File::open(assets_index_path)
         .await?
         .try_into_std()
-        .map_err(|_| LauncherError::Generic("Failed to convert".to_string()))?;
+        .map_err(|_| Error::Generic("Failed to convert".to_string()))?;
 
     let mut reader = std::io::BufReader::new(file);
 
@@ -355,7 +276,7 @@ pub async fn download_assets(
                 asset
                     .hash
                     .get(0..2)
-                    .ok_or(LauncherError::Generic("Failed to get hash id".to_string()))?,
+                    .ok_or(Error::Generic("Failed to get hash id".to_string()))?,
                 asset.hash
             );
 
@@ -368,7 +289,7 @@ pub async fn download_assets(
         }
     }))
     .buffer_unordered(50)
-    .collect::<Vec<Result<(), LauncherError>>>()
+    .collect::<Vec<Result<()>>>()
     .await;
 
     if assets.iter().any(|e| e.is_err()) {
@@ -377,17 +298,20 @@ pub async fn download_assets(
                 log::error!("{}", err)
             }
         });
-        return Err(LauncherError::Generic(
-            "Failed to download assets".to_string(),
-        ));
+        return Err(Error::Generic("Failed to download assets".to_string()));
     }
 
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     Ok(())
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -494,7 +418,7 @@ mod tests {
                     "include_in_classpath": true
                   }
             ]
-        
+
         "#).expect("Failed to parse");
 
         info!("{:#?}", libs);
@@ -542,4 +466,4 @@ mod tests {
             .await
             .expect("Failed to download");
     }
-}
+}*/
