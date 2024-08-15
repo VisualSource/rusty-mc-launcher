@@ -1,10 +1,12 @@
+pub mod database;
 /// Minecraft rust launcher library for launcher minecraft with/without mods
 /// https://ryanccn.dev/posts/inside-a-minecraft-launcher/
-pub mod errors;
+pub mod error;
 pub mod events;
 pub mod installer;
 mod launcher;
 mod manifest;
+pub mod process;
 mod state;
 //mod utils;
 
@@ -17,4 +19,4 @@ pub fn get_ram() -> u64 {
 
 pub use installer::{content, install_minecraft, ChannelMessage, InstallConfig};
 pub use launcher::{start_game, LaunchConfig};
-pub use state::{models, profile, AppState, Database, QueryResult};
+pub use state::{models, profile, AppState};

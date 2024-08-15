@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
 
-use crate::errors::LauncherError;
+use crate::error::LauncherError;
 
 lazy_static::lazy_static! {
     pub static ref REQUEST_CLIENT: reqwest::Client = {

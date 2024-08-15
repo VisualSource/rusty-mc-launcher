@@ -1,4 +1,4 @@
-use crate::{errors::LauncherError, installer::download::download_libraries, manifest::Manifest};
+use crate::{error::LauncherError, installer::download::download_libraries, manifest::Manifest};
 use log::debug;
 use std::{path::Path, process::Stdio};
 use tokio::{fs, io::AsyncBufReadExt, sync::mpsc::Sender};

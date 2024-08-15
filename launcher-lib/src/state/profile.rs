@@ -1,7 +1,6 @@
-use std::fmt::Display;
-
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
-use time::PrimitiveDateTime;
+use std::fmt::Display;
 
 #[derive(
     Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, sqlx::Type,
@@ -54,12 +53,12 @@ pub struct Profile {
 
     pub name: String,
 
-    pub date_created: PrimitiveDateTime,
+    pub date_created: time::OffsetDateTime,
 
     pub version: String,
     pub loader: Loader,
 
-    pub last_played: Option<PrimitiveDateTime>,
+    pub last_played: Option<time::OffsetDateTime>,
     pub icon: Option<String>,
     pub loader_version: Option<String>,
 
@@ -69,4 +68,35 @@ pub struct Profile {
     pub resolution_height: Option<String>,
 
     pub state: String,
+}
+
+impl Profile {
+    pub async fn get(id: &str, db: &crate::database::Database) -> Result<Option<Profile>> {
+        let query = sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?;", id)
+            .fetch_optional(&db.0)
+            .await?;
+        Ok(query)
+    }
+    pub async fn set_loader_version(
+        id: &str,
+        version: &str,
+        db: &crate::database::Database,
+    ) -> Result<()> {
+        sqlx::query("UPDATE profiles SET loader_version = ? WHERE id = ?")
+            .bind(version)
+            .bind(id)
+            .execute(&db.0)
+            .await?;
+
+        Ok(())
+    }
+    pub async fn set_state(id: &str, state: &str, db: &crate::database::Database) -> Result<()> {
+        sqlx::query("UPDATE profiles SET state = ? WHERE id = ?")
+            .bind(state)
+            .bind(id)
+            .execute(&db.0)
+            .await?;
+
+        Ok(())
+    }
 }

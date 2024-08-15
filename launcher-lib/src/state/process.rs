@@ -4,7 +4,7 @@ use tokio::process::{Child, Command};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::errors::LauncherError;
+use crate::error::LauncherError;
 use crate::AppState;
 
 #[derive(Debug, Serialize, Deserialize)]

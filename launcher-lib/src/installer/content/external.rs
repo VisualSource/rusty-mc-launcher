@@ -1,6 +1,6 @@
 use super::{ContentType, InstallContent};
 use crate::{
-    errors::LauncherError,
+    error::LauncherError,
     event,
     installer::{
         compression,

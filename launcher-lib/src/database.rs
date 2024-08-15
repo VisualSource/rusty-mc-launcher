@@ -1,57 +1,43 @@
 use time::{Date, PrimitiveDateTime, Time};
 
-use crate::errors::LauncherError;
+use crate::error::{Error, Result};
 use indexmap::IndexMap;
 use sqlx::migrate::MigrateDatabase;
-use sqlx::sqlite::{SqlitePool, SqlitePoolOptions, SqliteValueRef};
+use sqlx::sqlite::{Sqlite, SqlitePool, SqlitePoolOptions, SqliteValueRef};
 use sqlx::{migrate::Migrator, Column, Row, TypeInfo, Value, ValueRef};
 
 pub type QueryResult = Vec<IndexMap<String, serde_json::Value>>;
 pub struct Database(pub SqlitePool);
 
 impl Database {
-    pub async fn exists(path: &str) -> bool {
-        sqlx::sqlite::Sqlite::database_exists(path)
-            .await
-            .unwrap_or(false)
-    }
+    pub async fn new(path: &std::path::Path, db_name: &str) -> Result<Database> {
+        let db_path = path.join(db_name);
+        let db_path_str = db_path
+            .to_str()
+            .ok_or_else(|| Error::Generic("Failed to convert path to str".into()))?;
 
-    pub async fn create_db(path: &str) -> Result<(), LauncherError> {
-        sqlx::sqlite::Sqlite::create_database(path)
-            .await
-            .map_err(LauncherError::Sqlite)
-    }
-
-    pub fn new_from_path(path: &std::path::Path, db_name: &str) -> Result<Database, LauncherError> {
-        let database_file = path.join(db_name);
-        let db_str = database_file.to_string_lossy().to_string();
-        let no_dive = db_str
+        let conn_str = db_path_str
             .split_once(':')
-            .expect("Failed to parse connection string for database!")
-            .1;
-        let conn_str = format!("sqlite:{}", no_dive);
-        Self::new(&conn_str)
+            .map(|(_, a)| format!("sqlite:{}", a))
+            .ok_or_else(|| Error::Generic("Failed to get database connection string".into()))?;
+
+        if Sqlite::database_exists(&conn_str).await? {
+            Sqlite::create_database(&conn_str).await?;
+        }
+
+        let db = SqlitePoolOptions::new().connect_lazy(&conn_str)?;
+        Ok(Self(db))
     }
 
-    pub fn new(url: &str) -> Result<Self, LauncherError> {
-        let opts = SqlitePoolOptions::new().connect_lazy(url)?;
-
-        Ok(Self(opts))
-    }
-
-    pub async fn run_migrator(&self, miration_path: &std::path::Path) -> Result<(), LauncherError> {
-        let migrator = Migrator::new(miration_path).await?;
+    pub async fn run_migrations(&self, migrations_path: &std::path::Path) -> Result<()> {
+        let migrator = Migrator::new(migrations_path).await?;
 
         migrator.run(&self.0).await?;
 
         Ok(())
     }
 
-    pub async fn execute(
-        &self,
-        query: String,
-        args: Vec<serde_json::Value>,
-    ) -> Result<(u64, i64), LauncherError> {
+    pub async fn execute(&self, query: String, args: Vec<serde_json::Value>) -> Result<(u64, i64)> {
         let mut stmt = sqlx::query(&query);
 
         for arg in args {
@@ -69,11 +55,7 @@ impl Database {
         let result = stmt.execute(&self.0).await?;
         Ok((result.rows_affected(), result.last_insert_rowid()))
     }
-    pub async fn select(
-        &self,
-        query: String,
-        args: Vec<serde_json::Value>,
-    ) -> Result<QueryResult, LauncherError> {
+    pub async fn select(&self, query: String, args: Vec<serde_json::Value>) -> Result<QueryResult> {
         let mut stmt = sqlx::query(&query);
 
         for arg in args {
@@ -104,7 +86,7 @@ impl Database {
     }
 }
 
-fn to_json(v: SqliteValueRef) -> Result<serde_json::Value, LauncherError> {
+fn to_json(v: SqliteValueRef) -> Result<serde_json::Value> {
     if v.is_null() {
         return Ok(serde_json::Value::Null);
     }
@@ -113,55 +95,53 @@ fn to_json(v: SqliteValueRef) -> Result<serde_json::Value, LauncherError> {
         "TEXT" => v
             .to_owned()
             .try_decode()
-            .and_then(|v| Ok(serde_json::Value::String(v)))
+            .map(serde_json::Value::String)
             .or_else(|_| Ok(serde_json::Value::Null)),
         "REAL" => v
             .to_owned()
             .try_decode::<f64>()
-            .and_then(|v| Ok(serde_json::Value::from(v)))
+            .map(serde_json::Value::from)
             .or_else(|_| Ok(serde_json::Value::Null)),
         "INTEGER" | "NUMERIC" => v
             .to_owned()
             .try_decode::<i64>()
-            .and_then(|v| Ok(serde_json::Value::Number(v.into())))
+            .map(|v| serde_json::Value::Number(v.into()))
             .or_else(|_err| Ok(serde_json::Value::Null)),
         "BOOLEAN" => v
             .to_owned()
             .try_decode()
-            .and_then(|v| Ok(serde_json::Value::Bool(v)))
+            .map(serde_json::Value::Bool)
             .or_else(|_| Ok(serde_json::Value::Null)),
         "DATE" => v
             .to_owned()
             .try_decode::<Date>()
-            .and_then(|v| Ok(serde_json::Value::String(v.to_string())))
+            .map(|v| serde_json::Value::String(v.to_string()))
             .or_else(|_| Ok(serde_json::Value::Null)),
         "TIME" => v
             .to_owned()
             .try_decode::<Time>()
-            .and_then(|v| Ok(serde_json::Value::String(v.to_string())))
+            .map(|v| serde_json::Value::String(v.to_string()))
             .or_else(|_| Ok(serde_json::Value::Null)),
         "DATETIME" => v
             .to_owned()
             .try_decode::<PrimitiveDateTime>()
-            .and_then(|v| Ok(serde_json::Value::String(v.to_string())))
+            .map(|v| serde_json::Value::String(v.to_string()))
             .or_else(|_| Ok(serde_json::Value::Null)),
         "BLOB" => v
             .to_owned()
             .try_decode::<Vec<u8>>()
-            .and_then(|v| {
-                Ok(serde_json::Value::Array(
+            .map(|v| {
+                serde_json::Value::Array(
                     v.into_iter()
                         .map(|n| serde_json::Value::Number(n.into()))
                         .collect(),
-                ))
+                )
             })
             .or_else(|_| Ok(serde_json::Value::Null)),
         "NULL" => Ok(serde_json::Value::Null),
-        _ => {
-            return Err(LauncherError::Generic(format!(
-                "UnsupportedDatatype: {}",
-                v.type_info().name().to_string()
-            )))
-        }
+        _ => Err(Error::Generic(format!(
+            "UnsupportedDatatype: {}",
+            v.type_info().name()
+        ))),
     }
 }

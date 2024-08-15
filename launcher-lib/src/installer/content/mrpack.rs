@@ -3,7 +3,7 @@ use std::path::Path;
 use uuid::Uuid;
 
 use crate::{
-    errors::LauncherError,
+    error::LauncherError,
     event,
     installer::{
         compression,

@@ -12,7 +12,7 @@ use download::{download_assets, download_client, download_java, download_librari
 use tokio::sync::mpsc;
 
 use crate::manifest::Manifest;
-use crate::{errors::LauncherError, state::AppState};
+use crate::{error::LauncherError, state::AppState};
 
 use metadata::get_launcher_manifest;
 use normalize_path::NormalizePath;

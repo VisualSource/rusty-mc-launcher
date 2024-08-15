@@ -4,6 +4,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error(transparent)]
+    Lib(#[from] minecraft_launcher_lib::error::Error),
     #[error("Unable to send message. No channel set.")]
     NoChannel,
     #[error(transparent)]

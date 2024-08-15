@@ -1,4 +1,4 @@
-use crate::errors::LauncherError;
+use crate::error::LauncherError;
 use serde::Deserialize;
 
 const LAUNCHER_META: &str = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";

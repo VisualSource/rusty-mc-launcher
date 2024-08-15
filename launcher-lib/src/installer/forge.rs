@@ -18,7 +18,7 @@ use super::{
 };
 use crate::event;
 use crate::{
-    errors::LauncherError,
+    error::LauncherError,
     manifest::{Library, Manifest},
 };
 #[derive(Debug, Deserialize)]

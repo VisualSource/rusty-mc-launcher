@@ -1,7 +1,7 @@
 use std::env::consts;
 use std::path::PathBuf;
 
-use crate::errors::LauncherError;
+use crate::error::Error;
 use crate::launcher::arguments::{parse_rules, Arguments, RuleCondition};
 use log::info;
 use normalize_path::NormalizePath;
@@ -44,10 +44,7 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    pub async fn read_manifest(
-        manifest_dir: &PathBuf,
-        do_inhert: bool,
-    ) -> Result<Manifest, LauncherError> {
+    pub async fn read_manifest(manifest_dir: &PathBuf, do_inhert: bool) -> Result<Manifest, Error> {
         let manifest_raw = tokio::fs::read_to_string(&manifest_dir).await?;
         let mut manifest = serde_json::from_str::<Manifest>(&manifest_raw)?;
 
@@ -56,12 +53,12 @@ impl Manifest {
                 info!("Inherting manifest");
                 let root_dir = manifest_dir
                     .parent()
-                    .ok_or_else(|| LauncherError::Generic("Failed to get parent dir".into()))?
+                    .ok_or_else(|| Error::Generic("Failed to get parent dir".into()))?
                     .parent()
-                    .ok_or_else(|| LauncherError::Generic("Failed to get parent dir".into()))?;
+                    .ok_or_else(|| Error::Generic("Failed to get parent dir".into()))?;
 
                 if !root_dir.exists() {
-                    return Err(LauncherError::NotFound(
+                    return Err(Error::NotFound(
                         "Failed to find parent manifest".to_string(),
                     ));
                 }
@@ -111,7 +108,7 @@ impl Manifest {
         &self,
         root: &std::path::Path,
         version: &String,
-    ) -> Result<String, LauncherError> {
+    ) -> Result<String, Error> {
         let libraries_path = root.join("libraries");
 
         let mut classpath = Vec::new();
@@ -172,29 +169,26 @@ impl Library {
         }
     }
 
-    pub fn get_artifact_path(artifact: &str) -> Result<String, LauncherError> {
+    pub fn get_artifact_path(artifact: &str) -> Result<String, Error> {
         let name_items = artifact.split(':').collect::<Vec<&str>>();
 
         let package = name_items.first().ok_or_else(|| {
-            LauncherError::NotFound(format!("Unable to find package for library {}", &artifact))
+            Error::NotFound(format!("Unable to find package for library {}", &artifact))
         })?;
         let name = name_items.get(1).ok_or_else(|| {
-            LauncherError::NotFound(format!("Unable to find name for library {}", &artifact))
+            Error::NotFound(format!("Unable to find name for library {}", &artifact))
         })?;
 
         if name_items.len() == 3 {
             let version_ext = name_items
                 .get(2)
                 .ok_or_else(|| {
-                    LauncherError::NotFound(format!(
-                        "Unable to find version for library {}",
-                        &artifact
-                    ))
+                    Error::NotFound(format!("Unable to find version for library {}", &artifact))
                 })?
                 .split('@')
                 .collect::<Vec<&str>>();
             let version = version_ext.first().ok_or_else(|| {
-                LauncherError::NotFound(format!("Unable to find version for library {}", &artifact))
+                Error::NotFound(format!("Unable to find version for library {}", &artifact))
             })?;
             let ext = version_ext.get(1);
 
@@ -209,21 +203,18 @@ impl Library {
             ))
         } else {
             let version = name_items.get(2).ok_or_else(|| {
-                LauncherError::NotFound(format!("Unable to find version for library {}", &artifact))
+                Error::NotFound(format!("Unable to find version for library {}", &artifact))
             })?;
 
             let data_ext = name_items
                 .get(3)
                 .ok_or_else(|| {
-                    LauncherError::NotFound(format!(
-                        "Unable to find data for library {}",
-                        &artifact
-                    ))
+                    Error::NotFound(format!("Unable to find data for library {}", &artifact))
                 })?
                 .split('@')
                 .collect::<Vec<&str>>();
             let data = data_ext.first().ok_or_else(|| {
-                LauncherError::NotFound(format!("Unable to find data for library {}", &artifact))
+                Error::NotFound(format!("Unable to find data for library {}", &artifact))
             })?;
             let ext = data_ext.get(1);
 
@@ -240,7 +231,7 @@ impl Library {
         }
     }
 
-    fn get_lib(&self, root: &std::path::Path) -> Result<Option<String>, LauncherError> {
+    fn get_lib(&self, root: &std::path::Path) -> Result<Option<String>, Error> {
         let include = if let Some(rules) = &self.rules {
             parse_rules(None, rules)
         } else {

@@ -10,7 +10,7 @@ use tokio::{
 };
 use tokio_util::compat::{Compat, TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
-use crate::errors::LauncherError;
+use crate::error::LauncherError;
 
 type Archive = ZipFileReader<Compat<BufReader<File>>>;
 

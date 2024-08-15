@@ -1,11 +1,13 @@
-use thiserror::Error;
+use serde::{ser::Serializer, Serialize};
 
-#[derive(Error, Debug)]
-pub enum LauncherError {
+pub type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
     #[error(transparent)]
-    Sqlite(#[from] sqlx::Error),
+    Sqlx(#[from] sqlx::Error),
     #[error(transparent)]
-    Migrate(#[from] sqlx::migrate::MigrateError),
+    SqlxMigration(#[from] sqlx::migrate::MigrateError),
 
     #[error(transparent)]
     Uuid(#[from] uuid::Error),
@@ -32,4 +34,13 @@ pub enum LauncherError {
     PathBufError,
     #[error(transparent)]
     VarError(#[from] std::env::VarError),
+}
+
+impl Serialize for Error {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_ref())
+    }
 }

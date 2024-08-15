@@ -1,7 +1,6 @@
 pub mod models;
 mod process;
 pub mod profile;
-mod sqlite;
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
@@ -15,20 +14,19 @@ use process::ProcessCache;
 use profile::Profile;
 use tokio::sync::RwLock;
 
-use crate::errors::LauncherError;
-pub use sqlite::{Database, QueryResult};
+use crate::error::LauncherError;
 
 use self::process::{InstanceType, MinecraftInstance};
 
 pub struct AppState {
     pub instances: process::Instances,
-    pub database: sqlite::Database,
+    pub database: crate::database::Database,
 }
 
 impl AppState {
     pub fn new(path: &str) -> Result<Self, LauncherError> {
         Ok(Self {
-            database: sqlite::Database::new(path)?,
+            database: crate::database::Database::new(path)?,
             instances: process::Instances::new(),
         })
     }
@@ -128,12 +126,12 @@ impl AppState {
     }
 
     pub async fn get_profile(&self, id: &str) -> Result<Option<Profile>, LauncherError> {
-        let query: Option<Profile> =
-            sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
-                .fetch_optional(&self.database.0)
-                .await?;
+        /*let query: Option<Profile> =
+        sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
+            .fetch_optional(&self.database.0)
+            .await?;*/
 
-        Ok(query)
+        Ok(None /*query*/)
     }
 
     pub async fn set_profile_loader_version(
@@ -184,27 +182,27 @@ impl AppState {
         if has_current >= 1 {
             if !running {
                 log::debug!("There is a current item that has not yet been processed");
-                let item = sqlx::query_as!(
+                /*let item = sqlx::query_as!(
                     QueueItem,
                     "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;"
                 )
                 .fetch_one(&self.database.0)
-                .await?;
+                .await?;*/
 
-                return Ok(Some(item));
+                return Ok(None /*Some(item)*/);
             }
 
             return Ok(None);
         }
 
-        let pending: Option<QueueItem> = sqlx::query_as!(
+        /*let pending: Option<QueueItem> = sqlx::query_as!(
             QueueItem,
             "SELECT * FROM download_queue WHERE state = 'PENDING' ORDER BY install_order DESC LIMIT 1;",
         )
         .fetch_optional(&self.database.0)
-        .await?;
+        .await?;*/
 
-        if let Some(item) = pending {
+        /*if let Some(item) = pending {
             sqlx::query("UPDATE download_queue SET state = 'CURRENT' WHERE id = ?;")
                 .bind(&item.id)
                 .execute(&self.database.0)
@@ -213,7 +211,8 @@ impl AppState {
             Ok(Some(item))
         } else {
             Ok(None)
-        }
+        }*/
+        Ok(None)
     }
 
     pub async fn validate_java_at(path: &Path) -> Result<Option<String>, LauncherError> {
@@ -361,10 +360,10 @@ mod tests {
             .expect("Failed to get array")
             .to_owned();
 
-        app.database
-            .ececute("INSERT INTO settings VALUES (?,?,?)", args)
-            .await
-            .expect("Failed to insert");
+        /*app.database
+        .ececute("INSERT INTO settings VALUES (?,?,?)", args)
+        .await
+        .expect("Failed to insert");*/
 
         let path = app.get_path("path.app").await.expect("Failed to get path");
 

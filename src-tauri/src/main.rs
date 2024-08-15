@@ -1,7 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod error;
 mod plugins;
-use tauri_plugin_log::{Target, TargetKind};
 
 fn main() {
     tauri::Builder::default()
@@ -18,6 +17,7 @@ fn main() {
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level_for("tao", log::LevelFilter::Off)
+                .level_for("sqlx", log::LevelFilter::Off)
                 .build(),
         )
         .plugin(plugins::query::init())

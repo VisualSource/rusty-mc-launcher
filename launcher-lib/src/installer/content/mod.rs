@@ -2,7 +2,7 @@ pub mod external;
 mod mrpack;
 use std::{path::PathBuf, str::FromStr};
 
-use crate::{errors::LauncherError, event, installer::utils, AppState, ChannelMessage};
+use crate::{error::LauncherError, event, installer::utils, AppState, ChannelMessage};
 
 use futures::StreamExt;
 pub use mrpack::install_mrpack;

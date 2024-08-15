@@ -83,7 +83,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             Ok(())
         })
         .on_event(|_app, _event| {
-            log::debug!("Abort tasks");
+            // log::debug!("Abort tasks");
             /*if let RunEvent::Exit = event {
                 let handles = app.state::<[JoinHandle<crate::error::Result<()>>; 2]>();
                 handles[0].abort();
