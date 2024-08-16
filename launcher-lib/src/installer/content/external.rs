@@ -1,13 +1,12 @@
 use super::{ContentType, InstallContent};
 use crate::{
-    error::LauncherError,
-    event,
+    error::{Error, Result},
+    events::DownloadEvent,
     installer::{
         compression,
-        utils::{self, get_file_hash, ChannelMessage, REQUEST_CLIENT},
+        utils::{self, get_file_hash, REQUEST_CLIENT},
     },
-    profile::Loader,
-    AppState,
+    models::{profile::Loader, setting::Setting},
 };
 use futures::StreamExt;
 use normalize_path::NormalizePath;
@@ -17,12 +16,14 @@ use urlencoding::encode;
 use uuid::Uuid;
 
 pub async fn install_external(
-    app: &AppState,
+    db: &crate::database::Database,
     src: PathBuf,
     profile: String,
     content_type: ContentType,
-) -> Result<(), LauncherError> {
-    let root = app.get_path("path.app").await?;
+) -> Result<()> {
+    let root = Setting::path("path.app", db)
+        .await?
+        .ok_or_else(|| Error::NotFound("Application path not found.".to_string()))?;
 
     let profile_dir = root.join("profiles").join(&profile);
 
@@ -31,7 +32,7 @@ pub async fn install_external(
         ContentType::Shader => profile_dir.join("shaderpacks"),
         ContentType::Mod => profile_dir.join("mods"),
         ContentType::Modpack => {
-            return Err(LauncherError::Generic(
+            return Err(Error::Generic(
                 "Modpack content is not supported".to_string(),
             ))
         }
@@ -40,13 +41,13 @@ pub async fn install_external(
     let filename_temp = src.clone();
     let filename = filename_temp
         .file_name()
-        .ok_or_else(|| LauncherError::Generic("Failed to get filename".to_string()))?
+        .ok_or_else(|| Error::Generic("Failed to get filename".to_string()))?
         .to_string_lossy()
         .to_string();
 
     let output_filepath = content_dir.join(&filename);
     if output_filepath.exists() {
-        return Err(LauncherError::Generic("File already exists.".to_string()));
+        return Err(Error::Generic("File already exists.".to_string()));
     }
 
     // copy to dir
@@ -64,7 +65,7 @@ pub async fn install_external(
         filename,
         content_name
     )
-    .execute(&app.database.0)
+    .execute(&db.0)
     .await?;
 
     Ok(())
@@ -115,12 +116,14 @@ struct CFProjectFile {
 }
 
 pub async fn install_curseforge_modpack(
-    app: &AppState,
+    db: &crate::database::Database,
     config: InstallContent,
-    event_channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
-) -> Result<(), LauncherError> {
-    event!(&event_channel, "group", { "progress": 0, "max_progress": 1, "message": "Starting content install" });
-    let root = app.get_path("path.app").await?;
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
+) -> Result<()> {
+    //event!(&event_channel, "group", { "progress": 0, "max_progress": 1, "message": "Starting content install" });
+    let root = Setting::path("path.app", db)
+        .await?
+        .ok_or_else(|| Error::NotFound("Application path not found.".to_string()))?;
 
     let profile_direcotry = root.join("profiles").join(&config.profile);
     if !profile_direcotry.exists() {
@@ -130,35 +133,46 @@ pub async fn install_curseforge_modpack(
     let file = config
         .files
         .first()
-        .ok_or_else(|| LauncherError::NotFound("Missing download mrpack file".to_string()))?;
+        .ok_or_else(|| Error::NotFound("Missing download mrpack file".to_string()))?;
     let modpack_archive = PathBuf::from_str(&file.url)
-        .map_err(|_| LauncherError::Generic("Failed to parse path".to_string()))?;
+        .map_err(|_| Error::Generic("Failed to parse path".to_string()))?;
 
     if !(modpack_archive.exists() && modpack_archive.is_file()) {
-        return Err(LauncherError::NotFound(format!(
+        return Err(Error::NotFound(format!(
             "No file found at: {}",
             modpack_archive.to_string_lossy()
         )));
     }
-    event!(&event_channel,"update",{ "progress": 1 });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     tokio::time::sleep(Duration::from_secs(2)).await;
 
-    event!(&event_channel, "group", { "progress": 0, "max_progress": 5, "message": "Installing Curseforge modpack" });
+    //event!(&event_channel, "group", { "progress": 0, "max_progress": 5, "message": "Installing Curseforge modpack" });
 
     let mut archive =
         compression::open_archive(tokio::fs::File::open(&modpack_archive).await?).await?;
 
     let pack =
         compression::parse_extract::<CurseforgeModpack>(&mut archive, "manifest.json").await?;
-    event!(&event_channel,"update",{ "progress": 1 });
-    if pack.manifest_version != 1 || pack.manifest_type != "minecraftModpack" {
-        return Err(LauncherError::Generic(
-            "Pack format is not supported".to_string(),
-        ));
-    }
 
-    event!(&event_channel, "group", { "progress": 0, "max_progress": pack.files.len(), "message": "Downloading files" });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
+    if pack.manifest_version != 1 || pack.manifest_type != "minecraftModpack" {
+        return Err(Error::Generic("Pack format is not supported".to_string()));
+    }
+    //TODO: Download Section
+    //event!(&event_channel, "group", { "progress": 0, "max_progress": pack.files.len(), "message": "Downloading files" });
     let downloads = futures::stream::iter(pack.files.into_iter().map(|file| {
         let dir = profile_direcotry.clone();
         async move {
@@ -176,7 +190,7 @@ pub async fn install_curseforge_modpack(
                 "Resource Packs" => "resourcepacks",
                 "Customization" | "Shaders" => "shaderpacks",
                 _ => {
-                    return Err(LauncherError::Generic(format!(
+                    return Err(Error::Generic(format!(
                         "Unable to determine content type for {}",
                         project.title
                     )))
@@ -192,20 +206,20 @@ pub async fn install_curseforge_modpack(
             let project_file = project
                 .files
                 .binary_search_by(|prob| prob.id.cmp(&file.file_id))
-                .map_err(|_| LauncherError::Generic(format!("Failed to find project file, Project: {} File: {}",file.project_id,file.file_id)))?;
+                .map_err(|_| Error::Generic(format!("Failed to find project file, Project: {} File: {}",file.project_id,file.file_id)))?;
 
             let version = project
                 .files
                 .get(project_file)
-                .ok_or_else(|| LauncherError::Generic("Failed to get project file".to_string()))?;
+                .ok_or_else(|| Error::Generic("Failed to get project file".to_string()))?;
 
             let output = content_dir.join(&version.name).normalize();
 
             let id_s = version.id.to_string();
-            let url_a = id_s.get(0..4).ok_or_else(||LauncherError::Generic("Failed to get first file id part".to_string()))?;
+            let url_a = id_s.get(0..4).ok_or_else(||Error::Generic("Failed to get first file id part".to_string()))?;
             let url_b = id_s.get(4..)
-                .ok_or_else(||LauncherError::Generic("Failed to get file id part 2".to_string()))?
-                .parse::<u64>().map_err(|err|LauncherError::Generic(format!("{}",err)))?;
+                .ok_or_else(||Error::Generic("Failed to get file id part 2".to_string()))?
+                .parse::<u64>().map_err(|err|Error::Generic(format!("{}",err)))?;
 
             // https://mediafilez.forgecdn.net/files/5083/619/lambdynamiclights-2.3.4%2B1.20.4.jar
             let download_url = format!("https://mediafilez.forgecdn.net/files/{}/{}/{}",url_a,url_b, encode(&version.name));
@@ -215,7 +229,7 @@ pub async fn install_curseforge_modpack(
             let file_meta = tokio::fs::metadata(&output).await?;
             let on_disk = file_meta.file_size();
             if on_disk != version.filesize {
-                return Err(LauncherError::Generic(format!(
+                return Err(Error::Generic(format!(
                     "On disk file size does not match expected file size. {} bytes | {} bytes for {}",
                     on_disk, version.filesize, version.name
                 )));
@@ -223,13 +237,19 @@ pub async fn install_curseforge_modpack(
 
             let hash = get_file_hash(&output).await?;
 
-            event!(&event_channel,"update",{ "progress": 1 });
+            on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
             tokio::time::sleep(Duration::from_secs(5)).await;
             Ok((version.name.clone(), hash, content_type.to_owned()))
         }
     }))
     .buffer_unordered(50)
-    .collect::<Vec<Result<(String, String, String), LauncherError>>>()
+    .collect::<Vec<Result<(String, String, String)>>>()
     .await;
 
     for file in downloads {
@@ -243,12 +263,13 @@ pub async fn install_curseforge_modpack(
                 };
 
                 let profile_id = config.profile.clone();
-                sqlx::query!("INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)","",content.1,profile_id,content.0, content_type).execute(&app.database.0).await?;
+                sqlx::query!("INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)","",content.1,profile_id,content.0, content_type).execute(&db.0).await?;
             }
             Err(err) => return Err(err),
         }
     }
-    event!(&event_channel, "group", { "progress": 0, "max_progress": 6, "message": "Finalizing" });
+    // TODO: Download section
+    //event!(&event_channel, "group", { "progress": 0, "max_progress": 6, "message": "Finalizing" });
 
     compression::extract_dir(
         &mut archive,
@@ -258,13 +279,20 @@ pub async fn install_curseforge_modpack(
         Some(|file| file.replace("overrides", "")),
     )
     .await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     let (modloader, loader_version) = {
-        let loaders =
-            pack.minecraft.mod_loaders.first().ok_or_else(|| {
-                LauncherError::Generic("Failed to get pack modloader".to_string())
-            })?;
+        let loaders = pack
+            .minecraft
+            .mod_loaders
+            .first()
+            .ok_or_else(|| Error::Generic("Failed to get pack modloader".to_string()))?;
 
         let item = loaders
             .id
@@ -282,7 +310,13 @@ pub async fn install_curseforge_modpack(
         (loader, item[1].clone())
     };
 
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let title = format!(
         "Minecraft {} {} {}",
         pack.minecraft.version, modloader, loader_version
@@ -304,8 +338,15 @@ pub async fn install_curseforge_modpack(
         profile_id,
         "Client",
         metadata
-    ).execute(&app.database.0).await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+    ).execute(&db.0).await?;
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let loader = modloader.to_string().to_lowercase();
 
     let pack_name = format!("{}: {}", pack.name, pack.version);
@@ -319,8 +360,15 @@ pub async fn install_curseforge_modpack(
         "-Xmx4G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
         "INSTALLED"
     )
-    .execute(&app.database.0)
+    .execute(&db.0)
     .await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     Ok(())
 }

@@ -1,7 +1,8 @@
-use minecraft_launcher_lib::content::{external, ContentType};
 use minecraft_launcher_lib::events::DownloadEvent;
-use minecraft_launcher_lib::models::QueueType;
-use minecraft_launcher_lib::AppState;
+use minecraft_launcher_lib::installer::content::{external, ContentType};
+use minecraft_launcher_lib::models::queue::QueueType;
+use tokio::sync::RwLock;
+
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::ipc::Channel;
@@ -26,7 +27,7 @@ pub async fn downloads_listener(
 
 #[tauri::command]
 pub async fn delete_profile(
-    state: tauri::State<'_, AppState>,
+    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
 ) -> Result<(), String> {
     /*let app_dir = state
@@ -44,7 +45,7 @@ pub async fn delete_profile(
 
 #[tauri::command]
 pub async fn create_profile(
-    state: tauri::State<'_, AppState>,
+    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
     copy_options: Option<String>,
 ) -> Result<(), String> {
@@ -70,7 +71,7 @@ pub async fn create_profile(
 
 #[tauri::command]
 pub async fn uninstall_content(
-    state: tauri::State<'_, AppState>,
+    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     content_type: QueueType,
     filename: String,
     profile: String,
@@ -100,7 +101,7 @@ pub async fn uninstall_content(
 
 #[tauri::command]
 pub async fn copy_profile(
-    state: tauri::State<'_, AppState>,
+    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
     new_profile: String,
 ) -> Result<(), String> {
@@ -126,7 +127,7 @@ pub async fn copy_profile(
 
 #[tauri::command]
 pub async fn import_external(
-    state: tauri::State<'_, AppState>,
+    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
     src: PathBuf,
     content_type: ContentType,

@@ -1,4 +1,4 @@
-use minecraft_launcher_lib::{process::Processes, AppState, LaunchConfig};
+use minecraft_launcher_lib::{launcher::LaunchConfig, process::Processes};
 use tokio::sync::RwLock;
 
 use crate::error::Error;
@@ -16,14 +16,13 @@ pub async fn is_running(
     ps: tauri::State<'_, RwLock<Processes>>,
     id: String,
 ) -> Result<bool, Error> {
-    let state = ps.read().await;
-
-    state.is_running(&id).await
+    let mut state = ps.write().await;
+    state.is_running(&id).await.map_err(Error::Lib)
 }
 
 #[tauri::command]
 pub async fn stop(ps: tauri::State<'_, RwLock<Processes>>, id: String) -> Result<(), Error> {
-    let state = ps.write().await;
+    let mut state = ps.write().await;
 
     if let Some(process) = state.get_mut(&id) {
         process.kill().await?;

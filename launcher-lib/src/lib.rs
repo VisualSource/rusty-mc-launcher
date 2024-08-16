@@ -5,7 +5,7 @@ pub mod error;
 pub mod events;
 pub mod installer;
 mod java;
-mod launcher;
+pub mod launcher;
 mod manifest;
 pub mod models;
 pub mod process;

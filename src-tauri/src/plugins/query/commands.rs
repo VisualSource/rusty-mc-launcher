@@ -1,6 +1,7 @@
 use crate::error::{Error, Result};
-use minecraft_launcher_lib::{Database, QueryResult};
+use minecraft_launcher_lib::database::{Database, QueryResult};
 use tokio::sync::RwLock;
+
 #[tauri::command]
 pub async fn select(
     state: tauri::State<'_, RwLock<Database>>,
