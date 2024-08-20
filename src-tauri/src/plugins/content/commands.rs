@@ -1,26 +1,24 @@
 use minecraft_launcher_lib::events::DownloadEvent;
-use minecraft_launcher_lib::installer::content::{external, ContentType};
+use minecraft_launcher_lib::installer::content::ContentType;
 use minecraft_launcher_lib::models::queue::QueueType;
 use tokio::sync::RwLock;
 
 use std::path::PathBuf;
-use std::sync::Mutex;
 use tauri::ipc::Channel;
 use tauri::State;
+use tokio::sync::Mutex;
 
 use crate::error::Error;
 
-use super::EventChannel;
-
 #[tauri::command]
 pub async fn downloads_listener(
-    state: State<'_, Mutex<EventChannel>>,
+    state: State<'_, Mutex<Option<Channel<DownloadEvent>>>>,
     on_event: Channel<DownloadEvent>,
 ) -> Result<(), Error> {
     // do stuff pass on_event to caller
-    let mut data = state.lock().map_err(|err| Error::Reason(err.to_string()))?;
+    let mut data = state.lock().await;
 
-    data.0 = Some(on_event);
+    *data = Some(on_event);
 
     Ok(())
 }

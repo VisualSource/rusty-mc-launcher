@@ -1,6 +1,5 @@
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
-use time::PrimitiveDateTime;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum QueueType {
@@ -49,16 +48,17 @@ impl Default for QueueState {
     }
 }
 
-impl ToString for QueueState {
-    fn to_string(&self) -> String {
-        match self {
-            QueueState::Pending => "PENDING".into(),
-            QueueState::Errored => "ERRORED".into(),
-            QueueState::Current => "CURRENT".into(),
-            QueueState::Postponed => "POSTPONED".into(),
-            QueueState::Completed => "COMPLETED".into(),
-            QueueState::Unknown => "UNKNOWN".into(),
-        }
+impl std::fmt::Display for QueueState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = match self {
+            QueueState::Pending => "PENDING",
+            QueueState::Errored => "ERRORED",
+            QueueState::Current => "CURRENT",
+            QueueState::Postponed => "POSTPONED",
+            QueueState::Completed => "COMPLETED",
+            QueueState::Unknown => "UNKNOWN",
+        };
+        write!(f, "{}", value)
     }
 }
 
@@ -83,13 +83,44 @@ pub struct QueueItem {
     pub display_name: String,
     pub icon: Option<String>,
     pub profile_id: String,
-    pub created: PrimitiveDateTime,
+    pub created: time::OffsetDateTime,
     pub content_type: QueueType,
     pub metadata: Option<String>,
     pub state: QueueState,
 }
 
 impl QueueItem {
+    pub async fn get_pending(db: &crate::database::Database) -> Result<Option<QueueItem>> {
+        let has_current = sqlx::query_scalar!(
+            "SELECT COUNT(*) as count FROM download_queue WHERE state = 'CURRENT';"
+        )
+        .fetch_one(&db.0)
+        .await?;
+
+        if has_current >= 1 {
+            // if the app was closed during processing, restart with last known item.
+            let item: Option<QueueItem> = sqlx::query_as!(
+                QueueItem,
+                "SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;"
+            )
+            .fetch_optional(&db.0)
+            .await?;
+
+            if item.is_some() {
+                return Ok(item);
+            }
+        }
+
+        if let Some(pending) = sqlx::query_as!(QueueItem,
+            "SELECT * FROM download_queue WHERE state = 'PENDING' ORDER BY install_order DESC LIMIT 1;",
+        ).fetch_optional(&db.0).await? {
+            QueueItem::set_state(&pending.id, QueueState::Current, db).await?;
+            Ok(Some(pending))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn delete(id: &str, db: &crate::database::Database) -> Result<()> {
         sqlx::query("DELETE FROM download_queue WHERE id = ?;")
             .bind(id)
@@ -97,6 +128,7 @@ impl QueueItem {
             .await?;
         Ok(())
     }
+
     pub async fn set_state(
         id: &str,
         state: QueueState,

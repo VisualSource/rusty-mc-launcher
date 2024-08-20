@@ -47,6 +47,43 @@ impl From<String> for Loader {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub enum ProfileState {
+    Installing,
+    Installed,
+    Uninstalled,
+    Errored,
+    Unknown,
+}
+
+impl From<String> for ProfileState {
+    fn from(value: String) -> Self {
+        match value.to_lowercase().as_str() {
+            "installing" => Self::Installing,
+            "installed" => Self::Installed,
+            "uninstalled" => Self::Uninstalled,
+            "errored" => Self::Errored,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl Display for ProfileState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ProfileState::Installing => "Installing",
+                ProfileState::Installed => "Installed",
+                ProfileState::Uninstalled => "Uninstalled",
+                ProfileState::Errored => "Errored",
+                ProfileState::Unknown => "Unknown",
+            }
+        )
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Profile {
     pub id: String,
@@ -67,7 +104,7 @@ pub struct Profile {
     pub resolution_width: Option<String>,
     pub resolution_height: Option<String>,
 
-    pub state: String,
+    pub state: ProfileState,
 }
 
 impl Profile {
@@ -123,9 +160,13 @@ impl Profile {
 
         Ok(())
     }
-    pub async fn set_state(id: &str, state: &str, db: &crate::database::Database) -> Result<()> {
+    pub async fn set_state(
+        id: &str,
+        state: ProfileState,
+        db: &crate::database::Database,
+    ) -> Result<()> {
         sqlx::query("UPDATE profiles SET state = ? WHERE id = ?")
-            .bind(state)
+            .bind(state.to_string())
             .bind(id)
             .execute(&db.0)
             .await?;

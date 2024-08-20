@@ -1,42 +1,89 @@
 mod commands;
-use std::{sync::Mutex, time::Duration};
+mod desktop;
+use std::time::Duration;
 
-use minecraft_launcher_lib::events::DownloadEvent;
+use minecraft_launcher_lib::{
+    database::Database,
+    events::DownloadEvent,
+    models::{
+        profile::{Profile, ProfileState},
+        queue::{QueueItem, QueueState, QueueType},
+    },
+};
 use tauri::{
     async_runtime::JoinHandle,
     ipc::Channel,
     plugin::{Builder, TauriPlugin},
     Emitter, EventTarget, Manager, RunEvent, Runtime,
 };
+use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 use crate::error::Error;
-
-#[derive(Clone)]
-pub struct EventChannel(Option<Channel<DownloadEvent>>);
-
-impl EventChannel {
-    fn new() -> Self {
-        Self(None)
-    }
-    fn send(&self, data: DownloadEvent) -> Result<(), Error> {
-        if let Some(channel) = self.0.as_ref() {
-            return channel.send(data).map_err(Error::Tauri);
-        }
-
-        Err(Error::NoChannel)
-    }
-}
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-content")
         .setup(|app, _api| {
-            app.manage(Mutex::new(EventChannel::new()));
+            app.manage(Mutex::new(Option::<Channel<DownloadEvent>>::None));
 
-            /*let app_handle = app.app_handle().clone();
+            let app_handle = app.app_handle().clone();
             // downloads watcher
             let downloads_handle = tauri::async_runtime::spawn(async move {
-                // check database
                 loop {
+                    // slow iters
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+
+                    let state = app_handle.state::<RwLock<Database>>();
+                    let emitter_state = app_handle.state::<Mutex<Option<Channel<DownloadEvent>>>>();
+
+                    let item = {
+                        let db = state.read().await;
+                        QueueItem::get_pending(&db).await
+                    };
+                    match item {
+                        Ok(Some(item)) => {
+                            log::debug!("Processing Item: {}", item.id);
+                            let emitter_c = emitter_state.lock().await;
+                            if emitter_c.is_none() {
+                                continue;
+                            }
+                            let emitter = emitter_c.as_ref().unwrap();
+                            match item.content_type {
+                                QueueType::Client => {
+                                    if let Err(err) =
+                                        desktop::install_client(&item, &state, emitter).await
+                                    {
+                                        log::error!("{}", err);
+                                        // handler error
+                                    } else {
+                                        // clean up
+                                    }
+                                }
+                                QueueType::Modpack
+                                | QueueType::Mod
+                                | QueueType::Shader
+                                | QueueType::Resourcepack => todo!(),
+                                QueueType::Datapack => {
+                                    let db = state.write().await;
+                                    log::error!("Datapack install has no implemtion");
+                                    if let Err(err) =
+                                        QueueItem::set_state(&item.id, QueueState::Errored, &db)
+                                            .await
+                                    {
+                                        log::error!("{}", err);
+                                    }
+                                }
+                                QueueType::CurseforgeModpack => todo!(),
+                            }
+                        }
+                        Ok(None) => {}
+                        Err(err) => {
+                            log::error!("{}", err);
+                        }
+                    }
+                }
+
+                /* loop {
                     tokio::time::sleep(Duration::from_secs(5)).await;
                     // if pending install
                     let emitter = app_handle.state::<Mutex<EventChannel>>();
@@ -55,29 +102,12 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                             log::error!("{}", err)
                         }
                     }
-                }
+                }*/
 
                 Ok::<(), Error>(())
             });
 
-            let watch_app_handle = app.app_handle().clone();
-            let process_watcher_handle = tauri::async_runtime::spawn(async move {
-                loop {
-                    tokio::time::sleep(Duration::from_secs(5)).await;
-                    // fetch state
-                    // look for exited processes
-                    // emit events for crashed processes
-                    if let Err(err) =
-                        watch_app_handle.emit_to(EventTarget::labeled("main"), "process_crashed", 1)
-                    {
-                        log::error!("{}", err);
-                    }
-                }
-
-                Ok::<(), Error>(())
-            });
-
-            app.manage([downloads_handle, process_watcher_handle]);*/
+            app.manage([downloads_handle]);
 
             log::debug!("Plugin <rmcl-content> Ready");
             Ok(())

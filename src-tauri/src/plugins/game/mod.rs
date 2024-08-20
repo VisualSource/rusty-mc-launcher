@@ -24,6 +24,26 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                 Ok::<Processes, Error>(data)
             })?;
 
+            /*
+            let watch_app_handle = app.app_handle().clone();
+            let process_watcher_handle = tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                    // fetch state
+                    // look for exited processes
+                    // emit events for crashed processes
+                    if let Err(err) =
+                        watch_app_handle.emit_to(EventTarget::labeled("main"), "process_crashed", 1)
+                    {
+                        log::error!("{}", err);
+                    }
+                }
+
+                Ok::<(), Error>(())
+            });
+
+             */
+
             app.manage(RwLock::new(processes));
 
             // startup process watcher
