@@ -2,13 +2,18 @@ mod commands;
 mod desktop;
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    Manager, Runtime,
+    Listener, Manager, Runtime,
 };
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-auth")
-        .setup(|_app, _api| {
+        .setup(|app, _api| {
             log::debug!("Setup <rmcl-auth> plugin");
+
+            app.listen("rmcl://ms/authroize", |url| {
+                log::debug!("Event {:?}", url);
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

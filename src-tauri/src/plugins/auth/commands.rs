@@ -1,27 +1,22 @@
-//use crate::oauth::{cancel, start};
-
-use super::desktop::cancel;
+use super::desktop::{cancel, start};
+use crate::error::Result;
 use log::{debug, error};
-use tauri::{command, Emitter, Window};
 
-#[command]
-pub fn start_auth_server(/*window: Window*/) -> Result<u16, String> {
-    /*let port = start(move |url| {
-        if let Err(err) = window.emit(
-            "rmcl://auth_response",
-            format!(r#"{{ "status":"ok", "data": "{}" }}"#, url),
-        ) {
+#[tauri::command]
+pub fn start_auth_server(app: tauri::AppHandle) -> Result<u16> {
+    /*
+      let port = start(move |url| {
+        if let Err(err) = app.emit("rmcl://auth_response", url) {
             error!("{}", err);
         }
-    })
-    .map_err(|err| err.to_string())?;
-    debug!("Starting Auth Server on port: {}", port);
-    Ok(port)*/
-    Ok(5000)
+    })?;
+     */
+    //debug!("Starting Auth Server on port: {}", port);
+    Ok(2000)
 }
 
-#[command]
-pub fn close_auth_server(port: u16) -> Result<(), String> {
+#[tauri::command]
+pub fn close_auth_server(port: u16) -> Result<()> {
     debug!("Closing auth server on port: {port}");
-    cancel(port).map_err(|err| err.to_string())
+    cancel(port)
 }
