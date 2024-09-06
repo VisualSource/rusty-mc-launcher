@@ -9,8 +9,6 @@ pub enum Error {
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
-    #[error("Unable to send message. No channel set.")]
-    NoChannel,
     #[error(transparent)]
     Tauri(#[from] tauri::Error),
     #[error("{0}")]

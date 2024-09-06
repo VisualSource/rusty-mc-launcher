@@ -174,7 +174,9 @@ export class RedirectClient extends StandardInteractionClient {
                 navigationClient: this.navigationClient,
                 redirectTimeout: this.config.system.redirectNavigationTimeout,
                 redirectStartPage: redirectStartPage,
-                onRedirectNavigate: request.onRedirectNavigate,
+                onRedirectNavigate:
+                    request.onRedirectNavigate ||
+                    this.config.auth.onRedirectNavigate,
             });
         } catch (e) {
             if (e instanceof AuthError) {
@@ -201,6 +203,7 @@ export class RedirectClient extends StandardInteractionClient {
         const serverTelemetryManager = this.initializeServerTelemetryManager(
             ApiId.handleRedirectPromise
         );
+
         try {
             if (!this.browserStorage.isInteractionInProgress(true)) {
                 this.logger.info(

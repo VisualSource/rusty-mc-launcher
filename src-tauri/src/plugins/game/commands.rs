@@ -30,8 +30,3 @@ pub async fn stop(ps: tauri::State<'_, RwLock<Processes>>, id: String) -> Result
 
     Ok(())
 }
-
-#[tauri::command]
-pub async fn get_system_ram() -> u64 {
-    minecraft_launcher_lib::get_ram()
-}

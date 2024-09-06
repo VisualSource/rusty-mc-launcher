@@ -1,5 +1,6 @@
-import type { IPublicClientApplication, SilentRequest } from "@masl/index";
-import { startAuthServer, closeAuthServer } from "@system/commands";
+import type { IPublicClientApplication } from "@masl/app/IPublicClientApplication";
+import type { SilentRequest } from "@masl/request/SilentRequest";
+import { startAuthServer, closeAuthServer } from "@lib/api/plugins/auth";
 import logger from "@system/logger";
 
 const getToken = async (

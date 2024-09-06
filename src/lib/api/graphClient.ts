@@ -1,13 +1,20 @@
+/** @deprecated */
+
 import {
 	exists,
 	BaseDirectory,
-	writeBinaryFile,
-	createDir,
+	create,
+	mkdir,
 } from "@tauri-apps/plugin-fs";
 import { resolve, appDataDir } from "@tauri-apps/api/path";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
+/**
+ * @deprecated
+ * @param accessToken  
+ * @returns 
+ */
 export const getGraphClient = (accessToken: string) => {
 	const graphClient = Client.init({
 		authProvider: (done) => done(null, accessToken),
@@ -36,6 +43,7 @@ export type ImageMetadata = {
 	height: number;
 };
 
+/** @deprecated */
 export async function getAccountPhoto(client: Client, userId: string) {
 	const etagKey = `${userId}.image.etag`;
 	const etagSaved = localStorage.getItem(etagKey);
@@ -48,19 +56,21 @@ export async function getAccountPhoto(client: Client, userId: string) {
 
 	const appdir = await appDataDir();
 	const imagepath = await resolve(appdir, "images", `${userId}_${etag}.jpeg`);
-	const hasImage = await exists(imagepath, { dir: BaseDirectory.AppData });
+	const hasImage = await exists(imagepath, { baseDir: BaseDirectory.AppData });
 
 	if (!hasImage || etag !== etagSaved) {
-		const hasDir = await exists("images", { dir: BaseDirectory.AppData });
-		if (!hasDir) await createDir("images", { dir: BaseDirectory.AppData });
+		const hasDir = await exists("images", { baseDir: BaseDirectory.AppData });
+		if (!hasDir) await mkdir("images", { baseDir: BaseDirectory.AppData });
 
 		const imageRaw = (await client.api("/me/photo/$value").get()) as Blob;
 
 		const buffer = await imageRaw.arrayBuffer();
 
-		await writeBinaryFile(imagepath, [...new Uint8Array(buffer)], {
-			dir: BaseDirectory.AppData,
-		});
+
+		const file = await create(imagepath, { baseDir: BaseDirectory.AppData });
+
+		await file.write(new Uint8Array(buffer));
+		await file.close();
 
 		localStorage.setItem(etagKey, etag);
 	}

@@ -6,7 +6,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import type { OptsProps } from "./EditConsts";
+import type { OptsProps } from "../EditConsts";
 
 function ModrinthOptions({ card, updateCard }: OptsProps) {
 	return (

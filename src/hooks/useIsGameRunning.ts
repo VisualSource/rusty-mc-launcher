@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { isRunning } from "@system/commands";
+import { isRunning } from "@lib/api/plugins/game";
 
 export const QUERY_KEY = "GAME_STATE" as const;
 

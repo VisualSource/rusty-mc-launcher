@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CATEGORIES_KEY, CATEGORY_KEY, KEY_PROFILE_COLLECTION } from "./keys";
 import type { Category } from "@lib/models/categories";
-import { db } from "@system/commands";
+import { query } from "@lib/api/plugins/query";
 import logger from "@system/logger";
 
 type Query = { type: "add" | "remove"; category: string; profile: string };
@@ -44,11 +44,8 @@ const useCategoryMutation = () => {
 							{ id: "", category: data.category, profile: data.profile },
 						],
 					);
-					await db.execute({
-						query:
-							"INSERT INTO categories ('profile','category') VALUES (?,?);",
-						args: [data.profile, data.category],
-					});
+
+					await query("INSERT INTO categories ('profile','category') VALUES (?,?);", [data.profile, data.category]).run();
 					break;
 				}
 				case "remove": {
@@ -57,10 +54,7 @@ const useCategoryMutation = () => {
 						(old: Category[]) =>
 							old.filter((e) => e.category !== data.category),
 					);
-					await db.execute({
-						query: "DELETE FROM categories WHERE profile = ? AND category = ?",
-						args: [data.profile, data.category],
-					});
+					await query("DELETE FROM categories WHERE profile = ? AND category = ?", [data.profile, data.category]).run();
 					break;
 				}
 			}

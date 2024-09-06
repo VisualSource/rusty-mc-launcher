@@ -7,11 +7,6 @@ import { TypographyH4 } from "../ui/typography";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { useModrinth } from "@/hooks/useModrinth";
-import { useQuery } from "@tanstack/react-query";
-import { getProjects, getVersions } from "@/lib/api/modrinth";
-import { modrinthClient } from "@/lib/api/modrinthClient";
-import { queryClient } from "@/lib/api/queryClient";
 import { useModrinthNotifications } from "@/hooks/useModrinthNoitications";
 
 const DisplayToastData = ({ value }: { value: unknown }) => {

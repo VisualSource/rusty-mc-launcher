@@ -26,7 +26,11 @@ import {
     createBrowserAuthError,
     BrowserAuthErrorCodes,
 } from "../error/BrowserAuthError";
-import { InteractionType, ApiId } from "../utils/BrowserConstants";
+import {
+    InteractionType,
+    ApiId,
+    BrowserConstants,
+} from "../utils/BrowserConstants";
 import {
     initiateAuthRequest,
     monitorIframeForHash,
@@ -123,9 +127,11 @@ export class SilentIframeClient extends StandardInteractionClient {
             this.apiId
         );
 
+        let authClient: AuthorizationCodeClient | undefined;
+
         try {
             // Initialize the client
-            const authClient: AuthorizationCodeClient = await invokeAsync(
+            authClient = await invokeAsync(
                 this.createAuthCodeClient.bind(this),
                 PerformanceEvents.StandardInteractionClientCreateAuthCodeClient,
                 this.logger,
@@ -150,7 +156,38 @@ export class SilentIframeClient extends StandardInteractionClient {
                 (e as AuthError).setCorrelationId(this.correlationId);
                 serverTelemetryManager.cacheFailedRequest(e);
             }
-            throw e;
+
+            if (
+                !authClient ||
+                !(e instanceof AuthError) ||
+                e.errorCode !== BrowserConstants.INVALID_GRANT_ERROR
+            ) {
+                throw e;
+            }
+
+            this.performanceClient.addFields(
+                {
+                    retryError: e.errorCode,
+                },
+                this.correlationId
+            );
+
+            const retrySilentRequest: AuthorizationUrlRequest =
+                await invokeAsync(
+                    this.initializeAuthorizationRequest.bind(this),
+                    PerformanceEvents.StandardInteractionClientInitializeAuthorizationRequest,
+                    this.logger,
+                    this.performanceClient,
+                    request.correlationId
+                )(inputRequest, InteractionType.Silent);
+
+            return await invokeAsync(
+                this.silentTokenHelper.bind(this),
+                PerformanceEvents.SilentIframeClientTokenHelper,
+                this.logger,
+                this.performanceClient,
+                this.correlationId
+            )(authClient, retrySilentRequest);
         }
     }
 

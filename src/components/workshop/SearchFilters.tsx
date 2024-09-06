@@ -15,6 +15,7 @@ import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Checkbox } from "../ui/checkbox";
 import { Selectable } from "./Selectable";
 import { Label } from "../ui/label";
+import type { Facets } from "@/lib/Facets";
 
 const ALLOWED_MOD_LOADERS = ["forge", "fabric", "quilt", "neoforge"] as const;
 const SHOW_LOADERS_ON = ["mod", "modpack", "shader"] as const;
@@ -107,7 +108,7 @@ export const SearchFilters: React.FC<{
 				<RadioGroup
 					onValueChange={(e) => {
 						navigate({
-							search: (prev) => ({
+							search: (prev: { facets?: Facets }) => ({
 								...prev,
 								facets: prev?.facets?.setProjectType(e),
 								offset: 0,
@@ -140,7 +141,7 @@ export const SearchFilters: React.FC<{
 								checked={search.facets.hasCategory(item.name)}
 								onChange={() =>
 									navigate({
-										search: (prev) => ({
+										search: (prev: { facets?: Facets }) => ({
 											...prev,
 											facets: prev?.facets?.toggleCategory(item.name),
 										}),
@@ -167,7 +168,7 @@ export const SearchFilters: React.FC<{
 								checked={search.facets.hasLoader(item.name)}
 								onChange={() =>
 									navigate({
-										search: (prev) => ({
+										search: (prev: { facets?: Facets }) => ({
 											...prev,
 											facets: prev?.facets?.toggleLoader(item.name),
 										}),
@@ -187,7 +188,7 @@ export const SearchFilters: React.FC<{
 							<Checkbox
 								onClick={() =>
 									navigate({
-										search: (prev) => ({
+										search: (prev: { facets?: Facets }) => ({
 											...prev,
 											facets: prev?.facets?.toggleEnv("client"),
 										}),
@@ -217,7 +218,7 @@ export const SearchFilters: React.FC<{
 							<Checkbox
 								onCheckedChange={() =>
 									navigate({
-										search: (prev) => ({
+										search: (prev: { facets?: Facets }) => ({
 											...prev,
 											facets: prev?.facets?.toggleEnv("server"),
 										}),

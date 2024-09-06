@@ -356,33 +356,234 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  AuthenticatedRoute: AuthenticatedRoute.addChildren({
-    AuthenticatedLayoutRoute: AuthenticatedLayoutRoute.addChildren({
-      AuthenticatedLayoutCollectionsRoute,
-      AuthenticatedLayoutSkinsLazyRoute,
-      AuthenticatedLayoutIndexLazyRoute,
-      AuthenticatedLayoutProfileProfileIdRoute:
-        AuthenticatedLayoutProfileProfileIdRoute.addChildren({
-          AuthenticatedLayoutProfileProfileIdEditRoute,
-          AuthenticatedLayoutProfileProfileIdScreenshotsRoute,
-          AuthenticatedLayoutProfileProfileIdIndexRoute,
-        }),
-    }),
-    AuthenticatedSettingsRoute: AuthenticatedSettingsRoute.addChildren({
-      AuthenticatedSettingsAccountsLazyRoute,
-      AuthenticatedSettingsDownloadLazyRoute,
-      AuthenticatedSettingsGameLazyRoute,
-      AuthenticatedSettingsIndexRoute,
-    }),
-    AuthenticatedBugReportLazyRoute,
-    AuthenticatedCreateProfileLazyRoute,
-    AuthenticatedDownloadsLazyRoute,
-    AuthenticatedPatchNotesLazyRoute,
-    AuthenticatedWorkshopSearchRouteRoute,
+interface AuthenticatedLayoutProfileProfileIdRouteChildren {
+  AuthenticatedLayoutProfileProfileIdEditRoute: typeof AuthenticatedLayoutProfileProfileIdEditRoute
+  AuthenticatedLayoutProfileProfileIdScreenshotsRoute: typeof AuthenticatedLayoutProfileProfileIdScreenshotsRoute
+  AuthenticatedLayoutProfileProfileIdIndexRoute: typeof AuthenticatedLayoutProfileProfileIdIndexRoute
+}
+
+const AuthenticatedLayoutProfileProfileIdRouteChildren: AuthenticatedLayoutProfileProfileIdRouteChildren =
+  {
+    AuthenticatedLayoutProfileProfileIdEditRoute:
+      AuthenticatedLayoutProfileProfileIdEditRoute,
+    AuthenticatedLayoutProfileProfileIdScreenshotsRoute:
+      AuthenticatedLayoutProfileProfileIdScreenshotsRoute,
+    AuthenticatedLayoutProfileProfileIdIndexRoute:
+      AuthenticatedLayoutProfileProfileIdIndexRoute,
+  }
+
+const AuthenticatedLayoutProfileProfileIdRouteWithChildren =
+  AuthenticatedLayoutProfileProfileIdRoute._addFileChildren(
+    AuthenticatedLayoutProfileProfileIdRouteChildren,
+  )
+
+interface AuthenticatedLayoutRouteChildren {
+  AuthenticatedLayoutCollectionsRoute: typeof AuthenticatedLayoutCollectionsRoute
+  AuthenticatedLayoutSkinsLazyRoute: typeof AuthenticatedLayoutSkinsLazyRoute
+  AuthenticatedLayoutIndexLazyRoute: typeof AuthenticatedLayoutIndexLazyRoute
+  AuthenticatedLayoutProfileProfileIdRoute: typeof AuthenticatedLayoutProfileProfileIdRouteWithChildren
+}
+
+const AuthenticatedLayoutRouteChildren: AuthenticatedLayoutRouteChildren = {
+  AuthenticatedLayoutCollectionsRoute: AuthenticatedLayoutCollectionsRoute,
+  AuthenticatedLayoutSkinsLazyRoute: AuthenticatedLayoutSkinsLazyRoute,
+  AuthenticatedLayoutIndexLazyRoute: AuthenticatedLayoutIndexLazyRoute,
+  AuthenticatedLayoutProfileProfileIdRoute:
+    AuthenticatedLayoutProfileProfileIdRouteWithChildren,
+}
+
+const AuthenticatedLayoutRouteWithChildren =
+  AuthenticatedLayoutRoute._addFileChildren(AuthenticatedLayoutRouteChildren)
+
+interface AuthenticatedSettingsRouteChildren {
+  AuthenticatedSettingsAccountsLazyRoute: typeof AuthenticatedSettingsAccountsLazyRoute
+  AuthenticatedSettingsDownloadLazyRoute: typeof AuthenticatedSettingsDownloadLazyRoute
+  AuthenticatedSettingsGameLazyRoute: typeof AuthenticatedSettingsGameLazyRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+}
+
+const AuthenticatedSettingsRouteChildren: AuthenticatedSettingsRouteChildren = {
+  AuthenticatedSettingsAccountsLazyRoute:
+    AuthenticatedSettingsAccountsLazyRoute,
+  AuthenticatedSettingsDownloadLazyRoute:
+    AuthenticatedSettingsDownloadLazyRoute,
+  AuthenticatedSettingsGameLazyRoute: AuthenticatedSettingsGameLazyRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+}
+
+const AuthenticatedSettingsRouteWithChildren =
+  AuthenticatedSettingsRoute._addFileChildren(
+    AuthenticatedSettingsRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedLayoutRoute: typeof AuthenticatedLayoutRouteWithChildren
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
+  AuthenticatedBugReportLazyRoute: typeof AuthenticatedBugReportLazyRoute
+  AuthenticatedCreateProfileLazyRoute: typeof AuthenticatedCreateProfileLazyRoute
+  AuthenticatedDownloadsLazyRoute: typeof AuthenticatedDownloadsLazyRoute
+  AuthenticatedPatchNotesLazyRoute: typeof AuthenticatedPatchNotesLazyRoute
+  AuthenticatedWorkshopSearchRouteRoute: typeof AuthenticatedWorkshopSearchRouteRoute
+  AuthenticatedWorkshopProjectIdRouteRoute: typeof AuthenticatedWorkshopProjectIdRouteRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedLayoutRoute: AuthenticatedLayoutRouteWithChildren,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
+  AuthenticatedBugReportLazyRoute: AuthenticatedBugReportLazyRoute,
+  AuthenticatedCreateProfileLazyRoute: AuthenticatedCreateProfileLazyRoute,
+  AuthenticatedDownloadsLazyRoute: AuthenticatedDownloadsLazyRoute,
+  AuthenticatedPatchNotesLazyRoute: AuthenticatedPatchNotesLazyRoute,
+  AuthenticatedWorkshopSearchRouteRoute: AuthenticatedWorkshopSearchRouteRoute,
+  AuthenticatedWorkshopProjectIdRouteRoute:
     AuthenticatedWorkshopProjectIdRouteRoute,
-  }),
-})
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
+interface FileRoutesByFullPath {
+  '': typeof AuthenticatedLayoutRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRouteWithChildren
+  '/bug-report': typeof AuthenticatedBugReportLazyRoute
+  '/create-profile': typeof AuthenticatedCreateProfileLazyRoute
+  '/downloads': typeof AuthenticatedDownloadsLazyRoute
+  '/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
+  '/workshop/search': typeof AuthenticatedWorkshopSearchRouteRoute
+  '/collections': typeof AuthenticatedLayoutCollectionsRoute
+  '/skins': typeof AuthenticatedLayoutSkinsLazyRoute
+  '/settings/accounts': typeof AuthenticatedSettingsAccountsLazyRoute
+  '/settings/download': typeof AuthenticatedSettingsDownloadLazyRoute
+  '/settings/game': typeof AuthenticatedSettingsGameLazyRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/': typeof AuthenticatedLayoutIndexLazyRoute
+  '/workshop/project/$id': typeof AuthenticatedWorkshopProjectIdRouteRoute
+  '/profile/$id': typeof AuthenticatedLayoutProfileProfileIdRouteWithChildren
+  '/profile/$id/edit': typeof AuthenticatedLayoutProfileProfileIdEditRoute
+  '/profile/$id/screenshots': typeof AuthenticatedLayoutProfileProfileIdScreenshotsRoute
+  '/profile/$id/': typeof AuthenticatedLayoutProfileProfileIdIndexRoute
+}
+
+interface FileRoutesByTo {
+  '': typeof AuthenticatedRouteWithChildren
+  '/bug-report': typeof AuthenticatedBugReportLazyRoute
+  '/create-profile': typeof AuthenticatedCreateProfileLazyRoute
+  '/downloads': typeof AuthenticatedDownloadsLazyRoute
+  '/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
+  '/workshop/search': typeof AuthenticatedWorkshopSearchRouteRoute
+  '/collections': typeof AuthenticatedLayoutCollectionsRoute
+  '/skins': typeof AuthenticatedLayoutSkinsLazyRoute
+  '/settings/accounts': typeof AuthenticatedSettingsAccountsLazyRoute
+  '/settings/download': typeof AuthenticatedSettingsDownloadLazyRoute
+  '/settings/game': typeof AuthenticatedSettingsGameLazyRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/': typeof AuthenticatedLayoutIndexLazyRoute
+  '/workshop/project/$id': typeof AuthenticatedWorkshopProjectIdRouteRoute
+  '/profile/$id/edit': typeof AuthenticatedLayoutProfileProfileIdEditRoute
+  '/profile/$id/screenshots': typeof AuthenticatedLayoutProfileProfileIdScreenshotsRoute
+  '/profile/$id': typeof AuthenticatedLayoutProfileProfileIdIndexRoute
+}
+
+interface FileRoutesById {
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/_layout': typeof AuthenticatedLayoutRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
+  '/_authenticated/bug-report': typeof AuthenticatedBugReportLazyRoute
+  '/_authenticated/create-profile': typeof AuthenticatedCreateProfileLazyRoute
+  '/_authenticated/downloads': typeof AuthenticatedDownloadsLazyRoute
+  '/_authenticated/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
+  '/_authenticated/workshop/search': typeof AuthenticatedWorkshopSearchRouteRoute
+  '/_authenticated/_layout/collections': typeof AuthenticatedLayoutCollectionsRoute
+  '/_authenticated/_layout/skins': typeof AuthenticatedLayoutSkinsLazyRoute
+  '/_authenticated/settings/accounts': typeof AuthenticatedSettingsAccountsLazyRoute
+  '/_authenticated/settings/download': typeof AuthenticatedSettingsDownloadLazyRoute
+  '/_authenticated/settings/game': typeof AuthenticatedSettingsGameLazyRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/_layout/': typeof AuthenticatedLayoutIndexLazyRoute
+  '/_authenticated/workshop/project/$id': typeof AuthenticatedWorkshopProjectIdRouteRoute
+  '/_authenticated/_layout/profile/_profile/$id': typeof AuthenticatedLayoutProfileProfileIdRouteWithChildren
+  '/_authenticated/_layout/profile/_profile/$id/edit': typeof AuthenticatedLayoutProfileProfileIdEditRoute
+  '/_authenticated/_layout/profile/_profile/$id/screenshots': typeof AuthenticatedLayoutProfileProfileIdScreenshotsRoute
+  '/_authenticated/_layout/profile/_profile/$id/': typeof AuthenticatedLayoutProfileProfileIdIndexRoute
+}
+
+interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | ''
+    | '/settings'
+    | '/bug-report'
+    | '/create-profile'
+    | '/downloads'
+    | '/patch-notes'
+    | '/workshop/search'
+    | '/collections'
+    | '/skins'
+    | '/settings/accounts'
+    | '/settings/download'
+    | '/settings/game'
+    | '/settings/'
+    | '/'
+    | '/workshop/project/$id'
+    | '/profile/$id'
+    | '/profile/$id/edit'
+    | '/profile/$id/screenshots'
+    | '/profile/$id/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | ''
+    | '/bug-report'
+    | '/create-profile'
+    | '/downloads'
+    | '/patch-notes'
+    | '/workshop/search'
+    | '/collections'
+    | '/skins'
+    | '/settings/accounts'
+    | '/settings/download'
+    | '/settings/game'
+    | '/settings'
+    | '/'
+    | '/workshop/project/$id'
+    | '/profile/$id/edit'
+    | '/profile/$id/screenshots'
+    | '/profile/$id'
+  id:
+    | '/_authenticated'
+    | '/_authenticated/_layout'
+    | '/_authenticated/settings'
+    | '/_authenticated/bug-report'
+    | '/_authenticated/create-profile'
+    | '/_authenticated/downloads'
+    | '/_authenticated/patch-notes'
+    | '/_authenticated/workshop/search'
+    | '/_authenticated/_layout/collections'
+    | '/_authenticated/_layout/skins'
+    | '/_authenticated/settings/accounts'
+    | '/_authenticated/settings/download'
+    | '/_authenticated/settings/game'
+    | '/_authenticated/settings/'
+    | '/_authenticated/_layout/'
+    | '/_authenticated/workshop/project/$id'
+    | '/_authenticated/_layout/profile/_profile/$id'
+    | '/_authenticated/_layout/profile/_profile/$id/edit'
+    | '/_authenticated/_layout/profile/_profile/$id/screenshots'
+    | '/_authenticated/_layout/profile/_profile/$id/'
+  fileRoutesById: FileRoutesById
+}
+
+interface RootRouteChildren {
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+}
+
+export const routeTree = rootRoute
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 

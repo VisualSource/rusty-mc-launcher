@@ -29,7 +29,7 @@ import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import logger from "@system/logger";
 import type { Project } from "@/lib/api/modrinth/types.gen";
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 
 async function uninstall(filename: string, type: string, profile: string) {
 	try {
@@ -55,7 +55,7 @@ async function uninstall(filename: string, type: string, profile: string) {
 }
 
 const checkForUpdate = async (
-	profile: MinecraftProfile,
+	profile: Profile,
 	project: Project | null,
 	item: ProfileContentItem,
 ) => {
@@ -90,7 +90,7 @@ const checkForUpdate = async (
 					title: "Update Avaliable",
 					cancelLabel: "No",
 					okLabel: "Update",
-					type: "info",
+					kind: "info",
 				},
 			);
 
@@ -137,7 +137,7 @@ const checkForUpdate = async (
 };
 
 export const ContentTab: React.FC<{
-	profile: MinecraftProfile;
+	profile: Profile;
 	content_type: ContentType;
 	content: UseQueryResult<
 		{

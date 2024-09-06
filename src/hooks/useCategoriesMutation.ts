@@ -1,6 +1,6 @@
 import { queryClient } from "@/lib/api/queryClient";
 import { CATEGORIES_KEY } from "./keys";
-import { db } from "@/lib/system/commands";
+import { query } from "@lib/api/plugins/query";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { fromZodError } from "zod-validation-error";
@@ -16,10 +16,11 @@ export const useCategoriesMutation = () => {
 			switch (payload.type) {
 				case "POST": {
 					const id = crypto.randomUUID();
-					await db.execute({
-						query: "INSERT INTO settings VALUES (?,?,?)",
-						args: [`category.${id}`, id, payload.data.name],
-					});
+					await query("INSERT INTO settings VALUES (?,?,?)", [
+						`category.${id}`,
+						id,
+						payload.data.name
+					]).run();
 					break;
 				}
 				case "PATCH": {
@@ -34,10 +35,10 @@ export const useCategoriesMutation = () => {
 						throw message;
 					}
 
-					await db.execute({
-						query: "UPDATE settings SET value = ? WHERE key = ?",
-						args: [content.data.name, `category.${content.data.id}`],
-					});
+					await query("UPDATE settings SET value = ? WHERE key = ?", [
+						content.data.name,
+						`category.${content.data.id}`
+					]).run();
 
 					break;
 				}
@@ -53,15 +54,12 @@ export const useCategoriesMutation = () => {
 						throw message;
 					}
 
-					await db.execute({
-						query: "DELETE FROM categories WHERE category = ?",
-						args: [id.data],
-					});
-
-					await db.execute({
-						query: "DELETE FROM settings WHERE key = ?",
-						args: [`category.${id.data}`],
-					});
+					await query(`
+						BEGIN TRANSACTION; 
+							DELETE FROM categories WHERE category = ?;
+							DELETE FROM settings WHERE key = ?;
+						END TRANSACTION;
+					`, [id.data, `category.${id.data}`]);
 					break;
 				}
 			}

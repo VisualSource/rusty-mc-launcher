@@ -69,7 +69,7 @@ const onFormChange = debounce(
 					if (og[key] !== "vanilla" && profile[key] !== "vanilla") {
 						const deleteMods = await ask(
 							"Changing the loader may cause installed content to not work. Would you like to delete all installed mods?",
-							{ title: "Loader Switch", type: "warning" },
+							{ title: "Loader Switch", kind: "warning" },
 						);
 						if (deleteMods) {
 							const mods = await db.select({

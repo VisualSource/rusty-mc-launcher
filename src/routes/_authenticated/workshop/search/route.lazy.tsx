@@ -64,7 +64,7 @@ const WorkshopHome: React.FC = memo(() => {
 				}
 
 				navigate({
-					search: (prev) => ({
+					search: (prev: Record<string, unknown>) => ({
 						...prev,
 						query,
 						offset: 0,
@@ -159,7 +159,7 @@ const WorkshopHome: React.FC = memo(() => {
 						<Select
 							onValueChange={(e) =>
 								navigate({
-									search: (prev) => ({
+									search: (prev: Record<string, unknown>) => ({
 										...prev,
 										index: e as ModrinthSearchParams["index"],
 										offset: 0,
@@ -184,7 +184,7 @@ const WorkshopHome: React.FC = memo(() => {
 						<Select
 							onValueChange={(e) =>
 								navigate({
-									search: (prev) => ({
+									search: (prev: Record<string, unknown>) => ({
 										...prev,
 										limit: Number.parseInt(e),
 										offset: 0,

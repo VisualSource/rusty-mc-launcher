@@ -139,3 +139,8 @@ pub async fn import_external(
     Ok(())*/
     todo!("Update 'import_external'")
 }
+
+#[tauri::command]
+pub async fn get_system_ram() -> u64 {
+    minecraft_launcher_lib::get_ram()
+}

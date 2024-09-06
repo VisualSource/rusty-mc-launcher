@@ -12,7 +12,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "./ui/dialog";
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 import { parseJVMArgs, argsToString } from "@/lib/JvmArgs";
 import { MarkedSlider } from "@/components/ui/slider";
 import { getSystemRam } from "@/lib/system/commands";
@@ -61,7 +61,7 @@ const TickedSilder: React.FC<{
 };
 
 export const JVMArgForm: React.FC<{
-	controller: ControllerRenderProps<MinecraftProfile>;
+	controller: ControllerRenderProps<Profile>;
 }> = ({ controller: { value, onChange } }) => {
 	const { data: ram } = useSuspenseQuery({
 		networkMode: "offlineFirst",

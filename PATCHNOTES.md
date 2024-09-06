@@ -1,3 +1,11 @@
+# v0.8.0-pre1
+
+#### New
+
+#### Changes 
+
+#### Fixes
+
 # v0.7.3
 
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.6.4...v0.7.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.7.2...v0.7.3)

@@ -599,7 +599,7 @@ export class PopupClient extends StandardInteractionClient {
 			unlisten
 				?.then((unsubscribe) => unsubscribe())
 				.catch((e) =>
-					this.logger.error(e?.message ?? "Failed to unsubscribe."),
+					this.logger.error((e as Error)?.message ?? "Failed to unsubscribe."),
 				);
 		});
 	}
@@ -764,9 +764,8 @@ export class PopupClient extends StandardInteractionClient {
 	 * @param request
 	 */
 	generatePopupName(scopes: Array<string>, authority: string): string {
-		return `${BrowserConstants.POPUP_NAME_PREFIX}.${
-			this.config.auth.clientId
-		}.${scopes.join("-")}.${authority}.${this.correlationId}`;
+		return `${BrowserConstants.POPUP_NAME_PREFIX}.${this.config.auth.clientId
+			}.${scopes.join("-")}.${authority}.${this.correlationId}`;
 	}
 
 	/**
