@@ -1,19 +1,14 @@
 /** @deprecated */
 
-import {
-	exists,
-	BaseDirectory,
-	create,
-	mkdir,
-} from "@tauri-apps/plugin-fs";
+import { exists, BaseDirectory, create, mkdir } from "@tauri-apps/plugin-fs";
 import { resolve, appDataDir } from "@tauri-apps/api/path";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 /**
  * @deprecated
- * @param accessToken  
- * @returns 
+ * @param accessToken
+ * @returns
  */
 export const getGraphClient = (accessToken: string) => {
 	const graphClient = Client.init({
@@ -65,7 +60,6 @@ export async function getAccountPhoto(client: Client, userId: string) {
 		const imageRaw = (await client.api("/me/photo/$value").get()) as Blob;
 
 		const buffer = await imageRaw.arrayBuffer();
-
 
 		const file = await create(imagepath, { baseDir: BaseDirectory.AppData });
 

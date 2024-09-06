@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { loaderSchema } from "../system/commands";
-import type { QueryResult, } from "@lib/api/plugins/query";
+import type { QueryResult } from "@lib/api/plugins/query";
 
 type Loader = z.infer<typeof loaderSchema>;
 

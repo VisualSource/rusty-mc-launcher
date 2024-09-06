@@ -6,7 +6,10 @@ import AskDialog from "@/components/dialog/AskDialog";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
-import { registerDownloadListener, type DownloadEvent } from "../api/plugins/content";
+import {
+	registerDownloadListener,
+	type DownloadEvent,
+} from "../api/plugins/content";
 
 class DownloadManager extends EventTarget {
 	private channel = new Channel<DownloadEvent>();

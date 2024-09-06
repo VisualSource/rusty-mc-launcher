@@ -51,7 +51,9 @@ const import_profiles = async () => {
 	}
 
 	try {
-		const content = await readTextFile(result.path, { baseDir: BaseDirectory.AppData });
+		const content = await readTextFile(result.path, {
+			baseDir: BaseDirectory.AppData,
+		});
 		const data = JSON.parse(content) as {
 			profiles: Record<
 				string,
@@ -80,10 +82,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-					version.replace(
-						"latest-",
-						"",
-					) as keyof (typeof latest_data)["latest"]
+						version.replace(
+							"latest-",
+							"",
+						) as keyof (typeof latest_data)["latest"]
 					];
 			}
 

@@ -1,7 +1,7 @@
 import { message } from "@tauri-apps/plugin-dialog";
 import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
-import { fetch } from "@tauri-apps/plugin-http"
+import { fetch } from "@tauri-apps/plugin-http";
 import { auth } from "@system/logger";
 
 const MINECRAFT_LOGIN =
@@ -69,7 +69,7 @@ export async function getMinecraftAccount(
 	const authResponse = await fetch(XBOX_AUTHENTICATE, {
 		method: "POST",
 		headers: {
-			"Content-Type": "application/json"
+			"Content-Type": "application/json",
 		},
 		body: JSON.stringify({
 			Properties: {
@@ -79,13 +79,14 @@ export async function getMinecraftAccount(
 			},
 			RelyingParty: XBOX_LIVE_RELAY,
 			TokenType: "JWT",
-		})
+		}),
 	});
-	if (!authResponse.ok) throw new Error(authResponse.statusText, { cause: authResponse });
-	const authRequest = await authResponse.json() as {
+	if (!authResponse.ok)
+		throw new Error(authResponse.statusText, { cause: authResponse });
+	const authRequest = (await authResponse.json()) as {
 		Token: string;
 		DisplayClaims: { xui: { uhs: string }[] };
-	}
+	};
 
 	const userHash = authRequest.DisplayClaims.xui.at(0)?.uhs;
 	if (!userHash) throw new Error("Failed to get user hash");
@@ -98,7 +99,7 @@ export async function getMinecraftAccount(
 	const liveResponse = await fetch(LIVE_AUTHENTICATE, {
 		method: "POST",
 		headers: {
-			"Content-Type": "application/json"
+			"Content-Type": "application/json",
 		},
 		body: JSON.stringify({
 			Properties: {
@@ -107,10 +108,13 @@ export async function getMinecraftAccount(
 			},
 			RelyingParty: MC_LOGIN_RELAY,
 			TokenType: "JWT",
-		})
+		}),
 	});
-	if (!liveResponse.ok) throw new Error(liveResponse.statusText, { cause: liveResponse });
-	const liveToken = await liveResponse.json().then(e => (e as { Token: string }).Token);
+	if (!liveResponse.ok)
+		throw new Error(liveResponse.statusText, { cause: liveResponse });
+	const liveToken = await liveResponse
+		.json()
+		.then((e) => (e as { Token: string }).Token);
 	// #endregion
 
 	// #region Authenticate with minecraft
@@ -119,18 +123,22 @@ export async function getMinecraftAccount(
 	const mclResponse = await fetch(MINECRAFT_LOGIN, {
 		method: "POST",
 		body: JSON.stringify({
-			identityToken: `XBL3.0 x=${userHash};${liveToken}`
+			identityToken: `XBL3.0 x=${userHash};${liveToken}`,
 		}),
 		headers: {
-			"Content-Type": "application/json"
-		}
+			"Content-Type": "application/json",
+		},
 	});
-	if (!mclResponse.ok) throw new Error(mclResponse.statusText, { cause: mclResponse });
-	const access_token = await mclResponse.json().then(e => (e as { access_token: string }).access_token);
+	if (!mclResponse.ok)
+		throw new Error(mclResponse.statusText, { cause: mclResponse });
+	const access_token = await mclResponse
+		.json()
+		.then((e) => (e as { access_token: string }).access_token);
 
-	const jwt = JSON.parse(
-		atob(access_token.split(".")[1]),
-	) as { xuid: string; exp: number };
+	const jwt = JSON.parse(atob(access_token.split(".")[1])) as {
+		xuid: string;
+		exp: number;
+	};
 	const expDate = addSeconds(UNIX_EPOCH_DATE, jwt.exp).toISOString();
 	// #endregion
 
@@ -140,10 +148,13 @@ export async function getMinecraftAccount(
 	const profileResponse = await fetch(MINECRAFT_PROFILE, {
 		headers: {
 			Authorization: `Bearer ${access_token}`,
-		}
+		},
 	});
-	if (!profileResponse.ok) throw new Error(profileResponse.statusText, { cause: profileResponse });
-	const profile = await profileResponse.json() as MinecraftAccount["details"] | { path: string; error: string; errorMessage: string }
+	if (!profileResponse.ok)
+		throw new Error(profileResponse.statusText, { cause: profileResponse });
+	const profile = (await profileResponse.json()) as
+		| MinecraftAccount["details"]
+		| { path: string; error: string; errorMessage: string };
 
 	if ("error" in profile) {
 		await message(
@@ -159,7 +170,7 @@ export async function getMinecraftAccount(
 		exp: expDate,
 		xuid: jwt.xuid,
 		token: {
-			access_token
+			access_token,
 		},
 		details: profile,
 	};

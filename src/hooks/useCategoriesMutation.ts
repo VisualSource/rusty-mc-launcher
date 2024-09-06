@@ -19,7 +19,7 @@ export const useCategoriesMutation = () => {
 					await query("INSERT INTO settings VALUES (?,?,?)", [
 						`category.${id}`,
 						id,
-						payload.data.name
+						payload.data.name,
 					]).run();
 					break;
 				}
@@ -37,7 +37,7 @@ export const useCategoriesMutation = () => {
 
 					await query("UPDATE settings SET value = ? WHERE key = ?", [
 						content.data.name,
-						`category.${content.data.id}`
+						`category.${content.data.id}`,
 					]).run();
 
 					break;
@@ -54,12 +54,15 @@ export const useCategoriesMutation = () => {
 						throw message;
 					}
 
-					await query(`
+					await query(
+						`
 						BEGIN TRANSACTION; 
 							DELETE FROM categories WHERE category = ?;
 							DELETE FROM settings WHERE key = ?;
 						END TRANSACTION;
-					`, [id.data, `category.${id.data}`]);
+					`,
+						[id.data, `category.${id.data}`],
+					);
 					break;
 				}
 			}

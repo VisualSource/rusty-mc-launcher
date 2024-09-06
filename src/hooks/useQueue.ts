@@ -9,7 +9,10 @@ export function useCurrentQueue() {
 		queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.CURRENT],
 		initialData: null,
 		refetchInterval: 30_000,
-		queryFn: () => query("SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;").as(QueueItem).get(),
+		queryFn: () =>
+			query("SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;")
+				.as(QueueItem)
+				.get(),
 	});
 }
 
@@ -20,6 +23,12 @@ export function useQueue(
 	return useQuery({
 		queryKey: [KEY_DOWNLOAD_QUEUE, queue],
 		refetchInterval: 60_000,
-		queryFn: () => query(`SELECT * FROM download_queue WHERE state = ? AND display = TRUE ORDER BY priority ${order};`, [queue]).as(QueueItem).all()
+		queryFn: () =>
+			query(
+				`SELECT * FROM download_queue WHERE state = ? AND display = TRUE ORDER BY priority ${order};`,
+				[queue],
+			)
+				.as(QueueItem)
+				.all(),
 	});
 }

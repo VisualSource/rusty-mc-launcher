@@ -21,11 +21,7 @@ import type { Profile } from "@/lib/models/profiles";
 import { useProfiles } from "@/hooks/useProfiles";
 
 export const CopyProfileOptions: React.FC<{
-	form: UseFormReturn<
-		Profile & { copyOptions?: string },
-		unknown,
-		undefined
-	>;
+	form: UseFormReturn<Profile & { copyOptions?: string }, unknown, undefined>;
 }> = ({ form }) => {
 	const profiles = useProfiles();
 

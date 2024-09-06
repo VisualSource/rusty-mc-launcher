@@ -155,7 +155,10 @@ export function WorkshopPagination({
 					<PaginationItem>
 						<PaginationLink
 							isActive={currentPage === maxPages}
-							search={(prev: Record<string, unknown>) => ({ ...prev, offset: totalHits })}
+							search={(prev: Record<string, unknown>) => ({
+								...prev,
+								offset: totalHits,
+							})}
 						>
 							{maxPages}
 						</PaginationLink>

@@ -35,8 +35,10 @@ type Action =
 	| { type: "ADD_SKIN"; url: string }
 	| { type: "INIT"; skins: Skin[]; capes: Cape[] };
 
-const MINECRAFT_API_CAPE = "https://api.minecraftservices.com/minecraft/profile/capes/active";
-const MINECRAFT_API_SKIN = "https://api.minecraftservices.com/minecraft/profile/skins";
+const MINECRAFT_API_CAPE =
+	"https://api.minecraftservices.com/minecraft/profile/capes/active";
+const MINECRAFT_API_SKIN =
+	"https://api.minecraftservices.com/minecraft/profile/skins";
 const DEFAULT_NAMES = [
 	"X-Steve",
 	"X-Alex",
@@ -190,10 +192,13 @@ const MinecraftSkinControl: React.FC = memo(() => {
 							method: "DELETE",
 							headers: {
 								Authorization: `Bearer ${account.token.access_token}`,
-							}
-						})
-						if (!request.ok) throw new Error(request.statusText, { cause: request });
-						const data = await request.json() as { errorMessage: string } | MinecraftAccount["details"];
+							},
+						});
+						if (!request.ok)
+							throw new Error(request.statusText, { cause: request });
+						const data = (await request.json()) as
+							| { errorMessage: string }
+							| MinecraftAccount["details"];
 						if ("errorMessage" in data) throw new Error(data.errorMessage);
 
 						response = data;
@@ -206,10 +211,13 @@ const MinecraftSkinControl: React.FC = memo(() => {
 							},
 							body: JSON.stringify({
 								capeId: nextCape.id,
-							})
-						})
-						if (!request.ok) throw new Error(request.statusText, { cause: request });
-						const data = await request.json() as MinecraftAccount["details"] | { errorMessage: string };
+							}),
+						});
+						if (!request.ok)
+							throw new Error(request.statusText, { cause: request });
+						const data = (await request.json()) as
+							| MinecraftAccount["details"]
+							| { errorMessage: string };
 						if ("errorMessage" in data) throw new Error(data.errorMessage);
 
 						response = data;
@@ -263,9 +271,13 @@ const MinecraftSkinControl: React.FC = memo(() => {
 					body,
 				});
 
-				if (!request.ok) throw new Error(request.statusText, { cause: request });
-				const data = await request.json() as MinecraftAccount["details"] | { errorMessage: string };
-				if ("errorMessage" in data) throw new Error(data.errorMessage, { cause: request });
+				if (!request.ok)
+					throw new Error(request.statusText, { cause: request });
+				const data = (await request.json()) as
+					| MinecraftAccount["details"]
+					| { errorMessage: string };
+				if ("errorMessage" in data)
+					throw new Error(data.errorMessage, { cause: request });
 
 				response = data;
 			}
