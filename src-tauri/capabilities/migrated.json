@@ -81,7 +81,6 @@
 		"rmcl-auth:default",
 		"rmcl-content:default",
 		"rmcl-game:default",
-		"rmcl-query:default",
-		"rmcl-query:allow-select"
+		"rmcl-query:default"
 	]
 }

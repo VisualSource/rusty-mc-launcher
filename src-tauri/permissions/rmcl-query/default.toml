@@ -10,5 +10,5 @@ commands.allow = ["execute"]
 
 [[permission]]
 identifier = "allow-select"
-description = "Enables the select command."
+description = "Allow for select operation"
 commands.allow = ["select"]
