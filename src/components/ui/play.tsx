@@ -2,17 +2,17 @@ import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
 import { exit } from "@tauri-apps/plugin-process";
 import { toast } from "react-toastify";
 
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 import { launchGame, stop } from "@/lib/system/commands";
 import useIsGameRunning from "@hook/useIsGameRunning";
 import { Button, type ButtonProps } from "./button";
-import { settings } from "@/lib/models/settings";
+import { isOption } from "@/lib/models/settings";
 import useUser from "@/hooks/useUser";
 import logger from "@system/logger";
 import { cn } from "@/lib/utils";
 
 const PlayButton: React.FC<
-	ButtonProps & { profile: Pick<MinecraftProfile, "id" | "state"> }
+	ButtonProps & { profile: Pick<Profile, "id" | "state"> }
 > = ({ profile, className, ...props }) => {
 	const user = useUser();
 
@@ -40,7 +40,7 @@ const PlayButton: React.FC<
 						profile_id: profile.id,
 					});
 
-					const exit_on_start = await settings.is_true("option.exit_on_start");
+					const exit_on_start = await isOption("option.exit_on_start", "TRUE");
 					if (exit_on_start) {
 						exitTimer = setTimeout(() => exit(0), 12_000);
 					}

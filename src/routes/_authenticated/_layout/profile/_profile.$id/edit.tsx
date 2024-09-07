@@ -42,7 +42,7 @@ import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { ContentItem } from "@/lib/models/content";
 import { profileQueryOptions } from "../_profile.$id";
 import { queryClient } from "@/lib/api/queryClient";
-import { settings } from "@/lib/models/settings";
+import { getConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
@@ -270,7 +270,7 @@ function ProfileEdit() {
 						<Button
 							className="w-32"
 							onClick={async () => {
-								const setting = await settings.get_setting("path.app");
+								const setting = await getConfig("path.app");
 								if (!setting) return;
 								const path = await join(
 									setting?.value,

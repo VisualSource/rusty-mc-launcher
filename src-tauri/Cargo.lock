@@ -212,9 +212,9 @@ dependencies = [
 
 [[package]]
 name = "async-executor"
-version = "1.13.0"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7ebdfa2ebdab6b1760375fa7d6f382b9f486eac35fc994625a00e89280bdbb7"
+checksum = "30ca9a001c1e8ba5149f91a74362376cc6bc5b919d92d988668657bd570bdcec"
 dependencies = [
  "async-task",
  "concurrent-queue",
@@ -3186,7 +3186,6 @@ checksum = "0ee638a5da3799329310ad4cfa62fbf045d5f56e3ef5ba4149e7452dcf89d5a8"
 dependencies = [
  "bitflags 2.6.0",
  "block2",
- "dispatch",
  "libc",
  "objc2",
 ]
@@ -3383,9 +3382,9 @@ dependencies = [
 
 [[package]]
 name = "parking"
-version = "2.2.0"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb813b8af86854136c6922af0598d719255ecb2179515e6e7730d468f05c9cae"
+checksum = "f38d5652c16fde515bb1ecef450ab0f6a219d619a7274976324d5e377f7dceba"
 
 [[package]]
 name = "parking_lot"
@@ -4783,25 +4782,24 @@ dependencies = [
 
 [[package]]
 name = "softbuffer"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d623bff5d06f60d738990980d782c8c866997d9194cfe79ecad00aa2f76826dd"
+checksum = "18051cdd562e792cad055119e0cdb2cfc137e44e3987532e0f9659a77931bb08"
 dependencies = [
  "bytemuck",
  "cfg_aliases 0.2.1",
- "core-graphics 0.23.2",
+ "core-graphics 0.24.0",
  "foreign-types 0.5.0",
  "js-sys",
  "log",
  "objc2",
- "objc2-app-kit",
  "objc2-foundation",
  "objc2-quartz-core",
  "raw-window-handle",
  "redox_syscall",
  "wasm-bindgen",
  "web-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

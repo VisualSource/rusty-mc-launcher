@@ -10,6 +10,9 @@ pub type QueryResult = Vec<IndexMap<String, serde_json::Value>>;
 pub struct Database(pub SqlitePool);
 
 impl Database {
+    pub async fn close(&self) {
+        self.0.close().await;
+    }
     pub async fn new(path: &std::path::Path, db_name: &str) -> Result<Database> {
         let db_path = path.join(db_name);
         let db_path_str = db_path

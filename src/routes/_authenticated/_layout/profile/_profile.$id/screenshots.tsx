@@ -5,16 +5,16 @@ import { exists, readDir } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
 import { FileImage } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { settings } from "@/lib/models/settings";
+import { getConfig } from "@/lib/models/settings";
 import { Loading } from "@/components/Loading";
-import { showInFolder } from "@/lib/system/commands";
+import { showInFolder } from "@lib/api/plugins/content";
 
 const profileScreenshotsQueryOptions = (id: string) =>
 	queryOptions({
 		queryKey: ["PROFILE", id, "SCREENSHOTS"],
 		queryFn: async () => {
-			const paths = await settings.select("path.app");
-			const path = paths.at(0)?.value;
+			const paths = await getConfig("path.app");
+			const path = paths?.value;
 			if (!path) throw new Error("Missing app directory");
 			const screenshot_dir = await join(path, "profiles", id, "screenshots");
 			if (!(await exists(screenshot_dir))) return [];

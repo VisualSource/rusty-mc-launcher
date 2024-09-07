@@ -1,13 +1,35 @@
 import { z } from "zod";
-import { db } from "../system/commands";
+import { query } from "@lib/api/plugins/query";
+import type { QueryResult } from "../api/plugins/query";
 
-export const settings = {
-	name: "settings",
-	schema: z.object({
+export async function getConfig(id: string): Promise<Setting | undefined> {
+	return query("SELECT * FROM settings WHERE key = ? LIMIT 1", [id]).as(Setting).get();
+}
+
+export async function isOption(opt: string, value: string) {
+	const item = await getConfig(opt);
+	return item?.value === value;
+}
+
+export class Setting {
+	static schema = z.object({
 		key: z.string(),
 		metadata: z.string().nullable(),
 		value: z.string(),
-	}),
+	});
+	public key: string;
+	public metadata: string | null;
+	public value: string;
+	constructor(args: QueryResult) {
+		this.key = args.key as string;
+		this.metadata = args.metadata as string | null;
+		this.value = args.value as string;
+	}
+}
+/*
+export const settings = {
+	name: "settings",
+	schema: ,
 
 	async getLike(value: string) {
 		return db.select({
@@ -54,4 +76,4 @@ export const settings = {
 	},
 };
 
-export type Setting = z.infer<typeof settings.schema>;
+export type Setting = z.infer<typeof settings.schema>;*/

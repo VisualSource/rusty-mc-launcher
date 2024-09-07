@@ -443,7 +443,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
-interface FileRoutesByFullPath {
+export interface FileRoutesByFullPath {
   '': typeof AuthenticatedLayoutRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/bug-report': typeof AuthenticatedBugReportLazyRoute
@@ -465,7 +465,7 @@ interface FileRoutesByFullPath {
   '/profile/$id/': typeof AuthenticatedLayoutProfileProfileIdIndexRoute
 }
 
-interface FileRoutesByTo {
+export interface FileRoutesByTo {
   '': typeof AuthenticatedRouteWithChildren
   '/bug-report': typeof AuthenticatedBugReportLazyRoute
   '/create-profile': typeof AuthenticatedCreateProfileLazyRoute
@@ -485,7 +485,8 @@ interface FileRoutesByTo {
   '/profile/$id': typeof AuthenticatedLayoutProfileProfileIdIndexRoute
 }
 
-interface FileRoutesById {
+export interface FileRoutesById {
+  __root__: typeof rootRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/_layout': typeof AuthenticatedLayoutRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -508,7 +509,7 @@ interface FileRoutesById {
   '/_authenticated/_layout/profile/_profile/$id/': typeof AuthenticatedLayoutProfileProfileIdIndexRoute
 }
 
-interface FileRouteTypes {
+export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | ''
@@ -550,6 +551,7 @@ interface FileRouteTypes {
     | '/profile/$id/screenshots'
     | '/profile/$id'
   id:
+    | '__root__'
     | '/_authenticated'
     | '/_authenticated/_layout'
     | '/_authenticated/settings'
@@ -573,7 +575,7 @@ interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 
-interface RootRouteChildren {
+export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
 }
 

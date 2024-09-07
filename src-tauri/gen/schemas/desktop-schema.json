@@ -2506,7 +2506,7 @@
           ]
         },
         {
-          "description": "allow-select -> Enables the select command.",
+          "description": "allow-select -> Allow for select operation",
           "type": "string",
           "enum": [
             "allow-select"
@@ -6811,7 +6811,7 @@
           ]
         },
         {
-          "description": "rmcl-query:allow-select -> Enables the select command.",
+          "description": "rmcl-query:allow-select -> Allow for select operation",
           "type": "string",
           "enum": [
             "rmcl-query:allow-select"

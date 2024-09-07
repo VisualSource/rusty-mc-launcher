@@ -10,7 +10,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-query")
         .setup(|app, _api| {
             log::debug!("Setup <rmcl-query> plugin");
-            // setup mirgraions
+
             let config_dir = app.path().app_config_dir()?;
             let migration_path = app
                 .path()
@@ -30,9 +30,18 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
             Ok(())
         })
+        .on_event(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                let store = app.state::<RwLock<Database>>();
+                tauri::async_runtime::block_on(async {
+                    let db = store.write().await;
+                    db.close().await;
+                });
+            }
+        })
         .invoke_handler(tauri::generate_handler![
-            commands::select,
             commands::execute,
+            commands::select,
         ])
         .build()
 }
