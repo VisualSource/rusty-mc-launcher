@@ -330,7 +330,7 @@ pub async fn install_curseforge_modpack(
 
     let queue_id = Uuid::new_v4().to_string();
     let profile_id = config.profile.clone();
-    sqlx::query!("INSERT INTO download_queue ('id','display','install_order','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,current_timestamp,?,?,'PENDING')",
+    sqlx::query!("INSERT INTO download_queue ('id','display','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,current_timestamp,?,?,'PENDING')",
         queue_id,
         1,
         0,

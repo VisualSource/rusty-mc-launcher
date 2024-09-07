@@ -219,7 +219,7 @@ pub async fn install_mrpack(
 
     let cicon = icon.clone();
 
-    sqlx::query!("INSERT INTO download_queue ('id','display','icon','install_order','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
+    sqlx::query!("INSERT INTO download_queue ('id','display','icon','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
         queue_id,
         1,
         cicon,

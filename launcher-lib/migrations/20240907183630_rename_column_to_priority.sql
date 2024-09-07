@@ -1,0 +1,1 @@
+ALTER TABLE download_queue RENAME COLUMN install_order TO priority;

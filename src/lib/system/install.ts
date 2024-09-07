@@ -12,12 +12,13 @@ import {
 	getVersion,
 	getProject,
 } from "../api/modrinth/services.gen";
-import { type ContentType, download_queue } from "../models/download_queue";
+import { type ContentType, QueueItem } from "../models/download_queue";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { askFor } from "@/components/dialog/AskDialog";
-import { workshop_content } from "../models/content";
-import { db, uninstallContent } from "./commands";
-import type { MinecraftProfile } from "../models/profiles";
+import { ContentItem } from "../models/content";
+import { uninstallContent } from "@lib/api/plugins/content";
+import { query } from "@lib/api/plugins/query";
+import type { Profile } from "../models/profiles";
 import { modrinthClient } from "../api/modrinthClient";
 
 async function getContentVersion(
@@ -79,13 +80,12 @@ async function* getDependencies(
 		if (!file) throw new Error("Missing file download");
 
 		if (current.dependency_type === "incompatible") {
-			const incompatible = await db.select({
-				query: "SELECT * FROM profile_content WHERE id = ? AND profile = ?;",
-				args: [version.project_id, profile],
-				schema: workshop_content.schema,
-			});
 
-			if (incompatible.length) {
+			const incompatible = await query("SELECT * FROM profile_content WHERE id = ? AND profile = ? LIMIT 1;", [
+				version.project_id, profile
+			]).as(ContentItem).get();
+
+			if (incompatible) {
 				yield { type: "incompatible", dep: current };
 			}
 			continue;
@@ -157,7 +157,7 @@ export async function install_known(
 		type: "shader" | "mod" | "modpack" | "resourcepack";
 		icon?: string | null;
 	},
-	profile: MinecraftProfile,
+	profile: Profile,
 ) {
 	if (project.type === "modpack")
 		throw new Error("Known modpack install is not supported!");
@@ -165,7 +165,7 @@ export async function install_known(
 	const file = version.files.find((e) => e.primary) ?? version.files.at(0);
 	if (!file) throw new Error("No file download was found");
 
-	await uninstallContent(profile.id, version.project_id);
+	await uninstallContent(version.project_id, profile.id);
 
 	const files = [
 		{
@@ -194,7 +194,7 @@ export async function install_known(
 					case "include": {
 						if (!dep.file) throw new Error("Missing file download");
 
-						await uninstallContent(profile.id, dep.id);
+						await uninstallContent(dep.id, profile.id);
 
 						files.push({
 							sha1: dep.file?.hashes.sha1,
@@ -219,19 +219,22 @@ export async function install_known(
 	) as ContentType;
 	const queue_id = crypto.randomUUID();
 
-	await download_queue.insert(
-		queue_id,
-		true,
-		0,
-		project.title,
-		project.icon ?? null,
-		profile.id,
-		content_id,
-		{
+	await QueueItem.insert({
+		id: queue_id,
+		display: true,
+		priority: 0,
+		display_name: project.title,
+		icon: project.icon ?? null,
+		profile_id: profile.id,
+		content_type: content_id,
+		state: "PENDING",
+		created: new Date().toISOString(),
+		metadata: {
 			content_type: content_id,
 			profile: profile.id,
 			files: files,
 		},
+	}
 	);
 }
 
@@ -270,7 +273,7 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContent(profile.id, data.id);
+				await uninstallContent(data.id, profile.id);
 
 				const files = [
 					{
@@ -287,19 +290,23 @@ export async function install(data: Project) {
 				) as ContentType;
 				const queue_id = crypto.randomUUID();
 
-				await download_queue.insert(
-					queue_id,
-					true,
-					0,
-					data.title ?? "Unknown",
-					data.icon_url ?? null,
-					profile.id,
-					content_id,
+				await QueueItem.insert(
 					{
+						id: queue_id,
+						display: true,
+						priority: 0,
+						display_name: data.title ?? "Unknown",
+						icon: data.icon_url ?? null,
+						profile_id: profile.id,
 						content_type: content_id,
-						profile: profile.id,
-						files: files,
-					},
+						created: new Date().toISOString(),
+						state: "PENDING",
+						metadata: {
+							content_type: content_id,
+							profile: profile.id,
+							files: files,
+						},
+					}
 				);
 
 				break;
@@ -346,7 +353,7 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContent(profile.id, data.id);
+				await uninstallContent(profile.id, profile.id);
 
 				const files = [
 					{
@@ -372,7 +379,7 @@ export async function install(data: Project) {
 							case "include": {
 								if (!dep.file) throw new Error("Missing file download");
 
-								await uninstallContent(profile.id, dep.id);
+								await uninstallContent(dep.id, profile.id);
 
 								files.push({
 									sha1: dep.file?.hashes.sha1,
@@ -395,19 +402,22 @@ export async function install(data: Project) {
 				) as ContentType;
 				const queue_id = crypto.randomUUID();
 
-				await download_queue.insert(
-					queue_id,
-					true,
-					0,
-					data.title ?? "Unknown",
-					data.icon_url ?? null,
-					profile.id,
-					content_id,
-					{
+				await QueueItem.insert({
+					id: queue_id,
+					display: true,
+					priority: 0,
+					display_name: data.title ?? "Unknown",
+					icon: data.icon_url ?? null,
+					profile_id: profile.id,
+					content_type: content_id,
+					created: new Date().toISOString(),
+					state: "PENDING",
+					metadata: {
 						content_type: content_id,
 						profile: profile.id,
 						files: files,
 					},
+				}
 				);
 
 				break;
@@ -474,15 +484,17 @@ export async function install(data: Project) {
 				const queue_id = crypto.randomUUID();
 				const profile = crypto.randomUUID();
 
-				await download_queue.insert(
-					queue_id,
-					true,
-					0,
-					data.title ?? "Unknown",
-					data.icon_url ?? null,
-					profile,
-					"Modpack",
-					{
+				await QueueItem.insert({
+					id: queue_id,
+					display: true,
+					priority: 0,
+					display_name: data.title ?? "Unknown",
+					icon: data.icon_url ?? null,
+					profile_id: profile,
+					content_type: "Modpack",
+					created: new Date().toISOString(),
+					state: "PENDING",
+					metadata: {
 						content_type: "Modpack",
 						profile,
 						files: [
@@ -495,6 +507,7 @@ export async function install(data: Project) {
 							},
 						],
 					},
+				}
 				);
 				break;
 			}

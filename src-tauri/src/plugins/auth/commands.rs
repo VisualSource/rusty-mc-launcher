@@ -1,12 +1,13 @@
 use super::desktop::{cancel, start};
 use crate::error::Result;
 use log::{debug, error};
-use tauri::Emitter;
+use tauri::{Emitter, WebviewWindow};
 
 #[tauri::command]
-pub fn start_auth_server<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<u16> {
+pub fn start_auth_server<R: tauri::Runtime>(window: WebviewWindow<R>) -> Result<u16> {
     let port = start(move |url| {
-        if let Err(err) = app.emit("rmcl://auth_response", url) {
+        log::debug!("found result");
+        if let Err(err) = window.emit("auth-response", url) {
             error!("{}", err);
         }
     })?;

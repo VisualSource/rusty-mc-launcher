@@ -29,22 +29,17 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import {
-	copy_profile,
-	db,
-	deleteProfile,
-	showInFolder,
-	uninstallContent,
-} from "@/lib/system/commands";
+import { copyProfile, uninstallContent, deleteProfile, showInFolder } from "@lib/api/plugins/content";
 import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UNCATEGORIZEDP_GUID, categories } from "@/lib/models/categories";
-import { type MinecraftProfile, profile } from "@/lib/models/profiles";
-import { download_queue } from "@/lib/models/download_queue";
+import { query } from "@lib/api/plugins/query";
+import { Profile } from "@/lib/models/profiles";
+import { QueueItem } from "@/lib/models/download_queue";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
-import { workshop_content } from "@/lib/models/content";
+import { ContentItem } from "@/lib/models/content";
 import { profileQueryOptions } from "../_profile.$id";
 import { queryClient } from "@/lib/api/queryClient";
 import { settings } from "@/lib/models/settings";
@@ -62,8 +57,8 @@ export const Route = createFileRoute(
 });
 
 const onFormChange = debounce(
-	async (og: MinecraftProfile, profile: MinecraftProfile) => {
-		for (const key of Object.keys(og) as Array<keyof MinecraftProfile>) {
+	async (og: Profile, profile: Profile) => {
+		for (const key of Object.keys(og) as Array<keyof Profile>) {
 			if (og[key] !== profile[key]) {
 				if (key === "loader") {
 					if (og[key] !== "vanilla" && profile[key] !== "vanilla") {
@@ -72,27 +67,24 @@ const onFormChange = debounce(
 							{ title: "Loader Switch", kind: "warning" },
 						);
 						if (deleteMods) {
-							const mods = await db.select({
-								query:
-									"SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?",
-								args: [og.id],
-								schema: workshop_content.schema,
-							});
+							const mods = await query("SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?", [og.id]).as(ContentItem).all();
 
 							await Promise.allSettled(
-								mods.map((e) => uninstallContent(og.id, e.id)),
+								mods.map((e) => uninstallContent(e.id, og.id)),
 							);
 						}
 					}
-					await download_queue.insert(
-						crypto.randomUUID(),
-						true,
-						1,
-						`${profile.loader} ${profile.loader !== "vanilla" ? profile.loader_version : ""}`,
-						profile.icon ?? null,
-						profile.id,
-						"Client",
-						{
+					await QueueItem.insert({
+						id: crypto.randomUUID(),
+						display: true,
+						priority: 1,
+						display_name: `${profile.loader} ${profile.loader !== "vanilla" ? profile.loader_version : ""}`,
+						icon: profile.icon ?? null,
+						profile_id: profile.id,
+						content_type: "Client",
+						state: "PENDING",
+						created: new Date().toISOString(),
+						metadata: {
 							version: profile.version,
 							loader: profile.loader?.replace(
 								/^\w/,
@@ -100,12 +92,11 @@ const onFormChange = debounce(
 							),
 							loader_version: profile.loader_version,
 						},
+					}
 					);
 				}
-				await db.execute({
-					query: `UPDATE profiles SET ${key} = ? WHERE id = ?`,
-					args: [profile[key], og.id],
-				});
+
+				await query(`UPDATE profiles SET ${key} = ? WHERE id = ?`, [profile[key], og.id]).run();
 			}
 		}
 		await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
@@ -123,21 +114,21 @@ function ProfileEdit() {
 	const navigate = Route.useNavigate();
 	const formRef = useRef<HTMLFormElement>(null);
 	const params = Route.useParams();
-	const query = useSuspenseQuery(profileQueryOptions(params.id));
-	const form = useForm<MinecraftProfile>({
-		resolver: zodResolver(profile.schema),
-		defaultValues: query.data,
+	const profileQuery = useSuspenseQuery(profileQueryOptions(params.id));
+	const form = useForm<Profile>({
+		resolver: zodResolver(Profile.schema),
+		defaultValues: profileQuery.data,
 	});
 
 	useEffect(() => {
-		const callback = () => onFormChange(query.data, form.getValues());
+		const callback = () => onFormChange(profileQuery.data, form.getValues());
 		if (formRef.current) {
 			formRef.current.addEventListener("change", callback);
 		}
 		return () => {
 			formRef.current?.removeEventListener("change", callback);
 		};
-	}, [form.getValues, query.data]);
+	}, [form.getValues, profileQuery.data]);
 
 	return (
 		<Form {...form}>
@@ -265,7 +256,7 @@ function ProfileEdit() {
 				<section className="space-y-4 rounded-lg bg-zinc-900 px-4 py-2 shadow-lg">
 					<TypographyH3>Organiztion</TypographyH3>
 
-					<CategorySelect profile={query.data.id} />
+					<CategorySelect profile={profileQuery.data.id} />
 				</section>
 
 				<section className="space-y-4 rounded-lg bg-zinc-900 px-4 py-2 shadow-lg">
@@ -284,7 +275,7 @@ function ProfileEdit() {
 								const path = await join(
 									setting?.value,
 									"profiles",
-									query.data.id,
+									profileQuery.data.id,
 									"/",
 								);
 
@@ -310,26 +301,22 @@ function ProfileEdit() {
 							onClick={async () => {
 								try {
 									const id = crypto.randomUUID();
-									await copy_profile(query.data.id, id);
+									await copyProfile(profileQuery.data.id, id);
 
-									await db.execute({
-										query:
-											"INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-										args: [
-											id,
-											`${query.data.name}: Duplicate`,
-											query.data.icon,
-											query.data.date_created,
-											query.data.last_played,
-											query.data.version,
-											query.data.loader,
-											query.data.loader_version,
-											query.data.java_args,
-											query.data.resolution_width,
-											query.data.resolution_height,
-											query.data.state,
-										],
-									});
+									await query("INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", [
+										id,
+										`${profileQuery.data.name}: Duplicate`,
+										profileQuery.data.icon,
+										profileQuery.data.date_created,
+										profileQuery.data.last_played,
+										profileQuery.data.version,
+										profileQuery.data.loader,
+										profileQuery.data.loader_version,
+										profileQuery.data.java_args,
+										profileQuery.data.resolution_width,
+										profileQuery.data.resolution_height,
+										profileQuery.data.state,
+									]).run();
 
 									await queryClient.invalidateQueries({
 										queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
@@ -398,17 +385,16 @@ function ProfileEdit() {
 									<AlertDialogCancel>Cancel</AlertDialogCancel>
 									<AlertDialogAction
 										onClick={async () => {
-											//navigate("/");
 											const cats = await categories.getCategoriesForProfile(
-												query.data.id,
+												profileQuery.data.id,
 											);
-											await profile.delete(query.data.id);
+
 											for (const cat of cats) {
 												await queryClient.invalidateQueries({
 													queryKey: [CATEGORY_KEY, cat.category],
 												});
 											}
-											await deleteProfile(query.data.id);
+											await deleteProfile(profileQuery.data.id);
 
 											navigate({
 												to: "/",

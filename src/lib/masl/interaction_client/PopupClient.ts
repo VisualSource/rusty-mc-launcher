@@ -47,6 +47,7 @@ import type { PopupWindowAttributes } from "../request/PopupWindowAttributes";
 import type { EventError } from "../event/EventMessage";
 import type { AuthenticationResult } from "../response/AuthenticationResult";
 import * as ResponseHandler from "../response/ResponseHandler";
+import { auth } from "@/lib/system/logger";
 
 export type PopupParams = {
 	popup?: Window | null;
@@ -550,31 +551,32 @@ export class PopupClient extends StandardInteractionClient {
 		let intervalId: NodeJS.Timeout | undefined;
 
 		const hasHandler = new Promise<string>((resolve, reject) => {
-			unlisten = once<string>("rmcl://auth_response", (ev) => {
-				const payload = JSON.parse(ev.payload) as {
-					status: "ok" | "error";
-					data: string;
-				};
+			unlisten = once<string>("auth-response", (ev) => {
 				clearInterval(intervalId);
-				if (payload.status === "ok") {
-					this.logger.verbose(
-						"PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
-					);
+				try {
+					if (typeof ev.payload === "string") {
+						this.logger.verbose(
+							"PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
+						);
 
-					const url = new URL(payload.data);
+						const url = new URL(ev.payload);
 
-					const responseType = this.config.auth.OIDCOptions.serverResponseType;
-					let responseString = "";
-					if (responseType === ServerResponseType.QUERY) {
-						responseString = url.search;
-					} else {
-						responseString = url.hash;
+						const responseType = this.config.auth.OIDCOptions.serverResponseType;
+						let responseString = "";
+						if (responseType === ServerResponseType.QUERY) {
+							responseString = url.search;
+						} else {
+							responseString = url.hash;
+						}
+
+						resolve(responseString);
+						return;
 					}
-
-					resolve(responseString);
-					return;
+					throw new Error("Invalid payload");
+				} catch (error) {
+					auth.error(error);
+					reject(createBrowserAuthError(BrowserAuthErrorCodes.popupWindowError));
 				}
-				reject(createBrowserAuthError(BrowserAuthErrorCodes.popupWindowError));
 			});
 		});
 

@@ -18,6 +18,7 @@ fn main() {
             tauri_plugin_log::Builder::default()
                 .level_for("tao", log::LevelFilter::Off)
                 .level_for("sqlx", log::LevelFilter::Off)
+                .level_for("hyper_util", log::LevelFilter::Off)
                 .build(),
         )
         .plugin(plugins::query::init())

@@ -9,22 +9,27 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { profile } from "@/lib/models/profiles";
+import { Profile } from "@/lib/models/profiles";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import PlayButton from "@/components/ui/play";
 import { KEY_PROFILE } from "@/hooks/keys";
+import { query } from "@/lib/api/plugins/query";
 
 export const profileQueryOptions = (id: string) =>
 	queryOptions({
 		queryKey: [KEY_PROFILE, id],
-		queryFn: async () => profile.get(id),
+		queryFn: async () => {
+			const result = await query("SELECT * FROM profiles WHERE id = ? LIMIT 1;", [id]).as(Profile).get();
+			if (!result) throw new Error("No Profile found");
+			return result;
+		},
 	});
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id",
 )({
-	component: Profile,
+	component: ProfilePage,
 	loader: (opts) =>
 		opts.context.queryClient.ensureQueryData(
 			profileQueryOptions(opts.params.id),
@@ -41,7 +46,7 @@ export const Route = createFileRoute(
 	errorComponent: (error) => <ErrorComponent error={error} />,
 });
 
-function Profile() {
+function ProfilePage() {
 	const params = Route.useParams();
 	const profileQuery = useSuspenseQuery(profileQueryOptions(params.id));
 	const data = profileQuery.data;

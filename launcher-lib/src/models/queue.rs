@@ -79,7 +79,7 @@ impl From<String> for QueueState {
 pub struct QueueItem {
     pub id: String,
     pub display: bool,
-    pub install_order: i64,
+    pub priority: i64,
     pub display_name: String,
     pub icon: Option<String>,
     pub profile_id: String,
@@ -111,9 +111,13 @@ impl QueueItem {
             }
         }
 
-        if let Some(pending) = sqlx::query_as!(QueueItem,
-            "SELECT * FROM download_queue WHERE state = 'PENDING' ORDER BY install_order DESC LIMIT 1;",
-        ).fetch_optional(&db.0).await? {
+        if let Some(pending) =
+            sqlx::query_as!(QueueItem,
+            "SELECT * FROM download_queue WHERE state = 'PENDING' ORDER BY priority DESC LIMIT 1;",
+        )
+            .fetch_optional(&db.0)
+            .await?
+        {
             QueueItem::set_state(&pending.id, QueueState::Current, db).await?;
             Ok(Some(pending))
         } else {

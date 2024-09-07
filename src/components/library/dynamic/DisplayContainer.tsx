@@ -4,6 +4,15 @@ import { Suspense } from "react";
 
 import { type Card, DEFAULT_LAYOUT, OPTIONS, STORAGE_KEY } from "./EditConsts";
 import { Button } from "@/components/ui/button";
+import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
+
+const ComponentError = (props: FallbackProps) => {
+	return (
+		<div>
+			Error: {props.error?.message ?? props.error ?? "Unknown"}
+		</div>
+	);
+}
 
 export const DisplayContainer: React.FC<{
 	setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
@@ -40,9 +49,11 @@ export const DisplayContainer: React.FC<{
 			{data.map((e) => {
 				const Content = OPTIONS[e.type].Content;
 				return (
-					<Suspense key={e.id}>
-						<Content params={e.params as Record<string, string>} />
-					</Suspense>
+					<ErrorBoundary fallbackRender={ComponentError} key={e.id}>
+						<Suspense>
+							<Content params={e.params as Record<string, string>} />
+						</Suspense>
+					</ErrorBoundary>
 				);
 			})}
 		</>

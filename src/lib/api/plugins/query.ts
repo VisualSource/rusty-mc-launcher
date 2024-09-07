@@ -4,7 +4,7 @@ type Query<T> = {
 	all: () => Promise<T[]>;
 	get: () => Promise<T | undefined>;
 	run: () => Promise<[number, number]>;
-	as: <A>(model: { new (args: QueryResult): A }) => Omit<
+	as: <A>(model: { new(args: QueryResult): A }) => Omit<
 		Query<A>,
 		"as" | "run"
 	>;
@@ -37,7 +37,7 @@ export function query<T = QueryResult>(
 				args,
 			});
 		},
-		as<A>(Model: { new (args: QueryResult): A }) {
+		as<A>(Model: { new(args: QueryResult): A }) {
 			return {
 				async all() {
 					const result = await invoke<QueryResult[]>(

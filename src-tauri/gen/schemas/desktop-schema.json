@@ -2506,6 +2506,13 @@
           ]
         },
         {
+          "description": "allow-select -> Enables the select command.",
+          "type": "string",
+          "enum": [
+            "allow-select"
+          ]
+        },
+        {
           "description": "allow-start-auth-server -> Enables the startAuthServer command.",
           "type": "string",
           "enum": [
@@ -6801,6 +6808,13 @@
           "type": "string",
           "enum": [
             "rmcl-query:allow-execute"
+          ]
+        },
+        {
+          "description": "rmcl-query:allow-select -> Enables the select command.",
+          "type": "string",
+          "enum": [
+            "rmcl-query:allow-select"
           ]
         },
         {

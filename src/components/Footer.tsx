@@ -33,7 +33,7 @@ import {
 } from "./ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { download_queue } from "@/lib/models/download_queue";
+import { QueueItem } from "@/lib/models/download_queue";
 import { TypographyMuted } from "@component/ui/typography";
 import import_profiles from "@/lib/system/import_profiles";
 import { QueueItemState } from "@/lib/QueueItemState";
@@ -65,35 +65,35 @@ const Footer = memo(() => {
 		const display =
 			state.importFrom === "modrinth"
 				? {
-						queue: {
-							name: "MrPack($PACK_PATH)",
-							type: "Modpack",
-						},
-						dialog: {
-							title: "Import Mrpack",
-							filters: [
-								{
-									name: "Mrpack",
-									extensions: ["mrpack"],
-								},
-							],
-						},
-					}
+					queue: {
+						name: "MrPack($PACK_PATH)",
+						type: "Modpack",
+					},
+					dialog: {
+						title: "Import Mrpack",
+						filters: [
+							{
+								name: "Mrpack",
+								extensions: ["mrpack"],
+							},
+						],
+					},
+				}
 				: {
-						queue: {
-							name: "Curseforge Modpack ($PACK_PATH)",
-							type: "CurseforgeModpack",
-						},
-						dialog: {
-							title: "Import Modpack",
-							filters: [
-								{
-									name: "Zip",
-									extensions: ["zip"],
-								},
-							],
-						},
-					};
+					queue: {
+						name: "Curseforge Modpack ($PACK_PATH)",
+						type: "CurseforgeModpack",
+					},
+					dialog: {
+						title: "Import Modpack",
+						filters: [
+							{
+								name: "Zip",
+								extensions: ["zip"],
+							},
+						],
+					},
+				};
 
 		const result = await open({
 			multiple: false,
@@ -107,27 +107,31 @@ const Footer = memo(() => {
 		const queue_id = crypto.randomUUID();
 		const profile_id = crypto.randomUUID();
 
-		await download_queue.insert(
-			queue_id,
-			true,
-			0,
-			display.queue.name.replace("$PACK_PATH", result),
-			null,
-			profile_id,
-			display.queue.type as never as "Modpack" | "CurseforgeModpack",
+		await QueueItem.insert(
 			{
-				content_type: "Modpack",
-				profile: profile_id,
-				files: [
-					{
-						sha1: "UNKNOWN",
-						url: result,
-						version: "UNKNOWN",
-						filename: "UNKOWN",
-						id: "UNKOWN",
-					},
-				],
-			},
+				id: queue_id,
+				display: true,
+				priority: 0,
+				display_name: display.queue.name.replace("$PACK_PATH", result),
+				icon: null,
+				profile_id,
+				created: new Date().toISOString(),
+				content_type: display.queue.type as never as "Modpack" | "CurseforgeModpack",
+				state: "PENDING",
+				metadata: {
+					content_type: "Modpack",
+					profile: profile_id,
+					files: [
+						{
+							sha1: "UNKNOWN",
+							url: result,
+							version: "UNKNOWN",
+							filename: "UNKOWN",
+							id: "UNKOWN",
+						},
+					],
+				}
+			}
 		);
 		await queryClient.invalidateQueries({
 			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
@@ -254,12 +258,12 @@ const Footer = memo(() => {
 								<div className="w-96">
 									<div className="flex w-full justify-between">
 										<TypographyMuted asChild className="mb-1 line-clamp-1">
-											<span>{progress.message}</span>
+											<span>{progress.status}</span>
 										</TypographyMuted>
 										<TypographyMuted asChild>
 											<span>
 												{Math.floor(
-													100 * (progress.progress / progress.max_progress),
+													100 * (progress.amount / progress.max),
 												)}
 												%
 											</span>
@@ -267,7 +271,7 @@ const Footer = memo(() => {
 									</div>
 									<Progress
 										value={Math.floor(
-											100 * (progress.progress / progress.max_progress),
+											100 * (progress.amount / progress.max),
 										)}
 									/>
 								</div>

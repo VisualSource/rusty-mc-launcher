@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { type ZodTypeDef, z } from "zod";
-import { workshop_content } from "../models/content";
+//import { workshop_content } from "../models/content";
 
 type Query<S> = {
 	query: string;
@@ -103,7 +103,7 @@ export const copy_profile = async (profile: string, newProfile: string) =>
  * @deprecated
  */
 export const uninstallContent = async (profile: string, id: string) => {
-	const items = await db.select({
+	/*const items = await db.select({
 		query: "SELECT * FROM profile_content WHERE id = ? AND profile = ?",
 		args: [id, profile],
 		schema: workshop_content.schema,
@@ -116,7 +116,7 @@ export const uninstallContent = async (profile: string, id: string) => {
 	await db.execute({
 		query: "DELETE FROM profile_content WHERE id = ? AND profile = ?",
 		args: [id, profile],
-	});
+	});*/
 };
 /**
  * @deprecated

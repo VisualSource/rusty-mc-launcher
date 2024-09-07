@@ -39,6 +39,11 @@
 				}
 			]
 		},
+		"core:event:default",
+		"core:window:allow-is-maximized",
+		"core:window:allow-is-maximizable",
+		"core:window:allow-is-minimized",
+		"core:window:allow-toggle-maximize",
 		"dialog:allow-open",
 		"dialog:allow-save",
 		"dialog:allow-message",
@@ -76,6 +81,7 @@
 		"rmcl-auth:default",
 		"rmcl-content:default",
 		"rmcl-game:default",
-		"rmcl-query:default"
+		"rmcl-query:default",
+		"rmcl-query:allow-select"
 	]
 }

@@ -7,13 +7,15 @@ import { useState } from "react";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContentTab } from "@/components/library/content/profile/ContentTab";
-import { db, importContentExternal } from "@/lib/system/commands";
+
 import { profileQueryOptions } from "../_profile.$id";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import logger from "@system/logger";
-import { workshop_content } from "@/lib/models/content";
+import { ContentItem } from "@/lib/models/content";
+import { query } from "@lib/api/plugins/query";
+import { manualContentImport } from "@lib/api/plugins/content";
 import {
 	getProjects,
 	versionsFromHashes,
@@ -37,11 +39,10 @@ function ProfileContent() {
 		enabled: !!profile.data,
 		queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
 		queryFn: async () => {
-			const data = await db.select({
-				query: "SELECT * FROM profile_content WHERE profile = ? AND type = ?; ",
-				args: [profile.data.id, selected],
-				schema: workshop_content.schema,
-			});
+			const data = await query("SELECT * FROM profile_content WHERE profile = ? AND type = ?;", [
+				profile.data.id,
+				selected
+			]).as(ContentItem).all();
 
 			const { unknownContent, hashesContent, idsContent } = data.reduce(
 				(prev, cur) => {
@@ -119,18 +120,14 @@ function ProfileContent() {
 					}
 
 					if (!content.id.length) {
-						await db.execute({
-							query:
-								"UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?",
-							args: [
-								project.id,
-								projectId.version.version_number,
-								content.file_name,
-								content.type,
-								content.profile,
-								content.sha1,
-							],
-						});
+						await query("UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?", [
+							project.id,
+							projectId.version.version_number,
+							content.file_name,
+							content.type,
+							content.profile,
+							content.sha1,
+						]).run();
 						content.version = projectId.version.version_number ?? null;
 					}
 					output.push({ record: content, project });
@@ -193,7 +190,7 @@ function ProfileContent() {
 
 							const id = toast.loading("Importing Content");
 							try {
-								await importContentExternal(file, profile.data.id, selected);
+								await manualContentImport(selected, profile.data.id, file);
 								await queryClient.invalidateQueries({
 									queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
 								});

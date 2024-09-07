@@ -9,10 +9,12 @@ export function useCurrentQueue() {
 		queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.CURRENT],
 		initialData: null,
 		refetchInterval: 30_000,
-		queryFn: () =>
-			query("SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;")
+		queryFn: async () => {
+			const item = await query("SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;")
 				.as(QueueItem)
-				.get(),
+				.get();
+			return item ?? null;
+		},
 	});
 }
 

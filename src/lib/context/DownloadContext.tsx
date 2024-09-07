@@ -123,7 +123,7 @@ class DownloadManager extends EventTarget {
 /// 3. on shunt download save to localstorage
 
 export const DownloadContext = createContext<{
-	progress: unknown | null;
+	progress: { amount: number, max: number, status: string; } | null;
 } | null>(null);
 
 const download_manager = new DownloadManager();
