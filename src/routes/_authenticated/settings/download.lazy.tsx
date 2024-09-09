@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { queryClient } from "@/lib/api/queryClient";
-import { settings } from "@/lib/models/settings";
+import { getConfig, updateConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+const OPTION_PATH_APP = "path.app";
 
 const APP_INSTALLED_MC_VERIONS = "APPLICATION_INSTALLED_MC_VERSIONS";
 export const Route = createLazyFileRoute("/_authenticated/settings/download")({
@@ -31,7 +33,7 @@ function DownloadSettings() {
 	const { data } = useSuspenseQuery({
 		queryKey: [APP_INSTALLED_MC_VERIONS],
 		queryFn: async () => {
-			const path = await settings.get_setting("path.app");
+			const path = await getConfig(OPTION_PATH_APP);
 			if (!path) return [];
 			const version_dir = await join(path.value, "runtime", "versions");
 			return readDir(version_dir);
@@ -39,8 +41,8 @@ function DownloadSettings() {
 	});
 	const form = useForm<{ dir: string }>({
 		async defaultValues() {
-			const paths = await settings.select("path.app");
-			const path = paths.at(0)?.value;
+			const paths = await getConfig(OPTION_PATH_APP);
+			const path = paths?.value;
 			if (!path) throw new Error("Failed to get dir");
 			return { dir: path };
 		},
@@ -55,7 +57,7 @@ function DownloadSettings() {
 			return;
 		}
 
-		await settings.update("path.app", state.dir);
+		await updateConfig(OPTION_PATH_APP, state.dir);
 		await queryClient.invalidateQueries({
 			queryKey: [APP_INSTALLED_MC_VERIONS],
 		});
@@ -130,7 +132,7 @@ function DownloadSettings() {
 									{version.name}
 								</td>
 								<td className="text-center p-2 text-sm text-muted-foreground">
-									{version.path}
+
 								</td>
 							</tr>
 						))}

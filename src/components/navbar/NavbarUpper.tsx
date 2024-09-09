@@ -72,7 +72,7 @@ export const NavbarUpper: React.FC = () => {
 							</Link>
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
-						<DropdownMenuItem onClick={exit as () => void}>
+						<DropdownMenuItem onClick={() => exit()}>
 							<DoorOpen className="h-4 w-4 mr-2" />
 							Exit
 						</DropdownMenuItem>

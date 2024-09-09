@@ -18,17 +18,13 @@ export const router = createRouter({
 	routeTree,
 	defaultPreload: "intent",
 	defaultPreloadStaleTime: 0,
-	defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
+	defaultErrorComponent: ({ error }) => <div>   <ErrorComponent error={error} /></div>,
 	defaultPendingComponent: () => <Loading />,
 	stringifySearch: stringifySearchWith((value) =>
 		JSON.stringify(value, replacer),
 	),
 	context: {
 		queryClient,
-		auth: {
-			msa: undefined,
-			modrinth: undefined,
-		},
 	},
 });
 

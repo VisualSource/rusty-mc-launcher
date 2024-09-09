@@ -12,10 +12,12 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { settings } from "@/lib/models/settings";
+import { Setting, isOption, updateConfig, addConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";
+
+const OPTION_EXIT_ON_START = "option.exit_on_start";
 
 export const Route = createLazyFileRoute("/_authenticated/settings/game")({
 	component: GameSettings,
@@ -26,11 +28,9 @@ function GameSettings() {
 	const form = useForm<{ exit_on_start: boolean }>({
 		async defaultValues() {
 			try {
-				const exit_on_start = await settings.get_setting(
-					"option.exit_on_start",
-				);
+				const exit_on_start = await isOption(OPTION_EXIT_ON_START, "TRUE");
 
-				return { exit_on_start: exit_on_start.value === "TRUE" };
+				return { exit_on_start };
 			} catch (error) {
 				return { exit_on_start: false };
 			}
@@ -38,13 +38,13 @@ function GameSettings() {
 	});
 
 	const onSubmit = async (state: { exit_on_start: boolean }) => {
-		const [affected] = await settings.update(
-			"option.exit_on_start",
+		const [affected] = await updateConfig(
+			OPTION_EXIT_ON_START,
 			state.exit_on_start ? "TRUE" : "FALSE",
 		);
 		if (affected === 0) {
-			await settings.insert(
-				"option.exit_on_start",
+			await addConfig(
+				OPTION_EXIT_ON_START,
 				state.exit_on_start ? "TRUE" : "FALSE",
 			);
 		}

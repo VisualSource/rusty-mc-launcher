@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -15,7 +16,7 @@ import {
 import type { Profile } from "@/lib/models/profiles";
 import { parseJVMArgs, argsToString } from "@/lib/JvmArgs";
 import { MarkedSlider } from "@/components/ui/slider";
-import { getSystemRam } from "@/lib/system/commands";
+import { getSystemRam } from "@lib/api/plugins/content";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { range } from "@/lib/range";
@@ -145,8 +146,8 @@ export const JVMArgForm: React.FC<{
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Add Arg</DialogTitle>
+								<DialogDescription>New argument to pass to the jvm</DialogDescription>
 							</DialogHeader>
-							<Label>Arg</Label>
 							<Input
 								value={argValue}
 								onChange={(e) => setArgValue(e.target.value)}

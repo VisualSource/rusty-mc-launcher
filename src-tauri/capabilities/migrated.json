@@ -81,6 +81,12 @@
 		"rmcl-auth:default",
 		"rmcl-content:default",
 		"rmcl-game:default",
-		"rmcl-query:default"
+		"rmcl-query:default",
+		"core:path:allow-join",
+		"core:app:allow-name",
+		"core:app:allow-tauri-version",
+		"core:app:allow-version",
+		"core:path:allow-resolve-directory",
+		"process:allow-restart"
 	]
 }

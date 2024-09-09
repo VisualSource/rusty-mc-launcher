@@ -17,13 +17,12 @@ import { ProfileVersionSelector } from "@/components/library/content/profile/Pro
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CopyProfileOptions } from "@/components/library/CopyProfileOptions";
 import { UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
-import type { MinecraftProfile } from "@lib/models/profiles";
-import { createProfile, db } from "@/lib/system/commands";
+import { Profile } from "@lib/models/profiles";
+import { createProfile } from "@lib/api/plugins/content";
 import { TypographyH3 } from "@/components/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
-import { profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_KEY } from "@/hooks/keys";
 import logger from "@/lib/system/logger";
@@ -34,11 +33,11 @@ export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 	component: CreateProfile,
 });
 
-const resolver = zodResolver(profile.schema);
+const resolver = zodResolver(Profile.schema);
 
 function CreateProfile() {
 	const navigate = useNavigate();
-	const form = useForm<MinecraftProfile & { copyOptions?: string }>({
+	const form = useForm<Profile & { copyOptions?: string }>({
 		resolver,
 		defaultValues: {
 			id: crypto.randomUUID(),
@@ -51,10 +50,8 @@ function CreateProfile() {
 		},
 	});
 
-	const onSubmit = async (ev: MinecraftProfile & { copyOptions?: string }) => {
+	const onSubmit = async (ev: Profile & { copyOptions?: string }) => {
 		try {
-			const queue_id = crypto.randomUUID();
-
 			let version = ev.version;
 			if (ev.version === "latest-release") {
 				const latest_data = (await fetch(
@@ -65,43 +62,7 @@ function CreateProfile() {
 				version = latest_data.latest.release;
 			}
 
-			await db.execute({
-				query: `BEGIN TRANSACTION;
-					INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?);
-					INSERT INTO download_queue VALUES (?,?,
-					(SELECT COUNT(*) as count FROM download_queue WHERE state = 'PENDING'),
-					?,?,?,?,?,?,?);
-				COMMIT;`,
-				args: [
-					ev.id,
-					ev.name,
-					ev.icon ?? null,
-					ev.date_created,
-					ev.last_played ?? null,
-					version,
-					ev.loader,
-					ev.loader_version ?? null,
-					ev.java_args ?? null,
-					ev.resolution_width ?? null,
-					ev.resolution_height ?? null,
-					"INSTALLING",
-					queue_id,
-					1,
-					`Minecraft ${version} ${ev.loader}`,
-					null,
-					ev.id,
-					new Date().toISOString(),
-					"Client",
-					JSON.stringify({
-						version: version,
-						loader: ev.loader.replace(/^\w/, ev.loader[0].toUpperCase()),
-						loader_version: ev.loader_version,
-					}),
-					"PENDING",
-				],
-			});
-
-			await createProfile(ev.id, ev.copyOptions);
+			await createProfile(ev);
 
 			await queryClient.invalidateQueries({
 				queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],

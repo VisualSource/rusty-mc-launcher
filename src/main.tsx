@@ -28,12 +28,7 @@ root.render(
 						<GameCrash />
 						<RouterProvider
 							router={router}
-							context={{
-								auth: {
-									msa,
-									//modrinth: mca,
-								},
-							}}
+							context={{}}
 						/>
 					</DownloadProvider>
 				</ModrinthProvider>
@@ -41,13 +36,3 @@ root.render(
 		</QueryClientProvider>
 	</StrictMode>,
 );
-/*
-
-			
-					<DownloadProvider>
-					
-					</DownloadProvider>
-			
-			
-
-*/
