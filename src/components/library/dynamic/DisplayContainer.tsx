@@ -35,13 +35,13 @@ export const DisplayContainer: React.FC<{
 	});
 
 	return (
-		<>
+		<div className="relative">
 			<Button
 				onClick={() => setEditMode((e) => !e)}
 				title="Edit"
 				size="sm"
 				variant="ghost"
-				className="absolute top-0 right-0 z-50"
+				className="z-50 fixed right-4"
 			>
 				<Settings2 />
 			</Button>
@@ -56,6 +56,6 @@ export const DisplayContainer: React.FC<{
 					</ErrorBoundary>
 				);
 			})}
-		</>
+		</div>
 	);
 };
