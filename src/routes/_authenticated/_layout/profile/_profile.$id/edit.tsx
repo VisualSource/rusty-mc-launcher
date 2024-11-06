@@ -29,7 +29,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { copyProfile, uninstallContent, deleteProfile, showInFolder } from "@lib/api/plugins/content";
+import {
+	copyProfile,
+	uninstallContent,
+	deleteProfile,
+	showInFolder,
+} from "@lib/api/plugins/content";
 import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,59 +61,63 @@ export const Route = createFileRoute(
 	pendingComponent: Loading,
 });
 
-const onFormChange = debounce(
-	async (og: Profile, profile: Profile) => {
-		for (const key of Object.keys(og) as Array<keyof Profile>) {
-			if (og[key] !== profile[key]) {
-				if (key === "loader") {
-					if (og[key] !== "vanilla" && profile[key] !== "vanilla") {
-						const deleteMods = await ask(
-							"Changing the loader may cause installed content to not work. Would you like to delete all installed mods?",
-							{ title: "Loader Switch", kind: "warning" },
-						);
-						if (deleteMods) {
-							const mods = await query("SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?", [og.id]).as(ContentItem).all();
-
-							await Promise.allSettled(
-								mods.map((e) => uninstallContent(e.id, og.id)),
-							);
-						}
-					}
-					await QueueItem.insert({
-						id: crypto.randomUUID(),
-						display: true,
-						priority: 1,
-						display_name: `${profile.loader} ${profile.loader !== "vanilla" ? profile.loader_version : ""}`,
-						icon: profile.icon ?? null,
-						profile_id: profile.id,
-						content_type: "Client",
-						state: "PENDING",
-						created: new Date().toISOString(),
-						metadata: {
-							version: profile.version,
-							loader: profile.loader?.replace(
-								/^\w/,
-								profile.loader[0].toUpperCase(),
-							),
-							loader_version: profile.loader_version,
-						},
-					}
+const onFormChange = debounce(async (og: Profile, profile: Profile) => {
+	for (const key of Object.keys(og) as Array<keyof Profile>) {
+		if (og[key] !== profile[key]) {
+			if (key === "loader") {
+				if (og[key] !== "vanilla" && profile[key] !== "vanilla") {
+					const deleteMods = await ask(
+						"Changing the loader may cause installed content to not work. Would you like to delete all installed mods?",
+						{ title: "Loader Switch", kind: "warning" },
 					);
-				}
+					if (deleteMods) {
+						const mods = await query(
+							"SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?",
+							[og.id],
+						)
+							.as(ContentItem)
+							.all();
 
-				await query(`UPDATE profiles SET ${key} = ? WHERE id = ?`, [profile[key], og.id]).run();
+						await Promise.allSettled(
+							mods.map((e) => uninstallContent(e.id, og.id)),
+						);
+					}
+				}
+				await QueueItem.insert({
+					id: crypto.randomUUID(),
+					display: true,
+					priority: 1,
+					display_name: `${profile.loader} ${profile.loader !== "vanilla" ? profile.loader_version : ""}`,
+					icon: profile.icon ?? null,
+					profile_id: profile.id,
+					content_type: "Client",
+					state: "PENDING",
+					created: new Date().toISOString(),
+					metadata: {
+						version: profile.version,
+						loader: profile.loader?.replace(
+							/^\w/,
+							profile.loader[0].toUpperCase(),
+						),
+						loader_version: profile.loader_version,
+					},
+				});
 			}
+
+			await query(`UPDATE profiles SET ${key} = ? WHERE id = ?`, [
+				profile[key],
+				og.id,
+			]).run();
 		}
-		await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
-		const cats = await categories.getCategoriesForProfile(og.id);
-		await Promise.allSettled(
-			cats.map((e) =>
-				queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, e.category] }),
-			),
-		);
-	},
-	500,
-);
+	}
+	await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
+	const cats = await categories.getCategoriesForProfile(og.id);
+	await Promise.allSettled(
+		cats.map((e) =>
+			queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, e.category] }),
+		),
+	);
+}, 500);
 
 function ProfileEdit() {
 	const navigate = Route.useNavigate();
@@ -303,20 +312,23 @@ function ProfileEdit() {
 									const id = crypto.randomUUID();
 									await copyProfile(profileQuery.data.id, id);
 
-									await query("INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", [
-										id,
-										`${profileQuery.data.name}: Duplicate`,
-										profileQuery.data.icon,
-										profileQuery.data.date_created,
-										profileQuery.data.last_played,
-										profileQuery.data.version,
-										profileQuery.data.loader,
-										profileQuery.data.loader_version,
-										profileQuery.data.java_args,
-										profileQuery.data.resolution_width,
-										profileQuery.data.resolution_height,
-										profileQuery.data.state,
-									]).run();
+									await query(
+										"INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+										[
+											id,
+											`${profileQuery.data.name}: Duplicate`,
+											profileQuery.data.icon,
+											profileQuery.data.date_created,
+											profileQuery.data.last_played,
+											profileQuery.data.version,
+											profileQuery.data.loader,
+											profileQuery.data.loader_version,
+											profileQuery.data.java_args,
+											profileQuery.data.resolution_width,
+											profileQuery.data.resolution_height,
+											profileQuery.data.state,
+										],
+									).run();
 
 									await queryClient.invalidateQueries({
 										queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],

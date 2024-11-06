@@ -12,7 +12,12 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { Setting, isOption, updateConfig, addConfig } from "@/lib/models/settings";
+import {
+	Setting,
+	isOption,
+	updateConfig,
+	addConfig,
+} from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";

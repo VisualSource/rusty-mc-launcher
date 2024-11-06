@@ -80,10 +80,12 @@ async function* getDependencies(
 		if (!file) throw new Error("Missing file download");
 
 		if (current.dependency_type === "incompatible") {
-
-			const incompatible = await query("SELECT * FROM profile_content WHERE id = ? AND profile = ? LIMIT 1;", [
-				version.project_id, profile
-			]).as(ContentItem).get();
+			const incompatible = await query(
+				"SELECT * FROM profile_content WHERE id = ? AND profile = ? LIMIT 1;",
+				[version.project_id, profile],
+			)
+				.as(ContentItem)
+				.get();
 
 			if (incompatible) {
 				yield { type: "incompatible", dep: current };
@@ -234,8 +236,7 @@ export async function install_known(
 			profile: profile.id,
 			files: files,
 		},
-	}
-	);
+	});
 }
 
 export async function install(data: Project) {
@@ -290,24 +291,22 @@ export async function install(data: Project) {
 				) as ContentType;
 				const queue_id = crypto.randomUUID();
 
-				await QueueItem.insert(
-					{
-						id: queue_id,
-						display: true,
-						priority: 0,
-						display_name: data.title ?? "Unknown",
-						icon: data.icon_url ?? null,
-						profile_id: profile.id,
+				await QueueItem.insert({
+					id: queue_id,
+					display: true,
+					priority: 0,
+					display_name: data.title ?? "Unknown",
+					icon: data.icon_url ?? null,
+					profile_id: profile.id,
+					content_type: content_id,
+					created: new Date().toISOString(),
+					state: "PENDING",
+					metadata: {
 						content_type: content_id,
-						created: new Date().toISOString(),
-						state: "PENDING",
-						metadata: {
-							content_type: content_id,
-							profile: profile.id,
-							files: files,
-						},
-					}
-				);
+						profile: profile.id,
+						files: files,
+					},
+				});
 
 				break;
 			}
@@ -417,8 +416,7 @@ export async function install(data: Project) {
 						profile: profile.id,
 						files: files,
 					},
-				}
-				);
+				});
 
 				break;
 			}
@@ -507,8 +505,7 @@ export async function install(data: Project) {
 							},
 						],
 					},
-				}
-				);
+				});
 				break;
 			}
 			default:

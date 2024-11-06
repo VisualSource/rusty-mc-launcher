@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 
 const ComponentError = (props: FallbackProps) => {
-	return (
-		<div>
-			Error: {props.error?.message ?? props.error ?? "Unknown"}
-		</div>
-	);
-}
+	return <div>Error: {props.error?.message ?? props.error ?? "Unknown"}</div>;
+};
 
 export const DisplayContainer: React.FC<{
 	setEditMode: React.Dispatch<React.SetStateAction<boolean>>;

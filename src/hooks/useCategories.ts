@@ -5,7 +5,10 @@ import { query } from "@lib/api/plugins/query";
 
 export const categoriesQueryOptions = queryOptions({
 	queryKey: [CATEGORIES_KEY],
-	queryFn: () => query("SELECT * FROM settings WHERE key LIKE 'category.%';").as(Setting).all()
+	queryFn: () =>
+		query("SELECT * FROM settings WHERE key LIKE 'category.%';")
+			.as(Setting)
+			.all(),
 });
 
 const useCategories = () => {

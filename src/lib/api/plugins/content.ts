@@ -5,8 +5,20 @@ import { Command } from "@tauri-apps/plugin-shell";
 import type { z } from "zod";
 
 export type DownloadEvent =
-	| { event: "started"; data: unknown }
-	| { event: "progress"; data: { amount: number } }
+	| {
+			event: "started";
+			data: {
+				max_progress: number;
+				message: string;
+			};
+	  }
+	| {
+			event: "progress";
+			data: {
+				amount?: number;
+				message?: string;
+			};
+	  }
 	| { event: "finished"; data: unknown };
 
 export async function registerDownloadListener(
@@ -19,7 +31,6 @@ export async function registerDownloadListener(
 
 export async function getSystemRam() {
 	const value = await invoke<number>("plugin:rmcl-content|get_system_ram");
-	console.log(value);
 	return value;
 }
 
@@ -27,7 +38,11 @@ export async function uninstallContent(contentId: string, profileId: string) {
 	throw new Error("TODO: implement uninstallContent");
 }
 
-export async function manualContentImport(contentType: ContentType, profileId: string, path: string) {
+export async function manualContentImport(
+	contentType: ContentType,
+	profileId: string,
+	path: string,
+) {
 	throw new Error("TODO: implement manualContentImport");
 }
 

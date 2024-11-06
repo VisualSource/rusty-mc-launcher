@@ -26,10 +26,7 @@ root.render(
 				<ModrinthProvider client={mca}>
 					<DownloadProvider>
 						<GameCrash />
-						<RouterProvider
-							router={router}
-							context={{}}
-						/>
+						<RouterProvider router={router} context={{}} />
 					</DownloadProvider>
 				</ModrinthProvider>
 			</MsalProvider>

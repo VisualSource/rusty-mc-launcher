@@ -3,18 +3,39 @@ import { query } from "@lib/api/plugins/query";
 import type { QueryResult } from "../api/plugins/query";
 
 export async function getConfig(id: string): Promise<Setting | undefined> {
-	return query("SELECT * FROM settings WHERE key = ? LIMIT 1", [id]).as(Setting).get();
+	return query("SELECT * FROM settings WHERE key = ? LIMIT 1", [id])
+		.as(Setting)
+		.get();
 }
 
-export async function addConfig(option: string, value: string, metadata: string | null = null) {
-	return query("INSERT INTO settings VALUES (?,?,?)", [option, value, metadata]).run();
+export async function addConfig(
+	option: string,
+	value: string,
+	metadata: string | null = null,
+) {
+	return query("INSERT INTO settings VALUES (?,?,?)", [
+		option,
+		value,
+		metadata,
+	]).run();
 }
 
-export async function updateConfig(option: string, value: string, metadata?: string | null) {
+export async function updateConfig(
+	option: string,
+	value: string,
+	metadata?: string | null,
+) {
 	if (metadata !== undefined) {
-		return query("UPDATE settings SET value = ?, metadata = ? WHERE key = ?;", [value, metadata, option]).run();
+		return query("UPDATE settings SET value = ?, metadata = ? WHERE key = ?;", [
+			value,
+			metadata,
+			option,
+		]).run();
 	}
-	return query("UPDATE settings SET value = ? WHERE key = ?;", [value, option]).run();
+	return query("UPDATE settings SET value = ? WHERE key = ?;", [
+		value,
+		option,
+	]).run();
 }
 
 export async function isOption(opt: string, value: string) {

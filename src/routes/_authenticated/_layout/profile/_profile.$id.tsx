@@ -20,7 +20,12 @@ export const profileQueryOptions = (id: string) =>
 	queryOptions({
 		queryKey: [KEY_PROFILE, id],
 		queryFn: async () => {
-			const result = await query("SELECT * FROM profiles WHERE id = ? LIMIT 1;", [id]).as(Profile).get();
+			const result = await query(
+				"SELECT * FROM profiles WHERE id = ? LIMIT 1;",
+				[id],
+			)
+				.as(Profile)
+				.get();
 			if (!result) throw new Error("No Profile found");
 			return result;
 		},

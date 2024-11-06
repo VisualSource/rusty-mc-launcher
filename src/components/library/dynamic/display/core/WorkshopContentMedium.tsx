@@ -58,8 +58,11 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 	return (
 		<>
 			{data.hits.map((value) => (
-				<div className="space-y-3 w-[200px]" key={value.project_id}>
-					<div className="overflow-hidden rounded-md">
+				<div
+					className="space-y-3 w-[200px] flex flex-col"
+					key={value.project_id}
+				>
+					<div className="overflow-hidden rounded-md h-full">
 						<img
 							height={200}
 							width={200}

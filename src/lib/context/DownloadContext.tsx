@@ -1,4 +1,4 @@
-import { Channel, } from "@tauri-apps/api/core";
+import { Channel } from "@tauri-apps/api/core";
 import { createContext, useSyncExternalStore } from "react";
 import { toast } from "react-toastify";
 import AskDialog from "@/components/dialog/AskDialog";
@@ -12,30 +12,41 @@ import {
 import { Updater } from "../system/updater";
 import logger from "../system/logger";
 
-
 class DownloadManager extends EventTarget {
 	private updater = new Updater();
 	private channel = new Channel<DownloadEvent>();
-	private progress = null;
+	private progress: { amount: number; max: number; status: string } | null =
+		null;
 
 	constructor() {
 		super();
 		this.channel.onmessage = this.handler;
 		registerDownloadListener(this.channel);
-		this.updater.checkForUpdate().catch(e => logger.error((e as Error).message));
+		this.updater
+			.checkForUpdate()
+			.catch((e) => logger.error((e as Error).message));
 	}
 
 	private handler = (ev: DownloadEvent) => {
 		switch (ev.event) {
 			case "started":
+				this.progress = {
+					amount: 0,
+					max: ev.data.max_progress,
+					status: ev.data.message,
+				};
 				break;
 			case "progress":
+				if (!this.progress) break;
+				if (ev.data.message) this.progress.status = ev.data.message;
+				if (ev.data.amount) this.progress.amount += ev.data.amount;
 				break;
 			case "finished":
 				break;
 			default:
 				break;
 		}
+		this.dispatchEvent(new Event("update"));
 		console.log(ev);
 		//const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
 
@@ -127,7 +138,7 @@ class DownloadManager extends EventTarget {
 /// 3. on shunt download save to localstorage
 
 export const DownloadContext = createContext<{
-	progress: { amount: number, max: number, status: string; } | null;
+	progress: { amount: number; max: number; status: string } | null;
 } | null>(null);
 
 const download_manager = new DownloadManager();

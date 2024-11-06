@@ -312,7 +312,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				model:
 					activeSkin?.variant === "CLASSIC"
 						? "default"
-						: "slim" ?? "auto-detect",
+						: ("slim" ?? "auto-detect"),
 				skin: activeSkin?.url,
 				cape: activeCape?.url,
 			});

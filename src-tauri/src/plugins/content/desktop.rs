@@ -30,7 +30,7 @@ pub async fn install_client(
 
     let db = db_state.write().await;
     if let Some(loader_version) =
-        minecraft_launcher_lib::installer::install_minecraft(config, &db, &on_event).await?
+        minecraft_launcher_lib::installer::install_minecraft(config, &db, on_event).await?
     {
         Profile::set_loader_version(&item.profile_id, &loader_version, &db).await?;
     }

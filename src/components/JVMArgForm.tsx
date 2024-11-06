@@ -146,7 +146,9 @@ export const JVMArgForm: React.FC<{
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Add Arg</DialogTitle>
-								<DialogDescription>New argument to pass to the jvm</DialogDescription>
+								<DialogDescription>
+									New argument to pass to the jvm
+								</DialogDescription>
 							</DialogHeader>
 							<Input
 								value={argValue}

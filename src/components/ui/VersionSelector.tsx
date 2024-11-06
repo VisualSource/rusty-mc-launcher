@@ -35,7 +35,6 @@ export const VersionSelector: React.FC<{
 					disabled={isLoading}
 					aria-expanded={open}
 					type="button"
-					role="combobox"
 					variant="outline"
 				>
 					{isLoading

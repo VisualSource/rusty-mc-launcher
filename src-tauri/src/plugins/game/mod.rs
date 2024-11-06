@@ -14,7 +14,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-game")
         .setup(|app, _api| {
             let processes = tauri::async_runtime::block_on(async {
-                let mut data = Processes::new();
+                let mut data = Processes::default();
 
                 let state = app.state::<RwLock<Database>>();
                 let db = state.write().await;

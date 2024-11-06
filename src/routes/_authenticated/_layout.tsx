@@ -36,7 +36,7 @@ function Layout() {
 				className="@container/main bg-accent/25"
 			>
 				<div className="overflow-hidden animate-in fade-in-5 ">
-					{panel.current?.isExpanded() ?? true ? (
+					{(panel.current?.isExpanded() ?? true) ? (
 						<div>
 							<div className="flex gap-1 bg-zinc-950 p-2 shadow-lg">
 								<Button

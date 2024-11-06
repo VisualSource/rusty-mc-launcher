@@ -39,10 +39,12 @@ function ProfileContent() {
 		enabled: !!profile.data,
 		queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
 		queryFn: async () => {
-			const data = await query("SELECT * FROM profile_content WHERE profile = ? AND type = ?;", [
-				profile.data.id,
-				selected
-			]).as(ContentItem).all();
+			const data = await query(
+				"SELECT * FROM profile_content WHERE profile = ? AND type = ?;",
+				[profile.data.id, selected],
+			)
+				.as(ContentItem)
+				.all();
 
 			const { unknownContent, hashesContent, idsContent } = data.reduce(
 				(prev, cur) => {
@@ -120,14 +122,17 @@ function ProfileContent() {
 					}
 
 					if (!content.id.length) {
-						await query("UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?", [
-							project.id,
-							projectId.version.version_number,
-							content.file_name,
-							content.type,
-							content.profile,
-							content.sha1,
-						]).run();
+						await query(
+							"UPDATE profile_content SET id = ?, version = ? WHERE file_name = ? AND type = ? AND profile = ? AND sha1 = ?",
+							[
+								project.id,
+								projectId.version.version_number,
+								content.file_name,
+								content.type,
+								content.profile,
+								content.sha1,
+							],
+						).run();
 						content.version = projectId.version.version_number ?? null;
 					}
 					output.push({ record: content, project });

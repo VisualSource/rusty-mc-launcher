@@ -1,3 +1,9 @@
+//! Mrpack Installer
+//! The Modrinth modpack format (.mrpack) is a simple format that lets you store modpacks. This is the only format of modpack that can be uploaded to Modrinth.
+//! This module handles the parsing and install of a mrpack
+//!
+//! The mrpack spec can be found here https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack
+
 use normalize_path::NormalizePath;
 use std::path::Path;
 use uuid::Uuid;
@@ -15,12 +21,11 @@ use futures::StreamExt;
 use serde::Deserialize;
 use tokio::fs::{self, File};
 
-const WHITELISTED_DOMAINS: [&str; 5] = [
+const WHITELISTED_DOMAINS: [&str; 4] = [
     "cdn.modrinth.com",
     "github.com",
     "raw.githubusercontent.com",
-    "gitlab.com",
-    "mediafilez.forgecdn.net",
+    "gitlab.com", //"mediafilez.forgecdn.net", // breaks spec
 ];
 
 #[derive(Debug, Deserialize, Clone)]

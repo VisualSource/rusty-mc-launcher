@@ -142,7 +142,6 @@ export const LoaderVersionSelector: React.FC<{
 									className="w-full"
 									disabled={isError}
 									variant="outline"
-									role="combobox"
 									type="button"
 									aria-expanded={open}
 								>

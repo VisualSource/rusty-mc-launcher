@@ -24,53 +24,6 @@ lazy_static::lazy_static! {
     };
 }
 const FETCH_ATTEMPTS: usize = 5;
-/*
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ChannelMessage {
-    pub event: String,
-    pub value: String,
-}
-
-impl ChannelMessage {
-    pub fn new(event: impl Into<String>, value: impl Into<String>) -> Self {
-        Self {
-            event: event.into(),
-            value: value.into(),
-        }
-    }
-}
-//$event_channel:expr, $event_name:literal,
-#[macro_export]
-macro_rules! event {
-    ($event_channel:expr,$event_name:literal, $($json:tt)+) => {
-        $crate::installer::utils::event_internal::send_event(
-            $event_channel,
-            $event_name,
-            serde_json::json_internal!($($json)+),
-        )
-        .await;
-    };
-}*/
-
-/*pub mod event_internal {
-    use super::ChannelMessage;
-    use log::error;
-
-    pub async fn send_event<T>(
-        channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
-        event: T,
-        message: serde_json::Value,
-    ) where
-        T: Into<String>,
-    {
-        if let Err(error) = channel
-            .send(ChannelMessage::new(event.into(), message.to_string()))
-            .await
-        {
-            error!("{}", error);
-        }
-    }
-}*/
 
 pub async fn get_file_hash(path: &Path) -> Result<String> {
     let mut file = File::open(path)

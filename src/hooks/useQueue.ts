@@ -10,7 +10,9 @@ export function useCurrentQueue() {
 		initialData: null,
 		refetchInterval: 30_000,
 		queryFn: async () => {
-			const item = await query("SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;")
+			const item = await query(
+				"SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;",
+			)
 				.as(QueueItem)
 				.get();
 			return item ?? null;

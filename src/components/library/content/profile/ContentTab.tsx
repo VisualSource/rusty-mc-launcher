@@ -178,7 +178,7 @@ export const ContentTab: React.FC<{
 					<TypographyH3>Something went wrong:</TypographyH3>
 					<pre className="text-red-300">{error.message}</pre>
 				</div>
-			) : data?.length ?? 0 >= 1 ? (
+			) : (data?.length ?? 0 >= 1) ? (
 				<div
 					className="relative w-full"
 					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}

@@ -120,7 +120,7 @@ export const NavbarUpper: React.FC = () => {
 									? error?.message
 									: isLoading || msal.inProgress === InteractionStatus.Login
 										? "Loading"
-										: account?.details.name ?? "Login"}
+										: (account?.details.name ?? "Login")}
 							</span>
 							<ChevronDown className="h-4 w-4" />
 						</button>

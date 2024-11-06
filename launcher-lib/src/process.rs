@@ -4,13 +4,10 @@ use uuid::Uuid;
 
 use crate::error::{Error, Result};
 
+#[derive(Default)]
 pub struct Processes(HashMap<String, Process>);
 
 impl Processes {
-    pub fn new() -> Self {
-        Self(HashMap::new())
-    }
-
     pub fn insert(&mut self, process: Process) {
         self.0.insert(process.uuid.clone(), process);
     }
@@ -113,7 +110,7 @@ impl Process {
         let pid = sysinfo::Pid::from_u32(ps.id().unwrap_or_default());
         let mut system = sysinfo::System::new();
 
-        system.refresh_processes(sysinfo::ProcessesToUpdate::All);
+        system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
 
         let process = system
             .process(pid)
@@ -151,7 +148,7 @@ impl Process {
             InstanceType::Partial(pid) => {
                 let mut system = sysinfo::System::new();
                 let id = sysinfo::Pid::from_u32(*pid);
-                if system.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[id])) == 0 {
+                if system.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[id]), true) == 0 {
                     return Ok(Some(0));
                 }
 
@@ -174,7 +171,7 @@ impl Process {
             InstanceType::Partial(pid) => {
                 let mut system = sysinfo::System::new();
                 let id = sysinfo::Pid::from_u32(*pid);
-                if system.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[id])) == 1 {
+                if system.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[id]), true) == 1 {
                     if let Some(process) = system.process(id) {
                         process.kill();
                     }
