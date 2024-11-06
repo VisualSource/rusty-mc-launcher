@@ -131,9 +131,7 @@ function DownloadSettings() {
 								<td className="text-nowrap text-center p-2 border-r">
 									{version.name}
 								</td>
-								<td className="text-center p-2 text-sm text-muted-foreground">
-
-								</td>
+								<td className="text-center p-2 text-sm text-muted-foreground"></td>
 							</tr>
 						))}
 					</tbody>

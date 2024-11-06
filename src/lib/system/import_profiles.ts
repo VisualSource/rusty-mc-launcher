@@ -4,11 +4,13 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { toast } from "react-toastify";
 import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
-import type { MinecraftProfile } from "../models/profiles";
+import type { Profile } from "../models/profiles";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
-import { type Loader, db } from "./commands";
 import logger from "./logger";
+import { query } from "../api/plugins/query";
+
+export type Loader = "vanilla" | "forge" | "fabric" | "quilt" | "neoforge";
 
 const get_version = (
 	lastVersionId: string,
@@ -51,7 +53,7 @@ const import_profiles = async () => {
 	}
 
 	try {
-		const content = await readTextFile(result.path, {
+		const content = await readTextFile(result, {
 			baseDir: BaseDirectory.AppData,
 		});
 		const data = JSON.parse(content) as {
@@ -72,7 +74,7 @@ const import_profiles = async () => {
 		).then((e) => e.json())) as {
 			latest: { release: string; snapshot: string };
 		};
-		const profiles: MinecraftProfile[] = [];
+		const profiles: Profile[] = [];
 
 		for (const [_key, profile] of Object.entries(data.profiles)) {
 			let [version, loader, loader_version] = get_version(
@@ -82,10 +84,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-						version.replace(
-							"latest-",
-							"",
-						) as keyof (typeof latest_data)["latest"]
+					version.replace(
+						"latest-",
+						"",
+					) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -109,14 +111,14 @@ const import_profiles = async () => {
 			});
 		}
 
-		await db.execute({
-			query: `INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${Array.from(
+		query(
+			`INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${Array.from(
 				{ length: profiles.length },
 			)
 				.fill(0)
 				.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?)")
 				.join(", ")};`,
-			args: profiles.flatMap((e) => [
+			profiles.flatMap((e) => [
 				e.id,
 				e.name,
 				e.icon,
@@ -130,20 +132,20 @@ const import_profiles = async () => {
 				e.resolution_width,
 				e.state,
 			]),
-		});
+		).run();
 
 		await queryClient.invalidateQueries({
 			queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
 		});
 
-		await db.execute({
-			query: `INSERT INTO download_queue VALUES ${Array.from({
+		await query(
+			`INSERT INTO download_queue VALUES ${Array.from({
 				length: profiles.length,
 			})
 				.fill(0)
 				.map((_) => "(?,?,?,?,?,?,?,?,?,?)")
 				.join(", ")};`,
-			args: profiles.flatMap((e) => [
+			profiles.flatMap((e) => [
 				crypto.randomUUID(),
 				1,
 				0,
@@ -159,7 +161,7 @@ const import_profiles = async () => {
 				}),
 				"PENDING",
 			]),
-		});
+		).run();
 
 		await queryClient.invalidateQueries({
 			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],

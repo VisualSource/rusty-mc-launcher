@@ -1,6 +1,13 @@
 import { z } from "zod";
-import { loaderSchema } from "../system/commands";
 import type { QueryResult } from "@lib/api/plugins/query";
+
+const loaderSchema = z.enum([
+	"vanilla",
+	"forge",
+	"fabric",
+	"quilt",
+	"neoforge",
+]);
 
 type Loader = z.infer<typeof loaderSchema>;
 
