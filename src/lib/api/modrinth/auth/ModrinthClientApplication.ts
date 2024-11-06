@@ -51,6 +51,7 @@ const desterilize = (_key: string, value: unknown) => {
 
 export class ModrinthClientApplication extends EventTarget {
 	private data: AuthenticationResult | null = null;
+	public isLoading = false;
 
 	constructor() {
 		super();
@@ -250,7 +251,7 @@ export class ModrinthClientApplication extends EventTarget {
 		}
 	}
 	async acquireTokenPopup(): Promise<AuthenticationResult> {
-		const client = this.createPopupClient();
+		const client = new PopupClient();
 		const token = await client.acquireToken();
 
 		this.data = {
@@ -274,27 +275,34 @@ export class ModrinthClientApplication extends EventTarget {
 	async loginPopup(
 		_request?: PopupRequest | undefined,
 	): Promise<AuthenticationResult> {
-		const account = await this.acquireTokenPopup();
+		this.isLoading = true;
+		try {
+			const account = await this.acquireTokenPopup();
 
-		const response = await getUserFromAuth({
-			client: modrinthClient,
-			headers: {
-				Authorization: account.accessToken,
-			},
-		});
-		if (response.error) throw response.error;
-		if (!response.response.ok || !response.data)
-			throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
+			const response = await getUserFromAuth({
+				client: modrinthClient,
+				headers: {
+					Authorization: account.accessToken,
+				},
+			});
+			if (response.error) throw response.error;
+			if (!response.response.ok || !response.data)
+				throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
 
-		if (!this.data)
-			throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
-		this.data.account = response.data;
+			if (!this.data)
+				throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
+			this.data.account = response.data;
 
-		this.writeCache(this.data);
+			this.writeCache(this.data);
 
-		this.dispatchEvent(new Event("update-data"));
-
-		return this.data;
+			this.dispatchEvent(new Event("update-data"));
+			return this.data;
+		} catch (error) {
+			console.error(error);
+			throw error;
+		} finally {
+			this.isLoading = false;
+		}
 	}
 	public async logout(
 		_logoutRequest?: EndSessionRequest | undefined,
@@ -319,8 +327,5 @@ export class ModrinthClientApplication extends EventTarget {
 		const cache = localStorage.getItem(ACCOUNT_KEY);
 		if (!cache) return null;
 		return JSON.parse(cache, desterilize) as AuthenticationResult;
-	}
-	private createPopupClient() {
-		return new PopupClient();
 	}
 }

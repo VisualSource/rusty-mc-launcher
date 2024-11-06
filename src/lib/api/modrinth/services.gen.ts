@@ -8,193 +8,240 @@ export const client = createClient(createConfig());
 /**
  * Search projects
  */
-export const searchProjects = <ThrowOnError extends boolean = false>(options?: Options<SearchProjectsData, ThrowOnError>) => { return (options?.client ?? client).get<SearchProjectsResponse, SearchProjectsError, ThrowOnError>({
-    ...options,
-    url: '/search'
-}); };
+export const searchProjects = <ThrowOnError extends boolean = false>(options?: Options<SearchProjectsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<SearchProjectsResponse, SearchProjectsError, ThrowOnError>({
+        ...options,
+        url: '/search'
+    });
+};
 
 /**
  * Get a project
  */
-export const getProject = <ThrowOnError extends boolean = false>(options: Options<GetProjectData, ThrowOnError>) => { return (options?.client ?? client).get<GetProjectResponse, GetProjectError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}'
-}); };
+export const getProject = <ThrowOnError extends boolean = false>(options: Options<GetProjectData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetProjectResponse, GetProjectError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}'
+    });
+};
 
 /**
  * Modify a project
  */
-export const modifyProject = <ThrowOnError extends boolean = false>(options: Options<ModifyProjectData, ThrowOnError>) => { return (options?.client ?? client).patch<ModifyProjectResponse, ModifyProjectError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}'
-}); };
+export const modifyProject = <ThrowOnError extends boolean = false>(options: Options<ModifyProjectData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ModifyProjectResponse, ModifyProjectError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}'
+    });
+};
 
 /**
  * Delete a project
  */
-export const deleteProject = <ThrowOnError extends boolean = false>(options: Options<DeleteProjectData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteProjectResponse, DeleteProjectError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}'
-}); };
+export const deleteProject = <ThrowOnError extends boolean = false>(options: Options<DeleteProjectData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteProjectResponse, DeleteProjectError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}'
+    });
+};
 
 /**
  * Get multiple projects
  */
-export const getProjects = <ThrowOnError extends boolean = false>(options: Options<GetProjectsData, ThrowOnError>) => { return (options?.client ?? client).get<GetProjectsResponse, GetProjectsError, ThrowOnError>({
-    ...options,
-    url: '/projects'
-}); };
+export const getProjects = <ThrowOnError extends boolean = false>(options: Options<GetProjectsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetProjectsResponse, GetProjectsError, ThrowOnError>({
+        ...options,
+        url: '/projects'
+    });
+};
 
 /**
  * Bulk-edit multiple projects
  */
-export const patchProjects = <ThrowOnError extends boolean = false>(options: Options<PatchProjectsData, ThrowOnError>) => { return (options?.client ?? client).patch<PatchProjectsResponse, PatchProjectsError, ThrowOnError>({
-    ...options,
-    url: '/projects'
-}); };
+export const patchProjects = <ThrowOnError extends boolean = false>(options: Options<PatchProjectsData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<PatchProjectsResponse, PatchProjectsError, ThrowOnError>({
+        ...options,
+        url: '/projects'
+    });
+};
 
 /**
  * Get a list of random projects
  */
-export const randomProjects = <ThrowOnError extends boolean = false>(options: Options<RandomProjectsData, ThrowOnError>) => { return (options?.client ?? client).get<RandomProjectsResponse, RandomProjectsError, ThrowOnError>({
-    ...options,
-    url: '/projects_random'
-}); };
+export const randomProjects = <ThrowOnError extends boolean = false>(options: Options<RandomProjectsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<RandomProjectsResponse, RandomProjectsError, ThrowOnError>({
+        ...options,
+        url: '/projects_random'
+    });
+};
 
 /**
  * Create a project
  */
-export const createProject = <ThrowOnError extends boolean = false>(options?: Options<CreateProjectData, ThrowOnError>) => { return (options?.client ?? client).post<CreateProjectResponse, CreateProjectError, ThrowOnError>({
-    ...options,
-    ...formDataBodySerializer,
-    headers: {
-        'Content-Type': null
-    },
-    url: '/project'
-}); };
+export const createProject = <ThrowOnError extends boolean = false>(options?: Options<CreateProjectData, ThrowOnError>) => {
+    return (options?.client ?? client).post<CreateProjectResponse, CreateProjectError, ThrowOnError>({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers
+        },
+        url: '/project'
+    });
+};
 
 /**
  * Change project's icon
  * The new icon may be up to 256KiB in size.
  */
-export const changeProjectIcon = <ThrowOnError extends boolean = false>(options: Options<ChangeProjectIconData, ThrowOnError>) => { return (options?.client ?? client).patch<ChangeProjectIconResponse, ChangeProjectIconError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/icon'
-}); };
+export const changeProjectIcon = <ThrowOnError extends boolean = false>(options: Options<ChangeProjectIconData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ChangeProjectIconResponse, ChangeProjectIconError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/icon'
+    });
+};
 
 /**
  * Delete project's icon
  */
-export const deleteProjectIcon = <ThrowOnError extends boolean = false>(options: Options<DeleteProjectIconData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteProjectIconResponse, DeleteProjectIconError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/icon'
-}); };
+export const deleteProjectIcon = <ThrowOnError extends boolean = false>(options: Options<DeleteProjectIconData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteProjectIconResponse, DeleteProjectIconError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/icon'
+    });
+};
 
 /**
  * Check project slug/ID validity
  */
-export const checkProjectValidity = <ThrowOnError extends boolean = false>(options: Options<CheckProjectValidityData, ThrowOnError>) => { return (options?.client ?? client).get<CheckProjectValidityResponse, CheckProjectValidityError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/check'
-}); };
+export const checkProjectValidity = <ThrowOnError extends boolean = false>(options: Options<CheckProjectValidityData, ThrowOnError>) => {
+    return (options?.client ?? client).get<CheckProjectValidityResponse, CheckProjectValidityError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/check'
+    });
+};
 
 /**
  * Add a gallery image
  * Modrinth allows you to upload files of up to 5MiB to a project's gallery.
  */
-export const addGalleryImage = <ThrowOnError extends boolean = false>(options: Options<AddGalleryImageData, ThrowOnError>) => { return (options?.client ?? client).post<AddGalleryImageResponse, AddGalleryImageError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/gallery'
-}); };
+export const addGalleryImage = <ThrowOnError extends boolean = false>(options: Options<AddGalleryImageData, ThrowOnError>) => {
+    return (options?.client ?? client).post<AddGalleryImageResponse, AddGalleryImageError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/gallery'
+    });
+};
 
 /**
  * Modify a gallery image
  */
-export const modifyGalleryImage = <ThrowOnError extends boolean = false>(options: Options<ModifyGalleryImageData, ThrowOnError>) => { return (options?.client ?? client).patch<ModifyGalleryImageResponse, ModifyGalleryImageError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/gallery'
-}); };
+export const modifyGalleryImage = <ThrowOnError extends boolean = false>(options: Options<ModifyGalleryImageData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ModifyGalleryImageResponse, ModifyGalleryImageError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/gallery'
+    });
+};
 
 /**
  * Delete a gallery image
  */
-export const deleteGalleryImage = <ThrowOnError extends boolean = false>(options: Options<DeleteGalleryImageData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteGalleryImageResponse, DeleteGalleryImageError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/gallery'
-}); };
+export const deleteGalleryImage = <ThrowOnError extends boolean = false>(options: Options<DeleteGalleryImageData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteGalleryImageResponse, DeleteGalleryImageError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/gallery'
+    });
+};
 
 /**
  * Get all of a project's dependencies
  */
-export const getDependencies = <ThrowOnError extends boolean = false>(options: Options<GetDependenciesData, ThrowOnError>) => { return (options?.client ?? client).get<GetDependenciesResponse, GetDependenciesError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/dependencies'
-}); };
+export const getDependencies = <ThrowOnError extends boolean = false>(options: Options<GetDependenciesData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetDependenciesResponse, GetDependenciesError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/dependencies'
+    });
+};
 
 /**
  * Follow a project
  */
-export const followProject = <ThrowOnError extends boolean = false>(options: Options<FollowProjectData, ThrowOnError>) => { return (options?.client ?? client).post<FollowProjectResponse, FollowProjectError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/follow'
-}); };
+export const followProject = <ThrowOnError extends boolean = false>(options: Options<FollowProjectData, ThrowOnError>) => {
+    return (options?.client ?? client).post<FollowProjectResponse, FollowProjectError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/follow'
+    });
+};
 
 /**
  * Unfollow a project
  */
-export const unfollowProject = <ThrowOnError extends boolean = false>(options: Options<UnfollowProjectData, ThrowOnError>) => { return (options?.client ?? client).delete<UnfollowProjectResponse, UnfollowProjectError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/follow'
-}); };
+export const unfollowProject = <ThrowOnError extends boolean = false>(options: Options<UnfollowProjectData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<UnfollowProjectResponse, UnfollowProjectError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/follow'
+    });
+};
 
 /**
  * Schedule a project
  */
-export const scheduleProject = <ThrowOnError extends boolean = false>(options: Options<ScheduleProjectData, ThrowOnError>) => { return (options?.client ?? client).post<ScheduleProjectResponse, ScheduleProjectError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/schedule'
-}); };
+export const scheduleProject = <ThrowOnError extends boolean = false>(options: Options<ScheduleProjectData, ThrowOnError>) => {
+    return (options?.client ?? client).post<ScheduleProjectResponse, ScheduleProjectError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/schedule'
+    });
+};
 
 /**
  * List project's versions
  */
-export const getProjectVersions = <ThrowOnError extends boolean = false>(options: Options<GetProjectVersionsData, ThrowOnError>) => { return (options?.client ?? client).get<GetProjectVersionsResponse, GetProjectVersionsError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/version'
-}); };
+export const getProjectVersions = <ThrowOnError extends boolean = false>(options: Options<GetProjectVersionsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetProjectVersionsResponse, GetProjectVersionsError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/version'
+    });
+};
 
 /**
  * Get a version
  */
-export const getVersion = <ThrowOnError extends boolean = false>(options: Options<GetVersionData, ThrowOnError>) => { return (options?.client ?? client).get<GetVersionResponse, GetVersionError, ThrowOnError>({
-    ...options,
-    url: '/version/{id}'
-}); };
+export const getVersion = <ThrowOnError extends boolean = false>(options: Options<GetVersionData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetVersionResponse, GetVersionError, ThrowOnError>({
+        ...options,
+        url: '/version/{id}'
+    });
+};
 
 /**
  * Modify a version
  */
-export const modifyVersion = <ThrowOnError extends boolean = false>(options: Options<ModifyVersionData, ThrowOnError>) => { return (options?.client ?? client).patch<ModifyVersionResponse, ModifyVersionError, ThrowOnError>({
-    ...options,
-    url: '/version/{id}'
-}); };
+export const modifyVersion = <ThrowOnError extends boolean = false>(options: Options<ModifyVersionData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ModifyVersionResponse, ModifyVersionError, ThrowOnError>({
+        ...options,
+        url: '/version/{id}'
+    });
+};
 
 /**
  * Delete a version
  */
-export const deleteVersion = <ThrowOnError extends boolean = false>(options: Options<DeleteVersionData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteVersionResponse, DeleteVersionError, ThrowOnError>({
-    ...options,
-    url: '/version/{id}'
-}); };
+export const deleteVersion = <ThrowOnError extends boolean = false>(options: Options<DeleteVersionData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteVersionResponse, DeleteVersionError, ThrowOnError>({
+        ...options,
+        url: '/version/{id}'
+    });
+};
 
 /**
  * Get a version given a version number or ID
  * Please note that, if the version number provided matches multiple versions, only the **oldest matching version** will be returned.
  */
-export const getVersionFromIdOrNumber = <ThrowOnError extends boolean = false>(options: Options<GetVersionFromIdOrNumberData, ThrowOnError>) => { return (options?.client ?? client).get<GetVersionFromIdOrNumberResponse, GetVersionFromIdOrNumberError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/version/{id|number}'
-}); };
+export const getVersionFromIdOrNumber = <ThrowOnError extends boolean = false>(options: Options<GetVersionFromIdOrNumberData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetVersionFromIdOrNumberResponse, GetVersionFromIdOrNumberError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/version/{id|number}'
+    });
+};
 
 /**
  * Create a version
@@ -205,433 +252,537 @@ export const getVersionFromIdOrNumber = <ThrowOnError extends boolean = false>(o
  * You can name the file parts anything you would like, but you must list each of the parts' names in `file_parts`, and optionally, provide one to use as the primary file in `primary_file`.
  *
  */
-export const createVersion = <ThrowOnError extends boolean = false>(options?: Options<CreateVersionData, ThrowOnError>) => { return (options?.client ?? client).post<CreateVersionResponse, CreateVersionError, ThrowOnError>({
-    ...options,
-    ...formDataBodySerializer,
-    headers: {
-        'Content-Type': null
-    },
-    url: '/version'
-}); };
+export const createVersion = <ThrowOnError extends boolean = false>(options?: Options<CreateVersionData, ThrowOnError>) => {
+    return (options?.client ?? client).post<CreateVersionResponse, CreateVersionError, ThrowOnError>({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers
+        },
+        url: '/version'
+    });
+};
 
 /**
  * Schedule a version
  */
-export const scheduleVersion = <ThrowOnError extends boolean = false>(options: Options<ScheduleVersionData, ThrowOnError>) => { return (options?.client ?? client).post<ScheduleVersionResponse, ScheduleVersionError, ThrowOnError>({
-    ...options,
-    url: '/version/{id}/schedule'
-}); };
+export const scheduleVersion = <ThrowOnError extends boolean = false>(options: Options<ScheduleVersionData, ThrowOnError>) => {
+    return (options?.client ?? client).post<ScheduleVersionResponse, ScheduleVersionError, ThrowOnError>({
+        ...options,
+        url: '/version/{id}/schedule'
+    });
+};
 
 /**
  * Get multiple versions
  */
-export const getVersions = <ThrowOnError extends boolean = false>(options: Options<GetVersionsData, ThrowOnError>) => { return (options?.client ?? client).get<GetVersionsResponse, GetVersionsError, ThrowOnError>({
-    ...options,
-    url: '/versions'
-}); };
+export const getVersions = <ThrowOnError extends boolean = false>(options: Options<GetVersionsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetVersionsResponse, GetVersionsError, ThrowOnError>({
+        ...options,
+        url: '/versions'
+    });
+};
 
 /**
  * Add files to version
  * Project files are attached. `.mrpack` and `.jar` files are accepted.
  */
-export const addFilesToVersion = <ThrowOnError extends boolean = false>(options: Options<AddFilesToVersionData, ThrowOnError>) => { return (options?.client ?? client).post<AddFilesToVersionResponse, AddFilesToVersionError, ThrowOnError>({
-    ...options,
-    ...formDataBodySerializer,
-    headers: {
-        'Content-Type': null
-    },
-    url: '/version/{id}/file'
-}); };
+export const addFilesToVersion = <ThrowOnError extends boolean = false>(options: Options<AddFilesToVersionData, ThrowOnError>) => {
+    return (options?.client ?? client).post<AddFilesToVersionResponse, AddFilesToVersionError, ThrowOnError>({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers
+        },
+        url: '/version/{id}/file'
+    });
+};
 
 /**
  * Get version from hash
  */
-export const versionFromHash = <ThrowOnError extends boolean = false>(options: Options<VersionFromHashData, ThrowOnError>) => { return (options?.client ?? client).get<VersionFromHashResponse, VersionFromHashError, ThrowOnError>({
-    ...options,
-    url: '/version_file/{hash}'
-}); };
+export const versionFromHash = <ThrowOnError extends boolean = false>(options: Options<VersionFromHashData, ThrowOnError>) => {
+    return (options?.client ?? client).get<VersionFromHashResponse, VersionFromHashError, ThrowOnError>({
+        ...options,
+        url: '/version_file/{hash}'
+    });
+};
 
 /**
  * Delete a file from its hash
  */
-export const deleteFileFromHash = <ThrowOnError extends boolean = false>(options: Options<DeleteFileFromHashData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteFileFromHashResponse, DeleteFileFromHashError, ThrowOnError>({
-    ...options,
-    url: '/version_file/{hash}'
-}); };
+export const deleteFileFromHash = <ThrowOnError extends boolean = false>(options: Options<DeleteFileFromHashData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteFileFromHashResponse, DeleteFileFromHashError, ThrowOnError>({
+        ...options,
+        url: '/version_file/{hash}'
+    });
+};
 
 /**
  * Latest version of a project from a hash, loader(s), and game version(s)
  */
-export const getLatestVersionFromHash = <ThrowOnError extends boolean = false>(options: Options<GetLatestVersionFromHashData, ThrowOnError>) => { return (options?.client ?? client).post<GetLatestVersionFromHashResponse, GetLatestVersionFromHashError, ThrowOnError>({
-    ...options,
-    url: '/version_file/{hash}/update'
-}); };
+export const getLatestVersionFromHash = <ThrowOnError extends boolean = false>(options: Options<GetLatestVersionFromHashData, ThrowOnError>) => {
+    return (options?.client ?? client).post<GetLatestVersionFromHashResponse, GetLatestVersionFromHashError, ThrowOnError>({
+        ...options,
+        url: '/version_file/{hash}/update'
+    });
+};
 
 /**
  * Get versions from hashes
  * This is the same as [`/version_file/{hash}`](#operation/versionFromHash) except it accepts multiple hashes.
  */
-export const versionsFromHashes = <ThrowOnError extends boolean = false>(options?: Options<VersionsFromHashesData, ThrowOnError>) => { return (options?.client ?? client).post<VersionsFromHashesResponse, VersionsFromHashesError, ThrowOnError>({
-    ...options,
-    url: '/version_files'
-}); };
+export const versionsFromHashes = <ThrowOnError extends boolean = false>(options?: Options<VersionsFromHashesData, ThrowOnError>) => {
+    return (options?.client ?? client).post<VersionsFromHashesResponse, VersionsFromHashesError, ThrowOnError>({
+        ...options,
+        url: '/version_files'
+    });
+};
 
 /**
  * Latest versions of multiple project from hashes, loader(s), and game version(s)
  * This is the same as [`/version_file/{hash}/update`](#operation/getLatestVersionFromHash) except it accepts multiple hashes.
  */
-export const getLatestVersionsFromHashes = <ThrowOnError extends boolean = false>(options?: Options<GetLatestVersionsFromHashesData, ThrowOnError>) => { return (options?.client ?? client).post<GetLatestVersionsFromHashesResponse, GetLatestVersionsFromHashesError, ThrowOnError>({
-    ...options,
-    url: '/version_files/update'
-}); };
+export const getLatestVersionsFromHashes = <ThrowOnError extends boolean = false>(options?: Options<GetLatestVersionsFromHashesData, ThrowOnError>) => {
+    return (options?.client ?? client).post<GetLatestVersionsFromHashesResponse, GetLatestVersionsFromHashesError, ThrowOnError>({
+        ...options,
+        url: '/version_files/update'
+    });
+};
 
 /**
  * Get a user
  */
-export const getUser = <ThrowOnError extends boolean = false>(options: Options<GetUserData, ThrowOnError>) => { return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}'
-}); };
+export const getUser = <ThrowOnError extends boolean = false>(options: Options<GetUserData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}'
+    });
+};
 
 /**
  * Modify a user
  */
-export const modifyUser = <ThrowOnError extends boolean = false>(options: Options<ModifyUserData, ThrowOnError>) => { return (options?.client ?? client).patch<ModifyUserResponse, ModifyUserError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}'
-}); };
+export const modifyUser = <ThrowOnError extends boolean = false>(options: Options<ModifyUserData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ModifyUserResponse, ModifyUserError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}'
+    });
+};
 
 /**
  * Get user from authorization header
  */
-export const getUserFromAuth = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<GetUserFromAuthResponse, GetUserFromAuthError, ThrowOnError>({
-    ...options,
-    url: '/user'
-}); };
+export const getUserFromAuth = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetUserFromAuthResponse, GetUserFromAuthError, ThrowOnError>({
+        ...options,
+        url: '/user'
+    });
+};
 
 /**
  * Get multiple users
  */
-export const getUsers = <ThrowOnError extends boolean = false>(options: Options<GetUsersData, ThrowOnError>) => { return (options?.client ?? client).get<GetUsersResponse, GetUsersError, ThrowOnError>({
-    ...options,
-    url: '/users'
-}); };
+export const getUsers = <ThrowOnError extends boolean = false>(options: Options<GetUsersData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetUsersResponse, GetUsersError, ThrowOnError>({
+        ...options,
+        url: '/users'
+    });
+};
 
 /**
  * Change user's avatar
  * The new avatar may be up to 2MiB in size.
  */
-export const changeUserIcon = <ThrowOnError extends boolean = false>(options: Options<ChangeUserIconData, ThrowOnError>) => { return (options?.client ?? client).patch<ChangeUserIconResponse, ChangeUserIconError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}/icon'
-}); };
+export const changeUserIcon = <ThrowOnError extends boolean = false>(options: Options<ChangeUserIconData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ChangeUserIconResponse, ChangeUserIconError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}/icon'
+    });
+};
 
 /**
  * Get user's projects
  */
-export const getUserProjects = <ThrowOnError extends boolean = false>(options: Options<GetUserProjectsData, ThrowOnError>) => { return (options?.client ?? client).get<GetUserProjectsResponse, GetUserProjectsError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}/projects'
-}); };
+export const getUserProjects = <ThrowOnError extends boolean = false>(options: Options<GetUserProjectsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetUserProjectsResponse, GetUserProjectsError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}/projects'
+    });
+};
 
 /**
  * Get user's followed projects
  */
-export const getFollowedProjects = <ThrowOnError extends boolean = false>(options: Options<GetFollowedProjectsData, ThrowOnError>) => { return (options?.client ?? client).get<GetFollowedProjectsResponse, GetFollowedProjectsError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}/follows'
-}); };
+export const getFollowedProjects = <ThrowOnError extends boolean = false>(options: Options<GetFollowedProjectsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetFollowedProjectsResponse, GetFollowedProjectsError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}/follows'
+    });
+};
 
 /**
  * Get user's payout history
  */
-export const getPayoutHistory = <ThrowOnError extends boolean = false>(options: Options<GetPayoutHistoryData, ThrowOnError>) => { return (options?.client ?? client).get<GetPayoutHistoryResponse, GetPayoutHistoryError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}/payouts'
-}); };
+export const getPayoutHistory = <ThrowOnError extends boolean = false>(options: Options<GetPayoutHistoryData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetPayoutHistoryResponse, GetPayoutHistoryError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}/payouts'
+    });
+};
 
 /**
  * Withdraw payout balance to PayPal or Venmo
  * Warning: certain amounts get withheld for fees. Please do not call this API endpoint without first acknowledging the warnings on the corresponding frontend page.
  */
-export const withdrawPayout = <ThrowOnError extends boolean = false>(options: Options<WithdrawPayoutData, ThrowOnError>) => { return (options?.client ?? client).post<WithdrawPayoutResponse, WithdrawPayoutError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}/payouts'
-}); };
+export const withdrawPayout = <ThrowOnError extends boolean = false>(options: Options<WithdrawPayoutData, ThrowOnError>) => {
+    return (options?.client ?? client).post<WithdrawPayoutResponse, WithdrawPayoutError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}/payouts'
+    });
+};
 
 /**
  * Get user's notifications
  */
-export const getUserNotifications = <ThrowOnError extends boolean = false>(options: Options<GetUserNotificationsData, ThrowOnError>) => { return (options?.client ?? client).get<GetUserNotificationsResponse, GetUserNotificationsError, ThrowOnError>({
-    ...options,
-    url: '/user/{id|username}/notifications'
-}); };
+export const getUserNotifications = <ThrowOnError extends boolean = false>(options: Options<GetUserNotificationsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetUserNotificationsResponse, GetUserNotificationsError, ThrowOnError>({
+        ...options,
+        url: '/user/{id|username}/notifications'
+    });
+};
 
 /**
  * Get notification from ID
  */
-export const getNotification = <ThrowOnError extends boolean = false>(options: Options<GetNotificationData, ThrowOnError>) => { return (options?.client ?? client).get<GetNotificationResponse, GetNotificationError, ThrowOnError>({
-    ...options,
-    url: '/notification/{id}'
-}); };
+export const getNotification = <ThrowOnError extends boolean = false>(options: Options<GetNotificationData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetNotificationResponse, GetNotificationError, ThrowOnError>({
+        ...options,
+        url: '/notification/{id}'
+    });
+};
 
 /**
  * Mark notification as read
  */
-export const readNotification = <ThrowOnError extends boolean = false>(options: Options<ReadNotificationData, ThrowOnError>) => { return (options?.client ?? client).patch<ReadNotificationResponse, ReadNotificationError, ThrowOnError>({
-    ...options,
-    url: '/notification/{id}'
-}); };
+export const readNotification = <ThrowOnError extends boolean = false>(options: Options<ReadNotificationData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ReadNotificationResponse, ReadNotificationError, ThrowOnError>({
+        ...options,
+        url: '/notification/{id}'
+    });
+};
 
 /**
  * Delete notification
  */
-export const deleteNotification = <ThrowOnError extends boolean = false>(options: Options<DeleteNotificationData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteNotificationResponse, DeleteNotificationError, ThrowOnError>({
-    ...options,
-    url: '/notification/{id}'
-}); };
+export const deleteNotification = <ThrowOnError extends boolean = false>(options: Options<DeleteNotificationData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteNotificationResponse, DeleteNotificationError, ThrowOnError>({
+        ...options,
+        url: '/notification/{id}'
+    });
+};
 
 /**
  * Get multiple notifications
  */
-export const getNotifications = <ThrowOnError extends boolean = false>(options: Options<GetNotificationsData, ThrowOnError>) => { return (options?.client ?? client).get<GetNotificationsResponse, GetNotificationsError, ThrowOnError>({
-    ...options,
-    url: '/notifications'
-}); };
+export const getNotifications = <ThrowOnError extends boolean = false>(options: Options<GetNotificationsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetNotificationsResponse, GetNotificationsError, ThrowOnError>({
+        ...options,
+        url: '/notifications'
+    });
+};
 
 /**
  * Mark multiple notifications as read
  */
-export const readNotifications = <ThrowOnError extends boolean = false>(options: Options<ReadNotificationsData, ThrowOnError>) => { return (options?.client ?? client).patch<ReadNotificationsResponse, ReadNotificationsError, ThrowOnError>({
-    ...options,
-    url: '/notifications'
-}); };
+export const readNotifications = <ThrowOnError extends boolean = false>(options: Options<ReadNotificationsData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ReadNotificationsResponse, ReadNotificationsError, ThrowOnError>({
+        ...options,
+        url: '/notifications'
+    });
+};
 
 /**
  * Delete multiple notifications
  */
-export const deleteNotifications = <ThrowOnError extends boolean = false>(options: Options<DeleteNotificationsData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteNotificationsResponse, DeleteNotificationsError, ThrowOnError>({
-    ...options,
-    url: '/notifications'
-}); };
+export const deleteNotifications = <ThrowOnError extends boolean = false>(options: Options<DeleteNotificationsData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteNotificationsResponse, DeleteNotificationsError, ThrowOnError>({
+        ...options,
+        url: '/notifications'
+    });
+};
 
 /**
  * Report a project, user, or version
  * Bring a project, user, or version to the attention of the moderators by reporting it.
  */
-export const submitReport = <ThrowOnError extends boolean = false>(options?: Options<SubmitReportData, ThrowOnError>) => { return (options?.client ?? client).post<SubmitReportResponse, SubmitReportError, ThrowOnError>({
-    ...options,
-    url: '/report'
-}); };
+export const submitReport = <ThrowOnError extends boolean = false>(options?: Options<SubmitReportData, ThrowOnError>) => {
+    return (options?.client ?? client).post<SubmitReportResponse, SubmitReportError, ThrowOnError>({
+        ...options,
+        url: '/report'
+    });
+};
 
 /**
  * Get your open reports
  */
-export const getOpenReports = <ThrowOnError extends boolean = false>(options?: Options<GetOpenReportsData, ThrowOnError>) => { return (options?.client ?? client).get<GetOpenReportsResponse, GetOpenReportsError, ThrowOnError>({
-    ...options,
-    url: '/report'
-}); };
+export const getOpenReports = <ThrowOnError extends boolean = false>(options?: Options<GetOpenReportsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetOpenReportsResponse, GetOpenReportsError, ThrowOnError>({
+        ...options,
+        url: '/report'
+    });
+};
 
 /**
  * Get report from ID
  */
-export const getReport = <ThrowOnError extends boolean = false>(options: Options<GetReportData, ThrowOnError>) => { return (options?.client ?? client).get<GetReportResponse, GetReportError, ThrowOnError>({
-    ...options,
-    url: '/report/{id}'
-}); };
+export const getReport = <ThrowOnError extends boolean = false>(options: Options<GetReportData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetReportResponse, GetReportError, ThrowOnError>({
+        ...options,
+        url: '/report/{id}'
+    });
+};
 
 /**
  * Modify a report
  */
-export const modifyReport = <ThrowOnError extends boolean = false>(options: Options<ModifyReportData, ThrowOnError>) => { return (options?.client ?? client).patch<ModifyReportResponse, ModifyReportError, ThrowOnError>({
-    ...options,
-    url: '/report/{id}'
-}); };
+export const modifyReport = <ThrowOnError extends boolean = false>(options: Options<ModifyReportData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ModifyReportResponse, ModifyReportError, ThrowOnError>({
+        ...options,
+        url: '/report/{id}'
+    });
+};
 
 /**
  * Get multiple reports
  */
-export const getReports = <ThrowOnError extends boolean = false>(options: Options<GetReportsData, ThrowOnError>) => { return (options?.client ?? client).get<GetReportsResponse, GetReportsError, ThrowOnError>({
-    ...options,
-    url: '/reports'
-}); };
+export const getReports = <ThrowOnError extends boolean = false>(options: Options<GetReportsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetReportsResponse, GetReportsError, ThrowOnError>({
+        ...options,
+        url: '/reports'
+    });
+};
 
 /**
  * Get a thread
  */
-export const getThread = <ThrowOnError extends boolean = false>(options: Options<GetThreadData, ThrowOnError>) => { return (options?.client ?? client).get<GetThreadResponse, GetThreadError, ThrowOnError>({
-    ...options,
-    url: '/thread/{id}'
-}); };
+export const getThread = <ThrowOnError extends boolean = false>(options: Options<GetThreadData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetThreadResponse, GetThreadError, ThrowOnError>({
+        ...options,
+        url: '/thread/{id}'
+    });
+};
 
 /**
  * Send a text message to a thread
  */
-export const sendThreadMessage = <ThrowOnError extends boolean = false>(options: Options<SendThreadMessageData, ThrowOnError>) => { return (options?.client ?? client).post<SendThreadMessageResponse, SendThreadMessageError, ThrowOnError>({
-    ...options,
-    url: '/thread/{id}'
-}); };
+export const sendThreadMessage = <ThrowOnError extends boolean = false>(options: Options<SendThreadMessageData, ThrowOnError>) => {
+    return (options?.client ?? client).post<SendThreadMessageResponse, SendThreadMessageError, ThrowOnError>({
+        ...options,
+        url: '/thread/{id}'
+    });
+};
 
 /**
  * Get multiple threads
  */
-export const getThreads = <ThrowOnError extends boolean = false>(options: Options<GetThreadsData, ThrowOnError>) => { return (options?.client ?? client).get<GetThreadsResponse, GetThreadsError, ThrowOnError>({
-    ...options,
-    url: '/threads'
-}); };
+export const getThreads = <ThrowOnError extends boolean = false>(options: Options<GetThreadsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetThreadsResponse, GetThreadsError, ThrowOnError>({
+        ...options,
+        url: '/threads'
+    });
+};
 
 /**
  * Delete a thread message
  */
-export const deleteThreadMessage = <ThrowOnError extends boolean = false>(options: Options<DeleteThreadMessageData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteThreadMessageResponse, DeleteThreadMessageError, ThrowOnError>({
-    ...options,
-    url: '/message/{id}'
-}); };
+export const deleteThreadMessage = <ThrowOnError extends boolean = false>(options: Options<DeleteThreadMessageData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteThreadMessageResponse, DeleteThreadMessageError, ThrowOnError>({
+        ...options,
+        url: '/message/{id}'
+    });
+};
 
 /**
  * Get a project's team members
  */
-export const getProjectTeamMembers = <ThrowOnError extends boolean = false>(options: Options<GetProjectTeamMembersData, ThrowOnError>) => { return (options?.client ?? client).get<GetProjectTeamMembersResponse, GetProjectTeamMembersError, ThrowOnError>({
-    ...options,
-    url: '/project/{id|slug}/members'
-}); };
+export const getProjectTeamMembers = <ThrowOnError extends boolean = false>(options: Options<GetProjectTeamMembersData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetProjectTeamMembersResponse, GetProjectTeamMembersError, ThrowOnError>({
+        ...options,
+        url: '/project/{id|slug}/members'
+    });
+};
 
 /**
  * Get a team's members
  */
-export const getTeamMembers = <ThrowOnError extends boolean = false>(options: Options<GetTeamMembersData, ThrowOnError>) => { return (options?.client ?? client).get<GetTeamMembersResponse, GetTeamMembersError, ThrowOnError>({
-    ...options,
-    url: '/team/{id}/members'
-}); };
+export const getTeamMembers = <ThrowOnError extends boolean = false>(options: Options<GetTeamMembersData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetTeamMembersResponse, GetTeamMembersError, ThrowOnError>({
+        ...options,
+        url: '/team/{id}/members'
+    });
+};
 
 /**
  * Add a user to a team
  */
-export const addTeamMember = <ThrowOnError extends boolean = false>(options: Options<AddTeamMemberData, ThrowOnError>) => { return (options?.client ?? client).post<AddTeamMemberResponse, AddTeamMemberError, ThrowOnError>({
-    ...options,
-    url: '/team/{id}/members'
-}); };
+export const addTeamMember = <ThrowOnError extends boolean = false>(options: Options<AddTeamMemberData, ThrowOnError>) => {
+    return (options?.client ?? client).post<AddTeamMemberResponse, AddTeamMemberError, ThrowOnError>({
+        ...options,
+        url: '/team/{id}/members'
+    });
+};
 
 /**
  * Get the members of multiple teams
  */
-export const getTeams = <ThrowOnError extends boolean = false>(options: Options<GetTeamsData, ThrowOnError>) => { return (options?.client ?? client).get<GetTeamsResponse, GetTeamsError, ThrowOnError>({
-    ...options,
-    url: '/teams'
-}); };
+export const getTeams = <ThrowOnError extends boolean = false>(options: Options<GetTeamsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetTeamsResponse, GetTeamsError, ThrowOnError>({
+        ...options,
+        url: '/teams'
+    });
+};
 
 /**
  * Join a team
  */
-export const joinTeam = <ThrowOnError extends boolean = false>(options: Options<JoinTeamData, ThrowOnError>) => { return (options?.client ?? client).post<JoinTeamResponse, JoinTeamError, ThrowOnError>({
-    ...options,
-    url: '/team/{id}/join'
-}); };
+export const joinTeam = <ThrowOnError extends boolean = false>(options: Options<JoinTeamData, ThrowOnError>) => {
+    return (options?.client ?? client).post<JoinTeamResponse, JoinTeamError, ThrowOnError>({
+        ...options,
+        url: '/team/{id}/join'
+    });
+};
 
 /**
  * Modify a team member's information
  */
-export const modifyTeamMember = <ThrowOnError extends boolean = false>(options: Options<ModifyTeamMemberData, ThrowOnError>) => { return (options?.client ?? client).patch<ModifyTeamMemberResponse, ModifyTeamMemberError, ThrowOnError>({
-    ...options,
-    url: '/team/{id}/members/{id|username}'
-}); };
+export const modifyTeamMember = <ThrowOnError extends boolean = false>(options: Options<ModifyTeamMemberData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<ModifyTeamMemberResponse, ModifyTeamMemberError, ThrowOnError>({
+        ...options,
+        url: '/team/{id}/members/{id|username}'
+    });
+};
 
 /**
  * Remove a member from a team
  */
-export const deleteTeamMember = <ThrowOnError extends boolean = false>(options: Options<DeleteTeamMemberData, ThrowOnError>) => { return (options?.client ?? client).delete<DeleteTeamMemberResponse, DeleteTeamMemberError, ThrowOnError>({
-    ...options,
-    url: '/team/{id}/members/{id|username}'
-}); };
+export const deleteTeamMember = <ThrowOnError extends boolean = false>(options: Options<DeleteTeamMemberData, ThrowOnError>) => {
+    return (options?.client ?? client).delete<DeleteTeamMemberResponse, DeleteTeamMemberError, ThrowOnError>({
+        ...options,
+        url: '/team/{id}/members/{id|username}'
+    });
+};
 
 /**
  * Transfer team's ownership to another user
  */
-export const transferTeamOwnership = <ThrowOnError extends boolean = false>(options: Options<TransferTeamOwnershipData, ThrowOnError>) => { return (options?.client ?? client).patch<TransferTeamOwnershipResponse, TransferTeamOwnershipError, ThrowOnError>({
-    ...options,
-    url: '/team/{id}/owner'
-}); };
+export const transferTeamOwnership = <ThrowOnError extends boolean = false>(options: Options<TransferTeamOwnershipData, ThrowOnError>) => {
+    return (options?.client ?? client).patch<TransferTeamOwnershipResponse, TransferTeamOwnershipError, ThrowOnError>({
+        ...options,
+        url: '/team/{id}/owner'
+    });
+};
 
 /**
  * Get a list of categories
  * Gets an array of categories, their icons, and applicable project types
  */
-export const categoryList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<CategoryListResponse, CategoryListError, ThrowOnError>({
-    ...options,
-    url: '/tag/category'
-}); };
+export const categoryList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<CategoryListResponse, CategoryListError, ThrowOnError>({
+        ...options,
+        url: '/tag/category'
+    });
+};
 
 /**
  * Get a list of loaders
  * Gets an array of loaders, their icons, and supported project types
  */
-export const loaderList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<LoaderListResponse, LoaderListError, ThrowOnError>({
-    ...options,
-    url: '/tag/loader'
-}); };
+export const loaderList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<LoaderListResponse, LoaderListError, ThrowOnError>({
+        ...options,
+        url: '/tag/loader'
+    });
+};
 
 /**
  * Get a list of game versions
  * Gets an array of game versions and information about them
  */
-export const versionList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<VersionListResponse, VersionListError, ThrowOnError>({
-    ...options,
-    url: '/tag/game_version'
-}); };
+export const versionList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<VersionListResponse, VersionListError, ThrowOnError>({
+        ...options,
+        url: '/tag/game_version'
+    });
+};
 
 /**
  * @deprecated
  * Get a list of licenses
  * Deprecated - simply use SPDX IDs.
  */
-export const licenseList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<LicenseListResponse, LicenseListError, ThrowOnError>({
-    ...options,
-    url: '/tag/license'
-}); };
+export const licenseList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<LicenseListResponse, LicenseListError, ThrowOnError>({
+        ...options,
+        url: '/tag/license'
+    });
+};
 
 /**
  * Get the text and title of a license
  */
-export const licenseText = <ThrowOnError extends boolean = false>(options: Options<LicenseTextData, ThrowOnError>) => { return (options?.client ?? client).get<LicenseTextResponse, LicenseTextError, ThrowOnError>({
-    ...options,
-    url: '/tag/license/{id}'
-}); };
+export const licenseText = <ThrowOnError extends boolean = false>(options: Options<LicenseTextData, ThrowOnError>) => {
+    return (options?.client ?? client).get<LicenseTextResponse, LicenseTextError, ThrowOnError>({
+        ...options,
+        url: '/tag/license/{id}'
+    });
+};
 
 /**
  * Get a list of donation platforms
  * Gets an array of donation platforms and information about them
  */
-export const donationPlatformList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<DonationPlatformListResponse, DonationPlatformListError, ThrowOnError>({
-    ...options,
-    url: '/tag/donation_platform'
-}); };
+export const donationPlatformList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<DonationPlatformListResponse, DonationPlatformListError, ThrowOnError>({
+        ...options,
+        url: '/tag/donation_platform'
+    });
+};
 
 /**
  * Get a list of report types
  * Gets an array of valid report types
  */
-export const reportTypeList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<ReportTypeListResponse, ReportTypeListError, ThrowOnError>({
-    ...options,
-    url: '/tag/report_type'
-}); };
+export const reportTypeList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<ReportTypeListResponse, ReportTypeListError, ThrowOnError>({
+        ...options,
+        url: '/tag/report_type'
+    });
+};
 
 /**
  * Get a list of project types
  * Gets an array of valid project types
  */
-export const projectTypeList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<ProjectTypeListResponse, ProjectTypeListError, ThrowOnError>({
-    ...options,
-    url: '/tag/project_type'
-}); };
+export const projectTypeList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<ProjectTypeListResponse, ProjectTypeListError, ThrowOnError>({
+        ...options,
+        url: '/tag/project_type'
+    });
+};
 
 /**
  * Get a list of side types
  * Gets an array of valid side types
  */
-export const sideTypeList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<SideTypeListResponse, SideTypeListError, ThrowOnError>({
-    ...options,
-    url: '/tag/side_type'
-}); };
+export const sideTypeList = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<SideTypeListResponse, SideTypeListError, ThrowOnError>({
+        ...options,
+        url: '/tag/side_type'
+    });
+};
 
 /**
  * Forge Updates JSON file
@@ -655,15 +806,19 @@ export const sideTypeList = <ThrowOnError extends boolean = false>(options?: Opt
  * the update checker may not function properly.
  *
  */
-export const forgeUpdates = <ThrowOnError extends boolean = false>(options: Options<ForgeUpdatesData, ThrowOnError>) => { return (options?.client ?? client).get<ForgeUpdatesResponse, ForgeUpdatesError, ThrowOnError>({
-    ...options,
-    url: '/updates/{id|slug}/forge_updates.json'
-}); };
+export const forgeUpdates = <ThrowOnError extends boolean = false>(options: Options<ForgeUpdatesData, ThrowOnError>) => {
+    return (options?.client ?? client).get<ForgeUpdatesResponse, ForgeUpdatesError, ThrowOnError>({
+        ...options,
+        url: '/updates/{id|slug}/forge_updates.json'
+    });
+};
 
 /**
  * Various statistics about this Modrinth instance
  */
-export const statistics = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => { return (options?.client ?? client).get<StatisticsResponse, StatisticsError, ThrowOnError>({
-    ...options,
-    url: '/statistics'
-}); };
+export const statistics = <ThrowOnError extends boolean = false>(options?: Options<unknown, ThrowOnError>) => {
+    return (options?.client ?? client).get<StatisticsResponse, StatisticsError, ThrowOnError>({
+        ...options,
+        url: '/statistics'
+    });
+};

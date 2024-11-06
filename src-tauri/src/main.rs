@@ -1,9 +1,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use tauri_plugin_deep_link::DeepLinkExt;
 mod error;
 mod plugins;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(
+            plugins::single_instance::handle_instance,
+        ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -11,9 +15,6 @@ fn main() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_single_instance::init(
-            plugins::single_instance::handle_instance,
-        ))
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level_for("tao", log::LevelFilter::Off)

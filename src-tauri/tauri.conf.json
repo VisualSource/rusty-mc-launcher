@@ -12,7 +12,10 @@
 	"bundle": {
 		"active": true,
 		"category": "Utility",
-		"targets": ["msi", "nsis"],
+		"targets": [
+			"msi",
+			"nsis"
+		],
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",
@@ -26,7 +29,9 @@
 			"timestampUrl": ""
 		},
 		"longDescription": "A Minecraft launcher and mod installer.",
-		"resources": ["./migrations/*"],
+		"resources": [
+			"./migrations/*"
+		],
 		"shortDescription": "Game Launcher",
 		"createUpdaterArtifacts": "v1Compatible"
 	},
@@ -34,7 +39,9 @@
 		"deep-link": {
 			"mobile": [],
 			"desktop": {
-				"schemes": []
+				"schemes": [
+					"rmcl"
+				]
 			}
 		},
 		"updater": {
@@ -60,9 +67,13 @@
 			}
 		],
 		"security": {
-			"capabilities": ["migrated"],
+			"capabilities": [
+				"migrated"
+			],
 			"assetProtocol": {
-				"scope": ["$APPDATA/**/*"],
+				"scope": [
+					"$APPDATA/**/*"
+				],
 				"enable": true
 			},
 			"csp": null

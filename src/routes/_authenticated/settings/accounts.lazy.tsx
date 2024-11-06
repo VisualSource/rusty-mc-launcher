@@ -61,7 +61,10 @@ function AccountsSettings() {
 				</div>
 				<div>
 					<div className="flex justify-between items-center mb-4 ">
-						<h3 className="text-lg font-medium">Modrinth Account</h3>
+						<div className="mr-1">
+							<h3 className="text-lg font-medium">Modrinth Account</h3>
+							<p className="text-muted-foreground text-sm">Modrinth account login is currently bugged. Please login into the <a className="underline text-blue-500" href="https://modrinth.com">modrinth website</a> then click the login button below.</p>
+						</div>
 						<Button
 							onClick={() =>
 								modrinthAccount ? modrinth.logout() : modrinth.loginPopup()
@@ -80,33 +83,42 @@ function AccountsSettings() {
 						</Button>
 					</div>
 					<ul className="space-y-4">
-						{modrinthAccount ? (
-							<li
-								key={modrinthAccount.id}
-								className="flex flex-row items-center gap-4 rounded-lg border p-4"
-							>
-								<Avatar>
-									<AvatarFallback>
-										<User2 />
-									</AvatarFallback>
-									<AvatarImage src={modrinthAccount.avatar_url} />
-								</Avatar>
-								<div className="flex flex-col">
-									<span className="text-lg">{modrinthAccount.username}</span>
-									<span className="text-muted-foreground text-sm">
-										{modrinthAccount.name ?? modrinthAccount.email}
-									</span>
-								</div>
+						{modrinth.isLoading ? (
+							<li className="flex flex-row items-center justify-center rounded-lg border p-4">
+								Loading Account Details
 							</li>
 						) : (
-							<li className="flex flex-row items-center justify-center rounded-lg border p-4">
-								<Users2 className="mr-2" />
-								No Modrinth account
-							</li>
+							<>
+								{
+									modrinthAccount ? (
+										<li
+											key={modrinthAccount.id}
+											className="flex flex-row items-center gap-4 rounded-lg border p-4"
+										>
+											<Avatar>
+												<AvatarFallback>
+													<User2 />
+												</AvatarFallback>
+												<AvatarImage src={modrinthAccount.avatar_url} />
+											</Avatar>
+											<div className="flex flex-col">
+												<span className="text-lg">{modrinthAccount.username}</span>
+												<span className="text-muted-foreground text-sm">
+													{modrinthAccount.name ?? modrinthAccount.email}
+												</span>
+											</div>
+										</li>
+									) : (
+										<li className="flex flex-row items-center justify-center rounded-lg border p-4">
+											<Users2 className="mr-2" />
+											No Modrinth account
+										</li>
+									)}
+							</>
 						)}
 					</ul>
 				</div>
-			</div>
-		</div>
+			</div >
+		</div >
 	);
 }

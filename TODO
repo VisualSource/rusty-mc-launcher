@@ -4,6 +4,7 @@ Todo:
   ☐ Validate Content
   ☐ Working neoforge install
   ☐ performance changes
+  ☐ Fix modrinth login (Bugged https://github.com/modrinth/code/issues/2339) 
 
   
 Ignore:

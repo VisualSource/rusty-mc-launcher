@@ -3,16 +3,21 @@
 	"identifier": "migrated",
 	"description": "permissions that were migrated from v1",
 	"local": true,
-	"windows": ["main"],
+	"windows": [
+		"main"
+	],
 	"permissions": [
 		"fs:allow-read-file",
 		"fs:allow-write-file",
 		"fs:allow-read-dir",
 		"fs:allow-mkdir",
 		"fs:allow-exists",
+		"deep-link:default",
 		{
 			"identifier": "fs:scope",
-			"allow": ["$APPDATA/**"]
+			"allow": [
+				"$APPDATA/**"
+			]
 		},
 		"core:window:allow-request-user-attention",
 		"core:window:allow-maximize",
@@ -28,7 +33,6 @@
 			"identifier": "shell:allow-execute",
 			"allow": [
 				{
-					"sidecar": false,
 					"name": "windows-open-file",
 					"cmd": "explorer",
 					"args": [
