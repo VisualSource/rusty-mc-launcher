@@ -84,10 +84,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-					version.replace(
-						"latest-",
-						"",
-					) as keyof (typeof latest_data)["latest"]
+						version.replace(
+							"latest-",
+							"",
+						) as keyof (typeof latest_data)["latest"]
 					];
 			}
 

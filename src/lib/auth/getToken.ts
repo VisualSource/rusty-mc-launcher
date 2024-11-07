@@ -1,5 +1,4 @@
-import type { IPublicClientApplication } from "@masl/app/IPublicClientApplication";
-import type { SilentRequest } from "@masl/request/SilentRequest";
+import type { IPublicClientApplication, SilentRequest } from "@azure/msal-browser";
 import { startAuthServer, closeAuthServer } from "@lib/api/plugins/auth";
 import logger from "@system/logger";
 
