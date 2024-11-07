@@ -1,24 +1,24 @@
-import type { ContentType } from "@/lib/models/content";
-import type { Profile } from "@/lib/models/profiles";
 import { invoke, type Channel } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
 import type { z } from "zod";
+import type { ContentType } from "@/lib/models/content";
+import type { Profile } from "@/lib/models/profiles";
 
 export type DownloadEvent =
 	| {
-			event: "started";
-			data: {
-				max_progress: number;
-				message: string;
-			};
-	  }
+		event: "started";
+		data: {
+			max_progress: number;
+			message: string;
+		};
+	}
 	| {
-			event: "progress";
-			data: {
-				amount?: number;
-				message?: string;
-			};
-	  }
+		event: "progress";
+		data: {
+			amount?: number;
+			message?: string;
+		};
+	}
 	| { event: "finished"; data: unknown };
 
 export async function registerDownloadListener(
@@ -34,19 +34,23 @@ export async function getSystemRam() {
 	return value;
 }
 
-export async function uninstallContent(contentId: string, profileId: string) {
-	throw new Error("TODO: implement uninstallContent");
+export async function uninstallContent(contentType: ContentType, profileId: string, filename: string) {
+	await invoke<void>("plugin:rmcl-content|uninstall_content", {
+		content: contentType,
+		filename,
+		profile: profileId
+	})
 }
 
-export async function manualContentImport(
-	contentType: ContentType,
-	profileId: string,
-	path: string,
-) {
-	throw new Error("TODO: implement manualContentImport");
-}
+export async function createProfile(args: z.infer<typeof Profile.schema>, copy?: string) {
 
-export async function createProfile(args: z.infer<typeof Profile.schema>) {
+	// insert profile db
+
+	await invoke<void>("plugin:rmcl-content|create_profile", {
+		profile: args.id,
+		copy_from: copy
+	});
+
 	/*
 	await db.execute({
 				query: `BEGIN TRANSACTION;
@@ -87,12 +91,23 @@ export async function createProfile(args: z.infer<typeof Profile.schema>) {
 	throw new Error("TODO: implement createProfile");
 }
 
-export async function copyProfile(oldId: string, nextId: string) {
-	throw new Error("TOD: implement copyProfile");
+export async function copyProfile(oldProfile: string, newProfile: string) {
+
+	// TODO: do db stuff here to create new profile
+
+	await invoke<void>("plugin:rmcl-content|copy_profile", {
+		new_profile: newProfile,
+		old_profile: oldProfile
+	});
 }
 
 export async function deleteProfile(profileId: string) {
-	throw new Error("TOD: implement profileId");
+
+	// TODO: delete profile from db
+
+	await invoke<void>("plugin:rmcl-content|delete_profile", {
+		profile: profileId
+	});
 }
 
 export async function showInFolder(path: string) {

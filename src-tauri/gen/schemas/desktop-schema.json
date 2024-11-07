@@ -2005,6 +2005,21 @@
           "const": "allow-close-auth-server"
         },
         {
+          "description": "Allow for coping a profile files",
+          "type": "string",
+          "const": "allow-copy-profile"
+        },
+        {
+          "description": "Allow for creating a profile's on disk files",
+          "type": "string",
+          "const": "allow-create-profile"
+        },
+        {
+          "description": "Allow for deleting of a profile's on disk files",
+          "type": "string",
+          "const": "allow-delete-profile"
+        },
+        {
           "description": "Enables the execute command.",
           "type": "string",
           "const": "allow-execute"
@@ -2015,6 +2030,21 @@
           "const": "allow-get-system-ram"
         },
         {
+          "description": "Allow for  importing a external file source",
+          "type": "string",
+          "const": "allow-import-external"
+        },
+        {
+          "description": "Allow for checking if a game profile is running.",
+          "type": "string",
+          "const": "allow-is-running"
+        },
+        {
+          "description": "Allow for starting the game",
+          "type": "string",
+          "const": "allow-launch-game"
+        },
+        {
           "description": "Allow for select operation",
           "type": "string",
           "const": "allow-select"
@@ -2023,6 +2053,11 @@
           "description": "Enables the startAuthServer command.",
           "type": "string",
           "const": "allow-start-auth-server"
+        },
+        {
+          "description": "Allow for uninstalling content from disk",
+          "type": "string",
+          "const": "allow-uninstall-content"
         },
         {
           "description": "Allow for listening to download events via channel",
@@ -5145,9 +5180,34 @@
           "const": "rmcl-content:default"
         },
         {
+          "description": "Allow for coping a profile files",
+          "type": "string",
+          "const": "rmcl-content:allow-copy-profile"
+        },
+        {
+          "description": "Allow for creating a profile's on disk files",
+          "type": "string",
+          "const": "rmcl-content:allow-create-profile"
+        },
+        {
+          "description": "Allow for deleting of a profile's on disk files",
+          "type": "string",
+          "const": "rmcl-content:allow-delete-profile"
+        },
+        {
           "description": "Allow quering os for installed ram amount",
           "type": "string",
           "const": "rmcl-content:allow-get-system-ram"
+        },
+        {
+          "description": "Allow for  importing a external file source",
+          "type": "string",
+          "const": "rmcl-content:allow-import-external"
+        },
+        {
+          "description": "Allow for uninstalling content from disk",
+          "type": "string",
+          "const": "rmcl-content:allow-uninstall-content"
         },
         {
           "description": "Allow for listening to download events via channel",
@@ -5158,6 +5218,16 @@
           "description": "Default permissions for the rmcl-game plugin",
           "type": "string",
           "const": "rmcl-game:default"
+        },
+        {
+          "description": "Allow for checking if a game profile is running.",
+          "type": "string",
+          "const": "rmcl-game:allow-is-running"
+        },
+        {
+          "description": "Allow for starting the game",
+          "type": "string",
+          "const": "rmcl-game:allow-launch-game"
         },
         {
           "description": "Default permissions for the rmcl-query plugin",

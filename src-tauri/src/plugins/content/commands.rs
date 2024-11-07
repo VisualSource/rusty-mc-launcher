@@ -9,7 +9,7 @@ use tauri::State;
 use tokio::sync::Mutex;
 
 use crate::error::Error;
-
+/// function to register the download listener to the frontend
 #[tauri::command]
 pub async fn downloads_listener(
     state: State<'_, Mutex<Option<Channel<DownloadEvent>>>>,
@@ -27,9 +27,11 @@ pub async fn downloads_listener(
 pub async fn delete_profile(
     db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
-) -> Result<(), String> {
-    /*let app_dir = state
-        .get_path("path.app")
+) -> Result<(), Error> {
+    let app_dir = db
+        .read()
+        .await
+        .get_setting_as_path("path.app")
         .await?
         .join("profiles")
         .join(&profile);
@@ -37,17 +39,23 @@ pub async fn delete_profile(
     if app_dir.exists() {
         tokio::fs::remove_dir_all(&app_dir).await?;
     }
-    Ok(())*/
-    todo!("Update 'delete_profile'")
+    Ok(())
 }
 
+/// Creates profile folder in profiles dir and copies options.txt from another
+/// profile if given profile id
 #[tauri::command]
 pub async fn create_profile(
     db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
-    copy_options: Option<String>,
-) -> Result<(), String> {
-    /*let root_dir = state.get_path("path.app").await?.join("profiles");
+    copy_from: Option<String>,
+) -> Result<(), Error> {
+    let root_dir = db
+        .read()
+        .await
+        .get_setting_as_path("path.app")
+        .await?
+        .join("profiles");
 
     let new_profile = root_dir.join(&profile);
 
@@ -55,7 +63,7 @@ pub async fn create_profile(
         tokio::fs::create_dir_all(&new_profile).await?;
     }
 
-    if let Some(options) = copy_options {
+    if let Some(options) = copy_from {
         let op = root_dir.join(options).join("options.txt");
         let out = new_profile.join("options.txt");
         if op.exists() && op.is_file() && !out.exists() {
@@ -63,26 +71,27 @@ pub async fn create_profile(
         }
     }
 
-    Ok(())*/
-    todo!("Update 'create_profile'")
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn uninstall_content(
     db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
-    content_type: QueueType,
+    content: QueueType,
     filename: String,
     profile: String,
-) -> Result<(), String> {
-    /*let dir = match content_type {
+) -> Result<(), Error> {
+    let dir = match content {
         QueueType::Mod => "mods",
         QueueType::Resourcepack => "resourcepacks",
         QueueType::Shader => "shaderpacks",
-        _ => return Err(Error::Generic("Can not uninstall content type".to_string())),
+        _ => return Err(Error::Reason("Can not uninstall content type".to_string())),
     };
 
-    let file_path = state
-        .get_path("path.app")
+    let file_path = db
+        .read()
+        .await
+        .get_setting_as_path("path.app")
         .await?
         .join("profiles")
         .join(profile)
@@ -93,34 +102,41 @@ pub async fn uninstall_content(
         tokio::fs::remove_file(&file_path).await?;
     }
 
-    Ok(())*/
-    todo!("Update 'uninstall_content'")
+    Ok(())
 }
 
+/// copy file of a profile into a new profile
 #[tauri::command]
 pub async fn copy_profile(
     db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
-    profile: String,
+    old_profile: String,
     new_profile: String,
-) -> Result<(), String> {
-    /*  let root = state.get_path("path.app").await?.join("profiles");
+) -> Result<(), Error> {
+    let root = db
+        .read()
+        .await
+        .get_setting_as_path("path.app")
+        .await?
+        .join("profiles");
 
-    let a = root.join(profile);
-    let b = root.join(new_profile);
+    let old = root.join(old_profile);
+    let new = root.join(new_profile);
 
-    if !(a.exists() && a.is_dir()) {
-        tokio::fs::create_dir_all(&a).await?;
+    if !(new.exists() && new.is_dir()) {
+        tokio::fs::create_dir_all(&new).await?;
     }
-    if !(b.exists() && b.is_dir()) {
-        tokio::fs::create_dir_all(&b).await?;
+
+    // old dir does not exist or not a dir
+    // so just ignore
+    if !(old.is_dir() && old.exists()) {
+        return Ok(());
     }
 
-    if let Err(err) = copy_dir::copy_dir(&a, &b) {
+    if let Err(err) = copy_dir::copy_dir(&old, &new) {
         log::error!("{}", err.to_string());
     }
 
-    Ok(())*/
-    todo!("Update 'copy_profile'")
+    Ok(())
 }
 
 #[tauri::command]

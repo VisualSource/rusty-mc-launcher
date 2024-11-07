@@ -1,6 +1,11 @@
+use std::path::PathBuf;
+use std::str::FromStr;
+
+use futures::TryFutureExt;
 use time::{Date, PrimitiveDateTime, Time};
 
 use crate::error::{Error, Result};
+use crate::models::setting::Setting;
 use indexmap::IndexMap;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::{Sqlite, SqlitePool, SqlitePoolOptions, SqliteValueRef};
@@ -10,6 +15,27 @@ pub type QueryResult = Vec<IndexMap<String, serde_json::Value>>;
 pub struct Database(pub SqlitePool);
 
 impl Database {
+    pub async fn get_setting(&self, key: &str) -> Result<Option<Setting>> {
+        sqlx::query_as!(Setting, "SELECT * FROM settings WHERE key = ?", key)
+            .fetch_optional(&self.0)
+            .map_err(Error::Sqlx)
+            .await
+    }
+
+    pub async fn get_setting_as_path(&self, key: &str) -> Result<PathBuf> {
+        let setting = self.get_setting(key).await?;
+
+        if let Some(s) = setting {
+            return PathBuf::from_str(&s.value)
+                .map_err(|_| Error::Generic("Failed to make pathbuf".into()));
+        }
+
+        Err(Error::Generic(format!(
+            "Failed to get path from setting '{}'",
+            key
+        )))
+    }
+
     pub async fn close(&self) {
         self.0.close().await;
     }

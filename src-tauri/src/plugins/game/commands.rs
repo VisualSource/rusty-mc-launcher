@@ -1,14 +1,19 @@
-use minecraft_launcher_lib::{launcher::LaunchConfig, process::Processes};
+use minecraft_launcher_lib::{
+    launcher::{start_game, LaunchConfig},
+    process::Processes,
+};
 use tokio::sync::RwLock;
 
 use crate::error::Error;
 
 #[tauri::command]
 pub async fn launch_game(
+    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     ps: tauri::State<'_, RwLock<Processes>>,
     config: LaunchConfig,
-) -> Result<(), String> {
-    todo!("Start instance")
+) -> Result<(), Error> {
+    let dbr = db.write().await;
+    start_game(&dbr, &ps, config).await.map_err(Error::Lib)
 }
 
 #[tauri::command]
