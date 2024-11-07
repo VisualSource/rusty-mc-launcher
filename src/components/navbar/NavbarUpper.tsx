@@ -21,6 +21,7 @@ import {
 	ScrollText,
 } from "lucide-react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { InteractionStatus } from "@azure/msal-browser";
 import { exit } from "@tauri-apps/plugin-process";
 import { Link } from "@tanstack/react-router";
 
@@ -32,7 +33,7 @@ import {
 	DropdownMenuTrigger,
 } from "@component/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
-import { InteractionStatus } from "@masl/utils/BrowserConstants";
+
 import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
 import { Button } from "@component/ui/button";

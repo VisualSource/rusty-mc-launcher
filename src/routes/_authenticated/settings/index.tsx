@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { version } from "@masl/packageMetadata";
+import { version } from "@azure/msal-browser";
 import { Loading } from "@/components/Loading";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
@@ -44,7 +44,7 @@ function SystemSettings() {
 		},
 	});
 
-	const onSubmit = async () => {};
+	const onSubmit = async () => { };
 
 	return (
 		<div className="space-y-6">

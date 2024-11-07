@@ -38,7 +38,7 @@ import {
 import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UNCATEGORIZEDP_GUID, categories } from "@/lib/models/categories";
+import { UNCATEGORIZEDP_GUID, getCategoriesFromProfile } from "@/lib/models/categories";
 import { query } from "@lib/api/plugins/query";
 import { Profile } from "@/lib/models/profiles";
 import { QueueItem } from "@/lib/models/download_queue";
@@ -111,7 +111,7 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 		}
 	}
 	await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
-	const cats = await categories.getCategoriesForProfile(og.id);
+	const cats = await getCategoriesFromProfile(og.id);
 	await Promise.allSettled(
 		cats.map((e) =>
 			queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, e.category] }),
@@ -397,7 +397,7 @@ function ProfileEdit() {
 									<AlertDialogCancel>Cancel</AlertDialogCancel>
 									<AlertDialogAction
 										onClick={async () => {
-											const cats = await categories.getCategoriesForProfile(
+											const cats = await getCategoriesFromProfile(
 												profileQuery.data.id,
 											);
 

@@ -13,10 +13,11 @@ import {
 import {
 	BrowserAuthError,
 	BrowserAuthErrorCodes,
-} from "@/lib/masl/error/BrowserAuthError";
-import type { EndSessionRequest } from "@/lib/masl/request/EndSessionRequest";
-import type { Configuration } from "@/lib/masl/config/Configuration";
-import type { PopupRequest } from "@/lib/masl/request/PopupRequest";
+	type EndSessionRequest,
+	type Configuration,
+	type PopupRequest
+} from "@azure/msal-browser"
+
 import { modrinthClient } from "../../modrinthClient";
 import { queryClient } from "../../queryClient";
 import { PopupClient } from "./PopupClient";

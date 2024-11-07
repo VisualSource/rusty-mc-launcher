@@ -1,9 +1,8 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
 import { exit } from "@tauri-apps/plugin-process";
 import { toast } from "react-toastify";
-
+import { stop, launchGame } from "@/lib/api/plugins/game";
 import type { Profile } from "@/lib/models/profiles";
-import { launchGame, stop } from "@/lib/system/commands";
 import useIsGameRunning from "@hook/useIsGameRunning";
 import { Button, type ButtonProps } from "./button";
 import { isOption } from "@/lib/models/settings";

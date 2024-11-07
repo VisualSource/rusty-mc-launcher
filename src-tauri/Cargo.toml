@@ -17,7 +17,7 @@ oauth2 = "4.4.2"
 # old feature "protocol-asset"
 tauri = { version = "2.0", features = ["protocol-asset"  ] }
 tauri-plugin-http = {version ="2.0", features = ["multipart"] }
-tauri-plugin-single-instance = { version ="2.0",  features = ["deep-link"]}
+tauri-plugin-single-instance = { version ="2.0",  features = ["deep-link"] }
 tauri-plugin-deep-link = "2.0"
 tauri-plugin-process = "2.0"
 tauri-plugin-dialog = "2.0"

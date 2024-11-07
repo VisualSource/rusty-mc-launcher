@@ -2000,6 +2000,11 @@
           "const": "default"
         },
         {
+          "description": "Enables the closeAuthServer comamnd.",
+          "type": "string",
+          "const": "allow-close-auth-server"
+        },
+        {
           "description": "Enables the execute command.",
           "type": "string",
           "const": "allow-execute"
@@ -5123,6 +5128,11 @@
           "description": "Default permissions for the rmcl-auth plugin",
           "type": "string",
           "const": "rmcl-auth:default"
+        },
+        {
+          "description": "Enables the closeAuthServer comamnd.",
+          "type": "string",
+          "const": "rmcl-auth:allow-close-auth-server"
         },
         {
           "description": "Enables the startAuthServer command.",

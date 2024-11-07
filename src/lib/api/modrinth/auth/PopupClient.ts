@@ -1,11 +1,6 @@
-import { type UnlistenFn, once } from "@tauri-apps/api/event";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { open } from "@tauri-apps/plugin-shell";
-import {
-	BrowserAuthErrorCodes,
-	createBrowserAuthError,
-} from "@masl/error/BrowserAuthError";
-import { auth } from "@system/logger";
+import { BrowserAuthErrorCodes } from "@azure/msal-browser";
 import { toast } from "react-toastify";
 
 export type AuthResponse = {
@@ -63,7 +58,7 @@ export class PopupClient {
 		});
 
 		if (!response.ok) {
-			throw createBrowserAuthError(BrowserAuthErrorCodes.postRequestFailed);
+			throw new Error("Login request fialed", { cause: BrowserAuthErrorCodes.postRequestFailed })
 		}
 
 		return response.json() as Promise<AuthResponse>;

@@ -7,6 +7,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { toast } from "react-toastify";
 import { useRef } from "react";
 
+
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -21,9 +22,10 @@ import {
 import { getProjectVersions } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
-import type { ContentType, ProfileContentItem } from "@/lib/models/content";
+import type { ContentItem, ContentType } from "@/lib/models/content";
 import { modrinthClient } from "@/lib/api/modrinthClient";
-import { db, uninstallItem } from "@/lib/system/commands";
+import { uninstallContent } from "@lib/api/plugins/content";
+import { query } from "@lib/api/plugins/query";
 import { install_known } from "@/lib/system/install";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
@@ -34,13 +36,9 @@ import type { Profile } from "@/lib/models/profiles";
 async function uninstall(filename: string, type: string, profile: string) {
 	try {
 		if (!filename) throw new Error("Missing file name");
-		await uninstallItem(type, filename, profile);
+		await uninstallContent(type, /*filename,*/ profile);
 
-		await db.execute({
-			query:
-				"DELETE FROM profile_content WHERE profile = ? AND file_name = ? AND type = ?",
-			args: [profile, filename, type],
-		});
+		await query("DELETE FROM profile_content WHERE profile = ? AND file_name = ? AND type = ?", [profile, filename, type])
 
 		await queryClient.invalidateQueries({
 			queryKey: ["WORKSHOP_CONTENT", type, profile],
@@ -57,7 +55,7 @@ async function uninstall(filename: string, type: string, profile: string) {
 const checkForUpdate = async (
 	profile: Profile,
 	project: Project | null,
-	item: ProfileContentItem,
+	item: ContentItem,
 ) => {
 	if (!project) return;
 	const toastId = toast.loading("Checking for update.");
