@@ -50,7 +50,7 @@ export const useProfile = (id?: string, load = true) => {
 
 		async onSuccess(data) {
 			if (!data) {
-				navigate({ to: "/library" });
+				navigate({ to: "/" });
 				return;
 			}
 

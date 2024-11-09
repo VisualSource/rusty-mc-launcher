@@ -15,7 +15,7 @@ import { Loading } from "@/components/Loading";
 import logger from "@system/logger";
 import { ContentItem } from "@/lib/models/content";
 import { query } from "@lib/api/plugins/query";
-import { manualContentImport } from "@lib/api/plugins/content";
+//import { manualContentImport } from "@lib/api/plugins/content";
 import {
 	getProjects,
 	versionsFromHashes,
@@ -195,7 +195,8 @@ function ProfileContent() {
 
 							const id = toast.loading("Importing Content");
 							try {
-								await manualContentImport(selected, profile.data.id, file);
+								//TODO: fix this
+								//await manualContentImport(selected, profile.data.id, file);
 								await queryClient.invalidateQueries({
 									queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
 								});

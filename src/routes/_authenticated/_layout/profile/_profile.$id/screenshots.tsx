@@ -1,13 +1,14 @@
 import { ErrorComponent, createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { exists, readDir } from "@tauri-apps/plugin-fs";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
 import { FileImage } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { showInFolder } from "@lib/api/plugins/content";
 import { getConfig } from "@/lib/models/settings";
 import { Loading } from "@/components/Loading";
-import { showInFolder } from "@lib/api/plugins/content";
 
 const profileScreenshotsQueryOptions = (id: string) =>
 	queryOptions({
@@ -64,7 +65,7 @@ function Screenshots() {
 					</Avatar>
 				))
 			) : (
-				<div className="flex flex-col justify-center items-center h-full">
+				<div className="flex flex-col justify-center items-center h-full col-span-2">
 					No Screenshots!
 				</div>
 			)}

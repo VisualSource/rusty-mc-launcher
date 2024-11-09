@@ -1,6 +1,6 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import update from "immutability-helper";
 import { Plus } from "lucide-react";
 
@@ -188,7 +188,7 @@ export const JVMArgForm: React.FC<{
 									return data;
 								});
 							}}
-							className="select-none cursor-not-allowed"
+							className="select-none cursor-alias"
 							key={`${i + 1}`}
 						>
 							{e}

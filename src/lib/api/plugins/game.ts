@@ -8,9 +8,14 @@ export type LaunchConfig = {
 	profile_id: string,
 }
 export async function launchGame(config: LaunchConfig) {
-	await invoke<void>("plugin:rmcl-game|launch_game", {
-		config
-	});
+	try {
+		await invoke<void>("plugin:rmcl-game|launch_game", {
+			config
+		});
+	} catch (error) {
+		if (error instanceof Error) throw error;
+		throw new Error(error as string);
+	}
 }
 export async function isRunning(id: string): Promise<boolean> {
 	return invoke<boolean>("plugin:rmcl-game|is_running", {

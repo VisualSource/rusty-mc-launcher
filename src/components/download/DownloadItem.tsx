@@ -12,7 +12,7 @@ import { QueueItemState } from "@/lib/QueueItemState";
 import { queryClient } from "@/lib/api/queryClient";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Button } from "../ui/button";
-import { db } from "@system/commands";
+import { query } from "@/lib/api/plugins/query";
 
 const DownloadItem: React.FC<QueueItem> = ({
 	id,
@@ -46,10 +46,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 				<div>
 					<Button
 						onClick={async () => {
-							await db.execute({
-								query: "DELETE FROM download_queue WHERE id = ?",
-								args: [id],
-							});
+							await query("DELETE FROM download_queue WHERE id = ?;", [id]).run();
 							await queryClient.invalidateQueries({
 								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
 							});
@@ -66,10 +63,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 				<div className="flex gap-2">
 					<Button
 						onClick={async () => {
-							await db.execute({
-								query: "UPDATE download_queue SET state = ? WHERE id = ?",
-								args: [QueueItemState.PENDING, id],
-							});
+							await query("UPDATE download_queue SET state = ? WHERE id = ?;", [QueueItemState.PENDING, id]).run();
 							await queryClient.invalidateQueries({
 								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 							});
@@ -84,10 +78,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 					</Button>
 					<Button
 						onClick={async () => {
-							await db.execute({
-								query: "DELETE FROM download_queue WHERE id = ?",
-								args: [id],
-							});
+							await query("DELETE FROM download_queue WHERE id = ?;", [id]).run();
 							await queryClient.invalidateQueries({
 								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
 							});

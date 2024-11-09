@@ -9,12 +9,12 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { query } from "@/lib/api/plugins/query";
 import { Profile } from "@/lib/models/profiles";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import PlayButton from "@/components/ui/play";
 import { KEY_PROFILE } from "@/hooks/keys";
-import { query } from "@/lib/api/plugins/query";
 
 export const profileQueryOptions = (id: string) =>
 	queryOptions({
@@ -59,7 +59,7 @@ function ProfilePage() {
 	return (
 		<div className="grid h-full grid-cols-12 p-2">
 			<div className="col-span-3 h-full space-y-4 rounded-lg bg-zinc-900 p-2 shadow-md">
-				<div className="flex justify-between gap-2">
+				<div className="flex gap-2 justify-center">
 					<Avatar className="h-28 w-28 rounded-3xl bg-zinc-600 shadow-xl">
 						<AvatarFallback className="rounded-none bg-transparent">
 							<Box className="h-14 w-14" />

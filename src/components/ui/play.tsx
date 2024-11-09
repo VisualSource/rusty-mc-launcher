@@ -10,6 +10,36 @@ import useUser from "@/hooks/useUser";
 import logger from "@system/logger";
 import { cn } from "@/lib/utils";
 
+const DisplayState: React.FC<{ isRunning: boolean, state: Profile["state"] }> = ({ state, isRunning }) => {
+	switch (state) {
+		case "UNINSTALLED":
+			return (
+				<span className="inline-flex">
+					<Download className="mr-1 h-5 w-5" /> Install
+				</span>
+			);
+		case "INSTALLING":
+			return (
+				<span className="inline-flex animate-pulse">
+					<DatabaseZap className="mr-1 h-5 w-5 animate-bounce" /> Installing...
+				</span>
+			);
+		case "INSTALLED":
+			if (isRunning) return (
+				<span className="inline-flex">
+					<StopCircle className="mr-1 h-5 w-5" /> Stop
+				</span>
+			);
+			return (
+				<span className="inline-flex">
+					<Play className="mr-1 h-5 w-5" /> Play
+				</span>
+			);
+		default:
+			return null;
+	}
+}
+
 const PlayButton: React.FC<
 	ButtonProps & { profile: Pick<Profile, "id" | "state"> }
 > = ({ profile, className, ...props }) => {
@@ -44,9 +74,10 @@ const PlayButton: React.FC<
 						exitTimer = setTimeout(() => exit(0), 12_000);
 					}
 				} catch (error) {
+					console.error(typeof error);
 					logger.error((error as Error).message);
-					toast.error("Failed to launch game!", {
-						data: { error: (error as Error).message },
+					toast.error("Failed to start minecraft", {
+						data: error,
 					});
 					clearTimeout(exitTimer);
 				}
@@ -62,28 +93,7 @@ const PlayButton: React.FC<
 				className,
 			)}
 		>
-			{profile.state === "INSTALLED" && !isRunning ? (
-				<>
-					{" "}
-					<Play className="mr-1 h-5 w-5" /> Play
-				</>
-			) : null}
-			{profile.state === "INSTALLED" && isRunning ? (
-				<>
-					{" "}
-					<StopCircle className="mr-1 h-5 w-5" /> Stop
-				</>
-			) : null}
-			{profile.state === "INSTALLING" ? (
-				<span className="inline-flex animate-pulse">
-					<DatabaseZap className="mr-1 h-5 w-5 animate-bounce" /> Installing...
-				</span>
-			) : null}
-			{profile.state === "UNINSTALLED" ? (
-				<>
-					<Download className="mr-1 h-5 w-5" /> Install
-				</>
-			) : null}
+			<DisplayState state={profile.state} isRunning={isRunning} />
 		</Button>
 	);
 };

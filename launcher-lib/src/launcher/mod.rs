@@ -178,7 +178,7 @@ pub async fn start_game(
         .normalize();
     if !manifest_directory.exists() || !manifest_directory.is_file() {
         return Err(Error::NotFound(format!(
-            "Manifest directory was not found: ({})",
+            "Version manifest was not found at ({})",
             manifest_directory.to_string_lossy()
         )));
     }

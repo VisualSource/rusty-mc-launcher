@@ -92,7 +92,7 @@ function DownloadSettings() {
 										<Input {...field} placeholder="app directory" />
 									</FormControl>
 									<FormDescription>
-										The directory where all file are put. Ex. profile, and game
+										The directory where all files are put. Ex. profile, and game
 										runtime files.
 									</FormDescription>
 									<FormMessage />
@@ -105,12 +105,6 @@ function DownloadSettings() {
 						</div>
 					</form>
 				</Form>
-				<div className="flex flex-col">
-					<Label className="mb-4">Clear Cached Images</Label>
-					<Button disabled type="button">
-						Clear
-					</Button>
-				</div>
 			</div>
 
 			<h3 className="text-lg font-medium">Minecraft Instances</h3>

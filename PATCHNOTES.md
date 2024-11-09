@@ -1,10 +1,24 @@
 # v0.8.0-pre1
 
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.7.3...v0.8.0](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.7.2...v0.8.0)
+
 #### New
 
 #### Changes 
+- Changed format of modrinth notifications.
+- Added notice about modrinth login on account page.
+- Updated tauri to v2.
+- Use pnpm patch to patch masl.
+- Center "No Screenshots!" text on profile screenshots page.
+- Center profile icon on profile page.
+- Update issuse reporter.
+- Fix typo on download settings page of the "App Directory" description.
+- Remove "Clear Cached Images" button on download settings page.
+- Remove file path when listing installed minecraft versions in download settings page.
+- Fix height on card in the Popular modpacks section on home page.
 
 #### Fixes
+- Fix Issue [21](https://github.com/VisualSource/rusty-mc-launcher/issues/21)
 
 # v0.7.3
 
