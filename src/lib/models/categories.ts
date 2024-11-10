@@ -22,5 +22,5 @@ export class Category {
 }
 
 export function getCategoriesFromProfile(profile: string) {
-	return query("SELECT * FROM categories WHERE profile = ?;", [profile]).as(Category).all()
+	return query`SELECT * FROM categories WHERE profile = ${profile};`.as(Category).all()
 }

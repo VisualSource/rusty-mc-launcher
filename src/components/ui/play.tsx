@@ -74,7 +74,6 @@ const PlayButton: React.FC<
 						exitTimer = setTimeout(() => exit(0), 12_000);
 					}
 				} catch (error) {
-					console.error(typeof error);
 					logger.error((error as Error).message);
 					toast.error("Failed to start minecraft", {
 						data: error,

@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { query } from "@lib/api/plugins/query";
-import type { QueryResult } from "../api/plugins/query";
+import { query, type QueryResult } from "@lib/api/plugins/query";
 
 export async function getConfig(id: string): Promise<Setting | undefined> {
-	return query("SELECT * FROM settings WHERE key = ? LIMIT 1", [id])
+	return query`SELECT * FROM settings WHERE key = ${id} LIMIT 1;`
 		.as(Setting)
 		.get();
 }
@@ -13,11 +12,7 @@ export async function addConfig(
 	value: string,
 	metadata: string | null = null,
 ) {
-	return query("INSERT INTO settings VALUES (?,?,?)", [
-		option,
-		value,
-		metadata,
-	]).run();
+	return query`INSERT INTO settings VALUES (${option},${value},${metadata})`.run();
 }
 
 export async function updateConfig(
@@ -26,16 +21,9 @@ export async function updateConfig(
 	metadata?: string | null,
 ) {
 	if (metadata !== undefined) {
-		return query("UPDATE settings SET value = ?, metadata = ? WHERE key = ?;", [
-			value,
-			metadata,
-			option,
-		]).run();
+		return query`UPDATE settings SET value = ${value}, metadata = ${metadata} WHERE key = ${option};`.run();
 	}
-	return query("UPDATE settings SET value = ? WHERE key = ?;", [
-		value,
-		option,
-	]).run();
+	return query`UPDATE settings SET value = ${value} WHERE key = ${option};`.run();
 }
 
 export async function isOption(opt: string, value: string) {
@@ -58,54 +46,3 @@ export class Setting {
 		this.value = args.value as string;
 	}
 }
-/*
-export const settings = {
-	name: "settings",
-	schema: ,
-
-	async getLike(value: string) {
-		return db.select({
-			query: `SELECT * FROM settings WHERE key LIKE '${value}';`,
-			schema: settings.schema,
-		});
-	},
-
-	async update(key: string, value: string) {
-		return db.execute({
-			query: "UPDATE settings SET value = ? WHERE key = ?;",
-			args: [value, key],
-		});
-	},
-
-	async insert(key: string, value: string, metadata: string | null = null) {
-		await db.execute({
-			query: "INSERT INTO settings VALUES (?,?,?)",
-			args: [key, metadata, value],
-		});
-	},
-
-	async is_true(key: string) {
-		const result = await this.select(key);
-
-		const setting = result.at(0);
-		if (!setting) return false;
-		return setting.value === "TRUE";
-	},
-
-	async get_setting(key: string) {
-		const reuslt = await this.select(key);
-		const setting = reuslt.at(0);
-		if (!setting) throw new Error(`No key with name ${key} exists.`);
-		return setting;
-	},
-
-	async select(key: string) {
-		return db.select({
-			query: "SELECT * FROM settings WHERE key = ?",
-			args: [key],
-			schema: settings.schema,
-		});
-	},
-};
-
-export type Setting = z.infer<typeof settings.schema>;*/

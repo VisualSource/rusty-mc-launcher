@@ -62,7 +62,7 @@ function CreateProfile() {
 				version = latest_data.latest.release;
 			}
 
-			await createProfile(ev);
+			await createProfile(ev, ev.copyOptions);
 
 			await queryClient.invalidateQueries({
 				queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],

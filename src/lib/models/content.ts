@@ -1,9 +1,6 @@
 import { z } from "zod";
 import type { QueryResult } from "../api/plugins/query";
-
-const contentTypeSchema = z.enum(["Mod", "Resourcepack", "Shader", "Datapack"]);
-
-export type ContentType = z.infer<typeof contentTypeSchema>;
+import { contentTypeSchema, type ContentType } from "./download_queue";
 
 export class ContentItem {
 	static schema = z.object({
@@ -19,13 +16,13 @@ export class ContentItem {
 	public profile: string;
 	public file_name: string;
 	public version: string | null;
-	public type: ContentType;
+	public type: keyof typeof ContentType;
 	constructor(args: QueryResult) {
 		this.id = args.id as string;
 		this.sha1 = args.sha1 as string;
 		this.profile = args.profile as string;
 		this.file_name = args.file_name as string;
 		this.version = args.version as string | null;
-		this.type = args.type as ContentType;
+		this.type = args.type as keyof typeof ContentType;
 	}
 }

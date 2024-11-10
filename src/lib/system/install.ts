@@ -12,14 +12,16 @@ import {
 	getVersion,
 	getProject,
 } from "../api/modrinth/services.gen";
-import { type ContentType, QueueItem } from "../models/download_queue";
+import { QueueItem } from "../models/download_queue";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { askFor } from "@/components/dialog/AskDialog";
 import { ContentItem } from "../models/content";
 import { uninstallContent } from "@lib/api/plugins/content";
+import { ContentType } from "@lib/models/download_queue";
 import { query } from "@lib/api/plugins/query";
 import type { Profile } from "../models/profiles";
 import { modrinthClient } from "../api/modrinthClient";
+import { QueueItemState } from "../QueueItemState";
 
 async function getContentVersion(
 	current: VersionDependency,
@@ -80,10 +82,7 @@ async function* getDependencies(
 		if (!file) throw new Error("Missing file download");
 
 		if (current.dependency_type === "incompatible") {
-			const incompatible = await query(
-				"SELECT * FROM profile_content WHERE id = ? AND profile = ? LIMIT 1;",
-				[version.project_id, profile],
-			)
+			const incompatible = await query`SELECT * FROM profile_content WHERE id = ${version.project_id} AND profile = ${profile} LIMIT 1;`
 				.as(ContentItem)
 				.get();
 
@@ -218,7 +217,7 @@ export async function install_known(
 	const content_id = project.type.replace(
 		/^\w/,
 		project.type[0].toUpperCase(),
-	) as ContentType;
+	) as keyof typeof ContentType;
 	const queue_id = crypto.randomUUID();
 
 	await QueueItem.insert({
@@ -288,7 +287,7 @@ export async function install(data: Project) {
 				const content_id = data.project_type.replace(
 					/^\w/,
 					data.project_type[0].toUpperCase(),
-				) as ContentType;
+				) as keyof typeof ContentType;
 				const queue_id = crypto.randomUUID();
 
 				await QueueItem.insert({
@@ -300,7 +299,7 @@ export async function install(data: Project) {
 					profile_id: profile.id,
 					content_type: content_id,
 					created: new Date().toISOString(),
-					state: "PENDING",
+					state: QueueItemState.PENDING,
 					metadata: {
 						content_type: content_id,
 						profile: profile.id,
@@ -398,7 +397,7 @@ export async function install(data: Project) {
 				const content_id = data.project_type.replace(
 					/^\w/,
 					data.project_type[0].toUpperCase(),
-				) as ContentType;
+				) as keyof typeof ContentType;
 				const queue_id = crypto.randomUUID();
 
 				await QueueItem.insert({
@@ -410,7 +409,7 @@ export async function install(data: Project) {
 					profile_id: profile.id,
 					content_type: content_id,
 					created: new Date().toISOString(),
-					state: "PENDING",
+					state: QueueItemState.PENDING,
 					metadata: {
 						content_type: content_id,
 						profile: profile.id,
@@ -489,11 +488,11 @@ export async function install(data: Project) {
 					display_name: data.title ?? "Unknown",
 					icon: data.icon_url ?? null,
 					profile_id: profile,
-					content_type: "Modpack",
+					content_type: ContentType.Modpack,
 					created: new Date().toISOString(),
-					state: "PENDING",
+					state: QueueItemState.PENDING,
 					metadata: {
-						content_type: "Modpack",
+						content_type: ContentType.Modpack,
 						profile,
 						files: [
 							{

@@ -8,7 +8,8 @@ import type { Profile } from "../models/profiles";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import logger from "./logger";
-import { query } from "../api/plugins/query";
+import { transaction } from "../api/plugins/query";
+import { ContentType } from "../models/download_queue";
 
 export type Loader = "vanilla" | "forge" | "fabric" | "quilt" | "neoforge";
 
@@ -84,10 +85,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-						version.replace(
-							"latest-",
-							"",
-						) as keyof (typeof latest_data)["latest"]
+					version.replace(
+						"latest-",
+						"",
+					) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -111,14 +112,8 @@ const import_profiles = async () => {
 			});
 		}
 
-		query(
-			`INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${Array.from(
-				{ length: profiles.length },
-			)
-				.fill(0)
-				.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?)")
-				.join(", ")};`,
-			profiles.flatMap((e) => [
+		await transaction((tx) => {
+			tx.batch("INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES", profiles.map((e) => [
 				e.id,
 				e.name,
 				e.icon,
@@ -131,38 +126,26 @@ const import_profiles = async () => {
 				e.resolution_width,
 				e.resolution_width,
 				e.state,
-			]),
-		).run();
+			]));
 
-		await queryClient.invalidateQueries({
-			queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
-		});
-
-		await query(
-			`INSERT INTO download_queue VALUES ${Array.from({
-				length: profiles.length,
-			})
-				.fill(0)
-				.map((_) => "(?,?,?,?,?,?,?,?,?,?)")
-				.join(", ")};`,
-			profiles.flatMap((e) => [
+			tx.batch("INSERT INTO download_queue ('id','priority','display_name','icon','profile_id','content_type','metadata') VALUES", profiles.map((e) => [
 				crypto.randomUUID(),
-				1,
 				0,
 				e.name,
 				e.icon,
 				e.id,
-				new Date().toISOString(),
-				"Client",
+				ContentType.Client,
 				JSON.stringify({
 					version: e.version,
 					loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
 					loader_version: e.loader_version,
 				}),
-				"PENDING",
-			]),
-		).run();
+			]));
+		});
 
+		await queryClient.invalidateQueries({
+			queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
+		});
 		await queryClient.invalidateQueries({
 			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 		});

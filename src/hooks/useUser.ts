@@ -1,12 +1,13 @@
 import { useAccount, useMsal } from "@azure/msal-react";
+import type { AccountInfo } from "@azure/msal-browser";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import { startAuthServer, closeAuthServer } from "@lib/api/plugins/auth";
 import { getMinecraftAccount } from "@lib/api/minecraftAccount";
-import type { AccountInfo } from "@masl/naa/AccountInfo";
 import getToken from "@lib/auth/getToken";
 import { auth } from "@system/logger";
+
 
 const useUser = () => {
 	const msAccount = useAccount();

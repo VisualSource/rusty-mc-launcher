@@ -45,10 +45,7 @@ const useCategoryMutation = () => {
 						],
 					);
 
-					await query(
-						"INSERT INTO categories ('profile','category') VALUES (?,?);",
-						[data.profile, data.category],
-					).run();
+					await query`INSERT INTO categories ('profile','category') VALUES (${data.profile}, ${data.category});`.run();
 					break;
 				}
 				case "remove": {
@@ -57,10 +54,8 @@ const useCategoryMutation = () => {
 						(old: Category[]) =>
 							old.filter((e) => e.category !== data.category),
 					);
-					await query(
-						"DELETE FROM categories WHERE profile = ? AND category = ?",
-						[data.profile, data.category],
-					).run();
+
+					await query`DELETE FROM categories WHERE profile = ${data.profile} AND category = ${data.category}`.run();
 					break;
 				}
 			}

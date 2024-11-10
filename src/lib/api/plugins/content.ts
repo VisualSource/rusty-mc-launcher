@@ -1,8 +1,9 @@
 import { invoke, type Channel } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
 import type { z } from "zod";
-import type { ContentType } from "@/lib/models/content";
 import type { Profile } from "@/lib/models/profiles";
+import { transaction } from "./query";
+import { ContentType } from "@/lib/models/download_queue";
 
 export type DownloadEvent =
 	| {
@@ -34,7 +35,7 @@ export async function getSystemRam() {
 	return value;
 }
 
-export async function uninstallContent(contentType: ContentType, profileId: string, filename: string) {
+export async function uninstallContent(contentType: keyof typeof ContentType, profileId: string, filename: string) {
 	await invoke<void>("plugin:rmcl-content|uninstall_content", {
 		content: contentType,
 		filename,
@@ -43,52 +44,19 @@ export async function uninstallContent(contentType: ContentType, profileId: stri
 }
 
 export async function createProfile(args: z.infer<typeof Profile.schema>, copy?: string) {
-
-	// insert profile db
-
+	const queueId = crypto.randomUUID();
 	await invoke<void>("plugin:rmcl-content|create_profile", {
 		profile: args.id,
 		copy_from: copy
 	});
-
-	/*
-	await db.execute({
-				query: `BEGIN TRANSACTION;
-					INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?);
-					INSERT INTO download_queue VALUES (?,?,
-					(SELECT COUNT(*) as count FROM download_queue WHERE state = 'PENDING'),
-					?,?,?,?,?,?,?);
-				COMMIT;`,
-				args: [
-					ev.id,
-					ev.name,
-					ev.icon ?? null,
-					ev.date_created,
-					ev.last_played ?? null,
-					version,
-					ev.loader,
-					ev.loader_version ?? null,
-					ev.java_args ?? null,
-					ev.resolution_width ?? null,
-					ev.resolution_height ?? null,
-					"INSTALLING",
-					queue_id,
-					1,
-					`Minecraft ${version} ${ev.loader}`,
-					null,
-					ev.id,
-					new Date().toISOString(),
-					"Client",
-					JSON.stringify({
-						version: version,
-						loader: ev.loader.replace(/^\w/, ev.loader[0].toUpperCase()),
-						loader_version: ev.loader_version,
-					}),
-					"PENDING",
-				],
-			});
-	*/
-	throw new Error("TODO: implement createProfile");
+	await transaction((tx) => {
+		tx.query`INSERT INTO profiles (id,name,icon,date_created,version,loader,loader_version,java_args,resolution_width,resolution_height) VALUES (${args.id},${args.name},${args.icon},${args.date_created},${args.version},${args.loader_version},${args.java_args},${args.resolution_width},${args.resolution_height});`
+		tx.query`INSERT INTO download_queue (id,priority,display_name,profile_id,content_type,metadata) VALUES (${queueId},1,${`Minecraft ${args.loader} ${args.version}`},${args.id},${ContentType.Client},${JSON.stringify({
+			version: args.version,
+			loader: args.loader.replace(/^\w/, args.loader[0].toUpperCase()),
+			loader_version: args.loader_version,
+		})});`;
+	});
 }
 
 export async function copyProfile(oldProfile: string, newProfile: string) {

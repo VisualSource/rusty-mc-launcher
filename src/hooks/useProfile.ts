@@ -13,16 +13,13 @@ const handleMutate = async (ev: RequestType | RequestDelete) => {
 		const values = Object.entries(ev.data)
 			.filter((e) => e[0] !== "id")
 			.map((key, value) => `${key}='${value.toString()}'`);
-
-		await query(`UPDATE profiles SET ${values.join(", ")} WHERE id = ?`, [
-			ev.data.id,
-		]).run();
-
+		//TODO: FIX this will not work as intended
+		await query`UPDATE profiles SET ${values.join(", ")} WHERE id = ${ev.data.id}`.run();
 		return ev.data;
 	}
 
 	if (ev.type === "delete") {
-		await query("DELETE FROM profiles WHERE id = ?", [ev.data.id]).run();
+		await query`DELETE FROM profiles WHERE id = ${ev.data.id}`.run();
 		return null;
 	}
 };
@@ -35,9 +32,7 @@ export const useProfile = (id?: string, load = true) => {
 		queryKey: [KEY_PROFILE, id],
 		queryFn: async () => {
 			logger.info(`Loading Profile ${id}`);
-			const item = await query("SELECT * FROM profiles WHERE id = ? LIMIT 1;", [
-				id,
-			])
+			const item = await query`SELECT * FROM profiles WHERE id = ${id} LIMIT 1;`
 				.as(Profile)
 				.get();
 			if (!item) throw new Error("Failed to get minecraft profile");

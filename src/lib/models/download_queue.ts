@@ -1,19 +1,10 @@
 import { z } from "zod";
-import { QueueItemState } from "../QueueItemState";
 import { type QueryResult, query } from "../api/plugins/query";
+import { QueueItemState } from "../QueueItemState";
 
-const contentTypeSchema = z.enum([
-	"Client",
-	"Modpack",
-	"Mod",
-	"Resourcepack",
-	"Shader",
-	"Datapack",
-	"CurseforgeModpack",
-	"SystemUpdate",
-]);
+export const contentTypeSchema = z.enum(["Client", "Modpack", "Resourcepack", "Shader", "Datapack", "CurseforgeModpack", "SystemUpdate"]);
+export const ContentType = z.util.arrayToEnum(["Client", "Modpack", "Resourcepack", "Shader", "Datapack", "CurseforgeModpack", "SystemUpdate"]);
 
-export type ContentType = z.infer<typeof contentTypeSchema>;
 export class QueueItem {
 	static schema = z.object({
 		id: z.string().uuid(),
@@ -52,18 +43,7 @@ export class QueueItem {
 			metadata: Record<string, unknown>;
 		},
 	) {
-		return query("INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?);", [
-			args.id,
-			args.display ? 0 : 1,
-			args.priority,
-			args.display_name,
-			args.icon,
-			args.profile_id,
-			new Date().toISOString(),
-			args.content_type,
-			JSON.stringify(args.metadata),
-			args.state,
-		]).run();
+		return query`INSERT INTO download_queue VALUES (${args.id},${args.display ? 0 : 1},${args.priority},${args.display_name},${args.icon},${args.profile_id},${new Date().toISOString()},${args.content_type},${JSON.stringify(args.metadata)},${args.state});`.run();
 	}
 	public id: string;
 	public display: boolean;
@@ -73,7 +53,7 @@ export class QueueItem {
 	public profile_id: string;
 	public created: string;
 	public metadata: Record<string, unknown>;
-	public content_type: ContentType;
+	public content_type: z.infer<typeof contentTypeSchema>;
 	public state: keyof typeof QueueItemState = "PENDING";
 	constructor(args: QueryResult) {
 		this.id = args.id as string;
@@ -87,6 +67,6 @@ export class QueueItem {
 			string,
 			unknown
 		>;
-		this.content_type = args.content_type as ContentType;
+		this.content_type = args.content_type as keyof typeof ContentType;
 	}
 }

@@ -8,10 +8,7 @@ const useCategoryGroup = (category: string | null) => {
 		queryKey: [CATEGORY_KEY, category],
 		queryFn: async () => {
 			if (!category) throw new Error("Invalid id");
-			return query(
-				"SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?;",
-				[category],
-			)
+			return query`SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ${category};`
 				.as(Profile)
 				.all();
 		},

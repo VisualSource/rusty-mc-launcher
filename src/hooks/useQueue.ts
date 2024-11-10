@@ -10,9 +10,8 @@ export function useCurrentQueue() {
 		initialData: null,
 		refetchInterval: 30_000,
 		queryFn: async () => {
-			const item = await query(
-				"SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;",
-			)
+			const item = await query
+				`SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;`
 				.as(QueueItem)
 				.get();
 			return item ?? null;
@@ -28,10 +27,8 @@ export function useQueue(
 		queryKey: [KEY_DOWNLOAD_QUEUE, queue],
 		refetchInterval: 60_000,
 		queryFn: () =>
-			query(
-				`SELECT * FROM download_queue WHERE state = ? AND display = TRUE ORDER BY priority ${order};`,
-				[queue],
-			)
+			query
+				`SELECT * FROM download_queue WHERE state = ${queue} AND display = TRUE ORDER BY priority ${order};` /**TODO: fix sql query */
 				.as(QueueItem)
 				.all(),
 	});

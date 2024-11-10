@@ -6,7 +6,7 @@ import { PROFILES_KEY } from "./keys";
 export const useProfiles = () => {
 	const { data, error } = useSuspenseQuery({
 		queryKey: [PROFILES_KEY],
-		queryFn: () => query("SELECT * FROM profiles;").as(Profile).all(),
+		queryFn: () => query`SELECT * FROM profiles;`.as(Profile).all(),
 	});
 
 	if (error) throw error;
