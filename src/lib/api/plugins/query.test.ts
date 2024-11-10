@@ -42,7 +42,7 @@ describe("Query Plugin", () => {
             return []
         });
 
-        const stmt = query<{}>("SELECT * FROM table WHERE id = ?", [4]);
+        const stmt = query<{}>`SELECT * FROM table WHERE id = 4;`;
 
         const value = await stmt.all();
 
@@ -58,7 +58,7 @@ describe("Query Plugin", () => {
             return []
         });
 
-        const stmt = query<{ row: string, d: string }>("SELECT * FROM table WHERE id = ?", [4]);
+        const stmt = query<{ row: string, d: string }>`SELECT * FROM table WHERE id = ${4}`;
 
         const value = await stmt.get();
 
@@ -74,7 +74,7 @@ describe("Query Plugin", () => {
             return null;
         });
 
-        const stmt = query<void>("SELECT * FROM table WHERE id = ?", [4]);
+        const stmt = query<void>`SELECT * FROM table WHERE id = ${4};`;
 
         const value = await stmt.run();
 
@@ -90,7 +90,7 @@ describe("Query Plugin", () => {
             return []
         });
 
-        const stmt = query("SELECT * FROM table WHERE id = ?", [4]).as(ExampleClass);
+        const stmt = query`SELECT * FROM table WHERE id = ${4}`.as(ExampleClass);
 
         const value = await stmt.all();
 
@@ -106,7 +106,7 @@ describe("Query Plugin", () => {
             return []
         });
 
-        const stmt = query("SELECT * FROM table WHERE id = ?", [4]).as(ExampleClass);
+        const stmt = query`SELECT * FROM table WHERE id = ${4}`.as(ExampleClass);
 
         const value = await stmt.get();
 

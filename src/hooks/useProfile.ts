@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Profile } from "@lib/models/profiles";
-import { query } from "@lib/api/plugins/query";
+import { query, sqlValue } from "@lib/api/plugins/query";
 import { KEY_PROFILE } from "./keys";
 import logger from "@system/logger";
 
@@ -13,8 +13,7 @@ const handleMutate = async (ev: RequestType | RequestDelete) => {
 		const values = Object.entries(ev.data)
 			.filter((e) => e[0] !== "id")
 			.map((key, value) => `${key}='${value.toString()}'`);
-		//TODO: FIX this will not work as intended
-		await query`UPDATE profiles SET ${values.join(", ")} WHERE id = ${ev.data.id}`.run();
+		await query`UPDATE profiles SET ${sqlValue(values.join(", "))} WHERE id = ${ev.data.id}`.run();
 		return ev.data;
 	}
 

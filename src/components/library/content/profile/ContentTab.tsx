@@ -22,7 +22,8 @@ import {
 import { getProjectVersions } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
-import type { ContentItem, ContentType } from "@/lib/models/content";
+import type { ContentItem } from "@/lib/models/content";
+import type { ContentType } from "@lib/models/download_queue";
 import { modrinthClient } from "@/lib/api/modrinthClient";
 import { uninstallContent } from "@lib/api/plugins/content";
 import { query } from "@lib/api/plugins/query";
@@ -33,12 +34,12 @@ import logger from "@system/logger";
 import type { Project } from "@/lib/api/modrinth/types.gen";
 import type { Profile } from "@/lib/models/profiles";
 
-async function uninstall(filename: string, type: string, profile: string) {
+async function uninstall(filename: string, type: keyof typeof ContentType, profile: string) {
 	try {
 		if (!filename) throw new Error("Missing file name");
-		await uninstallContent(type, /*filename,*/ profile);
+		await uninstallContent(type, profile, filename);
 
-		await query("DELETE FROM profile_content WHERE profile = ? AND file_name = ? AND type = ?", [profile, filename, type])
+		await query`DELETE FROM profile_content WHERE profile = ${profile} AND file_name = ${filename} AND type = ${type}`.run();
 
 		await queryClient.invalidateQueries({
 			queryKey: ["WORKSHOP_CONTENT", type, profile],
@@ -136,17 +137,10 @@ const checkForUpdate = async (
 
 export const ContentTab: React.FC<{
 	profile: Profile;
-	content_type: ContentType;
+	content_type: keyof typeof ContentType;
 	content: UseQueryResult<
 		{
-			record: {
-				id: string;
-				version: string | null;
-				type: "Mod" | "Resourcepack" | "Shader" | "Datapack";
-				profile: string;
-				file_name: string;
-				sha1: string;
-			};
+			record: ContentItem;
 			project: Project | null;
 		}[],
 		Error

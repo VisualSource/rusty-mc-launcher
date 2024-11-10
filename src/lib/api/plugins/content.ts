@@ -50,8 +50,8 @@ export async function createProfile(args: z.infer<typeof Profile.schema>, copy?:
 		copy_from: copy
 	});
 	await transaction((tx) => {
-		tx.query`INSERT INTO profiles (id,name,icon,date_created,version,loader,loader_version,java_args,resolution_width,resolution_height) VALUES (${args.id},${args.name},${args.icon},${args.date_created},${args.version},${args.loader_version},${args.java_args},${args.resolution_width},${args.resolution_height});`
-		tx.query`INSERT INTO download_queue (id,priority,display_name,profile_id,content_type,metadata) VALUES (${queueId},1,${`Minecraft ${args.loader} ${args.version}`},${args.id},${ContentType.Client},${JSON.stringify({
+		tx`INSERT INTO profiles (id,name,icon,date_created,version,loader,loader_version,java_args,resolution_width,resolution_height) VALUES (${args.id},${args.name},${args.icon},${args.date_created},${args.version},${args.loader_version},${args.java_args},${args.resolution_width},${args.resolution_height});`
+		tx`INSERT INTO download_queue (id,priority,display_name,profile_id,content_type,metadata) VALUES (${queueId},1,${`Minecraft ${args.loader} ${args.version}`},${args.id},${ContentType.Client},${JSON.stringify({
 			version: args.version,
 			loader: args.loader.replace(/^\w/, args.loader[0].toUpperCase()),
 			loader_version: args.loader_version,

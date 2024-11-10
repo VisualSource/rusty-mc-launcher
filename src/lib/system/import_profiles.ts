@@ -8,7 +8,7 @@ import type { Profile } from "../models/profiles";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import logger from "./logger";
-import { transaction } from "../api/plugins/query";
+import { bulk, transaction } from "../api/plugins/query";
 import { ContentType } from "../models/download_queue";
 
 export type Loader = "vanilla" | "forge" | "fabric" | "quilt" | "neoforge";
@@ -113,7 +113,7 @@ const import_profiles = async () => {
 		}
 
 		await transaction((tx) => {
-			tx.batch("INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES", profiles.map((e) => [
+			tx`INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${bulk(profiles.map((e) => [
 				e.id,
 				e.name,
 				e.icon,
@@ -126,9 +126,9 @@ const import_profiles = async () => {
 				e.resolution_width,
 				e.resolution_width,
 				e.state,
-			]));
+			]))};`;
 
-			tx.batch("INSERT INTO download_queue ('id','priority','display_name','icon','profile_id','content_type','metadata') VALUES", profiles.map((e) => [
+			tx`INSERT INTO download_queue ('id','priority','display_name','icon','profile_id','content_type','metadata') VALUES ${bulk(profiles.map((e) => [
 				crypto.randomUUID(),
 				0,
 				e.name,
@@ -140,7 +140,7 @@ const import_profiles = async () => {
 					loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
 					loader_version: e.loader_version,
 				}),
-			]));
+			]))}`;
 		});
 
 		await queryClient.invalidateQueries({

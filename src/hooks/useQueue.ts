@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { QueueItem } from "@/lib/models/download_queue";
 import { QueueItemState } from "@/lib/QueueItemState";
 import { KEY_DOWNLOAD_QUEUE } from "./keys";
-import { query } from "@lib/api/plugins/query";
+import { query, sqlValue } from "@lib/api/plugins/query";
 
 export function useCurrentQueue() {
 	return useQuery({
@@ -28,7 +28,7 @@ export function useQueue(
 		refetchInterval: 60_000,
 		queryFn: () =>
 			query
-				`SELECT * FROM download_queue WHERE state = ${queue} AND display = TRUE ORDER BY priority ${order};` /**TODO: fix sql query */
+				`SELECT * FROM download_queue WHERE state = ${queue} AND display = TRUE ORDER BY priority ${sqlValue(order)};`
 				.as(QueueItem)
 				.all(),
 	});

@@ -2,8 +2,8 @@ import { z } from "zod";
 import { type QueryResult, query } from "../api/plugins/query";
 import { QueueItemState } from "../QueueItemState";
 
-export const contentTypeSchema = z.enum(["Client", "Modpack", "Resourcepack", "Shader", "Datapack", "CurseforgeModpack", "SystemUpdate"]);
-export const ContentType = z.util.arrayToEnum(["Client", "Modpack", "Resourcepack", "Shader", "Datapack", "CurseforgeModpack", "SystemUpdate"]);
+export const contentTypeSchema = z.enum(["Client", "Mod", "Modpack", "Resourcepack", "Shader", "Datapack", "CurseforgeModpack", "SystemUpdate"]);
+export const ContentType = z.util.arrayToEnum(["Client", "Modpack", "Resourcepack", "Mod", "Shader", "Datapack", "CurseforgeModpack", "SystemUpdate"]);
 
 export class QueueItem {
 	static schema = z.object({
