@@ -2,8 +2,11 @@ import { invoke, type Channel } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
 import type { z } from "zod";
 import type { Profile } from "@/lib/models/profiles";
-import { transaction } from "./query";
+import { bulk, query, transaction } from "./query";
 import { ContentType } from "@/lib/models/download_queue";
+import { getCategoriesFromProfile, UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
+import { queryClient } from "../queryClient";
+import { CATEGORY_KEY } from "@/hooks/keys";
 
 export type DownloadEvent =
 	| {
@@ -50,7 +53,7 @@ export async function createProfile(args: z.infer<typeof Profile.schema>, copy?:
 		copy_from: copy
 	});
 	await transaction((tx) => {
-		tx`INSERT INTO profiles (id,name,icon,date_created,version,loader,loader_version,java_args,resolution_width,resolution_height) VALUES (${args.id},${args.name},${args.icon},${args.date_created},${args.version},${args.loader_version},${args.java_args},${args.resolution_width},${args.resolution_height});`
+		tx`INSERT INTO profiles (id,name,icon,date_created,version,loader,loader_version,java_args,resolution_width,resolution_height) VALUES (${args.id},${args.name},${args.icon},${args.date_created},${args.version},${args.loader},${args.loader_version},${args.java_args},${args.resolution_width},${args.resolution_height});`
 		tx`INSERT INTO download_queue (id,priority,display_name,profile_id,content_type,metadata) VALUES (${queueId},1,${`Minecraft ${args.loader} ${args.version}`},${args.id},${ContentType.Client},${JSON.stringify({
 			version: args.version,
 			loader: args.loader.replace(/^\w/, args.loader[0].toUpperCase()),
@@ -59,9 +62,35 @@ export async function createProfile(args: z.infer<typeof Profile.schema>, copy?:
 	});
 }
 
-export async function copyProfile(oldProfile: string, newProfile: string) {
+export async function copyProfile(oldProfile: Profile, newProfile: string) {
 
-	// TODO: do db stuff here to create new profile
+	await transaction((tx) => {
+		tx`INSERT INTO profiles VALUES (${bulk([[
+			newProfile,
+			`${oldProfile.name}: Duplicate`,
+			oldProfile.icon,
+			oldProfile.date_created,
+			oldProfile.last_played,
+			oldProfile.version,
+			oldProfile.loader,
+			oldProfile.loader_version,
+			oldProfile.java_args,
+			oldProfile.resolution_width,
+			oldProfile.resolution_height,
+			oldProfile.state,
+		]])});`;
+		tx`
+		CREATE TEMPORARY TABLE temp_table ENGINE=MEMORY AS (
+		 	SELECT * FROM profile_content WHERE profile = ${oldProfile.id}
+		);
+		UPDATE temp_table SET profile = ${newProfile};
+		INSERT INTO profile_content SELECT * FROM temp_table;
+		DROP TABLE temp_table;`;
+	});
+
+	await queryClient.invalidateQueries({
+		queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
+	});
 
 	await invoke<void>("plugin:rmcl-content|copy_profile", {
 		new_profile: newProfile,
@@ -70,9 +99,18 @@ export async function copyProfile(oldProfile: string, newProfile: string) {
 }
 
 export async function deleteProfile(profileId: string) {
+	const cats = await getCategoriesFromProfile(
+		profileId,
+	);
 
-	// TODO: delete profile from db
+	await query`DELETE FROM profiles WHERE id = ${profileId}`.run();
 
+	for (const cat of cats) {
+		await queryClient.invalidateQueries({
+			queryKey: [CATEGORY_KEY, cat.category],
+		});
+	}
+	// remote local files
 	await invoke<void>("plugin:rmcl-content|delete_profile", {
 		profile: profileId
 	});

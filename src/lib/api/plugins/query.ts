@@ -88,7 +88,10 @@ export async function transaction(actions: (tx: TagFunc) => void) {
 
 	actions(tx);
 
-	return queryExecute(`BEGIN TRANACTION;${stmts.join("")}END TRANACTION;`, argsList);
+	return queryExecute(`BEGIN TRANSACTION;
+							${stmts.join("")} 
+						COMMIT;`,
+		argsList);
 }
 
 export function query<T = QueryResult>(

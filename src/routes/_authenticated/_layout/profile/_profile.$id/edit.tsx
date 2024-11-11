@@ -39,9 +39,9 @@ import { ProfileVersionSelector } from "@/components/library/content/profile/Pro
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UNCATEGORIZEDP_GUID, getCategoriesFromProfile } from "@/lib/models/categories";
-import { query } from "@lib/api/plugins/query";
+import { query, sqlValue } from "@lib/api/plugins/query";
 import { Profile } from "@/lib/models/profiles";
-import { QueueItem } from "@/lib/models/download_queue";
+import { ContentType, QueueItem } from "@/lib/models/download_queue";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { ContentItem } from "@/lib/models/content";
@@ -53,6 +53,7 @@ import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
 import logger from "@/lib/system/logger";
 import { JVMArgForm } from "@/components/JVMArgForm";
+import { QueueItemState } from "@/lib/QueueItemState";
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/edit",
@@ -71,10 +72,7 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 						{ title: "Loader Switch", kind: "warning" },
 					);
 					if (deleteMods) {
-						const mods = await query(
-							"SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?",
-							[og.id],
-						)
+						const mods = await query`SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ${og.id}`
 							.as(ContentItem)
 							.all();
 
@@ -90,8 +88,8 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 					display_name: `${profile.loader} ${profile.loader !== "vanilla" ? profile.loader_version : ""}`,
 					icon: profile.icon ?? null,
 					profile_id: profile.id,
-					content_type: "Client",
-					state: "PENDING",
+					content_type: ContentType.Client,
+					state: QueueItemState.PENDING,
 					created: new Date().toISOString(),
 					metadata: {
 						version: profile.version,
@@ -104,10 +102,7 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 				});
 			}
 
-			await query(`UPDATE profiles SET ${key} = ? WHERE id = ?`, [
-				profile[key],
-				og.id,
-			]).run();
+			await query`UPDATE profiles SET ${sqlValue(key)} = ${profile[key]} WHERE id = ${og.id}`.run();
 		}
 	}
 	await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
@@ -310,29 +305,8 @@ function ProfileEdit() {
 							onClick={async () => {
 								try {
 									const id = crypto.randomUUID();
-									await copyProfile(profileQuery.data.id, id);
+									await copyProfile(profileQuery.data, id);
 
-									await query(
-										"INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-										[
-											id,
-											`${profileQuery.data.name}: Duplicate`,
-											profileQuery.data.icon,
-											profileQuery.data.date_created,
-											profileQuery.data.last_played,
-											profileQuery.data.version,
-											profileQuery.data.loader,
-											profileQuery.data.loader_version,
-											profileQuery.data.java_args,
-											profileQuery.data.resolution_width,
-											profileQuery.data.resolution_height,
-											profileQuery.data.state,
-										],
-									).run();
-
-									await queryClient.invalidateQueries({
-										queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
-									});
 									toast.success("Copyed profile");
 									navigate({
 										to: "/profile/$id",
@@ -397,15 +371,6 @@ function ProfileEdit() {
 									<AlertDialogCancel>Cancel</AlertDialogCancel>
 									<AlertDialogAction
 										onClick={async () => {
-											const cats = await getCategoriesFromProfile(
-												profileQuery.data.id,
-											);
-
-											for (const cat of cats) {
-												await queryClient.invalidateQueries({
-													queryKey: [CATEGORY_KEY, cat.category],
-												});
-											}
 											await deleteProfile(profileQuery.data.id);
 
 											navigate({
