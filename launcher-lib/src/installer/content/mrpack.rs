@@ -2,7 +2,7 @@
 //! The Modrinth modpack format (.mrpack) is a simple format that lets you store modpacks. This is the only format of modpack that can be uploaded to Modrinth.
 //! This module handles the parsing and install of a mrpack
 //!
-//! The mrpack spec can be found here https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack
+//! The mrpack spec can be found here <https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack>
 
 use normalize_path::NormalizePath;
 use std::path::Path;

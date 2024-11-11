@@ -1,6 +1,8 @@
 use crate::error::Result;
 use std::path::Path;
 
+/// Runs the the java program in library/JavaInfo.class
+/// Returns the version of the jre bin that was pass to this function
 pub async fn check_java(path: &Path) -> Result<Option<String>> {
     let temp_dir = std::env::temp_dir();
 

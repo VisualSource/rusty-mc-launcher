@@ -118,7 +118,7 @@ struct CFProjectFile {
 /// ### Install a curseforge modpack from a zip file
 /// Developed for version 1 and "minecraftModpack" type for the curseforge pack format
 ///
-/// Note that this function uses "https://api.cfwidget.com/" api to reslove
+/// Note that this function uses <https://api.cfwidget.com/> api to reslove
 /// download urls for mods as curseforge does not provide a api for resloving mod project id's
 /// the stibility of this method is unstable as the third party api may not work in the future
 pub async fn install_curseforge_modpack(

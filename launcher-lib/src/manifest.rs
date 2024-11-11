@@ -1,3 +1,8 @@
+//! Structs and fucntion for working with the minecraft manifest file
+//!
+//! See <https://ryanccn.dev/posts/inside-a-minecraft-launcher>
+//! for information on how libraries are sturctured
+
 use log::info;
 use normalize_path::NormalizePath;
 use serde::{self, Deserialize, Serialize};

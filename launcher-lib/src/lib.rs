@@ -1,6 +1,7 @@
+//! utily library for downloading the minecraft client along with
+//! utils for installing modloaders,mods,resourcepacks,shaderpacks
+
 pub mod database;
-/// Minecraft rust launcher library for launcher minecraft with/without mods
-/// https://ryanccn.dev/posts/inside-a-minecraft-launcher/
 pub mod error;
 pub mod events;
 pub mod installer;
