@@ -4,36 +4,39 @@
 
 
 Rusty Minecraft Launcher is a Minecraft Client launcher and a simple one click mod installer.
-Supports Forge, Fabric, Vanilla, and OptiFine clients
 
 ![Logo](./public/logo.svg)
 
 ## Releases
 
-See [Release Notes](PATCH_NOTES.md)
+[Latest Release](https://github.com/VisualSource/rusty-mc-launcher/releases/latest)
+[Release Notes](PATCHNOTES.md)
 
 ## Features
 
-- Installable Clients
+- Installable clients
   - [x] Vanilla
   - [x] Forge
+  - [x] Neoforge
   - [x] Fabric
   - [x] Quilt
 - Profile Support
-  - [ ] Import From Offical Launcher
-  - [ ] Export to Offical Launcher
+  - [x] Import profiles from offical launcher
+  - [ ] Export profiles to offical launcher
 - Modpacks
-  - [x] One click Install
-  - [ ] Auto update
+  - [x] One click Install (modrinth)
+  - [x] Import curseforge Modpack
+  - [ ] Auto update (modrinth)
 - Mods
-  - [x] One Click Install
+  - [x] One Click Install (modrinth)
   - [ ] Auto update
-- Account
-  - [x] Multi account support
+- Accounts
+  - [x] Multi microsoft account
+  - [x] Modrinth account
 
 #### Possible Support
 
-1.  linux and macos support
+1.  linux
 
 ## Installation
 

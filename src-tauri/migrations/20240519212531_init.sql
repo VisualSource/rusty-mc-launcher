@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     id TEXT PRIMARY KEY NOT NULL, 
     name TEXT NOT NULL, 
     icon TEXT, 
-    date_created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+    date_created DATETIME NOT NULL, 
     last_played DATETIME, 
     version TEXT NOT NULL, 
     loader TEXT NOT NULL, 
