@@ -34,7 +34,7 @@ function initLogger() {
 		return acc;
 	}, {} as Loggers);
 
-	localStorage.debug = import.meta.env.PUBLIC_VITE_DEBUG ?? "rmcl:*:error";
+	localStorage.debug = import.meta.env.VITE_DEBUG ?? "rmcl:*:error";
 
 	return loggers;
 }

@@ -9,7 +9,7 @@ import { auth } from "@system/logger";
 
 const configuration: Configuration = {
 	auth: {
-		clientId: import.meta.env.PUBLIC_VITE_CLIENT_ID,
+		clientId: import.meta.env.VITE_CLIENT_ID,
 		authority: "https://login.microsoftonline.com/consumers/",
 		redirectUri: "http://localhost",
 		postLogoutRedirectUri: "http://localhost",

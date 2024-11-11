@@ -82,7 +82,6 @@ pub async fn run_installer(
     runtime_directory: &Path,
     java: &str,
 ) -> Result<String> {
-    //event!(&event_channel,"update",{ "message":"Fetching installer manifest" });
     let (loader_version, download_url) =
         get_installer_download_url(version, loader_version).await?;
 
@@ -101,10 +100,17 @@ pub async fn run_installer(
         fs::write(&launcher_profiles, b"{\"profiles\":{}}").await?;
     }
 
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let file = tokio::fs::File::create_new(&log_file).await?;
 
     utils::download_file(&download_url, &installer_path, None, None).await?;
-    //event!(&event_channel,"update",{ "progress": 1, "message": "Running installer" });
+
     let child = tokio::process::Command::new(java)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -148,12 +154,16 @@ pub async fn run_installer(
         stdout.consume(bytes);
     }
 
-    //event!(&event_channel,"update",{ "message": "Cleanup" });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     fs::remove_file(log_file).await?;
     fs::remove_file(&installer_path).await?;
     fs::remove_file(&launcher_profiles).await?;
-
-    //event!(&event_channel,"update",{ "progress": 1, "message": "Copying jar" });
 
     let modded_version = format!("neoforge-{}", loader_version);
 
@@ -176,7 +186,12 @@ pub async fn run_installer(
     let bytes = fs::copy(&vanilla_jar, &modded_jar).await?;
     debug!("Copyed {} bytes", bytes);
 
-    //event!(&event_channel,"update",{ "progress": 1, "message": "Install Libraries" });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     let manifest = Manifest::read_manifest(&modded_manifest, false).await?;
 
@@ -188,7 +203,12 @@ pub async fn run_installer(
     )
     .await?;
 
-    //event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     Ok(loader_version)
 }

@@ -56,7 +56,6 @@ pub async fn run_installer(
     loader_version: Option<String>,
     quilt: bool,
 ) -> Result<String> {
-    //event!(&event_channel,"update",{ "message": "Fetching mod manifest" });
     let loader_version = if let Some(version) = loader_version {
         version
     } else {
@@ -81,7 +80,13 @@ pub async fn run_installer(
         .normalize();
 
     utils::download_file(&installer_url, &installer_path, None, None).await?;
-    //event!(&event_channel,"update",{ "progress": 1, "message": "Running installer" });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     let mut child = match quilt {
         false => tokio::process::Command::new(java)
@@ -168,7 +173,14 @@ pub async fn run_installer(
         stdout.consume(stdout_bytes);
         stderr.consume(stderr_bytes);
     }
-    //event!(&event_channel,"update",{ "progress": 1, "message": "Copying jar" });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     tokio::fs::remove_file(&installer_path).await?;
 
     let modded_version = match quilt {
@@ -187,6 +199,7 @@ pub async fn run_installer(
     if modded_jar.exists() && modded_jar.is_file() {
         fs::remove_file(&modded_jar).await?;
     }
+
     debug!(
         "Copying {} to {}",
         vanilla_jar.to_string_lossy(),
@@ -195,9 +208,14 @@ pub async fn run_installer(
     let bytes = fs::copy(&vanilla_jar, &modded_jar).await?;
     debug!("Copyed {} bytes", bytes);
 
-    //event!(&event_channel,"update",{ "progress": 1, "message": "Install Libraries" });
-
     let manifest = Manifest::read_manifest(&modded_manifest, false).await?;
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(2),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     download_libraries(
         on_event,
@@ -207,20 +225,19 @@ pub async fn run_installer(
     )
     .await?;
 
-    //event!(&event_channel,"update",{ "progress": 1 });
     Ok(loader_version)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    /*use super::*;
 
     fn init() {
         let _ = env_logger::builder()
             .filter_level(log::LevelFilter::max())
             .is_test(true)
             .try_init();
-    }
+    }*/
 
     /*#[tokio::test]
     async fn test_fabric_install() {

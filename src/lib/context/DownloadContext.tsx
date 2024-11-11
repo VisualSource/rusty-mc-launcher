@@ -27,7 +27,7 @@ class DownloadManager extends EventTarget {
 			.catch((e) => logger.error((e as Error).message));
 	}
 
-	private handler = (ev: DownloadEvent) => {
+	private handler = async (ev: DownloadEvent) => {
 		switch (ev.event) {
 			case "started":
 				this.progress = {
@@ -47,14 +47,10 @@ class DownloadManager extends EventTarget {
 				break;
 		}
 		this.dispatchEvent(new Event("update"));
-		console.log(ev);
+		//console.log(ev);
 		//const data = JSON.parse(ev.payload.value) as Record<string, unknown>;
 
 		/*switch (ev.event) {
-			case "game_crash": {
-				console.log(data);
-				break;
-			}
 			case "group":
 				this.current_progress = {
 					message: (data?.message as string | undefined) ?? "",
@@ -112,10 +108,6 @@ class DownloadManager extends EventTarget {
 						toast.info(data.message as string);
 						break;
 				}
-				break;
-			}
-			case "reset": {
-				this.current_progress = null;
 				break;
 			}
 			case "done": {

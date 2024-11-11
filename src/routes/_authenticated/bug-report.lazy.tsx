@@ -40,9 +40,9 @@ function BugReport() {
 					method: "POST",
 					headers: {
 						Accept: "application/vnd.github+json",
-						Authorization: `Bearer ${import.meta.env.PUBLIC_VITE_GITHUB}`,
+						Authorization: `Bearer ${import.meta.env.VITE_GITHUB}`,
 						"X-GitHub-Api-Version": import.meta.env
-							.PUBLIC_VITE_GITHUB_API_VERSION,
+							.VITE_GITHUB_API_VERSION,
 					},
 					body: JSON.stringify({
 						...state,

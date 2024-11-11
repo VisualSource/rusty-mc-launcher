@@ -17,6 +17,7 @@ struct JavaDownload {
     java_version: Vec<usize>,
 }
 
+/// Downloads the zulu jre
 pub async fn download_java(
     runtime_directory: &std::path::Path,
     java: usize,
@@ -84,6 +85,9 @@ pub async fn download_java(
     Ok((java_vesrion, java))
 }
 
+/// Downloads the minecraft client jar file
+///
+/// Emits: 1 Progress event
 pub async fn download_client(
     on_event: &tauri::ipc::Channel<DownloadEvent>,
     version: &str,
@@ -117,6 +121,10 @@ pub async fn download_client(
     Ok(())
 }
 
+/// download minecraft libraries that are defined in the
+/// minecraft manifest file
+///
+/// Emits: 1 Progress event
 pub async fn download_libraries(
     on_event: &tauri::ipc::Channel<DownloadEvent>,
     runtime_directory: &std::path::Path,
@@ -231,6 +239,9 @@ pub async fn download_libraries(
     Ok(())
 }
 
+/// Downloads minecraft asset index files
+///
+/// Emits: 1 Progress event
 pub async fn download_assets(
     on_event: &tauri::ipc::Channel<DownloadEvent>,
     runtime_directory: &std::path::Path,

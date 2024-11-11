@@ -27,14 +27,14 @@ export class PopupClient {
 	}
 
 	private async acquireTokenPopupAsync() {
-		const signinURL = `${MODRITH_AUTHORIZE}?client_id=${import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID}&redirect_uri=${MODRINTH_REDIRECT}&scope=${import.meta.env.PUBLIC_VITE_MODRINTH_SCOPES}`;
+		const signinURL = `${MODRITH_AUTHORIZE}?client_id=${import.meta.env.VITE_MODRINTH_CLIENT_ID}&redirect_uri=${MODRINTH_REDIRECT}&scope=${import.meta.env.VITE_MODRINTH_SCOPES}`;
 
 		const responseString = await this.waitForCode(signinURL);
 
 		const params = new URLSearchParams([
 			["code", responseString],
 			["grant_type", "authorization_code"],
-			["client_id", import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_ID],
+			["client_id", import.meta.env.VITE_MODRINTH_CLIENT_ID],
 			["redirect_uri", MODRINTH_REDIRECT],
 		]);
 
@@ -51,7 +51,7 @@ export class PopupClient {
 		const response = await fetch(MODRINTH_GET_TOKEN, {
 			method: "POST",
 			headers: {
-				Authorization: import.meta.env.PUBLIC_VITE_MODRINTH_CLIENT_SECRET,
+				Authorization: import.meta.env.VITE_MODRINTH_CLIENT_SECRET,
 				"Content-Type": "application/x-www-form-urlencoded",
 			},
 			body: params,

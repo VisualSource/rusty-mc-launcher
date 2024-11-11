@@ -236,7 +236,6 @@ pub async fn run_installer(
     runtime_directory: &Path,
     java: &str,
 ) -> Result<String> {
-    //event!(&event_channel,"update",{ "message":"Fetching mod manifest" });
     let (loader_version, download_url) =
         get_installer_download_url(version, loader_version).await?;
 
@@ -287,9 +286,14 @@ pub async fn run_installer(
         (profile, modded_manifest_path)
     };
 
-    let manifest = Manifest::read_manifest(&modded_manifest_path, false).await?;
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
-    // event!(&event_channel,"update",{ "progress": 1, "message": "Installing Libraries" });
+    let manifest = Manifest::read_manifest(&modded_manifest_path, false).await?;
 
     tokio::try_join! {
         // profile libraries
@@ -307,8 +311,6 @@ pub async fn run_installer(
             manifest.libraries,
         )
     }?;
-
-    //event!(&event_channel,"update",{ "progress": 1, "message": "Running Processors" });
 
     let lzma_path = temp.join("data/client.lzma").normalize();
     // run processors
@@ -329,7 +331,12 @@ pub async fn run_installer(
         copyed
     );
 
-    // event!(&event_channel,"update",{ "progress": 1, "message": "Cleanup" });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     fs::remove_file(&installer_path).await?;
     fs::remove_file(&lzma_path).await?;
@@ -338,7 +345,12 @@ pub async fn run_installer(
         fs::remove_dir(parent).await?;
     }
 
-    //event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     Ok(loader_version)
 }

@@ -6,6 +6,8 @@ mod forge;
 mod metadata;
 mod neoforge;
 pub mod utils;
+use std::time::Duration;
+
 use crate::error::{Error, Result};
 use crate::manifest::Manifest;
 use crate::models::profile::Loader;
@@ -35,6 +37,15 @@ impl InstallConfig {
     }
 }
 
+/// Download the minecraft client, jre, and a mod loader if needed.
+/// If a modloader was installed the loader version installed is returned.
+///
+/// Emits:
+/// - 1  Started  event
+/// - 20 Progress event
+///     - 10 minecraft client/jre
+///     - 10 modloader install
+/// - 1  Finished event
 pub async fn install_minecraft(
     config: InstallConfig,
     db: &crate::database::Database,
@@ -42,7 +53,7 @@ pub async fn install_minecraft(
 ) -> Result<Option<String>> {
     on_event
         .send(crate::events::DownloadEvent::Started {
-            max_progress: 9,
+            max_progress: 20,
             message: "Starting minecraft install.".into(),
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -52,13 +63,6 @@ pub async fn install_minecraft(
         .ok_or_else(|| Error::NotFound("No runtime directory is avaiable.".into()))?;
     let runtime_directory = root.join("runtime");
     let version_directory = runtime_directory.join("versions").join(&config.version);
-
-    on_event
-        .send(crate::events::DownloadEvent::Progress {
-            amount: None,
-            message: Some("Loading manifest".into()),
-        })
-        .map_err(|err| Error::Generic(err.to_string()))?;
 
     let client_manfiest_file = version_directory
         .join(format!("{}.json", config.version))
@@ -75,7 +79,6 @@ pub async fn install_minecraft(
         .await?;
     }
 
-    let manifset = Manifest::read_manifest(&client_manfiest_file, false).await?;
     on_event
         .send(crate::events::DownloadEvent::Progress {
             amount: Some(1),
@@ -83,6 +86,7 @@ pub async fn install_minecraft(
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
+    let manifset = Manifest::read_manifest(&client_manfiest_file, false).await?;
     let java_version = manifset
         .java_version
         .ok_or(Error::NotFound("Java not found".to_string()))?
@@ -109,7 +113,7 @@ pub async fn install_minecraft(
     on_event
         .send(crate::events::DownloadEvent::Progress {
             amount: Some(1),
-            message: Some("Downloading client".into()),
+            message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
@@ -123,7 +127,7 @@ pub async fn install_minecraft(
         on_event
             .send(crate::events::DownloadEvent::Progress {
                 amount: None,
-                message: Some("Installing Mod loader".into()),
+                message: Some(format!("Installing {} mod loader", config.loader)),
             })
             .map_err(|err| Error::Generic(err.to_string()))?;
 
@@ -172,15 +176,24 @@ pub async fn install_minecraft(
                 .await?
             }
         };
-
+        on_event
+            .send(crate::events::DownloadEvent::Finished {})
+            .map_err(|err| Error::Generic(err.to_string()))?;
         Ok(Some(version_id))
     } else {
         on_event
             .send(crate::events::DownloadEvent::Progress {
-                amount: Some(4),
+                amount: Some(5),
                 message: None,
             })
             .map_err(|err| Error::Generic(err.to_string()))?;
+
+        tokio::time::sleep(Duration::from_secs(4)).await;
+
+        on_event
+            .send(crate::events::DownloadEvent::Finished {})
+            .map_err(|err| Error::Generic(err.to_string()))?;
+
         Ok(None)
     }
 }
@@ -188,14 +201,14 @@ pub async fn install_minecraft(
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    /*use super::*;
 
     fn init() {
         let _ = env_logger::builder()
             .filter_level(log::LevelFilter::max())
             .is_test(true)
             .try_init();
-    }
+    }*/
 
     /*#[tokio::test]
     async fn test_install_modded() {
