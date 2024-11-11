@@ -12,6 +12,7 @@
 - Center "No Screenshots!" text on profile screenshots page.
 - Center profile icon on profile page.
 - Update issuse reporter.
+- Copying a profile now copies profile content
 - Fix typo on download settings page of the "App Directory" description.
 - Remove "Clear Cached Images" button on download settings page.
 - Remove file path when listing installed minecraft versions in download settings page.
