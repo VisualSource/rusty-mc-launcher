@@ -1,9 +1,10 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
 import { exit } from "@tauri-apps/plugin-process";
 import { toast } from "react-toastify";
+
 import { stop, launchGame } from "@/lib/api/plugins/game";
+import { useIsRunning } from "@/hooks/useProcessState";
 import type { Profile } from "@/lib/models/profiles";
-import useIsGameRunning from "@hook/useIsGameRunning";
 import { Button, type ButtonProps } from "./button";
 import { isOption } from "@/lib/models/settings";
 import useUser from "@/hooks/useUser";
@@ -44,10 +45,7 @@ const PlayButton: React.FC<
 	ButtonProps & { profile: Pick<Profile, "id" | "state"> }
 > = ({ profile, className, ...props }) => {
 	const user = useUser();
-
-	const { isLoading, state: isRunning } = useIsGameRunning({
-		profile: profile.id,
-	});
+	const isRunning = useIsRunning(profile.id);
 
 	return (
 		<Button
@@ -81,7 +79,7 @@ const PlayButton: React.FC<
 					clearTimeout(exitTimer);
 				}
 			}}
-			disabled={isLoading || profile.state === "INSTALLING"}
+			disabled={profile.state === "INSTALLING"}
 			className={cn(
 				{
 					"bg-blue-500 hover:bg-blue-500/90 dark:bg-blue-900 dark:text-zinc-50 dark:hover:bg-blue-900/90":

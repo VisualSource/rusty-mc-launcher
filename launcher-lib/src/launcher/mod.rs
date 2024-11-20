@@ -22,6 +22,13 @@ pub struct LaunchConfig {
 
     profile_id: String,
 }
+
+impl LaunchConfig {
+    pub fn get_profile(&self) -> String {
+        self.profile_id.clone()
+    }
+}
+
 #[derive(Debug)]
 pub struct Config {
     // magic uuid

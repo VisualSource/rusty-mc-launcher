@@ -1,3 +1,5 @@
+import { listen } from "@tauri-apps/api/event";
+import { useEffect, useState } from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -7,10 +9,8 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useEffect, useState } from "react";
-import { listen } from "@tauri-apps/api/event";
 
-const CRASH_EVENT = "rmcl://profile_crash_event";
+const CRASH_EVENT = "rmcl://process-crash";
 
 const GameCrash: React.FC = () => {
 	const [exitCode, setExitCode] = useState(1);

@@ -6,13 +6,14 @@ import { StrictMode } from "react";
 
 import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
 import { ModrinthProvider } from "./components/providers/ModrinthProvider";
+import { ProcessProvider } from "./lib/context/ProcessProvider";
 import { DownloadProvider } from "@context/DownloadContext";
-import GameCrash from "./components/dialog/GameCrash";
 import { queryClient } from "@lib/api/queryClient";
 import { getPCA } from "@auth/msal";
 import { router } from "./router";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
+
 
 const msa = getPCA();
 const mca = new ModrinthClientApplication();
@@ -23,12 +24,13 @@ root.render(
 	<StrictMode>
 		<QueryClientProvider client={queryClient}>
 			<MsalProvider instance={msa}>
-				<ModrinthProvider client={mca}>
-					<DownloadProvider>
-						<GameCrash />
-						<RouterProvider router={router} context={{}} />
-					</DownloadProvider>
-				</ModrinthProvider>
+				<ProcessProvider>
+					<ModrinthProvider client={mca}>
+						<DownloadProvider>
+							<RouterProvider router={router} context={{}} />
+						</DownloadProvider>
+					</ModrinthProvider>
+				</ProcessProvider>
 			</MsalProvider>
 		</QueryClientProvider>
 	</StrictMode>,

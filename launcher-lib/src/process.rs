@@ -1,35 +1,61 @@
 use std::{collections::HashMap, path::Path};
+use sysinfo::ProcessStatus;
 use tokio::process::{Child, Command};
 use uuid::Uuid;
 
 use crate::error::{Error, Result};
 
 #[derive(Default)]
-pub struct Processes(HashMap<String, Process>);
+pub struct Processes {
+    pub state: HashMap<String, Process>,
+    active: Vec<String>,
+}
 
 impl Processes {
     pub fn insert(&mut self, process: Process) {
-        self.0.insert(process.uuid.clone(), process);
+        self.active.push(process.uuid.clone());
+        self.state.insert(process.uuid.clone(), process);
     }
     pub fn remove(&mut self, uuid: &str) {
-        self.0.remove(uuid);
+        self.state.remove(uuid);
     }
+
+    pub fn remove_list(&mut self, uuids: &Vec<&String>) {
+        for uuid in uuids {
+            self.state.remove(*uuid);
+        }
+    }
+
     pub fn has(&self, uuid: &str) -> bool {
-        self.0.contains_key(uuid)
+        self.state.contains_key(uuid)
     }
 
     pub fn get(&self, uuid: &str) -> Option<&Process> {
-        self.0.get(uuid)
+        self.state.get(uuid)
     }
     pub fn get_mut(&mut self, uuid: &str) -> Option<&mut Process> {
-        self.0.get_mut(uuid)
+        self.state.get_mut(uuid)
     }
 
     pub async fn is_running(&mut self, uuid: &str) -> Result<bool> {
-        if let Some(process) = self.0.get_mut(uuid) {
-            return Ok(process.try_wait().await?.is_none());
+        if let Some(process) = self.state.get_mut(uuid) {
+            return Ok(process.status().await?.is_none());
         }
         Ok(false)
+    }
+    pub async fn remove_from_cache(
+        &mut self,
+        db: &crate::database::Database,
+        items: &Vec<String>,
+    ) -> Result<()> {
+        for uuid in items {
+            self.state.remove(uuid);
+            sqlx::query!("DELETE FROM processes WHERE uuid = ?", uuid)
+                .execute(&db.0)
+                .await?;
+        }
+
+        Ok(())
     }
     pub async fn load_cache(&mut self, db: &crate::database::Database) -> Result<()> {
         let processes: Vec<Process> = sqlx::query_as("SELECT * FROM processes;")
@@ -61,7 +87,7 @@ impl Processes {
         Ok(())
     }
     pub async fn cache(&self, db: &crate::database::Database) -> Result<()> {
-        for item in self.0.values() {
+        for item in self.state.values() {
             sqlx::query!(
                 "INSERT INTO processes VALUES (?,?,?,?,?);",
                 item.uuid,
@@ -139,7 +165,7 @@ impl Process {
             child,
         })
     }
-    pub async fn try_wait(&mut self) -> Result<Option<i32>> {
+    pub async fn status(&mut self) -> Result<Option<i32>> {
         match &mut self.child {
             InstanceType::Unknown => Ok(None),
             InstanceType::Full(child) => {
