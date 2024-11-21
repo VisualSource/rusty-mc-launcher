@@ -40,3 +40,19 @@ pub async fn install_client(
 
     Ok(())
 }
+
+pub async fn install_external(
+    item: &QueueItem,
+    db_state: &RwLock<Database>,
+    on_event: &Channel<DownloadEvent>,
+) -> Result<()> {
+    todo!()
+}
+
+pub async fn install_content(
+    item: &QueueItem,
+    db_state: &RwLock<Database>,
+    on_event: &Channel<DownloadEvent>,
+) -> Result<()> {
+    todo!()
+}

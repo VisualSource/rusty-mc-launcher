@@ -58,19 +58,28 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                             if let Err(err) =
                                                 desktop::install_client(&item, &state, emitter).await
                                             {
+                                                // handler error
                                                 let db = state.write().await;
                                                 log::error!("{}", err);
                                                 if let Err(err) = QueueItem::set_state(&item.id, QueueState::Errored, &db).await
                                                 {
                                                     log::error!("{}", err);
                                                 }
-                                                // handler error
                                             }
                                         }
                                         QueueType::Modpack
                                         | QueueType::Mod
                                         | QueueType::Shader
-                                        | QueueType::Resourcepack => todo!(),
+                                        | QueueType::Resourcepack => {
+                                            if let Err(err) = desktop::install_content(&item, &state, emitter).await {
+                                                let db = state.write().await;
+                                                log::error!("{}", err);
+                                                if let Err(err) = QueueItem::set_state(&item.id, QueueState::Errored, &db).await
+                                                {
+                                                    log::error!("{}", err);
+                                                }
+                                            }
+                                        },
                                         QueueType::Datapack => {
                                             let db = state.write().await;
                                             log::error!("Datapack install has no support for installing yet");
@@ -81,7 +90,16 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                                 log::error!("{}", err);
                                             }
                                         }
-                                        QueueType::CurseforgeModpack => todo!(),
+                                        QueueType::CurseforgeModpack => {
+                                            if let Err(err) = desktop::install_external(&item, &state, emitter).await {
+                                                let db = state.write().await;
+                                                log::error!("{}", err);
+                                                if let Err(err) = QueueItem::set_state(&item.id, QueueState::Errored, &db).await
+                                                {
+                                                    log::error!("{}", err);
+                                                }
+                                            }
+                                        },
                                     }
                                 }
                                 Ok(None) => {}

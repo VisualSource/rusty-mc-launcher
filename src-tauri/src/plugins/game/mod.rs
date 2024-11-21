@@ -43,6 +43,30 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             // 3. emit events for first seen processes
             // 3. emit events for crashed processes
             //
+
+            /*let ph = app.handle();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                    let state = ph.state::<AppState>();
+
+                    match state.watch_process_status().await {
+                        Ok(status) => {
+                            if status.is_some() {
+                                if let Err(err) = ph.emit_to(
+                                    "main",
+                                    "rmcl://profile_crash_event",
+                                    format!("{{ \"status\": {} }}", status.unwrap_or_default()),
+                                ) {
+                                    log::error!("{}", err);
+                                }
+                                tokio::time::sleep(Duration::from_secs(5)).await;
+                            }
+                        }
+                        Err(err) => log::error!("{}", err),
+                    }
+                }
+            });*/
             let handle = app.app_handle().clone();
             let token = CancellationToken::new();
 
