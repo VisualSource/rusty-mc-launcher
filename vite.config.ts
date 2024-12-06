@@ -28,11 +28,10 @@ export default defineConfig({
     strictPort: true,
     watch: {
       ignored: [
-        "**/node_modules/**",
-        "**/src-tauri/**",
-        "**/launcher-lib/**",
-        "./patches/**",
-        "./profiling/**"
+        "src-tauri/",
+        "launcher-lib/",
+        "patches/",
+        "profiling/"
       ],
     },
   },

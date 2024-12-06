@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Label } from "@/components/ui/label";
 import useUser from "@/hooks/useUser";
-import logger from "@system/logger";
 import { cn } from "@/lib/utils";
 
 type Content = {
@@ -176,7 +175,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 			);
 		},
 		onError(error) {
-			logger.error(error.message);
+			console.error(error);
 		},
 		mutationFn: async () => {
 			if (!account) throw new Error("No profile data");
@@ -312,7 +311,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				model:
 					activeSkin?.variant === "CLASSIC"
 						? "default"
-						: ("slim" ?? "auto-detect"),
+						: "slim",
 				skin: activeSkin?.url,
 				cape: activeCape?.url,
 			});
