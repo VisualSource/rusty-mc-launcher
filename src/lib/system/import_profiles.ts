@@ -7,7 +7,6 @@ import { UNCATEGORIZEDP_GUID } from "../models/categories";
 import type { Profile } from "../models/profiles";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
-import logger from "./logger";
 import { bulk, transaction } from "../api/plugins/query";
 import { ContentType } from "../models/download_queue";
 
@@ -152,7 +151,7 @@ const import_profiles = async () => {
 
 		toast.success("Imported Profiles");
 	} catch (error) {
-		logger.error(error);
+		console.error(error);
 		toast.error("Import profile error!", {
 			data: { error: (error as Error).message },
 		});

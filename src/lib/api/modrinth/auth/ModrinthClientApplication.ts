@@ -1,4 +1,5 @@
 import { addSeconds } from "date-fns/addSeconds";
+import { error } from "@tauri-apps/plugin-log"
 import {
 	getUserFromAuth,
 	getUserNotifications,
@@ -21,7 +22,6 @@ import {
 import { modrinthClient } from "../../modrinthClient";
 import { queryClient } from "../../queryClient";
 import { PopupClient } from "./PopupClient";
-import { auth } from "@/lib/system/logger";
 import type { User } from "../types.gen";
 
 export type AuthenticationResult = {
@@ -244,10 +244,9 @@ export class ModrinthClientApplication extends EventTarget {
 	initialize(): void {
 		try {
 			this.data = this.readCache();
-		} catch (error) {
-			auth.error(
-				`Failed to load modrinth cache: ${(error as Error).message}`,
-				error,
+		} catch (er) {
+			error(
+				`Failed to load modrinth cache: ${(er as Error).message}`,
 			);
 		}
 	}

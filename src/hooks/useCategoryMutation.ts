@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CATEGORIES_KEY, CATEGORY_KEY, KEY_PROFILE_COLLECTION } from "./keys";
 import type { Category } from "@lib/models/categories";
 import { query } from "@lib/api/plugins/query";
-import logger from "@system/logger";
 
 type Query = { type: "add" | "remove"; category: string; profile: string };
 
@@ -19,7 +18,7 @@ const useCategoryMutation = () => {
 			});
 		},
 		onError(error, variables, context) {
-			logger.error(error);
+			console.error(error);
 			client.setQueryData(
 				[KEY_PROFILE_COLLECTION, variables.profile],
 				(context as { previous: Category[] }).previous,

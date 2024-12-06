@@ -50,6 +50,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                     log::debug!("Processing Item: {}", item.id);
                                     let emitter_c = emitter_state.lock().await;
                                     if emitter_c.is_none() {
+                                        log::warn!("Download listener not registered: waiting for listener");
                                         continue;
                                     }
                                     let emitter = emitter_c.as_ref().unwrap();
@@ -102,7 +103,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                         },
                                     }
                                 }
-                                Ok(None) => {}
+                                Ok(None) => continue,
                                 Err(err) => {
                                     log::error!("{}", err);
                                 }

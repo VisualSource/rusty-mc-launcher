@@ -2,7 +2,6 @@ import { message } from "@tauri-apps/plugin-dialog";
 import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
 import { fetch } from "@tauri-apps/plugin-http";
-import { auth } from "@system/logger";
 
 const MINECRAFT_LOGIN =
 	"https://api.minecraftservices.com/authentication/login_with_xbox";
@@ -65,7 +64,6 @@ export async function getMinecraftAccount(
 	}
 
 	// #region Authenticate with Xbox Live.
-	auth.info("Authenticate With Xbox Live");
 	const authResponse = await fetch(XBOX_AUTHENTICATE, {
 		method: "POST",
 		headers: {
@@ -94,8 +92,6 @@ export async function getMinecraftAccount(
 	// #endregion
 
 	// #region Authenticate with XSTS
-	auth.info("Authenticate with XSTS");
-
 	const liveResponse = await fetch(LIVE_AUTHENTICATE, {
 		method: "POST",
 		headers: {
@@ -118,7 +114,6 @@ export async function getMinecraftAccount(
 	// #endregion
 
 	// #region Authenticate with minecraft
-	auth.info("Authenticate with minecraft");
 
 	const mclResponse = await fetch(MINECRAFT_LOGIN, {
 		method: "POST",
@@ -143,7 +138,6 @@ export async function getMinecraftAccount(
 	// #endregion
 
 	//#region Get Minecraft Profile
-	auth.info("Fetching minecraft profile");
 
 	const profileResponse = await fetch(MINECRAFT_PROFILE, {
 		headers: {

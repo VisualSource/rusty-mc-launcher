@@ -1,14 +1,15 @@
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { ask } from "@tauri-apps/plugin-dialog";
-import logger from "@lib/system/logger";
+import { info } from "@tauri-apps/plugin-log";
+
 
 export class Updater {
 	async checkForUpdate() {
-		logger.info("Checking for update");
+		info("Checking for update");
 		const update = await check();
 		if (!update?.available) return;
-		logger.info("New update found");
+		info("New update found");
 
 		await update.downloadAndInstall((ev) => {
 			console.log(ev);

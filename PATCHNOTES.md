@@ -17,6 +17,8 @@
 - Remove "Clear Cached Images" button on download settings page.
 - Remove file path when listing installed minecraft versions in download settings page.
 - Fix height on card in the Popular modpacks section on home page.
+- Preconnect modrinth cdn
+- update react to v19
 
 #### Fixes
 - Fix Issue [21](https://github.com/VisualSource/rusty-mc-launcher/issues/21)

@@ -51,7 +51,6 @@ import { getConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import logger from "@/lib/system/logger";
 import { JVMArgForm } from "@/components/JVMArgForm";
 import { QueueItemState } from "@/lib/QueueItemState";
 
@@ -77,7 +76,7 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 							.all();
 
 						await Promise.allSettled(
-							mods.map((e) => uninstallContent(e.id, og.id)),
+							mods.map((e) => uninstallContent(e.type, og.id, e.file_name)),
 						);
 					}
 				}
@@ -282,9 +281,6 @@ function ProfileEdit() {
 									profileQuery.data.id,
 									"/",
 								);
-
-								logger.debug(`Open path ${path}`);
-
 								await showInFolder(path);
 							}}
 							type="button"

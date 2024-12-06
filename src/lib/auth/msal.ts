@@ -5,7 +5,7 @@ import {
 	type Configuration,
 } from "@azure/msal-browser";
 import { LogLevel } from "@azure/msal-common";
-import { auth } from "@system/logger";
+import { error, warn, info, debug, trace } from "@tauri-apps/plugin-log"
 
 const configuration: Configuration = {
 	auth: {
@@ -27,19 +27,19 @@ const configuration: Configuration = {
 			loggerCallback(level: LogLevel, message: string) {
 				switch (level) {
 					case LogLevel.Error:
-						auth.error(message);
+						error(message);
 						break;
 					case LogLevel.Warning:
-						auth.warn(message);
+						warn(message);
 						break;
 					case LogLevel.Info:
-						auth.info(message);
+						info(message);
 						break;
 					case LogLevel.Verbose:
-						auth.verbose(message);
+						debug(message);
 						break;
 					case LogLevel.Trace:
-						auth.trace(message);
+						trace(message);
 						break;
 				}
 			},
@@ -59,11 +59,11 @@ export const getPCA = () => {
 				break;
 			}
 			case EventType.ACCOUNT_ADDED: {
-				auth.debug("New Account Added");
+				debug("New Account Added");
 				break;
 			}
 			case EventType.ACCOUNT_REMOVED: {
-				auth.debug("Account has been removed");
+				debug("Account has been removed");
 				break;
 			}
 		}

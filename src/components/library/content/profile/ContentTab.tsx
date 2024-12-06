@@ -30,7 +30,6 @@ import { query } from "@lib/api/plugins/query";
 import { install_known } from "@/lib/system/install";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
-import logger from "@system/logger";
 import type { Project } from "@/lib/api/modrinth/types.gen";
 import type { Profile } from "@/lib/models/profiles";
 
@@ -46,7 +45,6 @@ async function uninstall(filename: string, type: keyof typeof ContentType, profi
 		});
 	} catch (error) {
 		console.error(error);
-		logger.error((error as Error).message);
 		toast.error("Failed to uninstall content", {
 			data: { error: (error as Error).message },
 		});
@@ -67,7 +65,7 @@ const checkForUpdate = async (
 				"id|slug": project.id,
 			},
 			query: {
-				gameVersions: `["${profile.version}"]`,
+				game_versions: `["${profile.version}"]`,
 				loaders:
 					profile.loader !== "vanilla" ? `["${profile.loader}"]` : undefined,
 			},

@@ -8,7 +8,6 @@ import type { Profile } from "@/lib/models/profiles";
 import { Button, type ButtonProps } from "./button";
 import { isOption } from "@/lib/models/settings";
 import useUser from "@/hooks/useUser";
-import logger from "@system/logger";
 import { cn } from "@/lib/utils";
 
 const DisplayState: React.FC<{ isRunning: boolean, state: Profile["state"] }> = ({ state, isRunning }) => {
@@ -72,7 +71,7 @@ const PlayButton: React.FC<
 						exitTimer = setTimeout(() => exit(0), 12_000);
 					}
 				} catch (error) {
-					logger.error((error as Error).message);
+					console.error((error as Error).message);
 					toast.error("Failed to start minecraft", {
 						data: error,
 					});

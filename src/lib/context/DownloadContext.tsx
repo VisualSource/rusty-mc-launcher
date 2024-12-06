@@ -1,5 +1,6 @@
 import { Channel } from "@tauri-apps/api/core";
 import { createContext, useSyncExternalStore } from "react";
+import { error } from "@tauri-apps/plugin-log"
 import { toast } from "react-toastify";
 import AskDialog from "@/components/dialog/AskDialog";
 import { queryClient } from "@lib/api/queryClient";
@@ -10,7 +11,6 @@ import {
 	type DownloadEvent,
 } from "../api/plugins/content";
 import { Updater } from "../system/updater";
-import logger from "../system/logger";
 
 class DownloadManager extends EventTarget {
 	private updater = new Updater();
@@ -24,7 +24,7 @@ class DownloadManager extends EventTarget {
 		registerDownloadListener(this.channel);
 		this.updater
 			.checkForUpdate()
-			.catch((e) => logger.error((e as Error).message));
+			.catch((e) => error((e as Error).message));
 	}
 
 	private handler = async (ev: DownloadEvent) => {

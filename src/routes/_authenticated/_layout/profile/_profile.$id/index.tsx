@@ -12,7 +12,6 @@ import { profileQueryOptions } from "../_profile.$id";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
-import logger from "@system/logger";
 import { ContentItem } from "@/lib/models/content";
 import { query } from "@lib/api/plugins/query";
 //import { manualContentImport } from "@lib/api/plugins/content";
@@ -196,7 +195,6 @@ function ProfileContent() {
 								});
 							} catch (error) {
 								console.error(error);
-								logger.error((error as Error).message);
 								toast.update(id, {
 									render: "Failed to import content",
 									type: "error",
