@@ -288,7 +288,7 @@ pub async fn run_installer(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -333,7 +333,7 @@ pub async fn run_installer(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -347,7 +347,7 @@ pub async fn run_installer(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;

@@ -113,7 +113,7 @@ pub async fn download_client(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -231,7 +231,7 @@ pub async fn download_libraries(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -314,167 +314,10 @@ pub async fn download_assets(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
     Ok(())
 }
-
-/*#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn init() {
-        let _ = env_logger::builder()
-            .filter_level(log::LevelFilter::max())
-            .is_test(true)
-            .try_init();
-    }
-
-    #[tokio::test]
-    async fn test_assets() {
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-        let runtime_directory = std::env::temp_dir().join("runtime");
-
-        let assets: manifest::File = serde_json::from_str(r#"{
-            "id": "16",
-            "sha1": "8014a719aff1e5c5651e1a04f57993460d76404a",
-            "size": 445177,
-            "totalSize": 630829417,
-            "url": "https://piston-meta.mojang.com/v1/packages/8014a719aff1e5c5651e1a04f57993460d76404a/16.json"
-          }"#).expect("Failed to parse");
-
-        download_assets(&tx, &runtime_directory, Some(assets))
-            .await
-            .expect("Failed to download");
-    }
-
-    #[tokio::test]
-    async fn test_download_java() {
-        init();
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-        let runtime_directory = std::env::temp_dir().join("runtime");
-        download_java(&tx, &runtime_directory, 21)
-            .await
-            .expect("Failed to download ");
-    }
-
-    #[tokio::test]
-    async fn test_download_libraries() {
-        init();
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-        let runtime_directory = std::env::temp_dir().join("runtime");
-
-        let libs = serde_json::from_str::<Vec<Library>>(r#"
-            [
-                {
-                    "downloads": {
-                      "artifact": {
-                        "path": "com/google/code/gson/gson/2.10.1/gson-2.10.1.jar",
-                        "sha1": "b3add478d4382b78ea20b1671390a858002feb6c",
-                        "size": 283367,
-                        "url": "https://libraries.minecraft.net/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar"
-                      }
-                    },
-                    "name": "com.google.code.gson:gson:2.10.1",
-                    "include_in_classpath": true
-                  },
-                  {
-                    "downloads": {
-                      "artifact": {
-                        "path": "org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3-natives-windows-arm64.jar",
-                        "sha1": "e9aca8c5479b520a2a7f0d542a118140e812c5e8",
-                        "size": 133378,
-                        "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3-natives-windows-arm64.jar"
-                      }
-                    },
-                    "name": "org.lwjgl:lwjgl:3.3.3:natives-windows-arm64",
-                    "rules": [{ "action": "allow", "os": { "name": "windows" } }],
-                    "include_in_classpath": true
-                  },
-                  {
-                    "downloads": {
-                      "artifact": {
-                        "path": "org/lwjgl/lwjgl-stb/3.2.2/lwjgl-stb-3.2.2.jar",
-                        "sha1": "3b8e6ebc5851dd3d17e37e5cadce2eff2a429f0f",
-                        "size": 104469,
-                        "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl-stb/3.2.2/lwjgl-stb-3.2.2.jar"
-                      },
-                      "classifiers": {
-                        "natives-linux": {
-                          "path": "org/lwjgl/lwjgl-stb/3.2.2/lwjgl-stb-3.2.2-natives-linux.jar",
-                          "sha1": "172c52e586fecf43f759bc4f70a778c01f6fdcc1",
-                          "size": 203476,
-                          "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl-stb/3.2.2/lwjgl-stb-3.2.2-natives-linux.jar"
-                        },
-                        "natives-windows": {
-                          "path": "org/lwjgl/lwjgl-stb/3.2.2/lwjgl-stb-3.2.2-natives-windows.jar",
-                          "sha1": "811f705cbb29e8ae8d60bdf8fdd38c0c123ad3ef",
-                          "size": 465810,
-                          "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl-stb/3.2.2/lwjgl-stb-3.2.2-natives-windows.jar"
-                        }
-                      }
-                    },
-                    "name": "org.lwjgl:lwjgl-stb:3.2.2",
-                    "natives": { "windows": "natives-windows", "linux": "natives-linux" },
-                    "rules": [
-                      { "action": "allow" },
-                      { "action": "disallow", "os": { "name": "osx" } },
-                      { "action": "disallow", "os": { "name": "linux-arm64" } },
-                      { "action": "disallow", "os": { "name": "linux-arm32" } },
-                      { "action": "disallow", "os": { "name": "osx-arm64" } }
-                    ],
-                    "include_in_classpath": true
-                  }
-            ]
-
-        "#).expect("Failed to parse");
-
-        info!("{:#?}", libs);
-
-        download_libraries(&tx, &runtime_directory, "1.20.6", libs)
-            .await
-            .expect("Failed to download");
-    }
-
-    #[tokio::test]
-    async fn test_download_client() {
-        init();
-        let versions_directory = std::env::temp_dir()
-            .join("runtime\\versions\\1.20.6")
-            .normalize();
-
-        let downloads = serde_json::from_str::<Downloads>(
-            r#"{
-            "server_mappings": {
-              "sha1": "9e96100f573a46ef44caab3e716d5eb974594bb7",
-              "size": 7283803,
-              "url": "https://piston-data.mojang.com/v1/objects/9e96100f573a46ef44caab3e716d5eb974594bb7/server.txt"
-            },
-            "client_mappings": {
-              "sha1": "de46c8f33d7826eb83e8ef0e9f80dc1f08cb9498",
-              "size": 9422442,
-              "url": "https://piston-data.mojang.com/v1/objects/de46c8f33d7826eb83e8ef0e9f80dc1f08cb9498/client.txt"
-            },
-            "server": {
-              "sha1": "145ff0858209bcfc164859ba735d4199aafa1eea",
-              "size": 51420480,
-              "url": "https://piston-data.mojang.com/v1/objects/145ff0858209bcfc164859ba735d4199aafa1eea/server.jar"
-            },
-            "client": {
-              "sha1": "05b6f1c6b46a29d6ea82b4e0d42190e42402030f",
-              "size": 26565641,
-              "url": "https://piston-data.mojang.com/v1/objects/05b6f1c6b46a29d6ea82b4e0d42190e42402030f/client.jar"
-            }
-          }"#,
-        ).expect("Failed to parse");
-
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-
-        download_client(&tx, "1.20.6", &versions_directory, Some(downloads))
-            .await
-            .expect("Failed to download");
-    }
-}*/

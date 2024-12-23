@@ -8,6 +8,21 @@ import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 export const DOWNLOAD_MANAGER_EVENT_PROGRESS = "update::progress";
 export const DOWNLOAD_MANAGER_EVENT_CURRENT = "update::current";
 
+const UpdateQueues = () => Promise.all([
+    queryClient.invalidateQueries({
+        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
+    }),
+    queryClient.invalidateQueries({
+        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
+    }),
+    queryClient.invalidateQueries({
+        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
+    }),
+    queryClient.invalidateQueries({
+        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
+    })
+])
+
 class DownloadManager extends EventTarget {
     static INSTANCE: DownloadManager | null = null;
     static get() {
@@ -33,11 +48,13 @@ class DownloadManager extends EventTarget {
     }
 
     private handler = async (ev: DownloadEvent) => {
+        console.log(ev);
         switch (ev.event) {
             case "init":
                 this.current = ev.data;
                 this.progress = { amount: 0, max: 100, status: "" };
                 this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_CURRENT));
+                await UpdateQueues().catch(e => console.error(e));
                 break;
             case "started": {
                 this.progress = {
@@ -67,20 +84,7 @@ class DownloadManager extends EventTarget {
                 this.progress = null;
                 this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_CURRENT));
                 this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_PROGRESS));
-                await Promise.all([
-                    queryClient.invalidateQueries({
-                        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
-                    }),
-                    queryClient.invalidateQueries({
-                        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
-                    }),
-                    queryClient.invalidateQueries({
-                        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
-                    }),
-                    queryClient.invalidateQueries({
-                        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
-                    })
-                ])
+                await UpdateQueues().catch(e => console.error(e));
                 break;
             }
             default:

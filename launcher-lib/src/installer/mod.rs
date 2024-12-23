@@ -81,7 +81,7 @@ pub async fn install_minecraft(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -112,7 +112,7 @@ pub async fn install_minecraft(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(2),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -181,12 +181,10 @@ pub async fn install_minecraft(
     } else {
         on_event
             .send(crate::events::DownloadEvent::Progress {
-                amount: Some(5),
+                amount: Some(10),
                 message: None,
             })
             .map_err(|err| Error::Generic(err.to_string()))?;
-
-        tokio::time::sleep(Duration::from_secs(4)).await;
 
         Ok(None)
     }
