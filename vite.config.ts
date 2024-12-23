@@ -23,16 +23,18 @@ export default defineConfig({
       "@util": resolve(__dirname, "./src/utils")
     }
   },
+  optimizeDeps: {
+    entries: "index.html"
+  },
   clearScreen: false,
   server: {
-    strictPort: true,
     watch: {
       ignored: [
-        "src-tauri/",
-        "launcher-lib/",
-        "patches/",
-        "profiling/"
-      ],
+        "src-tauri",
+        "launcher-lib",
+        "patches",
+        "profiling"
+      ].map(file => resolve(__dirname, file)),
     },
   },
 });

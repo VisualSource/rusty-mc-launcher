@@ -1,17 +1,18 @@
 Todo:
+  ☐ Finished rewrite on installs
+  ☐ Fix content uninstall
   ☐ Update content check deps
   ☐ update to latest version (for vanilla)
   ☐ Validate Content
   ☐ Working neoforge install
   ☐ performance changes
-  ☐ Fix modrinth login (Bugged https://github.com/modrinth/code/issues/2339) 
   ☐ Resourcepack mod checks
+  ☐ CurseForge Search
   
-Ignore:
-  ☐ default icons
-  ☐ button to check for app updates
-  ☐ Fix typo some where?
-  ☐ log viewer
+  
+Bugs:
+  ☐ (Tauri) Window Size and Fullscreen Issues: https://github.com/tauri-apps/tauri/issues/11788
+  ☐ (Modrinth) OAuth2 Bug: https://github.com/modrinth/code/issues/2339
 
 Archive:
   ✔ modrinth login fix @done(24-07-17 13:59)

@@ -6,6 +6,7 @@
       "@/*": ["./src/*"],
     }
   },
+  "exclude": ["launcher-lib/","src-tauri/"],
   "references": [
     {
       "path": "./tsconfig.app.json"
