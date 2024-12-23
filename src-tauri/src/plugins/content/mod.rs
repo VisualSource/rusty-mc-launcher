@@ -5,15 +5,12 @@ use tokio_util::sync::CancellationToken;
 use minecraft_launcher_lib::{
     database::Database,
     events::DownloadEvent,
-    models::{
-        profile::{Profile, ProfileState},
-        queue::{QueueItem, QueueState, QueueType},
-    },
+    models:: queue::{QueueItem, QueueState, QueueType},
 };
 use tauri::{
     ipc::Channel,
     plugin::{Builder, TauriPlugin},
-    Emitter, EventTarget, Manager, RunEvent, Runtime,
+    Manager, RunEvent, Runtime,
 };
 use tokio::{select, sync::Mutex};
 use tokio::sync::RwLock;
@@ -53,8 +50,27 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                         log::warn!("Download listener not registered: waiting for listener");
                                         continue;
                                     }
+
+                                    {
+                                        let db = state.write().await;
+                                        if let Err(err) = QueueItem::set_state(&item.id, QueueState::Current, &db).await 
+                                        {
+                                            log::error!("{}", err);
+                                            continue
+                                        }
+                                    }
+                                
                                     let emitter = emitter_c.as_ref().unwrap();
-                                    match item.content_type {
+                                    if let Err(err) = emitter.send(DownloadEvent::Init{
+                                        display_name: item.display_name.clone(),
+                                        icon: item.icon.clone(),
+                                        content_type: item.content_type.clone()
+                                    }){
+                                        log::error!("{}",err)
+                                    }
+                                    tokio::time::sleep(Duration::from_secs(2)).await;
+                                    
+                                    match &item.content_type {
                                         QueueType::Client => {
                                             if let Err(err) =
                                                 desktop::install_client(&item, &state, emitter).await

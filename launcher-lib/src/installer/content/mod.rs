@@ -11,7 +11,7 @@ use crate::{
 
 use futures::StreamExt;
 pub use mrpack::install_mrpack;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::fs;
 
 #[derive(Debug, Deserialize)]

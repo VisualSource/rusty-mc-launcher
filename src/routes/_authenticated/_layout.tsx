@@ -58,7 +58,7 @@ function Layout() {
 									</Link>
 								</Button>
 							</div>
-							<ErrorBoundary fallbackRender={SidebarError}>
+							<ErrorBoundary FallbackComponent={SidebarError}>
 								<Suspense fallback={"Loading..."}>
 									<Sidebar />
 								</Suspense>

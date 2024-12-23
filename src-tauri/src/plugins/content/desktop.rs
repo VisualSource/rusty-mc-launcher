@@ -38,6 +38,10 @@ pub async fn install_client(
     Profile::set_state(&item.profile_id, ProfileState::Installed, &db).await?;
     QueueItem::set_state(&item.id, QueueState::Completed, &db).await?;
 
+    if let Err(err) = on_event.send(DownloadEvent::Finished {}) {
+        log::error!("{}", err)
+    }
+
     Ok(())
 }
 

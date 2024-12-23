@@ -1,15 +1,23 @@
 import { invoke, type Channel } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
 import type { z } from "zod";
+import { getCategoriesFromProfile, UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
+import { ContentType } from "@/lib/models/download_queue";
 import type { Profile } from "@/lib/models/profiles";
 import { bulk, query, transaction } from "./query";
-import { ContentType } from "@/lib/models/download_queue";
-import { getCategoriesFromProfile, UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
 import { queryClient } from "../queryClient";
 import { CATEGORY_KEY } from "@/hooks/keys";
 
+export type DownloadCurrentItem = {
+	display_name: string,
+	icon: string | null,
+	content_type: keyof typeof ContentType
+}
 export type DownloadEvent =
-	| {
+	{
+		event: "init", data: DownloadCurrentItem
+	} |
+	{
 		event: "started";
 		data: {
 			max_progress: number;

@@ -54,7 +54,7 @@ pub async fn install_minecraft(
     on_event
         .send(crate::events::DownloadEvent::Started {
             max_progress: 20,
-            message: "Starting minecraft install.".into(),
+            message: "Installing Minecraft.".into(),
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
@@ -176,9 +176,7 @@ pub async fn install_minecraft(
                 .await?
             }
         };
-        on_event
-            .send(crate::events::DownloadEvent::Finished {})
-            .map_err(|err| Error::Generic(err.to_string()))?;
+
         Ok(Some(version_id))
     } else {
         on_event
@@ -190,82 +188,6 @@ pub async fn install_minecraft(
 
         tokio::time::sleep(Duration::from_secs(4)).await;
 
-        on_event
-            .send(crate::events::DownloadEvent::Finished {})
-            .map_err(|err| Error::Generic(err.to_string()))?;
-
         Ok(None)
     }
-}
-
-#[cfg(test)]
-mod tests {
-
-    /*use super::*;
-
-    fn init() {
-        let _ = env_logger::builder()
-            .filter_level(log::LevelFilter::max())
-            .is_test(true)
-            .try_init();
-    }*/
-
-    /*#[tokio::test]
-    async fn test_install_modded() {
-        init();
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-        let runtime_directory = std::env::temp_dir();
-        let runtime_dir = runtime_directory.join("runtime");
-        let java = runtime_dir.join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe");
-        let app = AppState::new("sqlite::memory:").expect("Failed to make app");
-        app.insert_setting(
-            "path.app",
-            None,
-            runtime_directory.to_string_lossy().to_string(),
-        )
-        .await
-        .expect("Failed to add settings");
-        app.insert_java(21, "0.0.0", &java)
-            .await
-            .expect("Failed to insert");
-
-        let config = InstallConfig {
-            version: "1.20.6".to_string(),
-            loader: Loader::Fabric,
-            loader_version: None,
-        };
-
-        install_minecraft(&app, config, &tx)
-            .await
-            .expect("Failed to install minecraft");
-    }
-
-    #[tokio::test]
-    async fn test_install() {
-        init();
-
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-        let runtime_directory = std::env::temp_dir();
-
-        let app = AppState::new("sqlite::memory:").expect("Failed to make app");
-
-        app.insert_setting(
-            "path.app",
-            None,
-            runtime_directory.to_string_lossy().to_string(),
-        )
-        .await
-        .expect("Failed to add settings");
-
-        let config = InstallConfig {
-            //app_directory: runtime_directory,
-            version: "1.20.6".to_string(),
-            loader: Loader::Vanilla,
-            loader_version: None,
-        };
-
-        install_minecraft(&app, config, &tx)
-            .await
-            .expect("Failed to install minecraft");
-    }*/
 }

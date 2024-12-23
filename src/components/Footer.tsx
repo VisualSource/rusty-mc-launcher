@@ -32,10 +32,11 @@ import {
 	DialogTrigger,
 } from "./ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
+import { useDownloadProgress } from "@/hooks/useDownloadProgress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { QueueItem } from "@/lib/models/download_queue";
 import { TypographyMuted } from "@component/ui/typography";
 import import_profiles from "@/lib/system/import_profiles";
+import { QueueItem } from "@/lib/models/download_queue";
 import { QueueItemState } from "@/lib/QueueItemState";
 import { queryClient } from "@/lib/api/queryClient";
 import { useCurrentQueue } from "@/hooks/useQueue";
@@ -43,14 +44,13 @@ import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import { Form, FormField } from "./ui/form";
-import useDownload from "@hook/useDownload";
 import { Label } from "./ui/label";
 
 type FormState = { importFrom: "modrinth" | "curseforge" };
 
 const Footer = memo(() => {
 	const [openDialog, setOpen] = useState(false);
-	const { progress } = useDownload();
+	const progress = useDownloadProgress()
 	const queueCurrent = useCurrentQueue();
 
 	const form = useForm<FormState>({
@@ -65,35 +65,35 @@ const Footer = memo(() => {
 		const display =
 			state.importFrom === "modrinth"
 				? {
-						queue: {
-							name: "MrPack($PACK_PATH)",
-							type: "Modpack",
-						},
-						dialog: {
-							title: "Import Mrpack",
-							filters: [
-								{
-									name: "Mrpack",
-									extensions: ["mrpack"],
-								},
-							],
-						},
-					}
+					queue: {
+						name: "MrPack($PACK_PATH)",
+						type: "Modpack",
+					},
+					dialog: {
+						title: "Import Mrpack",
+						filters: [
+							{
+								name: "Mrpack",
+								extensions: ["mrpack"],
+							},
+						],
+					},
+				}
 				: {
-						queue: {
-							name: "Curseforge Modpack ($PACK_PATH)",
-							type: "CurseforgeModpack",
-						},
-						dialog: {
-							title: "Import Modpack",
-							filters: [
-								{
-									name: "Zip",
-									extensions: ["zip"],
-								},
-							],
-						},
-					};
+					queue: {
+						name: "Curseforge Modpack ($PACK_PATH)",
+						type: "CurseforgeModpack",
+					},
+					dialog: {
+						title: "Import Modpack",
+						filters: [
+							{
+								name: "Zip",
+								extensions: ["zip"],
+							},
+						],
+					},
+				};
 
 		const result = await open({
 			multiple: false,
@@ -241,19 +241,19 @@ const Footer = memo(() => {
 					asChild
 				>
 					<Link to="/downloads" className="group">
-						{queueCurrent.data && progress ? (
+						{queueCurrent && progress ? (
 							<div className="flex items-center gap-3">
 								<Avatar className="rounded-none">
 									<AvatarFallback className="rounded-lg">
-										{queueCurrent.data?.content_type === "Client" ? (
+										{queueCurrent.content_type === "Client" ? (
 											<Monitor />
-										) : queueCurrent?.data?.content_type === "Mod" ? (
+										) : queueCurrent.content_type === "Mod" ? (
 											<PackagePlus />
 										) : (
 											<FileDiff />
 										)}
 									</AvatarFallback>
-									<AvatarImage src={queueCurrent.data.icon ?? undefined} />
+									<AvatarImage src={queueCurrent.icon ?? undefined} />
 								</Avatar>
 								<div className="w-96">
 									<div className="flex w-full justify-between">

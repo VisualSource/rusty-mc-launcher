@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Book } from "lucide-react";
-
+import { Suspense } from "react";
 import {
 	Form,
 	FormControl,
@@ -17,17 +17,15 @@ import { ProfileVersionSelector } from "@/components/library/content/profile/Pro
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CopyProfileOptions } from "@/components/library/CopyProfileOptions";
 import { UNCATEGORIZEDP_GUID } from "@/lib/models/categories";
-import { Profile } from "@lib/models/profiles";
 import { createProfile } from "@lib/api/plugins/content";
 import { TypographyH3 } from "@/components/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
+import { JVMArgForm } from "@/components/JVMArgForm";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
+import { Profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_KEY } from "@/hooks/keys";
-import logger from "@/lib/system/logger";
-import { JVMArgForm } from "@/components/JVMArgForm";
-import { Suspense } from "react";
 
 export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 	component: CreateProfile,
@@ -52,15 +50,15 @@ function CreateProfile() {
 
 	const onSubmit = async (ev: Profile & { copyOptions?: string }) => {
 		try {
-			let version = ev.version;
 			if (ev.version === "latest-release") {
 				const latest_data = (await fetch(
 					"https://launchermeta.mojang.com/mc/game/version_manifest_v2.json",
 				).then((e) => e.json())) as {
 					latest: { release: string; snapshot: string };
 				};
-				version = latest_data.latest.release;
+				ev.version = latest_data.latest.release;
 			}
+			if (ev.version === "latest-release") throw new Error("Was unable to get latest-release")
 
 			await createProfile(ev, ev.copyOptions);
 
@@ -76,7 +74,7 @@ function CreateProfile() {
 			});
 		} catch (error) {
 			toast.error("Failed to create profile", { data: error });
-			logger.error(error);
+			console.error(error);
 		}
 	};
 
@@ -217,7 +215,7 @@ function CreateProfile() {
 							disabled={form.formState.isLoading || form.formState.isSubmitting}
 							type="submit"
 						>
-							Create
+							{form.formState.isSubmitting ? "Creating..." : "Create"}
 						</Button>
 					</div>
 				</form>

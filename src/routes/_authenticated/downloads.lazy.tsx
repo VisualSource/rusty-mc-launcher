@@ -4,12 +4,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { DownloadSection } from "@/components/download/DownloadSection";
 import SectionDivider from "@component/download/SectionDivider";
 import DownloadItem from "@/components/download/DownloadItem";
-import { useQueue, useCurrentQueue } from "@hook/useQueue";
+import { useCurrentQueue, useQueue } from "@hook/useQueue";
 import { TypographyMuted } from "@component/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { QueueItemState } from "@/lib/QueueItemState";
 import { Loading } from "@/components/Loading";
-import useDownload from "@hook/useDownload";
+import { useDownloadProgress } from "@/hooks/useDownloadProgress";
 
 export const Route = createLazyFileRoute("/_authenticated/downloads")({
 	component: Download,
@@ -17,30 +17,30 @@ export const Route = createLazyFileRoute("/_authenticated/downloads")({
 });
 
 function Download() {
-	const queueCurrent = useCurrentQueue();
+	const current = useCurrentQueue();
+	const progress = useDownloadProgress();
 	const queueNext = useQueue(QueueItemState.PENDING);
-	const { progress } = useDownload();
 
 	return (
 		<div className="grid h-full w-full grid-cols-1 grid-rows-6 text-zinc-50">
 			<div className="row-span-2 border-b border-b-blue-300 bg-blue-900/20 p-2">
-				{queueCurrent.data && progress ? (
+				{current && progress ? (
 					<div className="flex gap-4">
 						<Avatar className="h-32 w-32 rounded-none xl:h-60 xl:w-60">
 							<AvatarFallback className="h-32 w-32 rounded-lg xl:h-60 xl:w-60">
-								{queueCurrent.data.content_type === "Client" ? (
+								{current.content_type === "Client" ? (
 									<Monitor className="h-24 w-24" />
-								) : queueCurrent.data.content_type === "Mod" ? (
+								) : current.content_type === "Mod" ? (
 									<PackagePlus className="h-24 w-24" />
 								) : (
 									<FileDiff className="h-24 w-24" />
 								)}
 							</AvatarFallback>
-							<AvatarImage src={queueCurrent.data.icon ?? undefined} />
+							<AvatarImage src={current.icon ?? undefined} />
 						</Avatar>
 
 						<div>
-							<h1>{queueCurrent.data.display_name}</h1>
+							<h1>{current.display_name}</h1>
 							<div>{progress.status}</div>
 							<div>
 								{progress.amount} of {progress.max}

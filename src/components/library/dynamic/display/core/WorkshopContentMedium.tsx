@@ -62,11 +62,9 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 					className="space-y-3 w-[200px] flex flex-col"
 					key={value.project_id}
 				>
-					<div className="overflow-hidden rounded-md h-full">
+					<div className="overflow-hidden rounded-md h-[200px]">
 						<img
-							height={200}
-							width={200}
-							className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-square"
+							className="object-cover transition-all hover:scale-105 aspect-square h-full w-full"
 							src={
 								value.featured_gallery ??
 								value.gallery?.at(0) ??
@@ -83,7 +81,7 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 								<FileImage />
 							</AvatarFallback>
 						</Avatar>
-						<h3 className="font-medium leading-none">{value.title}</h3>
+						<h3 title={value.title} className="font-medium leading-none line-clamp-2">{value.title}</h3>
 					</div>
 
 					<Button asChild className="w-full">

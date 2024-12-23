@@ -1,11 +1,11 @@
-import { useQueue } from "@hook/useQueue";
 import type { QueueItemState } from "@/lib/QueueItemState";
-import SectionDivider from "./SectionDivider";
-import DownloadItem from "./DownloadItem";
-import { Button } from "../ui/button";
-import { query } from "@/lib/api/plugins/query";
 import { queryClient } from "@/lib/api/queryClient";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
+import { query } from "@/lib/api/plugins/query";
+import SectionDivider from "./SectionDivider";
+import { useQueue } from "@hook/useQueue";
+import DownloadItem from "./DownloadItem";
+import { Button } from "../ui/button";
 
 export const DownloadSection: React.FC<{
 	label: string;
@@ -24,7 +24,7 @@ export const DownloadSection: React.FC<{
 				<Button
 					size="sm"
 					onClick={() => {
-						query("DELETE FROM download_queue WHERE state = ?", [group])
+						query`DELETE FROM download_queue WHERE state = ${group}`
 							.run()
 							.then(() => {
 								queryClient.invalidateQueries({
