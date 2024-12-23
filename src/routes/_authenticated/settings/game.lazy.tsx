@@ -62,8 +62,7 @@ function GameSettings() {
 			<div>
 				<h3 className="text-lg font-medium">Game</h3>
 				<p className="text-sm text-muted-foreground">
-					Customize the appearance of the app. Automatically switch between day
-					and night themes.
+					Edit game settings.
 				</p>
 			</div>
 			<Separator />
