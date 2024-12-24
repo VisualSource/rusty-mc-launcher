@@ -1,7 +1,8 @@
 use minecraft_launcher_lib::{
     database::Database,
     events::DownloadEvent,
-    installer::InstallConfig,
+    installer::content::{self, external::install_curseforge_modpack},
+    installer::{content::InstallContent, InstallConfig},
     models::{
         profile::{Profile, ProfileState},
         queue::{QueueItem, QueueState},
@@ -17,18 +18,16 @@ pub async fn install_client(
     db_state: &RwLock<Database>,
     on_event: &Channel<DownloadEvent>,
 ) -> Result<()> {
-    {
-        let db = db_state.write().await;
-        Profile::set_state(&item.id, ProfileState::Installing, &db).await?;
-    }
-
     let config = if let Some(metdata) = &item.metadata {
         serde_json::from_str::<InstallConfig>(metdata)?
     } else {
-        return Err(Error::Reason("Missing client install metadata".to_string()));
+        return Err(Error::Reason("Invalid client metadata".to_string()));
     };
 
     let db = db_state.write().await;
+
+    Profile::set_state(&item.id, ProfileState::Installing, &db).await?;
+
     if let Some(loader_version) =
         minecraft_launcher_lib::installer::install_minecraft(config, &db, on_event).await?
     {
@@ -46,17 +45,46 @@ pub async fn install_client(
 }
 
 pub async fn install_external(
-    _item: &QueueItem,
-    _db_state: &RwLock<Database>,
-    _on_event: &Channel<DownloadEvent>,
+    item: &QueueItem,
+    db_state: &RwLock<Database>,
+    on_event: &Channel<DownloadEvent>,
 ) -> Result<()> {
-    todo!()
+    let config = if let Some(metadata) = &item.metadata {
+        serde_json::from_str::<InstallContent>(metadata)?
+    } else {
+        return Err(Error::Reason("Invalid metadata config".to_string()));
+    };
+
+    let db = db_state.write().await;
+    install_curseforge_modpack(&db, config, on_event).await?;
+
+    QueueItem::set_state(&item.id, QueueState::Completed, &db).await?;
+
+    if let Err(err) = on_event.send(DownloadEvent::Finished {}) {
+        log::error!("{}", err)
+    }
+    Ok(())
 }
 
 pub async fn install_content(
-    _item: &QueueItem,
-    _db_state: &RwLock<Database>,
-    _on_event: &Channel<DownloadEvent>,
+    item: &QueueItem,
+    db_state: &RwLock<Database>,
+    on_event: &Channel<DownloadEvent>,
 ) -> Result<()> {
-    todo!()
+    let config = if let Some(metadata) = &item.metadata {
+        serde_json::from_str::<InstallContent>(metadata)?
+    } else {
+        return Err(Error::Reason("Invalid metadata config".to_string()));
+    };
+
+    let db = db_state.write().await;
+    content::install_content(config, item.icon.clone(), &db, on_event).await?;
+
+    QueueItem::set_state(&item.id, QueueState::Completed, &db).await?;
+
+    if let Err(err) = on_event.send(DownloadEvent::Finished {}) {
+        log::error!("{}", err)
+    }
+
+    Ok(())
 }

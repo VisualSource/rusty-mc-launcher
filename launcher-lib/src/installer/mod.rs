@@ -6,7 +6,6 @@ mod forge;
 mod metadata;
 mod neoforge;
 pub mod utils;
-use std::time::Duration;
 
 use crate::error::{Error, Result};
 use crate::manifest::Manifest;

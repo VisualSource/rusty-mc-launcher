@@ -386,6 +386,7 @@ mod tests {
     }*/
     #[test]
     fn test_get_processer_args() {
+        init();
         let processor = serde_json::from_str::<Processor>(
             r#"
         {

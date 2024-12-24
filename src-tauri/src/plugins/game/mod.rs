@@ -112,7 +112,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                 }
                                 removable
                             };
-                            // drop ald processes
+                            // drop old processes
                             if !removable.is_empty() {
                                 let s_db =
                                     handle.state::<RwLock<minecraft_launcher_lib::database::Database>>();

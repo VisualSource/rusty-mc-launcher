@@ -76,7 +76,7 @@ function ProfilePage() {
 				<div className="flex justify-evenly gap-1">
 					<PlayButton
 						className="w-full"
-						profile={{ id: data.id, state: data.state }}
+						profile={{ id: data.id, state: data.state.toUpperCase() as "UNINSTALLED" | "INSTALLING" | "INSTALLED" }}
 					/>
 				</div>
 

@@ -11,7 +11,7 @@ use crate::{
 
 use futures::StreamExt;
 pub use mrpack::install_mrpack;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tokio::fs;
 
 #[derive(Debug, Deserialize)]
@@ -49,11 +49,7 @@ pub struct InstallContent {
     files: Vec<InstallFile>,
 }
 
-async fn download_files(
-    output_direcotry: &std::path::Path,
-    files: Vec<InstallFile>,
-    on_event: &tauri::ipc::Channel<DownloadEvent>,
-) -> Result<()> {
+async fn download_files(output_direcotry: &std::path::Path, files: Vec<InstallFile>) -> Result<()> {
     let result = futures::stream::iter(files.into_iter().map(|file| async move {
         let name = file
             .url
@@ -62,9 +58,6 @@ async fn download_files(
             .ok_or_else(|| Error::NotFound("Failed to get file name".to_string()))?;
         let file_dir = output_direcotry.join(name);
         utils::download_file(&file.url, &file_dir, None, Some(&file.sha1)).await?;
-
-        //TODO: clonable on_event?
-        //event!(&event_channel,"update",{ "progress": 1 });
 
         Ok(())
     }))
@@ -89,13 +82,6 @@ pub async fn install_content(
     db: &crate::database::Database,
     on_event: &tauri::ipc::Channel<DownloadEvent>,
 ) -> Result<()> {
-    on_event
-        .send(crate::events::DownloadEvent::Started {
-            max_progress: 1,
-            message: "Starting content install".to_string(),
-        })
-        .map_err(|err| Error::Generic(err.to_string()))?;
-
     let root = Setting::path("path.app", db)
         .await?
         .ok_or_else(|| Error::NotFound("Failed to get application path.".to_string()))?;
@@ -104,59 +90,146 @@ pub async fn install_content(
 
     match config.content_type {
         ContentType::Resourcepack => {
+            on_event
+                .send(crate::events::DownloadEvent::Started {
+                    max_progress: 3,
+                    message: "Installing Resource Pack".to_string(),
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             let resource_packs = profile_direcotry.join("resourcepacks");
 
             if !resource_packs.exists() {
                 fs::create_dir_all(&resource_packs).await?;
             }
-            // TODO: Download event Sections
-            //event!(&event_channel, "group", { "progress": 0, "max_progress": config.files.len(), "message": "Downloading Files" });
 
-            download_files(&resource_packs, config.files.clone(), on_event).await?;
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
+            download_files(&resource_packs, config.files.clone()).await?;
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
 
             for item in config.files {
                 sqlx::query("INSERT INTO profile_content ('id','sha1','profile','file_name','version','type') VALUES (?,?,?,?,?,'Resourcepack')")
                 .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&db.0).await?;
             }
 
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             Ok(())
         }
         ContentType::Shader => {
+            on_event
+                .send(crate::events::DownloadEvent::Started {
+                    max_progress: 3,
+                    message: "Installing Shader pack".to_string(),
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             let shader_directory = profile_direcotry.join("shaderpacks");
 
             if !shader_directory.exists() {
                 fs::create_dir_all(&shader_directory).await?;
             }
-            // TODO: download sections?
-            // event!(&event_channel, "group", { "progress": 0, "max_progress": config.files.len(), "message": "Downloading Files" });
-            download_files(&shader_directory, config.files.clone(), on_event).await?;
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
+            download_files(&shader_directory, config.files.clone()).await?;
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
 
             for item in config.files {
                 sqlx::query("INSERT INTO profile_content ('id','sha1','profile','file_name','version','type') VALUES (?,?,?,?,?,'Shader')")
                 .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&db.0).await?;
             }
 
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             Ok(())
         }
         ContentType::Mod => {
+            on_event
+                .send(crate::events::DownloadEvent::Started {
+                    max_progress: 3,
+                    message: "Installing Mod".to_string(),
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             let mod_direcotry = profile_direcotry.join("mods");
 
             if !mod_direcotry.exists() {
                 fs::create_dir_all(&mod_direcotry).await?;
             }
-            //TODO: download sections?
-            //event!(&event_channel, "group", { "progress": 0, "max_progress": config.files.len(), "message": "Downloading Files" });
-            download_files(&mod_direcotry, config.files.clone(), on_event).await?;
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
+            download_files(&mod_direcotry, config.files.clone()).await?;
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
 
             for item in config.files {
                 sqlx::query("INSERT INTO profile_content ('id','sha1','profile','file_name','version','type') VALUES (?,?,?,?,?,'Mod')")
                 .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&db.0).await?;
             }
 
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             Ok(())
         }
 
         ContentType::Modpack => {
+            on_event
+                .send(crate::events::DownloadEvent::Started {
+                    max_progress: 100,
+                    message: "Installing Modpack".to_string(),
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             let file = config
                 .files
                 .first()
@@ -165,17 +238,7 @@ pub async fn install_content(
             let file_path = if file.url.starts_with("https://") {
                 let id = uuid::Uuid::new_v4();
                 let temp = std::env::temp_dir().join(format!("{id}.mrpack"));
-                //TODO: download sections
-                //event!(&event_channel, "group", { "progress": 0, "max_progress": 1, "message": "Downloading Files" });
                 utils::download_file(&file.url, &temp, None, Some(&file.sha1)).await?;
-
-                on_event
-                    .send(crate::events::DownloadEvent::Progress {
-                        amount: Some(1),
-                        message: None,
-                    })
-                    .map_err(|err| Error::Generic(err.to_string()))?;
-
                 temp
             } else {
                 from_path = true;
@@ -191,21 +254,34 @@ pub async fn install_content(
 
                 item
             };
-            // TODO: download sections
-            //event!(&event_channel, "group", { "progress": 0, "max_progress": 5, "message": "Installing Mrpack" });
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(2),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             if let Err(err) =
                 mrpack::install_mrpack(db, on_event, &file_path, icon, config.profile, &root).await
             {
                 if !from_path {
                     tokio::fs::remove_file(&file_path).await?;
                 }
-                //tokio::fs::remove_dir_all(&profile_direcotry).await?;
+
                 return Err(err);
             }
 
             if !from_path {
                 tokio::fs::remove_file(&file_path).await?;
             }
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
 
             Ok(())
         }

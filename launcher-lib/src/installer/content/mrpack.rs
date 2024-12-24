@@ -22,10 +22,10 @@ use serde::Deserialize;
 use tokio::fs::{self, File};
 
 const WHITELISTED_DOMAINS: [&str; 4] = [
-    "cdn.modrinth.com",
-    "github.com",
-    "raw.githubusercontent.com",
-    "gitlab.com", //"mediafilez.forgecdn.net", // breaks spec
+    "https://cdn.modrinth.com",
+    "https://github.com",
+    "https://raw.githubusercontent.com",
+    "https://gitlab.com", //"mediafilez.forgecdn.net", // breaks spec
 ];
 
 #[derive(Debug, Deserialize, Clone)]
@@ -79,11 +79,13 @@ pub async fn install_mrpack(
     runtime_directory: &Path,
 ) -> Result<()> {
     let mut archive = compression::open_archive(File::open(&mrpack_path).await?).await?;
-
     let pack = compression::parse_extract::<MrPack>(&mut archive, "modrinth.index.json").await?;
 
     if pack.format_version != 1 {
-        return Err(Error::Generic("Pack format is not supported".to_string()));
+        return Err(Error::Generic(format!(
+            "Pack Format Version {} is not supported",
+            pack.format_version
+        )));
     }
     let current_profile_dir = runtime_directory.join("profiles").join(&profile_id);
     if !current_profile_dir.exists() {
@@ -110,13 +112,12 @@ pub async fn install_mrpack(
     let data_files = files.clone();
 
     on_event
-        .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
-            message: Some("Downloading files".to_string()),
+        .send(crate::events::DownloadEvent::Started {
+            max_progress: 100 + data_files.len(),
+            message: "Installing Modpack".to_string(),
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
-    //event!(&event_channel, "group", { "progress": 0, "max_progress": data_files.len(), "message":  });
     let downloads = futures::stream::iter(files.into_iter().map(|file| {
         let dir = current_profile_dir.clone();
         async move {
@@ -125,19 +126,24 @@ pub async fn install_mrpack(
                 file.path
             )))?;
 
-            if !WHITELISTED_DOMAINS
-                .iter()
-                .any(|x| source.starts_with(&format!("https://{}", x)))
-            {
-                return Err(Error::Generic("Invalid download source".to_string()));
+            if !WHITELISTED_DOMAINS.iter().any(|x| source.starts_with(x)) {
+                return Err(Error::Generic(format!(
+                    "Invalid download source: {}",
+                    source
+                )));
             }
 
             let output = dir.join(&file.path).normalize();
 
             utils::download_file(source, &output, None, Some(&file.hashes.sha1)).await?;
 
-            // TODO: on_event in async move?
-            //event!(&event_channel,"update",{ "progress": 1 });
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             Ok(())
         }
     }))
@@ -151,9 +157,8 @@ pub async fn install_mrpack(
                 log::error!("{}", error);
             }
         });
-        return Err(Error::Generic("Failed to download libraries".to_string()));
+        return Err(Error::Generic("Failed to download file(s)".to_string()));
     }
-    //event!(&event_channel, "group", { "progress": 0, "max_progress": 6, "message": "Finalizing" });
 
     compression::extract_dir(
         &mut archive,
@@ -165,12 +170,11 @@ pub async fn install_mrpack(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(16),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
-    //event!(&event_channel,"update",{ "progress": 1 });
     compression::extract_dir(
         &mut archive,
         "client-overrides",
@@ -181,7 +185,7 @@ pub async fn install_mrpack(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(16),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -200,7 +204,7 @@ pub async fn install_mrpack(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(16),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -237,7 +241,7 @@ pub async fn install_mrpack(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(16),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -259,7 +263,7 @@ pub async fn install_mrpack(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(16),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
@@ -303,7 +307,7 @@ pub async fn install_mrpack(
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
-            amount: Some(1),
+            amount: Some(16),
             message: None,
         })
         .map_err(|err| Error::Generic(err.to_string()))?;

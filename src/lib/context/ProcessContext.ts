@@ -10,13 +10,19 @@ export class ProcessState extends EventTarget {
         super();
         this.subscription = listen<{ profile: string, state: boolean }>(PROCESS_STATE_CHANGE, this.onChange);
     }
+
+    public async destory() {
+        const listen = await this.subscription
+        listen();
+    }
+
     private onChange = (ev: Event<{ profile: string, state: boolean }>) => {
         if (ev.payload.state) {
             this.state.add(ev.payload.profile);
             return;
         }
         this.state.delete(ev.payload.profile);
-        this.dispatchEvent(new CustomEvent("state"));
+        this.dispatchEvent(new Event("update"));
     }
 
     public getState(profile: string) {

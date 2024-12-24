@@ -126,7 +126,13 @@ pub async fn install_curseforge_modpack(
     config: InstallContent,
     on_event: &tauri::ipc::Channel<DownloadEvent>,
 ) -> Result<()> {
-    //event!(&event_channel, "group", { "progress": 0, "max_progress": 1, "message": "Starting content install" });
+    on_event
+        .send(crate::events::DownloadEvent::Started {
+            max_progress: 2,
+            message: "Starting Download".to_string(),
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let root = Setting::path("path.app", db)
         .await?
         .ok_or_else(|| Error::NotFound("Application path not found.".to_string()))?;
@@ -157,10 +163,6 @@ pub async fn install_curseforge_modpack(
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
-    tokio::time::sleep(Duration::from_secs(2)).await;
-
-    //event!(&event_channel, "group", { "progress": 0, "max_progress": 5, "message": "Installing Curseforge modpack" });
-
     let mut archive =
         compression::open_archive(tokio::fs::File::open(&modpack_archive).await?).await?;
 
@@ -177,8 +179,16 @@ pub async fn install_curseforge_modpack(
     if pack.manifest_version != 1 || pack.manifest_type != "minecraftModpack" {
         return Err(Error::Generic("Pack format is not supported".to_string()));
     }
-    //TODO: Download Section
-    //event!(&event_channel, "group", { "progress": 0, "max_progress": pack.files.len(), "message": "Downloading files" });
+
+    tokio::time::sleep(Duration::from_secs(2)).await;
+
+    on_event
+        .send(crate::events::DownloadEvent::Started {
+            max_progress: pack.files.len() + 4,
+            message: "Installing CurseForge Modpck".to_string(),
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let downloads = futures::stream::iter(pack.files.into_iter().map(|file| {
         let dir = profile_direcotry.clone();
         async move {
@@ -274,8 +284,6 @@ pub async fn install_curseforge_modpack(
             Err(err) => return Err(err),
         }
     }
-    // TODO: Download section
-    //event!(&event_channel, "group", { "progress": 0, "max_progress": 6, "message": "Finalizing" });
 
     compression::extract_dir(
         &mut archive,
