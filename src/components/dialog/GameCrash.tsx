@@ -1,5 +1,4 @@
-import { listen } from "@tauri-apps/api/event";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -9,28 +8,16 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-const CRASH_EVENT = "rmcl://process-crash";
+import { useCrashEvent } from "@/hooks/useProcessState";
 
 const GameCrash: React.FC = () => {
 	const [exitCode, setExitCode] = useState(1);
 	const [open, setOpen] = useState(false);
 
-	useEffect(() => {
-		const eventHandler = listen<string>(CRASH_EVENT, (ev) => {
-			try {
-				const data = JSON.parse(ev.payload) as { status: number };
-				setExitCode(data.status);
-				setOpen(true);
-			} catch (error) {
-				console.error(error);
-			}
-		});
-
-		return () => {
-			eventHandler.then((unsub) => unsub());
-		};
-	}, []);
+	useCrashEvent((ev) => {
+		setExitCode(ev.detail.code);
+		setOpen(true);
+	});
 
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
@@ -38,7 +25,7 @@ const GameCrash: React.FC = () => {
 				<AlertDialogHeader>
 					<AlertDialogTitle>Crash Notice</AlertDialogTitle>
 					<AlertDialogDescription className="text-center p-4">
-						The game did not start/exit successfully. (Exit Code: {exitCode})
+						The game did not exit successfully. (Exit Code: {exitCode})
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

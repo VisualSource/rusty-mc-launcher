@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { Profile } from "@lib/models/profiles";
 import { query, sqlValue } from "@lib/api/plugins/query";
 import { KEY_PROFILE } from "./keys";
-import logger from "@system/logger";
 
 type RequestType = { type: "patch"; data: Partial<Profile> };
 type RequestDelete = { type: "delete"; data: { id: string } };
@@ -30,7 +29,6 @@ export const useProfile = (id?: string, load = true) => {
 		enabled: !!id && load,
 		queryKey: [KEY_PROFILE, id],
 		queryFn: async () => {
-			logger.info(`Loading Profile ${id}`);
 			const item = await query`SELECT * FROM profiles WHERE id = ${id} LIMIT 1;`
 				.as(Profile)
 				.get();

@@ -98,8 +98,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                             }
                                         },
                                         QueueType::Datapack => {
-                                            let db = state.write().await;
                                             log::error!("Datapack install has no support for installing yet");
+                                            let db = state.write().await;
                                             if let Err(err) =
                                                 QueueItem::set_state(&item.id, QueueState::Errored, &db)
                                                     .await
@@ -108,7 +108,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                             }
                                         }
                                         QueueType::CurseforgeModpack => {
-                                            if let Err(err) = desktop::install_external(&item, &state, emitter).await {
+                                            if let Err(err) = desktop::install_cf_modpack(&item, &state, emitter).await {
                                                 let db = state.write().await;
                                                 log::error!("{}", err);
                                                 if let Err(err) = QueueItem::set_state(&item.id, QueueState::Errored, &db).await
@@ -136,7 +136,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             Ok(())
         })
         .on_event(|app, event| {
-            if let RunEvent::Exit = event {
+            if let RunEvent::ExitRequested { .. } = event {
                 let handle = app.state::<PluginContentCancellationToken>();
                 handle.0.cancel();
                 log::debug!("Aborting content queue")

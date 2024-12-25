@@ -1,4 +1,11 @@
-use super::{ContentType, InstallContent};
+//! ### Install a curseforge modpack from a zip file
+//! Developed for version 1 and "minecraftModpack" type for the curseforge pack format.
+//!
+//! `Note that this function uses <https://api.cfwidget.com/> api to reslove
+//! download urls for mods as curseforge does not provide a api for resloving mod project id's
+//! the stibility of this method is unstable as the third party api may not work in the future`
+
+use super::InstallContent;
 use crate::{
     error::{Error, Result},
     events::DownloadEvent,
@@ -14,62 +21,6 @@ use serde::Deserialize;
 use std::{os::windows::fs::MetadataExt, path::PathBuf, str::FromStr, time::Duration};
 use urlencoding::encode;
 use uuid::Uuid;
-
-pub async fn install_external(
-    db: &crate::database::Database,
-    src: PathBuf,
-    profile: String,
-    content_type: ContentType,
-) -> Result<()> {
-    let root = Setting::path("path.app", db)
-        .await?
-        .ok_or_else(|| Error::NotFound("Application path not found.".to_string()))?;
-
-    let profile_dir = root.join("profiles").join(&profile);
-
-    let content_dir = match content_type {
-        ContentType::Resourcepack => profile_dir.join("resourcepacks"),
-        ContentType::Shader => profile_dir.join("shaderpacks"),
-        ContentType::Mod => profile_dir.join("mods"),
-        ContentType::Modpack => {
-            return Err(Error::Generic(
-                "Modpack content is not supported".to_string(),
-            ))
-        }
-    };
-
-    let filename_temp = src.clone();
-    let filename = filename_temp
-        .file_name()
-        .ok_or_else(|| Error::Generic("Failed to get filename".to_string()))?
-        .to_string_lossy()
-        .to_string();
-
-    let output_filepath = content_dir.join(&filename);
-    if output_filepath.exists() {
-        return Err(Error::Generic("File already exists.".to_string()));
-    }
-
-    // copy to dir
-    tokio::fs::copy(src, &output_filepath).await?;
-    // gen hash
-    let hash = get_file_hash(&output_filepath).await?;
-    let content_name = content_type.as_string();
-
-    // add to content list
-    sqlx::query!(
-        "INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)",
-        "",
-        hash,
-        profile,
-        filename,
-        content_name
-    )
-    .execute(&db.0)
-    .await?;
-
-    Ok(())
-}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -115,12 +66,6 @@ struct CFProjectFile {
     name: String,
 }
 
-/// ### Install a curseforge modpack from a zip file
-/// Developed for version 1 and "minecraftModpack" type for the curseforge pack format
-///
-/// Note that this function uses <https://api.cfwidget.com/> api to reslove
-/// download urls for mods as curseforge does not provide a api for resloving mod project id's
-/// the stibility of this method is unstable as the third party api may not work in the future
 pub async fn install_curseforge_modpack(
     db: &crate::database::Database,
     config: InstallContent,

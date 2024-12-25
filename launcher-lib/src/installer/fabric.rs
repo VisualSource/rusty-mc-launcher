@@ -12,15 +12,24 @@ use tokio::{fs, io::AsyncBufReadExt};
 
 use super::utils::{self};
 
+const QUILT_LOADER_VERSION_LIST_URL: &str = "https://meta.quiltmc.org/v3/versions/loader";
+const QUILT_INSTALLER_LIST_URL: &str =
+    "https://maven.quiltmc.org/repository/release/org/quiltmc/quilt-installer/maven-metadata.xml";
+
+const FABRIC_LOADER_VERSION_LIST_URL: &str = "https://meta.fabricmc.net/v2/versions/loader";
+const FABRIC_INSTALLER_LIST_URL: &str =
+    "https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml";
+
 #[derive(Debug, Deserialize)]
 struct LoaderVersion {
     version: String,
 }
 
+/// get either fabric or quilt's latest loader version
 pub async fn get_latest_loader_version(quilt: bool) -> Result<String> {
     let source = match quilt {
-        true => "https://meta.quiltmc.org/v3/versions/loader",
-        false => "https://meta.fabricmc.net/v2/versions/loader",
+        true => QUILT_LOADER_VERSION_LIST_URL,
+        false => FABRIC_LOADER_VERSION_LIST_URL,
     };
 
     let response = utils::REQUEST_CLIENT.get(source).send().await?;
@@ -34,10 +43,11 @@ pub async fn get_latest_loader_version(quilt: bool) -> Result<String> {
     Ok(latest.version.to_owned())
 }
 
+/// get either fabric or quilt's latest installer
 pub async fn get_latest_installer(quilt: bool) -> Result<String> {
-    let source = match  quilt {
-        true => "https://maven.quiltmc.org/repository/release/org/quiltmc/quilt-installer/maven-metadata.xml",
-        false => "https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml"
+    let source = match quilt {
+        true => QUILT_INSTALLER_LIST_URL,
+        false => FABRIC_INSTALLER_LIST_URL,
     };
     let response = utils::REQUEST_CLIENT.get(source).send().await?;
     let xml = response.text().await?;
@@ -48,6 +58,7 @@ pub async fn get_latest_installer(quilt: bool) -> Result<String> {
     Ok(version.to_owned())
 }
 
+/// Install the fabric or quilt mod loader.
 pub async fn run_installer(
     on_event: &tauri::ipc::Channel<DownloadEvent>,
     runtime_directory: &Path,
@@ -226,58 +237,4 @@ pub async fn run_installer(
     .await?;
 
     Ok(loader_version)
-}
-
-#[cfg(test)]
-mod tests {
-    /*use super::*;
-
-    fn init() {
-        let _ = env_logger::builder()
-            .filter_level(log::LevelFilter::max())
-            .is_test(true)
-            .try_init();
-    }*/
-
-    /*#[tokio::test]
-    async fn test_fabric_install() {
-        init();
-        let temp = std::env::temp_dir();
-        let runtime_dir = temp.join("runtime");
-        let java = runtime_dir.join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe");
-
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-
-        run_installer(
-            &tx,
-            &runtime_dir,
-            java.to_string_lossy().as_ref(),
-            "1.20.6",
-            None,
-            false,
-        )
-        .await
-        .expect("Failed to install");
-    }
-
-    #[tokio::test]
-    async fn test_quilt_install() {
-        init();
-        let temp = std::env::temp_dir();
-        let runtime_dir = temp.join("runtime");
-        let java = runtime_dir.join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe");
-
-        let (tx, _) = tokio::sync::mpsc::channel::<ChannelMessage>(2);
-
-        run_installer(
-            &tx,
-            &runtime_dir,
-            java.to_string_lossy().as_ref(),
-            "1.20.6",
-            None,
-            true,
-        )
-        .await
-        .expect("Failed to install");
-    }*/
 }

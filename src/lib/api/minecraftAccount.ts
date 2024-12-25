@@ -169,7 +169,7 @@ export async function getMinecraftAccount(
 		details: profile,
 	};
 
-	localStorage.setItem(key, JSON.stringify(profile));
+	localStorage.setItem(key, JSON.stringify(mcprofile));
 
 	return mcprofile;
 }

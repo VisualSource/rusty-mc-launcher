@@ -10,6 +10,8 @@ use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::{fs, io::AsyncWriteExt};
 
+const JAVA_DOWNLOAD_URL: &str = "https://api.azul.com/metadata/v1/zulu/packages";
+
 #[derive(Debug, Deserialize)]
 struct JavaDownload {
     download_url: String,
@@ -26,7 +28,12 @@ pub async fn download_java(
 
     let temp = std::env::temp_dir();
 
-    let url = &format!("https://api.azul.com/metadata/v1/zulu/packages?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",std::env::consts::ARCH, java, std::env::consts::OS);
+    let url = &format!("{}?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",
+        JAVA_DOWNLOAD_URL,
+        std::env::consts::ARCH, 
+        java, 
+        std::env::consts::OS
+    );
 
     let request = utils::REQUEST_CLIENT.get(url);
 
@@ -87,7 +94,7 @@ pub async fn download_java(
 
 /// Downloads the minecraft client jar file
 ///
-/// Emits: 1 Progress event
+/// Emits: 2 Progress event
 pub async fn download_client(
     on_event: &tauri::ipc::Channel<DownloadEvent>,
     version: &str,

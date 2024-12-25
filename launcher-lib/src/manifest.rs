@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use crate::error::Error;
 use crate::launcher::arguments::{parse_rules, Arguments, RuleCondition};
 
+/// struct reps of the download for minecraft assets
 pub mod asset_index {
     use super::*;
 
@@ -26,6 +27,7 @@ pub mod asset_index {
     }
 }
 
+/// The minecraft manifest file
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Manifest {
@@ -49,6 +51,7 @@ pub struct Manifest {
 }
 
 impl Manifest {
+    /// Load a minecraft manifest file with optional inherting of parent manifest.
     pub async fn read_manifest(manifest_dir: &PathBuf, do_inhert: bool) -> Result<Manifest, Error> {
         let manifest_raw = tokio::fs::read_to_string(&manifest_dir).await?;
         let mut manifest = serde_json::from_str::<Manifest>(&manifest_raw)?;
@@ -81,6 +84,7 @@ impl Manifest {
         Ok(manifest)
     }
 
+    /// Merges two manifests together
     pub fn inherit(mut self, manifest: Manifest) -> Manifest {
         self.id = manifest.id;
         self.release_time = manifest.release_time;
@@ -109,6 +113,7 @@ impl Manifest {
         self
     }
 
+    /// convert libraries vector into a string with class path.
     pub fn libs_as_string(
         &self,
         root: &std::path::Path,
@@ -150,6 +155,7 @@ pub struct JavaVersion {
     pub major_version: usize,
 }
 
+/// A library reference defined into the manifest file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Library {

@@ -1,12 +1,12 @@
 use crate::error::Result;
 use std::path::Path;
 
-/// Runs the the java program in library/JavaInfo.class
+/// Runs the the java program in java/JavaInfo.class
 /// Returns the version of the jre bin that was pass to this function
 pub async fn check_java(path: &Path) -> Result<Option<String>> {
     let temp_dir = std::env::temp_dir();
 
-    let bytes = include_bytes!("../library/JavaInfo.class");
+    let bytes = include_bytes!("../java/JavaInfo.class");
     let file_path = temp_dir.join("JavaInfo.class");
 
     tokio::fs::write(file_path, bytes).await?;

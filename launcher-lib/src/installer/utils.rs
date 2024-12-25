@@ -25,6 +25,7 @@ lazy_static::lazy_static! {
 }
 const FETCH_ATTEMPTS: usize = 5;
 
+/// Gets the sha1 hash of a file.
 pub async fn get_file_hash(path: &Path) -> Result<String> {
     let mut file = File::open(path)
         .await?
@@ -38,6 +39,9 @@ pub async fn get_file_hash(path: &Path) -> Result<String> {
     Ok(hex::encode(file_hash))
 }
 
+/// Tries to download file from source.
+/// If as sha1 hash is given, the output location is checked if the file exists and checks if hash
+/// matches file at that location and does not try to download from remote source if hash matches
 pub async fn download_file(
     source_url: &str,
     output_directory: &Path,

@@ -19,6 +19,10 @@ use crate::{
     events::DownloadEvent,
     manifest::{Library, Manifest},
 };
+
+const FORGE_VERSION_LIST_URL: &str =
+    "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml";
+
 #[derive(Debug, Deserialize)]
 struct Mapping {
     client: String,
@@ -187,13 +191,14 @@ impl InstallProfile {
     }
 }
 
+/// Get the lastest version of forge
 pub async fn get_latest_version(minecraft_version: &str) -> Result<String> {
     let regex = regex::Regex::new(&format!(
         r"<version>{minecraft_version}-(?<loader_version>\d+\.\d+\.\d+)<\/version>"
     ))?;
 
     let response = utils::REQUEST_CLIENT
-        .get("https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml")
+        .get(FORGE_VERSION_LIST_URL)
         .send()
         .await?;
 
@@ -210,6 +215,7 @@ pub async fn get_latest_version(minecraft_version: &str) -> Result<String> {
     Ok(loader_version.as_str().to_string())
 }
 
+/// Get the installer url for forge
 pub async fn get_installer_download_url(
     minecraft: &str,
     loader_version: Option<String>,

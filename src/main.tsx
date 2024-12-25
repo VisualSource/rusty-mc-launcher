@@ -27,7 +27,7 @@ root.render(
 				<ProcessProvider>
 					<ModrinthProvider client={mca}>
 						<DownloadProvider>
-							<RouterProvider router={router} context={{}} />
+							<RouterProvider router={router} />
 						</DownloadProvider>
 					</ModrinthProvider>
 				</ProcessProvider>

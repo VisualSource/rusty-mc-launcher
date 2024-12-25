@@ -1,38 +1,56 @@
-import { type Event, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { type Event as TauriEvent, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { createContext } from "react";
 
-const PROCESS_STATE_CHANGE = "rmcl://running-process-state";
+const EVENT_PROCESS_STATE = "rmcl::process-state";
+const EVENT_PROCESS_CRASH = "rmcl::process-crash";
+const UPDATE_EVENT = "update";
+export const CRASH_EVENT = "crash";
+
+type ProcessStateEvent = { type: "Add", data: string } | { type: "Remove", data: string[] } | { type: "Init", data: string[] };
+export type ProcessCrashEvent = { profile: string, code: number };
 
 export class ProcessState extends EventTarget {
-    private subscription: Promise<UnlistenFn>;
+    private stateSubscription: Promise<UnlistenFn>;
+    private crashSubscription: Promise<UnlistenFn>;
     private state: Set<string> = new Set();
     constructor() {
         super();
-        this.subscription = listen<{ profile: string, state: boolean }>(PROCESS_STATE_CHANGE, this.onChange);
+        this.stateSubscription = listen<ProcessStateEvent>(EVENT_PROCESS_STATE, this.onState);
+        this.crashSubscription = listen<ProcessCrashEvent>(EVENT_PROCESS_CRASH, this.onCrash);
     }
-
     public async destory() {
-        const listen = await this.subscription
-        listen();
+        const [stateSub, crashSub] = await Promise.all([this.stateSubscription, this.crashSubscription]);
+        stateSub();
+        crashSub();
     }
-
-    private onChange = (ev: Event<{ profile: string, state: boolean }>) => {
-        if (ev.payload.state) {
-            this.state.add(ev.payload.profile);
-            return;
-        }
+    private onCrash = (ev: TauriEvent<ProcessCrashEvent>) => {
         this.state.delete(ev.payload.profile);
-        this.dispatchEvent(new Event("update"));
+        this.dispatchEvent(new Event(UPDATE_EVENT));
+        this.dispatchEvent(new CustomEvent<ProcessCrashEvent>(CRASH_EVENT, { detail: ev.payload }));
     }
-
-    public getState(profile: string) {
+    private onState = (ev: TauriEvent<ProcessStateEvent>) => {
+        switch (ev.payload.type) {
+            case "Add":
+                this.state.add(ev.payload.data);
+                break;
+            case "Remove":
+                for (const id of ev.payload.data) this.state.delete(id);
+                break;
+            case "Init":
+                for (const id of ev.payload.data) this.state.add(id);
+                break;
+            default:
+                break;
+        }
+        this.dispatchEvent(new Event(UPDATE_EVENT));
+    }
+    public isProfileRunning(profile: string): boolean {
         return this.state.has(profile);
     }
-
-    public onEvent = (callback: () => void) => {
-        this.addEventListener("state", callback);
+    public onSync = (callback: () => void) => {
+        this.addEventListener(UPDATE_EVENT, callback);
         return () => {
-            this.removeEventListener("state", callback);
+            this.removeEventListener(UPDATE_EVENT, callback);
         }
     }
 }

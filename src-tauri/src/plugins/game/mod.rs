@@ -3,10 +3,13 @@ mod desktop;
 
 use std::time::Duration;
 
-use desktop::{PluginGameState, ProcessStatePayload};
+use desktop::{
+    PluginGameState, ProcessCrashEvent, ProcessStatePayload, PROCESSES_STATE_EVENT,
+    PROCESS_CRASH_EVENT,
+};
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    Emitter, EventTarget, Manager, RunEvent, Runtime,
+    Emitter, Manager, RunEvent, Runtime,
 };
 use tokio_util::sync::CancellationToken;
 
@@ -15,26 +18,27 @@ use tokio::{select, sync::RwLock};
 
 use crate::error::Error;
 
-const PROCESS_CRASH_EVENT: &str = "";
-pub const PROCESSES_STATE_EVENT: &str = "";
-
 struct PluginGameCancellationToken(CancellationToken);
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-game")
         .setup(|app, _api| {
-            // rescue processes from cahce
+            // rescue processes from cache
             let processes = tauri::async_runtime::block_on(async {
                 let mut data = Processes::default();
 
                 let state = app.state::<RwLock<Database>>();
                 let db = state.write().await;
 
-                data.load_cache(&db).await.map_err(Error::Lib)?;
+                let active = data.load_cache(&db).await.map_err(Error::Lib)?;
+
+                if let Err(err) = app.emit(PROCESSES_STATE_EVENT, ProcessStatePayload::Init(active)) {
+                    log::error!("{}",err);
+                }
 
                 Ok::<Processes, Error>(data)
             })?;
-
+            
             app.manage(PluginGameState::new(processes));
 
             //
@@ -44,29 +48,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             // 3. emit events for crashed processes
             //
 
-            /*let ph = app.handle();
-            tauri::async_runtime::spawn(async move {
-                loop {
-                    tokio::time::sleep(Duration::from_secs(5)).await;
-                    let state = ph.state::<AppState>();
-
-                    match state.watch_process_status().await {
-                        Ok(status) => {
-                            if status.is_some() {
-                                if let Err(err) = ph.emit_to(
-                                    "main",
-                                    "rmcl://profile_crash_event",
-                                    format!("{{ \"status\": {} }}", status.unwrap_or_default()),
-                                ) {
-                                    log::error!("{}", err);
-                                }
-                                tokio::time::sleep(Duration::from_secs(5)).await;
-                            }
-                        }
-                        Err(err) => log::error!("{}", err),
-                    }
-                }
-            });*/
             let handle = app.app_handle().clone();
             let token = CancellationToken::new();
 
@@ -84,6 +65,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
                                 let mut removable = Vec::new();
                                 for (uuid, ps) in &mut ps_list.state {
+                                    let profile_id = ps.profile_id.clone();
                                     let status = ps
                                         .status()
                                         .await
@@ -95,18 +77,19 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                         e if e < 0 => continue,
                                         // error exit code
                                         e if e > 0 => {
-                                            if let Err(err) = handle.emit_to(
-                                               "main",
+                                            if let Err(err) = handle.emit(
                                                 PROCESS_CRASH_EVENT,
-                                                uuid,
+                                                ProcessCrashEvent::new(profile_id.clone(),e),
                                             ) {
                                                 log::error!("{}", err);
                                             }
-                                            removable.push(uuid.clone());
+                                            log::debug!("Process crashed: {}",uuid);
+                                            removable.push((uuid.clone(),profile_id));
                                         }
                                         // 0 exit code
                                         _ => {
-                                            removable.push(uuid.clone());
+                                            log::debug!("Process exited: {}",uuid);
+                                            removable.push((uuid.clone(),profile_id));
                                         }
                                     }
                                 }
@@ -117,16 +100,19 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                 let s_db =
                                     handle.state::<RwLock<minecraft_launcher_lib::database::Database>>();
 
+                                log::debug!("Removing old processes: {:?}",removable);
+
+                                let (process_ids,profile_ids) = removable.into_iter().unzip();
+
                                 let mut state = state.0.write().await;
                                 let db = s_db.write().await;
-                                if let Err(err) = state.remove_from_cache(&db, &removable).await {
+                                if let Err(err) = state.remove_from_cache(&db, &process_ids).await {
                                     log::error!("{}", err);
                                 }
 
-                                if let Err(err) = handle.emit_to(
-                                    EventTarget::labeled("main"),
+                                if let Err(err) = handle.emit(
                                     PROCESSES_STATE_EVENT,
-                                    ProcessStatePayload::Remove(removable),
+                                    ProcessStatePayload::Remove(profile_ids),
                                 ) {
                                     log::error!("{}", err);
                                 }
@@ -143,7 +129,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             Ok(())
         })
         .on_event(|app, ev| {
-            if let RunEvent::Exit = &ev {
+            if let RunEvent::ExitRequested { .. } = &ev {
                 let state = app.state::<PluginGameCancellationToken>();
                 state.0.cancel();
             }

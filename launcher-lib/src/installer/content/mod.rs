@@ -1,4 +1,5 @@
-pub mod external;
+pub mod curseforge;
+pub mod file;
 mod mrpack;
 use std::{path::PathBuf, str::FromStr};
 

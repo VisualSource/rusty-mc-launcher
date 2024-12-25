@@ -8,6 +8,11 @@ use log::debug;
 use std::{path::Path, process::Stdio};
 use tokio::{fs, io::AsyncBufReadExt};
 
+const NEOFORGE_VERSION_LIST_URL: &str =
+    "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml";
+const NEOFORGE_INSTALLER_FINISH_MESSAGE: &str =
+    "You can delete this installer file now if you wish";
+
 use super::utils::{self};
 
 pub async fn get_latest_neoforge_version(minecraft_version: &str) -> Result<String> {
@@ -18,7 +23,7 @@ pub async fn get_latest_neoforge_version(minecraft_version: &str) -> Result<Stri
     let minor = if minor.is_empty() { "0" } else { minor };
 
     let response = utils::REQUEST_CLIENT
-        .get("https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")
+        .get(NEOFORGE_VERSION_LIST_URL)
         .send()
         .await?;
 
@@ -133,13 +138,11 @@ pub async fn run_installer(
             Ok(line) => {
                 let log = String::from_utf8_lossy(line);
                 if !log.is_empty() {
-                    log::info!("{}", log);
-                    //event!(&event_channel,"update",{ "message": log });
+                    log::debug!("{}", log);
                 }
 
-                // You can delete this installer file now if you wish
-
-                if log.contains("You can delete this installer file now if you wish") {
+                //wait for installer message finish message
+                if log.contains(NEOFORGE_INSTALLER_FINISH_MESSAGE) {
                     break 'logger;
                 }
 

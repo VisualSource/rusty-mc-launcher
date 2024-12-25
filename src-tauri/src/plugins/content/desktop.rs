@@ -1,7 +1,7 @@
 use minecraft_launcher_lib::{
     database::Database,
     events::DownloadEvent,
-    installer::content::{self, external::install_curseforge_modpack},
+    installer::content::{self, curseforge::install_curseforge_modpack},
     installer::{content::InstallContent, InstallConfig},
     models::{
         profile::{Profile, ProfileState},
@@ -44,7 +44,7 @@ pub async fn install_client(
     Ok(())
 }
 
-pub async fn install_external(
+pub async fn install_cf_modpack(
     item: &QueueItem,
     db_state: &RwLock<Database>,
     on_event: &Channel<DownloadEvent>,

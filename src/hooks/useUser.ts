@@ -1,12 +1,12 @@
 import { useAccount, useMsal } from "@azure/msal-react";
 import type { AccountInfo } from "@azure/msal-browser";
 import { useQuery } from "@tanstack/react-query";
+import { debug } from "@tauri-apps/plugin-log";
 import { useCallback } from "react";
 
 import { startAuthServer, closeAuthServer } from "@lib/api/plugins/auth";
 import { getMinecraftAccount } from "@lib/api/minecraftAccount";
 import getToken from "@lib/auth/getToken";
-import { debug } from "@tauri-apps/plugin-log";
 
 const useUser = () => {
 	const msAccount = useAccount();

@@ -14,6 +14,7 @@ use crate::error::{Error, Result};
 
 type Archive = ZipFileReader<Compat<BufReader<File>>>;
 
+/// Gets the main class from the MANIFEST.MF inside of a java jar file
 pub async fn get_mainclass(file: &Path) -> Result<String> {
     let mut archive = open_archive(File::open(file).await?).await?;
 
@@ -46,7 +47,7 @@ pub async fn open_archive(file: File) -> Result<Archive> {
     ZipFileReader::new(archive).await.map_err(Error::from)
 }
 
-/// extract a file from archive and parse into given value.
+/// extract a file from archive and parse json.
 pub async fn parse_extract<T>(
     reader: &mut ZipFileReader<Compat<BufReader<File>>>,
     filename: &str,
@@ -71,7 +72,7 @@ where
     serde_json::from_slice::<T>(&buffer).map_err(Error::from)
 }
 
-/// extract a file from archive
+/// extract a file from a archive
 pub async fn extract_file_to(archive: &mut Archive, filename: &str, outdir: &Path) -> Result<u64> {
     let file_index = archive
         .file()
@@ -83,6 +84,7 @@ pub async fn extract_file_to(archive: &mut Archive, filename: &str, outdir: &Pat
     extract_file_at(archive, file_index, outdir, None).await
 }
 
+/// Extract a directory in the archive
 pub async fn extract_dir(
     archive: &mut Archive,
     dir: &str,

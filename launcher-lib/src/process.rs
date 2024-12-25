@@ -1,5 +1,4 @@
 use std::{collections::HashMap, path::Path};
-use sysinfo::ProcessStatus;
 use tokio::process::{Child, Command};
 use uuid::Uuid;
 
@@ -57,13 +56,16 @@ impl Processes {
 
         Ok(())
     }
-    pub async fn load_cache(&mut self, db: &crate::database::Database) -> Result<()> {
+
+    /// Loads processes from db.
+    pub async fn load_cache(&mut self, db: &crate::database::Database) -> Result<Vec<String>> {
         let processes: Vec<Process> = sqlx::query_as("SELECT * FROM processes;")
             .fetch_all(&db.0)
             .await?;
         // delete old processes
         sqlx::query("DELETE FROM processes;").execute(&db.0).await?;
 
+        let mut running_profiles = Vec::new();
         let system = sysinfo::System::new();
         for mut cache in processes {
             if let Some(process) = system.process(sysinfo::Pid::from_u32(cache.pid as u32)) {
@@ -79,12 +81,14 @@ impl Processes {
                     continue;
                 }
 
+                running_profiles.push(cache.profile_id.clone());
+
                 cache.child = InstanceType::Partial(process.pid().as_u32());
                 self.insert(cache);
             }
         }
 
-        Ok(())
+        Ok(running_profiles)
     }
     pub async fn cache(&self, db: &crate::database::Database) -> Result<()> {
         for item in self.state.values() {

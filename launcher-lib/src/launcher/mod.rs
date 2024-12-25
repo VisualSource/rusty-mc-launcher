@@ -259,31 +259,3 @@ pub async fn start_game(
 
     Ok(())
 }
-/*#[cfg(test)]
-mod tests {
-    use super::*;
-    #[tokio::test]
-    async fn test_start() {
-        let runtime_directory = std::env::temp_dir().join("runtime");
-        let java = runtime_directory
-            .join("java\\zulu21.34.19-ca-jre21.0.3-win_x64\\bin\\javaw.exe")
-            .normalize();
-        let settings = LaunchConfig {
-            profile_id: "AAAA".to_string(),
-            auth_player_name: "VisaulSource".to_string(),
-            auth_uuid: "37f0c4ef71c943e2baafd547302f0c92".to_string(),
-            auth_access_token: "TOKEN".to_string(),
-            auth_xuid: "0".to_string(),
-        };
-
-        let app = AppState::new(":memory:").expect("Failed to build");
-
-        app.insert_java(21, "0.0.0", &java)
-            .await
-            .expect("Failed to insert");
-
-        start_game(&app, settings)
-            .await
-            .expect("Failed to build string");
-    }
-}*/

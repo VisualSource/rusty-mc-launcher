@@ -13,16 +13,21 @@ pub async fn launch_game<R: Runtime>(
     ps: tauri::State<'_, PluginGameState>,
     config: LaunchConfig,
 ) -> Result<(), Error> {
-    let dbr = db.write().await;
+    let profile_id = config.get_profile();
 
-    if let Err(err) = app.emit(
-        PROCESSES_STATE_EVENT,
-        ProcessStatePayload::Starting(config.get_profile()),
-    ) {
+    log::debug!("Starting processes: Profile UUID: {}", profile_id);
+
+    let dbr = db.write().await;
+    if let Err(err) = start_game(&dbr, &ps.0, config).await.map_err(Error::Lib) {
+        log::error!("{}", err);
+        return Err(err);
+    }
+
+    if let Err(err) = app.emit(PROCESSES_STATE_EVENT, ProcessStatePayload::Add(profile_id)) {
         log::error!("{}", err);
     }
 
-    start_game(&dbr, &ps.0, config).await.map_err(Error::Lib)
+    Ok(())
 }
 
 #[tauri::command]

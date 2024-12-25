@@ -2,7 +2,7 @@ mod commands;
 mod desktop;
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    Listener, Manager, Runtime,
+    Listener, Runtime,
 };
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
