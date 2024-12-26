@@ -126,6 +126,7 @@ impl Process {
         profile_id: String,
         game_directory: &Path,
     ) -> Result<Self> {
+        log::debug!("{} {}", exe, args.join(" "),);
         let uuid = Uuid::new_v4().to_string();
 
         let ps = Command::new(&exe)

@@ -74,7 +74,6 @@ function Download() {
 				<DownloadSection
 					label="Completed"
 					group={QueueItemState.COMPLETED}
-					order="ASC"
 				/>
 				<DownloadSection
 					label="Errored"

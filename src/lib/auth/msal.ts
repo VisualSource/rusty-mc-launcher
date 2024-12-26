@@ -23,7 +23,7 @@ const configuration: Configuration = {
 		allowNativeBroker: true,
 		loggerOptions: {
 			piiLoggingEnabled: false,
-			logLevel: import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
+			logLevel: LogLevel.Error,// import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
 			loggerCallback(level: LogLevel, message: string) {
 				switch (level) {
 					case LogLevel.Error:

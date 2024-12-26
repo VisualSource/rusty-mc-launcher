@@ -1,5 +1,4 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use tauri_plugin_deep_link::DeepLinkExt;
 mod error;
 mod plugins;
 

@@ -17,7 +17,7 @@ use super::{
 use crate::{
     error::{Error, Result},
     events::DownloadEvent,
-    manifest::{Library, Manifest},
+    manifest::{LibVersion, Library, Manifest},
 };
 
 const FORGE_VERSION_LIST_URL: &str =
@@ -31,10 +31,10 @@ struct Mapping {
 impl Mapping {
     fn get_client(&self, libary_path: &Path) -> Result<String> {
         if self.client.starts_with('[') && self.client.ends_with(']') {
+            let path = LibVersion::parse(&self.client.replace(['[', ']'], ""))?.as_classpath();
+
             Ok(libary_path
-                .join(Library::get_artifact_path(
-                    &self.client.replace(['[', ']'], ""),
-                )?)
+                .join(path)
                 .normalize()
                 .to_string_lossy()
                 .to_string())
@@ -79,7 +79,7 @@ impl Processor {
                     )))?;
                 args.push(mapping.1.to_owned());
             } else if arg.starts_with('[') && arg.ends_with(']') {
-                let path = Library::get_artifact_path(&arg.replace(['[', ']'], ""))?;
+                let path = LibVersion::parse(&arg.replace(['[', ']'], ""))?.as_classpath();
 
                 args.push(
                     library_directory
@@ -155,18 +155,19 @@ impl InstallProfile {
         for processor in processors {
             let mut classpath = Vec::new();
             for lib in &processor.classpath {
+                let path = LibVersion::parse(lib)?.as_classpath();
+
                 classpath.push(
                     library_directory
-                        .join(Library::get_artifact_path(lib)?)
+                        .join(path)
                         .normalize()
                         .to_string_lossy()
                         .to_string(),
                 );
             }
 
-            let main_jar = library_directory
-                .join(Library::get_artifact_path(&processor.jar)?)
-                .normalize();
+            let jar_path = LibVersion::parse(&processor.jar)?.as_classpath();
+            let main_jar = library_directory.join(jar_path).normalize();
 
             classpath.push(main_jar.to_string_lossy().to_string());
 

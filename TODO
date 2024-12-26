@@ -1,5 +1,5 @@
 Todo:
-  ☐ Finished rewrite on installs
+  ✔ Finished rewrite on installs @done(24-12-25 19:55)
   ☐ Fix content uninstall
   ☐ Update content check deps
   ☐ update to latest version (for vanilla)
@@ -7,7 +7,7 @@ Todo:
   ☐ Working neoforge install
   ☐ performance changes
   ☐ Resourcepack mod checks
-  ☐ CurseForge Search
+  ☐ Add Completed timestamp to download queue
   
   
 Bugs:

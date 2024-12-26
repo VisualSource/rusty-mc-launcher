@@ -13,8 +13,11 @@ use tauri::{
 };
 use tokio_util::sync::CancellationToken;
 
-use minecraft_launcher_lib::{database::Database, process::Processes};
-use tokio::{select, sync::RwLock};
+use minecraft_launcher_lib::{
+    database::Database,
+    process::{InstanceType, Processes},
+};
+use tokio::{io::AsyncReadExt, select, sync::RwLock};
 
 use crate::error::Error;
 
@@ -38,7 +41,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
                 Ok::<Processes, Error>(data)
             })?;
-            
+
             app.manage(PluginGameState::new(processes));
 
             //
@@ -66,6 +69,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                 let mut removable = Vec::new();
                                 for (uuid, ps) in &mut ps_list.state {
                                     let profile_id = ps.profile_id.clone();
+
                                     let status = ps
                                         .status()
                                         .await
@@ -77,6 +81,16 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                         e if e < 0 => continue,
                                         // error exit code
                                         e if e > 0 => {
+                                            if let InstanceType::Full(child) = &mut ps.child {
+                                                if let Some(mut output) = child.stderr.take() {
+                                                    let mut io = String::new();
+                                                    if let Err(err) = output.read_to_string(&mut io).await {
+                                                        log::error!("{}",err);
+                                                    };
+                                                    log::debug!("{:#?}",io);
+                                                }
+                                            }
+
                                             if let Err(err) = handle.emit(
                                                 PROCESS_CRASH_EVENT,
                                                 ProcessCrashEvent::new(profile_id.clone(),e),

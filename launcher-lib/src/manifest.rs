@@ -5,7 +5,9 @@
 
 use log::info;
 use normalize_path::NormalizePath;
-use serde::{self, Deserialize, Serialize};
+use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
+use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::env::consts;
 use std::path::PathBuf;
 
@@ -96,19 +98,33 @@ impl Manifest {
         self.arguments.game.extend(manifest.arguments.game);
         self.arguments.jvm.extend(manifest.arguments.jvm);
 
-        let lib_names = self
-            .libraries
-            .iter()
-            .map(|lib| lib.name.replace("@jar", "").clone())
-            .collect::<Vec<_>>();
+        self.libraries.extend(manifest.libraries);
 
-        for lib in manifest.libraries {
-            if !lib_names.contains(&lib.name.replace("@jar", "")) {
-                self.libraries.push(lib);
-                continue;
+        let mut seen = HashMap::<String, String>::new();
+        for lib in &self.libraries {
+            let name = lib.name.as_string_without_version();
+            if seen.contains_key(&name) {
+                let seen_version = seen.get(&name).unwrap();
+
+                if semver_rs::compare(&lib.name.version, seen_version, None).unwrap()
+                    == Ordering::Greater
+                {
+                    seen.insert(name, lib.name.version.clone());
+                }
+            } else {
+                seen.insert(name, lib.name.version.clone());
             }
-            log::info!("Ignoring {}", lib.name);
         }
+
+        self.libraries.retain(|lib| {
+            let name = lib.name.as_string_without_version();
+            if seen.contains_key(&name) {
+                return seen
+                    .get(&name)
+                    .map_or_else(|| true, |version| version == &lib.name.version);
+            }
+            false
+        });
 
         self
     }
@@ -155,12 +171,121 @@ pub struct JavaVersion {
     pub major_version: usize,
 }
 
+#[derive(Debug, Clone)]
+pub struct LibVersion {
+    package: String,
+    name: String,
+    version: String,
+    file: String,
+    native: Option<String>,
+}
+
+impl LibVersion {
+    pub fn parse(buf: &str) -> Result<LibVersion, Error> {
+        let name_items = buf.split(':').collect::<Vec<&str>>();
+
+        let package = name_items.first().ok_or_else(|| {
+            Error::NotFound(format!("Unable to find package for library {}", buf))
+        })?;
+        let name = name_items
+            .get(1)
+            .ok_or_else(|| Error::NotFound(format!("Unable to find name for library {}", buf)))?;
+
+        if name_items.len() == 3 {
+            let version_ext = name_items
+                .get(2)
+                .ok_or_else(|| {
+                    Error::NotFound(format!("Unable to find version for library {}", buf))
+                })?
+                .split('@')
+                .collect::<Vec<&str>>();
+            let version = version_ext.first().ok_or_else(|| {
+                Error::NotFound(format!("Unable to find version ext for library {}", buf))
+            })?;
+            let ext = version_ext.get(1);
+
+            Ok(LibVersion {
+                package: package.to_string(),
+                name: name.to_string(),
+                version: version.to_string(),
+                file: format!("{}-{}.{}", name, version, ext.unwrap_or(&"jar")),
+                native: None,
+            })
+        } else {
+            let version = name_items.get(2).ok_or_else(|| {
+                Error::NotFound(format!("Unable to find version for library {}", buf))
+            })?;
+
+            let data_ext = name_items
+                .get(3)
+                .ok_or_else(|| Error::NotFound(format!("Unable to find data for library {}", buf)))?
+                .split('@')
+                .collect::<Vec<&str>>();
+            let data = data_ext.first().ok_or_else(|| {
+                Error::NotFound(format!("Unable to find native for library {}", buf))
+            })?;
+            let ext = data_ext.get(1);
+
+            Ok(LibVersion {
+                package: package.to_string(),
+                name: name.to_string(),
+                version: version.to_string(),
+                file: format!("{}-{}-{}.{}", name, version, data, ext.unwrap_or(&"jar")),
+                native: Some(data.to_string()),
+            })
+        }
+    }
+
+    pub fn as_string(&self) -> String {
+        if let Some(native) = &self.native {
+            format!("{}:{}:{}:{}", self.package, self.name, self.version, native)
+        } else {
+            format!("{}:{}:{}", self.package, self.name, self.version)
+        }
+    }
+    pub fn as_classpath(&self) -> String {
+        format!(
+            "{}/{}/{}/{}",
+            self.package.replace('.', "/"),
+            self.name,
+            self.version,
+            self.file
+        )
+    }
+
+    fn as_string_without_version(&self) -> String {
+        if let Some(native) = &self.native {
+            format!("{}:{}:{}", self.package, self.name, native)
+        } else {
+            format!("{}:{}", self.package, self.name)
+        }
+    }
+
+    /// Parse a library's name into it's parts so be can do operations on it
+    /// <https://brokenco.de/2020/08/03/serde-deserialize-with-string.html>
+    fn deserialize<'de, D>(deserializer: D) -> Result<LibVersion, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let buf = String::deserialize(deserializer)?;
+
+        Self::parse(&buf).map_err(|x| serde::de::Error::custom(x.to_string()))
+    }
+    fn serialize<S>(lib: &LibVersion, serialize: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serialize.serialize_str(&lib.as_string())
+    }
+}
+
 /// A library reference defined into the manifest file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Library {
     pub downloads: Option<LibraryDownloads>,
-    pub name: String,
+    #[serde(with = "LibVersion")]
+    pub name: LibVersion,
     pub url: Option<String>,
     pub sha1: Option<String>,
     pub natives: Option<std::collections::HashMap<String, String>>,
@@ -179,69 +304,7 @@ impl Library {
             ":"
         }
     }
-
-    pub fn get_artifact_path(artifact: &str) -> Result<String, Error> {
-        let name_items = artifact.split(':').collect::<Vec<&str>>();
-
-        let package = name_items.first().ok_or_else(|| {
-            Error::NotFound(format!("Unable to find package for library {}", &artifact))
-        })?;
-        let name = name_items.get(1).ok_or_else(|| {
-            Error::NotFound(format!("Unable to find name for library {}", &artifact))
-        })?;
-
-        if name_items.len() == 3 {
-            let version_ext = name_items
-                .get(2)
-                .ok_or_else(|| {
-                    Error::NotFound(format!("Unable to find version for library {}", &artifact))
-                })?
-                .split('@')
-                .collect::<Vec<&str>>();
-            let version = version_ext.first().ok_or_else(|| {
-                Error::NotFound(format!("Unable to find version for library {}", &artifact))
-            })?;
-            let ext = version_ext.get(1);
-
-            Ok(format!(
-                "{}/{}/{}/{}-{}.{}",
-                package.replace('.', "/"),
-                name,
-                version,
-                name,
-                version,
-                ext.unwrap_or(&"jar")
-            ))
-        } else {
-            let version = name_items.get(2).ok_or_else(|| {
-                Error::NotFound(format!("Unable to find version for library {}", &artifact))
-            })?;
-
-            let data_ext = name_items
-                .get(3)
-                .ok_or_else(|| {
-                    Error::NotFound(format!("Unable to find data for library {}", &artifact))
-                })?
-                .split('@')
-                .collect::<Vec<&str>>();
-            let data = data_ext.first().ok_or_else(|| {
-                Error::NotFound(format!("Unable to find data for library {}", &artifact))
-            })?;
-            let ext = data_ext.get(1);
-
-            Ok(format!(
-                "{}/{}/{}/{}-{}-{}.{}",
-                package.replace('.', "/"),
-                name,
-                version,
-                name,
-                version,
-                data,
-                ext.unwrap_or(&"jar")
-            ))
-        }
-    }
-
+    /// creates the absuolte path to this file
     fn get_lib(&self, root: &std::path::Path) -> Result<Option<String>, Error> {
         let include = if let Some(rules) = &self.rules {
             parse_rules(None, rules)
@@ -253,7 +316,7 @@ impl Library {
             return Ok(None);
         }
 
-        let lib = Library::get_artifact_path(&self.name)?;
+        let lib = self.name.as_classpath();
 
         Ok(Some(
             root.join(lib).normalize().to_string_lossy().to_string(),
@@ -312,6 +375,121 @@ mod tests {
             .filter_level(log::LevelFilter::max())
             .is_test(true)
             .try_init();
+    }
+
+    #[test]
+    fn test_deserialize_lib() {
+        init();
+        let lib: Library = serde_json::from_str(r#"{
+                        "downloads": {
+                            "artifact": {
+                                "path": "org/ow2/asm/asm/9.6/asm-9.6.jar",
+                                "sha1": "aa205cf0a06dbd8e04ece91c0b37c3f5d567546a",
+                                "size": 123598,
+                                "url": "https://libraries.minecraft.net/org/ow2/asm/asm/9.6/asm-9.6.jar"
+                            }
+                        },
+                        "name": "org.ow2.asm:asm:9.6"
+                    }"#).expect("failed to build");
+
+        log::debug!("{:#?}", lib);
+    }
+
+    #[test]
+    fn test_deserialize_lib_with_native() {
+        init();
+        let lib: Library = serde_json::from_str(r#"
+        {
+            "downloads": {
+                "artifact": {
+                    "path": "org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3-natives-windows-x86.jar",
+                    "sha1": "9e670718e050aeaeea0c2d5b907cffb142f2e58f",
+                    "size": 139653,
+                    "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3-natives-windows-x86.jar"
+                }
+            },
+            "name": "org.lwjgl:lwjgl:3.3.3:natives-windows-x86",
+            "rules": [
+                {
+                    "action": "allow",
+                    "os": {
+                        "name": "windows"
+                    }
+                }
+            ]
+        }"#).expect("Failed to parse");
+        log::debug!("{:#?}", lib);
+    }
+
+    #[test]
+    fn test_dedup_library() {
+        init();
+        let manifset_source: Manifest = serde_json::from_str(r#"{
+        "inheritsFrom": "1.21.4",
+        "releaseTime": "2024-12-25T08:28:30+0000",
+        "mainClass": "net.fabricmc.loader.impl.launch.knot.KnotClient",
+        "libraries": [
+            {
+                "sha1": "f0ed132a49244b042cd0e15702ab9f2ce3cc8436",
+                "sha256": "8cadd43ac5eb6d09de05faecca38b917a040bb9139c7edeb4cc81c740b713281",
+                "size": 126093,
+                "name": "org.ow2.asm:asm:9.7.1",
+                "sha512": "4767b01603dad5c79cc1e2b5f3722f72b1059d928f184f446ba11badeb1b381b3a3a9a801cc43d25d396df950b09d19597c73173c411b1da890de808b94f1f50",
+                "url": "https://maven.fabricmc.net/",
+                "md5": "e2cdd32d198ad31427d298eee9d39d8d"
+            },
+            {
+                "name": "net.fabricmc:intermediary:1.21.4",
+                "url": "https://maven.fabricmc.net/"
+            },
+            {
+                "name": "net.fabricmc:fabric-loader:0.16.9",
+                "url": "https://maven.fabricmc.net/"
+            }
+        ],
+        "arguments": {
+            "jvm": [
+                "-DFabricMcEmu= net.minecraft.client.main.Main "
+            ],
+            "game": []
+        },
+        "id": "fabric-loader-0.16.9-1.21.4",
+        "time": "2024-12-25T08:28:30+0000",
+        "type": "release"
+    }"#).expect("Failed to parse manifset");
+        let manifset_two: Manifest = serde_json::from_str(r#"
+        {
+                "releaseTime": "2024-12-25T08:28:30+0000",
+                "mainClass": "net.fabricmc.loader.impl.launch.knot.KnotClient",
+                "libraries": [
+                    {
+                        "downloads": {
+                            "artifact": {
+                                "path": "org/ow2/asm/asm/9.6/asm-9.6.jar",
+                                "sha1": "aa205cf0a06dbd8e04ece91c0b37c3f5d567546a",
+                                "size": 123598,
+                                "url": "https://libraries.minecraft.net/org/ow2/asm/asm/9.6/asm-9.6.jar"
+                            }
+                        },
+                        "name": "org.ow2.asm:asm:9.6"
+                    }
+                ],
+                "arguments": {
+                    "jvm": [
+                        "-DFabricMcEmu= net.minecraft.client.main.Main "
+                    ],
+                    "game": []
+                },
+                "id": "fabric-loader-0.16.9-1.21.4",
+                "time": "2024-12-25T08:28:30+0000",
+                "type": "release"
+            }
+        "#).expect("Failed to parse");
+
+        let updated = manifset_source.inherit(manifset_two);
+        log::debug!("{:#?}", updated);
+
+        assert!(updated.libraries.len() == 3)
     }
 
     #[test]
@@ -434,7 +612,7 @@ mod tests {
     #[tokio::test]
     async fn test_manifest_inhert() {
         init();
-        let manifest_dir = PathBuf::from("C:\\Users\\Collin\\AppData\\Roaming\\us.visualsource.rmcl\\runtime\\versions\\fabric-loader-0.15.11-1.20.6\\fabric-loader-0.15.11-1.20.6.json");
+        let manifest_dir = PathBuf::from("C:\\tmp\\fabric-loader-0.15.11-1.20.6.json");
         let manifest = Manifest::read_manifest(&manifest_dir, true).await.unwrap();
 
         debug!("{:#?}", manifest);
@@ -444,9 +622,7 @@ mod tests {
     async fn test_libs_to_string() {
         init();
 
-        let manifest_dir = PathBuf::from(
-            "C:\\Users\\Collin\\AppData\\Roaming\\.minecraft\\versions\\1.19.3\\1.19.3.json",
-        );
+        let manifest_dir = PathBuf::from("C:\\tmp\\1.19.3.json");
         let manifest = Manifest::read_manifest(&manifest_dir, false).await.unwrap();
 
         let result = manifest

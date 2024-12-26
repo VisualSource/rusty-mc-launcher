@@ -1,6 +1,7 @@
 use super::{compression, utils};
 use crate::error::{Error, Result};
 use crate::events::DownloadEvent;
+use crate::java::check_java;
 use crate::manifest::{self, asset_index::AssetIndex, Downloads, Library};
 use futures::StreamExt;
 use log::{info, warn};
@@ -89,6 +90,12 @@ pub async fn download_java(
         .join("javaw.exe")
         .normalize();
 
+    let test_java = check_java(&java).await?.ok_or_else(||Error::Generic("Java install check failed.".to_string()))?;
+
+    if !test_java.starts_with(java.to_str().unwrap()) {
+        return Err(Error::Generic("Java version returned was not what was expected.".to_string()))
+    }
+
     Ok((java_vesrion, java))
 }
 
@@ -153,8 +160,8 @@ pub async fn download_libraries(
                     return Ok(());
                 }
             }
-
-            let artifact_path = Library::get_artifact_path(&lib.name)?;
+            let artifact_name = lib.name.as_string();
+            let artifact_path = lib.name.as_classpath();
             let path = lib_dir.join(&artifact_path).normalize();
 
             match &lib.downloads {
@@ -170,7 +177,7 @@ pub async fn download_libraries(
                     } else {
                         warn!(
                             "Lib {} does not have a download url! Most likely a forge library.",
-                            lib.name
+                            artifact_name
                         );
                     }
                 }
@@ -197,7 +204,7 @@ pub async fn download_libraries(
                         .ok_or(Error::NotFound("Failed to get classifer".to_string()))?;
                     let classifier = classifiers.get(native).ok_or(Error::NotFound(format!(
                         "Failed to get native for library: {}",
-                        lib.name
+                        artifact_name
                     )))?;
 
                     let file = classifier
