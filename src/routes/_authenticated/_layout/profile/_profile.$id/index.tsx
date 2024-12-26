@@ -1,21 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { open } from "@tauri-apps/plugin-dialog";
+import { createFileRoute } from "@tanstack/react-router";
 import { Import } from "lucide-react";
 import { useState } from "react";
 
-import { getProjects, versionsFromHashes, } from "@/lib/api/modrinth/services.gen";
 import { ContentTab } from "@/components/library/content/profile/ContentTab";
+import { fetchProfileContent } from "@/lib/profile/fetchProfileContent";
+import { profileImportFile } from "@/lib/profile/profileImportFile";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { modrinthClient } from "@/lib/api/modrinthClient";
 import { profileQueryOptions } from "../_profile.$id";
-import { queryClient } from "@/lib/api/queryClient";
-import { ContentItem } from "@/lib/models/content";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
-import { query } from "@lib/api/plugins/query";
-import toast, { updateToast } from "@component/ui/toast";
-//import { manualContentImport } from "@lib/api/plugins/content";
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/",
@@ -25,118 +19,18 @@ export const Route = createFileRoute(
 });
 
 function ProfileContent() {
-	const [selected, setSelected] = useState<"Mod" | "Resourcepack" | "Shader">(
-		"Mod",
-	);
 	const params = Route.useParams();
 	const profile = useSuspenseQuery(profileQueryOptions(params.id));
+
+	const isModded = profile.data.loader !== "vanilla";
+
+	const [selected, setSelected] = useState<"Mod" | "Resourcepack" | "Shader">(
+		isModded ? "Mod" : "Resourcepack"
+	);
 	const content = useQuery({
 		enabled: !!profile.data,
 		queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
-		queryFn: async () => {
-			const data = await query`SELECT * FROM profile_content WHERE profile = ${profile.data.id} AND type = ${selected};`
-				.as(ContentItem)
-				.all();
-
-			const { unknownContent, hashesContent, idsContent } = data.reduce(
-				(prev, cur) => {
-					if (cur.id.length) {
-						prev.idsContent.push(cur);
-					} else if (cur.sha1) {
-						prev.hashesContent.push(cur);
-					} else {
-						prev.unknownContent.push(cur);
-					}
-					return prev;
-				},
-				{ unknownContent: [], hashesContent: [], idsContent: [] } as {
-					unknownContent: typeof data;
-					hashesContent: typeof data;
-					idsContent: typeof data;
-				},
-			);
-
-			const loadIdContent = async () => {
-				const ids = JSON.stringify(idsContent.map((e) => e.id));
-				const projects = await getProjects({
-					client: modrinthClient,
-					query: {
-						ids,
-					},
-				});
-				if (projects.error) throw projects.error;
-				if (!projects.data) throw new Error("Failed to load projects.");
-				return idsContent.map((item) => {
-					const project = projects.data.find((e) => e.id === item.id);
-					return { record: item, project: project ?? null };
-				});
-			};
-
-			const loadHashContent = async () => {
-				const hashes = await versionsFromHashes({
-					client: modrinthClient,
-					body: {
-						algorithm: "sha1",
-						hashes: hashesContent.map((e) => e.sha1),
-					},
-				});
-				if (hashes.error) throw hashes.error;
-				if (!hashes.data) throw new Error("Failed to load versions from hashs");
-
-				const items = Object.entries(hashes.data).map(([hash, version]) => ({
-					hash,
-					version,
-				}));
-
-				const projects = await getProjects({
-					client: modrinthClient,
-					query: {
-						ids: JSON.stringify(items.map((e) => e.version.project_id)),
-					},
-				});
-				if (projects.error) throw projects.error;
-				if (!projects.data) throw new Error("Failed to load projects");
-
-				const output = [];
-				for (const content of hashesContent) {
-					const projectId = items.find((e) => e.hash === content.sha1);
-					if (!projectId) {
-						output.push({ record: content, project: null });
-						continue;
-					}
-
-					const project = projects.data.find(
-						(e) => e.id === projectId.version.project_id,
-					);
-					if (!project) {
-						output.push({ record: content, project: null });
-						continue;
-					}
-
-					if (!content.id.length) {
-						await query`UPDATE profile_content SET id = ${project.id}, version = ${projectId.version.version_number} WHERE file_name = ${content.file_name} AND type = ${content.type} AND profile = ${content.profile} AND sha1 = ${content.sha1}`
-							.run();
-						content.version = projectId.version.version_number ?? null;
-					}
-					output.push({ record: content, project });
-				}
-
-				return output;
-			};
-			const c = async () => {
-				return unknownContent.map((e) => ({ record: e, project: null }));
-			};
-
-			const results = await Promise.allSettled([
-				loadIdContent(),
-				loadHashContent(),
-				c(),
-			]);
-			return results
-				.map((e) => (e.status === "fulfilled" ? e.value : null))
-				.filter(Boolean)
-				.flat(2);
-		},
+		queryFn: () => fetchProfileContent(profile.data.id, selected)
 	});
 
 	return (
@@ -149,50 +43,20 @@ function ProfileContent() {
 				className="flex h-full w-full flex-col"
 			>
 				<TabsList className="w-full">
-					<TabsTrigger value="Mod">Mods</TabsTrigger>
+					{isModded ? <TabsTrigger value="Mod">Mods</TabsTrigger> : null}
 					<TabsTrigger value="Resourcepack">Resource Packs</TabsTrigger>
-					<TabsTrigger value="Shader">Shader Packs</TabsTrigger>
+					{isModded ? <TabsTrigger value="Shader">Shader Packs</TabsTrigger> : null}
 				</TabsList>
-				<div className="mt-4 flex justify-between">
-					<div>
-						<span>{content.data?.length ?? 0} Items</span>
+				<div className="mt-2 flex justify-between relative">
+					<div className="flex flex-col justify-center ml-1">
+						<div className="font-thin">{content.data?.length ?? 0} Items</div>
 					</div>
 					<Button
 						variant="secondary"
-						size="sm"
-						onClick={async () => {
-							const file = await open({
-								title: "Import Content",
-								filters: [
-									{
-										name: "Mod",
-										extensions: ["jar"],
-									},
-									{
-										name: "Resource Pack | Shader Pack",
-										extensions: ["zip"],
-									},
-								],
-							});
-							if (!file) return;
-
-							const id = toast({ title: "Importing Content", closeButton: false, opts: { isLoading: true } });
-							try {
-								//TODO: fix this
-								//await manualContentImport(selected, profile.data.id, file);
-								await queryClient.invalidateQueries({
-									queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
-								});
-
-								updateToast(id, { isLoading: false, autoClose: 5000, data: { variant: "success", title: "Imported Content" } });
-							} catch (error) {
-								console.error(error);
-								updateToast(id, { isLoading: false, autoClose: 5000, data: { variant: "error", title: "Failed to import content" } });
-							}
-						}}
-					>
-						<Import className="h-4 w-4 mr-2" />
-						Import External
+						size="icon"
+						title="Import File"
+						onClick={() => profileImportFile(profile.data.id, selected)}>
+						<Import />
 					</Button>
 				</div>
 				<div className="pb-2 overflow-y-auto scrollbar h-full">

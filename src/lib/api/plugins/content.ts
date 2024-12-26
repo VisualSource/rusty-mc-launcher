@@ -135,3 +135,11 @@ export async function showInFolder(path: string) {
 	const cmd = Command.create("windows-open-file", [path]);
 	await cmd.execute();
 }
+
+export async function importFile(profile: string, src: string, type: keyof typeof ContentType) {
+	return invoke<void>("plugin:rmcl-content|import_external", {
+		profile,
+		src,
+		content_type: type,
+	})
+}
