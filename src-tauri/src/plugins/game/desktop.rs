@@ -5,7 +5,6 @@ use tokio::io::AsyncReadExt;
 use tokio::sync::RwLock;
 pub const PROCESS_CRASH_EVENT: &str = "rmcl::process-crash";
 pub const PROCESSES_STATE_EVENT: &str = "rmcl::process-state";
-pub const PROCESSES_REQUEST_LIST: &str = "rmcl::process-request";
 
 pub struct PluginGameState(pub RwLock<Processes>);
 impl PluginGameState {
