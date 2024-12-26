@@ -46,7 +46,13 @@ export async function getSystemRam() {
 	return value;
 }
 
-export async function uninstallContent(contentType: keyof typeof ContentType, profileId: string, filename: string) {
+export async function uninstallContentById(contentType: keyof typeof ContentType, profileId: string, contentId: string) {
+	await query`DELETE FROM profile_content WHERE profile = ${profileId} AND id = ${contentId} AND type = ${contentType}`.get();
+
+}
+
+export async function uninstallContentByFilename(contentType: keyof typeof ContentType, profileId: string, filename: string) {
+	await query`DELETE FROM profile_content WHERE profile = ${profileId} AND file_name = ${filename} AND type = ${contentType}`.run();
 	await invoke<void>("plugin:rmcl-content|uninstall_content", {
 		content: contentType,
 		filename,

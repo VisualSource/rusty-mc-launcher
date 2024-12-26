@@ -1,27 +1,22 @@
 import { coerce, minSatisfying } from "semver";
 import toast, { updateToast } from "@component/ui/toast"
 
-import type {
-	Project,
-	Version,
-	VersionDependency,
-	VersionFile,
-} from "../api/modrinth/types.gen";
-import {
-	getProjectVersions,
-	getVersion,
-	getProject,
-} from "../api/modrinth/services.gen";
-import { QueueItem } from "../models/download_queue";
+import type { Project, Version, VersionDependency, VersionFile, } from "../api/modrinth/types.gen";
+import { getProjectVersions, getVersion, getProject, } from "../api/modrinth/services.gen";
+import { uninstallContentByFilename, uninstallContentById } from "@lib/api/plugins/content";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
-import { askFor } from "@/components/dialog/AskDialog";
-import { ContentItem } from "../models/content";
-import { uninstallContent } from "@lib/api/plugins/content";
 import { ContentType } from "@lib/models/download_queue";
-import { query } from "@lib/api/plugins/query";
-import type { Profile } from "../models/profiles";
 import { modrinthClient } from "../api/modrinthClient";
+import { askFor } from "@/components/dialog/AskDialog";
+import { QueueItem } from "../models/download_queue";
 import { QueueItemState } from "../QueueItemState";
+import type { Profile } from "../models/profiles";
+import { ContentItem } from "../models/content";
+import { query } from "@lib/api/plugins/query";
+
+function asContentType(value: string): keyof typeof ContentType {
+	return value.replace(/^\w/, value[0].toUpperCase()) as keyof typeof ContentType;
+}
 
 async function getContentVersion(
 	current: VersionDependency,
@@ -166,7 +161,7 @@ export async function install_known(
 	const file = version.files.find((e) => e.primary) ?? version.files.at(0);
 	if (!file) throw new Error("No file download was found");
 
-	await uninstallContent(version.project_id, profile.id);
+	await uninstallContentByFilename(asContentType(project.type), profile.id, file.filename);
 
 	const files = [
 		{
@@ -195,7 +190,7 @@ export async function install_known(
 					case "include": {
 						if (!dep.file) throw new Error("Missing file download");
 
-						await uninstallContent(dep.id, profile.id);
+						await uninstallContentByFilename(asContentType(dep.type), profile.id, file.filename);
 
 						files.push({
 							sha1: dep.file?.hashes.sha1,
@@ -268,7 +263,7 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContent(data.id, profile.id);
+				await uninstallContentById(asContentType(data.project_type), profile.id, data.id);
 
 				const files = [
 					{
@@ -341,7 +336,7 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContent(profile.id, profile.id);
+				await uninstallContentByFilename(asContentType(data.project_type), profile.id, file.filename);
 
 				const files = [
 					{
@@ -367,7 +362,7 @@ export async function install(data: Project) {
 							case "include": {
 								if (!dep.file) throw new Error("Missing file download");
 
-								await uninstallContent(dep.id, profile.id);
+								await uninstallContentByFilename(asContentType(data.project_type), profile.id, dep.file.filename);
 
 								files.push({
 									sha1: dep.file?.hashes.sha1,

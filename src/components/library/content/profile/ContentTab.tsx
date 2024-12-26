@@ -7,7 +7,6 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import toast, { updateToast } from "@component/ui/toast";
 import { useRef } from "react";
 
-
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -19,26 +18,23 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getProjectVersions } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
-import type { ContentItem } from "@/lib/models/content";
+import { uninstallContentByFilename } from "@lib/api/plugins/content";
+import { getProjectVersions } from "@lib/api/modrinth/services.gen";
 import type { ContentType } from "@lib/models/download_queue";
+import type { Project } from "@/lib/api/modrinth/types.gen";
 import { modrinthClient } from "@/lib/api/modrinthClient";
-import { uninstallContent } from "@lib/api/plugins/content";
-import { query } from "@lib/api/plugins/query";
+import type { ContentItem } from "@/lib/models/content";
+import type { Profile } from "@/lib/models/profiles";
 import { install_known } from "@/lib/system/install";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
-import type { Project } from "@/lib/api/modrinth/types.gen";
-import type { Profile } from "@/lib/models/profiles";
 
 async function uninstall(filename: string, type: keyof typeof ContentType, profile: string) {
 	try {
 		if (!filename) throw new Error("Missing file name");
-		await uninstallContent(type, profile, filename);
-
-		await query`DELETE FROM profile_content WHERE profile = ${profile} AND file_name = ${filename} AND type = ${type}`.run();
+		await uninstallContentByFilename(type, profile, filename);
 
 		await queryClient.invalidateQueries({
 			queryKey: ["WORKSHOP_CONTENT", type, profile],

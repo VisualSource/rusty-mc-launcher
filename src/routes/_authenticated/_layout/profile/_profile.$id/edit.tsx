@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/form";
 import {
 	copyProfile,
-	uninstallContent,
+	uninstallContentByFilename,
 	deleteProfile,
 	showInFolder,
 } from "@lib/api/plugins/content";
@@ -76,7 +76,7 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 							.all();
 
 						await Promise.allSettled(
-							mods.map((e) => uninstallContent(e.type, og.id, e.file_name)),
+							mods.map((e) => uninstallContentByFilename(e.type, og.id, e.file_name)),
 						);
 					}
 				}
