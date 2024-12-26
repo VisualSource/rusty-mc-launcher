@@ -1,7 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 
-
 import {
 	Form,
 	FormControl,
@@ -12,11 +11,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import {
-	isOption,
-	updateConfig,
-	addConfig,
-} from "@/lib/models/settings";
+import { isOption, updateConfig, addConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";
@@ -61,9 +56,7 @@ function GameSettings() {
 		<div className="space-y-6">
 			<div>
 				<h3 className="text-lg font-medium">Game</h3>
-				<p className="text-sm text-muted-foreground">
-					Edit game settings.
-				</p>
+				<p className="text-sm text-muted-foreground">Edit game settings.</p>
 			</div>
 			<Separator />
 			<div className="space-y-4">

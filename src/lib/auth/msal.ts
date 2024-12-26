@@ -5,7 +5,7 @@ import {
 	type Configuration,
 } from "@azure/msal-browser";
 import { LogLevel } from "@azure/msal-common";
-import { error, warn, info, debug, trace } from "@tauri-apps/plugin-log"
+import { error, warn, info, debug, trace } from "@tauri-apps/plugin-log";
 
 const configuration: Configuration = {
 	auth: {
@@ -23,7 +23,7 @@ const configuration: Configuration = {
 		allowNativeBroker: true,
 		loggerOptions: {
 			piiLoggingEnabled: false,
-			logLevel: LogLevel.Error,// import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
+			logLevel: LogLevel.Error, // import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
 			loggerCallback(level: LogLevel, message: string) {
 				switch (level) {
 					case LogLevel.Error:

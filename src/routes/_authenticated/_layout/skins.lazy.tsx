@@ -308,10 +308,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				animation: new IdleAnimation(),
 				width: 300,
 				height: 400,
-				model:
-					activeSkin?.variant === "CLASSIC"
-						? "default"
-						: "slim",
+				model: activeSkin?.variant === "CLASSIC" ? "default" : "slim",
 				skin: activeSkin?.url,
 				cape: activeCape?.url,
 			});
@@ -360,7 +357,14 @@ const MinecraftSkinControl: React.FC = memo(() => {
 					<div>
 						<Button
 							disabled={mutation.isPending}
-							onClick={() => waitToast({ callback: mutation.mutateAsync(), pendingTitle: "Updating", errorTitle: "Failed to update", successTitle: "Updated" })}
+							onClick={() =>
+								waitToast({
+									callback: mutation.mutateAsync(),
+									pendingTitle: "Updating",
+									errorTitle: "Failed to update",
+									successTitle: "Updated",
+								})
+							}
 							size="sm"
 						>
 							Save

@@ -25,12 +25,12 @@ function ProfileContent() {
 	const isModded = profile.data.loader !== "vanilla";
 
 	const [selected, setSelected] = useState<"Mod" | "Resourcepack" | "Shader">(
-		isModded ? "Mod" : "Resourcepack"
+		isModded ? "Mod" : "Resourcepack",
 	);
 	const content = useQuery({
 		enabled: !!profile.data,
 		queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
-		queryFn: () => fetchProfileContent(profile.data.id, selected)
+		queryFn: () => fetchProfileContent(profile.data.id, selected),
 	});
 
 	return (
@@ -45,7 +45,9 @@ function ProfileContent() {
 				<TabsList className="w-full">
 					{isModded ? <TabsTrigger value="Mod">Mods</TabsTrigger> : null}
 					<TabsTrigger value="Resourcepack">Resource Packs</TabsTrigger>
-					{isModded ? <TabsTrigger value="Shader">Shader Packs</TabsTrigger> : null}
+					{isModded ? (
+						<TabsTrigger value="Shader">Shader Packs</TabsTrigger>
+					) : null}
 				</TabsList>
 				<div className="mt-2 flex justify-between relative">
 					<div className="flex flex-col justify-center ml-1">
@@ -55,7 +57,8 @@ function ProfileContent() {
 						variant="secondary"
 						size="icon"
 						title="Import File"
-						onClick={() => profileImportFile(profile.data.id, selected)}>
+						onClick={() => profileImportFile(profile.data.id, selected)}
+					>
 						<Import />
 					</Button>
 				</div>

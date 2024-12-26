@@ -10,10 +10,10 @@ import AskDialog from "@/components/dialog/AskDialog";
 
 const TanStackRouterDevtools = import.meta.env.DEV
 	? lazy(() =>
-		import("@tanstack/router-devtools").then((res) => ({
-			default: res.TanStackRouterDevtools,
-		})),
-	)
+			import("@tanstack/router-devtools").then((res) => ({
+				default: res.TanStackRouterDevtools,
+			})),
+		)
 	: () => null;
 
 const Index: React.FC = () => {

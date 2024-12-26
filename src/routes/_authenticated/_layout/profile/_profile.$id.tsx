@@ -20,9 +20,10 @@ export const profileQueryOptions = (id: string) =>
 	queryOptions({
 		queryKey: [KEY_PROFILE, id],
 		queryFn: async () => {
-			const result = await query`SELECT * FROM profiles WHERE id = ${id} LIMIT 1;`
-				.as(Profile)
-				.get();
+			const result =
+				await query`SELECT * FROM profiles WHERE id = ${id} LIMIT 1;`
+					.as(Profile)
+					.get();
 			if (!result) throw new Error("No Profile found");
 			return result;
 		},
@@ -76,7 +77,13 @@ function ProfilePage() {
 				<div className="flex justify-evenly gap-1">
 					<PlayButton
 						className="w-full"
-						profile={{ id: data.id, state: data.state.toUpperCase() as "UNINSTALLED" | "INSTALLING" | "INSTALLED" }}
+						profile={{
+							id: data.id,
+							state: data.state.toUpperCase() as
+								| "UNINSTALLED"
+								| "INSTALLING"
+								| "INSTALLED",
+						}}
 					/>
 				</div>
 

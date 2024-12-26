@@ -128,23 +128,23 @@ function Project() {
 						) : null}
 						{project.donation_urls
 							? project.donation_urls.map((value) => (
-								<a
-									href={value.url}
-									target="_blank"
-									key={value.id}
-									className="flex items-center"
-									rel="noopener noreferrer"
-								>
-									<DollarSign className="pr-2" />
-									<span className="text-blue-600 underline">
-										{value.platform
-											? "Donate"
-											: value.platform === "Other"
+									<a
+										href={value.url}
+										target="_blank"
+										key={value.id}
+										className="flex items-center"
+										rel="noopener noreferrer"
+									>
+										<DollarSign className="pr-2" />
+										<span className="text-blue-600 underline">
+											{value.platform
 												? "Donate"
-												: value.platform}
-									</span>
-								</a>
-							))
+												: value.platform === "Other"
+													? "Donate"
+													: value.platform}
+										</span>
+									</a>
+								))
 							: null}
 					</div>
 				</section>
@@ -157,7 +157,11 @@ function Project() {
 							<div className="flex items-center gap-2">
 								<Button
 									onClick={async () => {
-										const toastId = toast({ closeButton: false, title: "Updating", opts: { isLoading: true } });
+										const toastId = toast({
+											closeButton: false,
+											title: "Updating",
+											opts: { isLoading: true },
+										});
 										try {
 											const state =
 												follows.data?.findIndex((e) => e.id === project.id) !==
@@ -168,14 +172,15 @@ function Project() {
 												await modrinth.followProject(project.id);
 											}
 
-
 											updateToast(toastId, {
 												isLoading: false,
 												autoClose: 5000,
 												data: {
 													variant: "success",
-													title: state ? `Unfollowed project: ${project.title}` : `Followed project: ${project.title}`,
-												}
+													title: state
+														? `Unfollowed project: ${project.title}`
+														: `Followed project: ${project.title}`,
+												},
 											});
 										} catch (error) {
 											console.error(error);
@@ -185,8 +190,8 @@ function Project() {
 												data: {
 													error,
 													variant: "error",
-													title: "Failed to update project follow"
-												}
+													title: "Failed to update project follow",
+												},
 											});
 										}
 									}}
@@ -194,7 +199,7 @@ function Project() {
 									variant="secondary"
 								>
 									{isModrinthAuthed &&
-										follows.data?.findIndex((e) => e.id === project.id) !== -1 ? (
+									follows.data?.findIndex((e) => e.id === project.id) !== -1 ? (
 										<>
 											<HeartOff className="mr-2 h-5 w-5" /> Unfollow
 										</>

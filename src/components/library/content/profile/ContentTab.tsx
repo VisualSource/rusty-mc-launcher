@@ -31,7 +31,11 @@ import { install_known } from "@/lib/system/install";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 
-async function uninstall(filename: string, type: keyof typeof ContentType, profile: string) {
+async function uninstall(
+	filename: string,
+	type: keyof typeof ContentType,
+	profile: string,
+) {
 	try {
 		if (!filename) throw new Error("Missing file name");
 		await uninstallContentByFilename(type, profile, filename);
@@ -44,7 +48,7 @@ async function uninstall(filename: string, type: keyof typeof ContentType, profi
 		toast({
 			title: "Failed to uninstall content",
 			description: (error as Error).message,
-			variant: "error"
+			variant: "error",
 		});
 	}
 }
@@ -55,7 +59,11 @@ const checkForUpdate = async (
 	item: ContentItem,
 ) => {
 	if (!project) return;
-	const toastId = toast({ title: "Checking for update.", closeButton: false, opts: { isLoading: true } });
+	const toastId = toast({
+		title: "Checking for update.",
+		closeButton: false,
+		opts: { isLoading: true },
+	});
 	try {
 		const { data, error, response } = await getProjectVersions({
 			client: modrinthClient,
@@ -90,7 +98,11 @@ const checkForUpdate = async (
 			);
 
 			if (doUpdate) {
-				updateToast(toastId, { data: { title: "Installing new version", variant: "info" }, isLoading: false, autoClose: 5000 });
+				updateToast(toastId, {
+					data: { title: "Installing new version", variant: "info" },
+					isLoading: false,
+					autoClose: 5000,
+				});
 				await install_known(
 					version,
 					{
@@ -111,7 +123,7 @@ const checkForUpdate = async (
 				variant: "info",
 			},
 			isLoading: false,
-			autoClose: 5000
+			autoClose: 5000,
 		});
 	} catch (error) {
 		console.error(error);
@@ -119,7 +131,7 @@ const checkForUpdate = async (
 			data: {
 				title: "Failed to update content",
 				description: (error as Error).message,
-				variant: "error"
+				variant: "error",
 			},
 			isLoading: false,
 			autoClose: 5000,

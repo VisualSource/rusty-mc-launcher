@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import toast, { updateToast } from "@component/ui/toast"
+import toast, { updateToast } from "@component/ui/toast";
 import { error } from "@tauri-apps/plugin-log";
 
 export const Route = createLazyFileRoute("/_authenticated/bug-report")({
@@ -32,7 +32,11 @@ function BugReport() {
 	const form = useForm<FormState>();
 
 	const onSubmit = async (state: FormState) => {
-		const toastId = toast({ title: "Submitting report", closeButton: false, opts: { isLoading: true, } })
+		const toastId = toast({
+			title: "Submitting report",
+			closeButton: false,
+			opts: { isLoading: true },
+		});
 
 		try {
 			const response = await fetch(
@@ -42,8 +46,7 @@ function BugReport() {
 					headers: {
 						Accept: "application/vnd.github+json",
 						Authorization: `Bearer ${import.meta.env.VITE_GITHUB}`,
-						"X-GitHub-Api-Version": import.meta.env
-							.VITE_GITHUB_API_VERSION,
+						"X-GitHub-Api-Version": import.meta.env.VITE_GITHUB_API_VERSION,
 					},
 					body: JSON.stringify({
 						...state,
@@ -57,11 +60,27 @@ function BugReport() {
 
 			const data = (await response.json()) as { html_url: string };
 
-			updateToast(toastId, { data: { variant: "success", title: "Report submited", description: data.html_url }, isLoading: false, autoClose: 5000 });
+			updateToast(toastId, {
+				data: {
+					variant: "success",
+					title: "Report submited",
+					description: data.html_url,
+				},
+				isLoading: false,
+				autoClose: 5000,
+			});
 			navigate({ to: "/" });
 		} catch (err) {
 			error((err as Error).message);
-			updateToast(toastId, { data: { error: err, variant: "error", title: "Failed to submit bug report" }, isLoading: false, autoClose: 5000 });
+			updateToast(toastId, {
+				data: {
+					error: err,
+					variant: "error",
+					title: "Failed to submit bug report",
+				},
+				isLoading: false,
+				autoClose: 5000,
+			});
 		}
 	};
 

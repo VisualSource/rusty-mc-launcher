@@ -81,7 +81,12 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 								<FileImage />
 							</AvatarFallback>
 						</Avatar>
-						<h3 title={value.title} className="font-medium leading-none line-clamp-2">{value.title}</h3>
+						<h3
+							title={value.title}
+							className="font-medium leading-none line-clamp-2"
+						>
+							{value.title}
+						</h3>
 					</div>
 
 					<Button asChild className="w-full">

@@ -11,14 +11,21 @@ import {
 import { useCrashEvent } from "@/hooks/useProcessState";
 
 const GameCrash: React.FC = () => {
-	const [data, setData] = useState<{ open: boolean, code: number; details: string }>({ open: false, code: 0, details: "" });
+	const [data, setData] = useState<{
+		open: boolean;
+		code: number;
+		details: string;
+	}>({ open: false, code: 0, details: "" });
 
 	useCrashEvent((ev) => {
-		setData({ open: true, details: ev.detail.details, code: ev.detail.code })
+		setData({ open: true, details: ev.detail.details, code: ev.detail.code });
 	});
 
 	return (
-		<AlertDialog open={data.open} onOpenChange={(data) => setData(pre => ({ ...pre, open: data }))}>
+		<AlertDialog
+			open={data.open}
+			onOpenChange={(data) => setData((pre) => ({ ...pre, open: data }))}
+		>
 			<AlertDialogContent className="text-zinc-50">
 				<AlertDialogHeader>
 					<AlertDialogTitle>Crash Notice</AlertDialogTitle>

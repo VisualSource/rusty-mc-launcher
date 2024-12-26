@@ -1,5 +1,5 @@
 import { addSeconds } from "date-fns/addSeconds";
-import { error } from "@tauri-apps/plugin-log"
+import { error } from "@tauri-apps/plugin-log";
 import {
 	getUserFromAuth,
 	getUserNotifications,
@@ -16,8 +16,8 @@ import {
 	BrowserAuthErrorCodes,
 	type EndSessionRequest,
 	type Configuration,
-	type PopupRequest
-} from "@azure/msal-browser"
+	type PopupRequest,
+} from "@azure/msal-browser";
 
 import { modrinthClient } from "../../modrinthClient";
 import { queryClient } from "../../queryClient";
@@ -245,9 +245,7 @@ export class ModrinthClientApplication extends EventTarget {
 		try {
 			this.data = this.readCache();
 		} catch (er) {
-			error(
-				`Failed to load modrinth cache: ${(er as Error).message}`,
-			);
+			error(`Failed to load modrinth cache: ${(er as Error).message}`);
 		}
 	}
 	async acquireTokenPopup(): Promise<AuthenticationResult> {

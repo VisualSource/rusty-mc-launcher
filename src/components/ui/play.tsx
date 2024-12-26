@@ -1,6 +1,6 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
 import { exit } from "@tauri-apps/plugin-process";
-import toast from "@component/ui/toast"
+import toast from "@component/ui/toast";
 
 import { stop, launchGame } from "@/lib/api/plugins/game";
 import { useIsRunning } from "@/hooks/useProcessState";
@@ -10,7 +10,10 @@ import { isOption } from "@/lib/models/settings";
 import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 
-const DisplayState: React.FC<{ isRunning: boolean, state: Profile["state"] }> = ({ state, isRunning }) => {
+const DisplayState: React.FC<{
+	isRunning: boolean;
+	state: Profile["state"];
+}> = ({ state, isRunning }) => {
 	switch (state) {
 		case "UNINSTALLED":
 			return (
@@ -25,11 +28,12 @@ const DisplayState: React.FC<{ isRunning: boolean, state: Profile["state"] }> = 
 				</span>
 			);
 		case "INSTALLED":
-			if (isRunning) return (
-				<span className="inline-flex">
-					<StopCircle className="mr-1 h-5 w-5" /> Stop
-				</span>
-			);
+			if (isRunning)
+				return (
+					<span className="inline-flex">
+						<StopCircle className="mr-1 h-5 w-5" /> Stop
+					</span>
+				);
 			return (
 				<span className="inline-flex">
 					<Play className="mr-1 h-5 w-5" /> Play
@@ -38,7 +42,7 @@ const DisplayState: React.FC<{ isRunning: boolean, state: Profile["state"] }> = 
 		default:
 			return null;
 	}
-}
+};
 
 const PlayButton: React.FC<
 	ButtonProps & { profile: Pick<Profile, "id" | "state"> }
@@ -72,7 +76,11 @@ const PlayButton: React.FC<
 					}
 				} catch (error) {
 					console.error(error);
-					toast({ variant: "error", title: "Failed to start minecraft", error });
+					toast({
+						variant: "error",
+						title: "Failed to start minecraft",
+						error,
+					});
 					clearTimeout(exitTimer);
 				}
 			}}

@@ -58,7 +58,8 @@ function CreateProfile() {
 				};
 				ev.version = latest_data.latest.release;
 			}
-			if (ev.version === "latest-release") throw new Error("Was unable to get latest-release")
+			if (ev.version === "latest-release")
+				throw new Error("Was unable to get latest-release");
 
 			await createProfile(ev, ev.copyOptions);
 

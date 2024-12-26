@@ -48,7 +48,7 @@ const import_profiles = async () => {
 	});
 
 	if (!result) {
-		toast({ variant: "error", title: "Failed to import profiles" })
+		toast({ variant: "error", title: "Failed to import profiles" });
 		return;
 	}
 
@@ -84,10 +84,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-					version.replace(
-						"latest-",
-						"",
-					) as keyof (typeof latest_data)["latest"]
+						version.replace(
+							"latest-",
+							"",
+						) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -112,34 +112,38 @@ const import_profiles = async () => {
 		}
 
 		await transaction((tx) => {
-			tx`INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${bulk(profiles.map((e) => [
-				e.id,
-				e.name,
-				e.icon,
-				e.date_created,
-				e.last_played,
-				e.version,
-				e.loader,
-				e.loader_version,
-				e.java_args,
-				e.resolution_width,
-				e.resolution_width,
-				e.state,
-			]))};`;
+			tx`INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${bulk(
+				profiles.map((e) => [
+					e.id,
+					e.name,
+					e.icon,
+					e.date_created,
+					e.last_played,
+					e.version,
+					e.loader,
+					e.loader_version,
+					e.java_args,
+					e.resolution_width,
+					e.resolution_width,
+					e.state,
+				]),
+			)};`;
 
-			tx`INSERT INTO download_queue ('id','priority','display_name','icon','profile_id','content_type','metadata') VALUES ${bulk(profiles.map((e) => [
-				crypto.randomUUID(),
-				0,
-				e.name,
-				e.icon,
-				e.id,
-				ContentType.Client,
-				JSON.stringify({
-					version: e.version,
-					loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
-					loader_version: e.loader_version,
-				}),
-			]))}`;
+			tx`INSERT INTO download_queue ('id','priority','display_name','icon','profile_id','content_type','metadata') VALUES ${bulk(
+				profiles.map((e) => [
+					crypto.randomUUID(),
+					0,
+					e.name,
+					e.icon,
+					e.id,
+					ContentType.Client,
+					JSON.stringify({
+						version: e.version,
+						loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
+						loader_version: e.loader_version,
+					}),
+				]),
+			)}`;
 		});
 
 		await queryClient.invalidateQueries({

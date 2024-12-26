@@ -28,5 +28,5 @@ root.render(
 				</ProcessProvider>
 			</MsalProvider>
 		</QueryClientProvider>
-	</StrictMode>
+	</StrictMode>,
 );

@@ -26,7 +26,11 @@ export const useCategoriesMutation = () => {
 						.safeParse(payload.data);
 					if (content.error) {
 						const message = fromZodError(content.error);
-						toast({ variant: "error", title: "Failed to delete collection!", error: message });
+						toast({
+							variant: "error",
+							title: "Failed to delete collection!",
+							error: message,
+						});
 						throw message;
 					}
 
@@ -39,7 +43,11 @@ export const useCategoriesMutation = () => {
 					if (id.error) {
 						const message = fromZodError(id.error);
 
-						toast({ variant: "error", title: "Failed to delete collection!", error: message });
+						toast({
+							variant: "error",
+							title: "Failed to delete collection!",
+							error: message,
+						});
 
 						throw message;
 					}

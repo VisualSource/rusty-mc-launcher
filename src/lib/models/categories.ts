@@ -9,10 +9,10 @@ export class Category {
 		id: z.number().int().positive(),
 		profile: z.string().uuid(),
 		category: z.string().uuid(),
-	})
+	});
 
 	public id: number;
-	public profile: string
+	public profile: string;
 	public category: string;
 	constructor(args: QueryResult) {
 		this.id = args.id as number;
@@ -22,5 +22,7 @@ export class Category {
 }
 
 export function getCategoriesFromProfile(profile: string) {
-	return query`SELECT * FROM categories WHERE profile = ${profile};`.as(Category).all()
+	return query`SELECT * FROM categories WHERE profile = ${profile};`
+		.as(Category)
+		.all();
 }

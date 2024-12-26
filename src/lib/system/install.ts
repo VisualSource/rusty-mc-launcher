@@ -1,9 +1,21 @@
 import { coerce, minSatisfying } from "semver";
-import toast, { updateToast } from "@component/ui/toast"
+import toast, { updateToast } from "@component/ui/toast";
 
-import type { Project, Version, VersionDependency, VersionFile, } from "../api/modrinth/types.gen";
-import { getProjectVersions, getVersion, getProject, } from "../api/modrinth/services.gen";
-import { uninstallContentByFilename, uninstallContentById } from "@lib/api/plugins/content";
+import type {
+	Project,
+	Version,
+	VersionDependency,
+	VersionFile,
+} from "../api/modrinth/types.gen";
+import {
+	getProjectVersions,
+	getVersion,
+	getProject,
+} from "../api/modrinth/services.gen";
+import {
+	uninstallContentByFilename,
+	uninstallContentById,
+} from "@lib/api/plugins/content";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { ContentType } from "@lib/models/download_queue";
 import { modrinthClient } from "../api/modrinthClient";
@@ -15,7 +27,10 @@ import { ContentItem } from "../models/content";
 import { query } from "@lib/api/plugins/query";
 
 function asContentType(value: string): keyof typeof ContentType {
-	return value.replace(/^\w/, value[0].toUpperCase()) as keyof typeof ContentType;
+	return value.replace(
+		/^\w/,
+		value[0].toUpperCase(),
+	) as keyof typeof ContentType;
 }
 
 async function getContentVersion(
@@ -77,9 +92,10 @@ async function* getDependencies(
 		if (!file) throw new Error("Missing file download");
 
 		if (current.dependency_type === "incompatible") {
-			const incompatible = await query`SELECT * FROM profile_content WHERE id = ${version.project_id} AND profile = ${profile} LIMIT 1;`
-				.as(ContentItem)
-				.get();
+			const incompatible =
+				await query`SELECT * FROM profile_content WHERE id = ${version.project_id} AND profile = ${profile} LIMIT 1;`
+					.as(ContentItem)
+					.get();
 
 			if (incompatible) {
 				yield { type: "incompatible", dep: current };
@@ -161,7 +177,11 @@ export async function install_known(
 	const file = version.files.find((e) => e.primary) ?? version.files.at(0);
 	if (!file) throw new Error("No file download was found");
 
-	await uninstallContentByFilename(asContentType(project.type), profile.id, file.filename);
+	await uninstallContentByFilename(
+		asContentType(project.type),
+		profile.id,
+		file.filename,
+	);
 
 	const files = [
 		{
@@ -190,7 +210,11 @@ export async function install_known(
 					case "include": {
 						if (!dep.file) throw new Error("Missing file download");
 
-						await uninstallContentByFilename(asContentType(dep.type), profile.id, file.filename);
+						await uninstallContentByFilename(
+							asContentType(dep.type),
+							profile.id,
+							file.filename,
+						);
 
 						files.push({
 							sha1: dep.file?.hashes.sha1,
@@ -234,7 +258,11 @@ export async function install_known(
 }
 
 export async function install(data: Project) {
-	const id = toast({ title: "Preparing install...", closeButton: false, opts: { isLoading: true } });
+	const id = toast({
+		title: "Preparing install...",
+		closeButton: false,
+		opts: { isLoading: true },
+	});
 	try {
 		switch (data.project_type) {
 			case "resourcepack":
@@ -244,7 +272,11 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
+						isLoading: false,
+						autoClose: 5000,
+					});
 					return;
 				}
 
@@ -263,7 +295,11 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContentById(asContentType(data.project_type), profile.id, data.id);
+				await uninstallContentById(
+					asContentType(data.project_type),
+					profile.id,
+					data.id,
+				);
 
 				const files = [
 					{
@@ -305,7 +341,11 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
+						isLoading: false,
+						autoClose: 5000,
+					});
 					return;
 				}
 
@@ -336,7 +376,11 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContentByFilename(asContentType(data.project_type), profile.id, file.filename);
+				await uninstallContentByFilename(
+					asContentType(data.project_type),
+					profile.id,
+					file.filename,
+				);
 
 				const files = [
 					{
@@ -362,7 +406,11 @@ export async function install(data: Project) {
 							case "include": {
 								if (!dep.file) throw new Error("Missing file download");
 
-								await uninstallContentByFilename(asContentType(data.project_type), profile.id, dep.file.filename);
+								await uninstallContentByFilename(
+									asContentType(data.project_type),
+									profile.id,
+									dep.file.filename,
+								);
 
 								files.push({
 									sha1: dep.file?.hashes.sha1,
@@ -416,7 +464,11 @@ export async function install(data: Project) {
 				});
 
 				if (!gameVersions.length) {
-					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
+						isLoading: false,
+						autoClose: 5000,
+					});
 					return;
 				}
 
@@ -428,7 +480,11 @@ export async function install(data: Project) {
 					options: data.loaders?.map((e) => ({ id: e, name: e })) ?? [],
 				});
 				if (!loaders.length) {
-					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
+						isLoading: false,
+						autoClose: 5000,
+					});
 					return;
 				}
 
@@ -486,9 +542,17 @@ export async function install(data: Project) {
 				break;
 		}
 
-		updateToast(id, { data: { variant: "success", title: "Staring Install" }, isLoading: false, autoClose: 5000 });
+		updateToast(id, {
+			data: { variant: "success", title: "Staring Install" },
+			isLoading: false,
+			autoClose: 5000,
+		});
 	} catch (error) {
 		console.error(error);
-		updateToast(id, { data: { variant: "success", error, title: "Failed to install content" }, isLoading: false, autoClose: 5000 });
+		updateToast(id, {
+			data: { variant: "success", error, title: "Failed to install content" },
+			isLoading: false,
+			autoClose: 5000,
+		});
 	}
 }

@@ -10,12 +10,17 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 const DisplayToastData = ({ value }: { value: unknown }) => {
-	if ((value instanceof Error) || (value && typeof value === "object" &&
-		"error" in value &&
-		value.error instanceof Error)) {
+	if (
+		value instanceof Error ||
+		(value &&
+			typeof value === "object" &&
+			"error" in value &&
+			value.error instanceof Error)
+	) {
 		return (
 			<span className="text-xs text-red-600 break-words text-wrap max-w-64">
-				{(value as Error)?.message ?? (value as { error: Error })?.error.message}
+				{(value as Error)?.message ??
+					(value as { error: Error })?.error.message}
 			</span>
 		);
 	}
@@ -107,7 +112,9 @@ export const Notifications = () => {
 								)}
 								<div>
 									<div className="flex flex-col">
-										<h1 className="line-clamp-2 font-semibold border-b mb-1 pb-1">{n.title}</h1>
+										<h1 className="line-clamp-2 font-semibold border-b mb-1 pb-1">
+											{n.title}
+										</h1>
 										<p className="text-sm text-muted-foreground text-wrap">
 											{n.text}
 										</p>

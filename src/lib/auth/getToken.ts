@@ -1,6 +1,9 @@
-import type { IPublicClientApplication, SilentRequest } from "@azure/msal-browser";
+import type {
+	IPublicClientApplication,
+	SilentRequest,
+} from "@azure/msal-browser";
 import { startAuthServer, closeAuthServer } from "@lib/api/plugins/auth";
-import { debug } from "@tauri-apps/plugin-log"
+import { debug } from "@tauri-apps/plugin-log";
 
 const getToken = async (
 	instance: IPublicClientApplication,

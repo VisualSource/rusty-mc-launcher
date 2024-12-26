@@ -1,7 +1,7 @@
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { open } from "@tauri-apps/plugin-shell";
 import { BrowserAuthErrorCodes } from "@azure/msal-browser";
-import toast from "@component/ui/toast"
+import toast from "@component/ui/toast";
 
 export type AuthResponse = {
 	access_token: string;
@@ -58,7 +58,9 @@ export class PopupClient {
 		});
 
 		if (!response.ok) {
-			throw new Error("Login request fialed", { cause: BrowserAuthErrorCodes.postRequestFailed })
+			throw new Error("Login request fialed", {
+				cause: BrowserAuthErrorCodes.postRequestFailed,
+			});
 		}
 
 		return response.json() as Promise<AuthResponse>;

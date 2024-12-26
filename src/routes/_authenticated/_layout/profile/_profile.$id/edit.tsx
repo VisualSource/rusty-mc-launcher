@@ -71,12 +71,15 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 						{ title: "Loader Switch", kind: "warning" },
 					);
 					if (deleteMods) {
-						const mods = await query`SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ${og.id}`
-							.as(ContentItem)
-							.all();
+						const mods =
+							await query`SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ${og.id}`
+								.as(ContentItem)
+								.all();
 
 						await Promise.allSettled(
-							mods.map((e) => uninstallContentByFilename(e.type, og.id, e.file_name)),
+							mods.map((e) =>
+								uninstallContentByFilename(e.type, og.id, e.file_name),
+							),
 						);
 					}
 				}
@@ -302,7 +305,7 @@ function ProfileEdit() {
 								try {
 									const id = crypto.randomUUID();
 									await copyProfile(profileQuery.data, id);
-									toast({ variant: "success", title: "Copyed profile" })
+									toast({ variant: "success", title: "Copyed profile" });
 									navigate({
 										to: "/profile/$id",
 										params: {

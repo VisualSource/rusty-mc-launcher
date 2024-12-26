@@ -15,17 +15,21 @@ import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Button } from "../ui/button";
 import { query } from "@/lib/api/plugins/query";
 
-const QueuItemContent: React.FC<{ state: QueueItem["state"], id: string }> = ({ state, id }) => {
+const QueuItemContent: React.FC<{ state: QueueItem["state"]; id: string }> = ({
+	state,
+	id,
+}) => {
 	switch (state) {
 		case "ERRORED":
 			return (
 				<div className="flex gap-2">
-					<Button title="Retry"
+					<Button
+						title="Retry"
 						onClick={async () => {
 							await query`UPDATE download_queue SET state = ${QueueItemState.PENDING} WHERE id = ${id};`.run();
 							await invalidateQueries([
 								[KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
-								[KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED]
+								[KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
 							]);
 						}}
 						size="icon"
@@ -33,7 +37,8 @@ const QueuItemContent: React.FC<{ state: QueueItem["state"], id: string }> = ({ 
 					>
 						<RefreshCcw />
 					</Button>
-					<Button title="Delete"
+					<Button
+						title="Delete"
 						onClick={async () => {
 							await query`DELETE FROM download_queue WHERE id = ${id};"`.run();
 							await queryClient.invalidateQueries({
@@ -50,7 +55,8 @@ const QueuItemContent: React.FC<{ state: QueueItem["state"], id: string }> = ({ 
 		case "COMPLETED":
 			return (
 				<div>
-					<Button title="Delete"
+					<Button
+						title="Delete"
 						onClick={async () => {
 							await query`DELETE FROM download_queue WHERE id = ${id};`.run();
 							await queryClient.invalidateQueries({
@@ -72,7 +78,7 @@ const QueuItemContent: React.FC<{ state: QueueItem["state"], id: string }> = ({ 
 							await query`UPDATE download_queue SET state = ${QueueItemState.PENDING} WHERE id = ${id};`.run();
 							await invalidateQueries([
 								[KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
-								[KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED]
+								[KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
 							]);
 						}}
 						title="Enqueue"
@@ -88,7 +94,7 @@ const QueuItemContent: React.FC<{ state: QueueItem["state"], id: string }> = ({ 
 		default:
 			return null;
 	}
-}
+};
 
 const DownloadItem: React.FC<QueueItem> = ({
 	id,
