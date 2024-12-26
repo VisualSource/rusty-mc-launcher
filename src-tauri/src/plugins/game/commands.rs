@@ -46,3 +46,14 @@ pub async fn stop(ps: tauri::State<'_, PluginGameState>, id: String) -> Result<(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn list_active_processes(
+    ps: tauri::State<'_, PluginGameState>,
+) -> Result<ProcessStatePayload, Error> {
+    let ps = ps.0.read().await;
+
+    let data = ps.get_running();
+
+    Ok(ProcessStatePayload::List(data.clone()))
+}

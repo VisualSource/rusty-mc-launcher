@@ -6,8 +6,7 @@ import { StrictMode } from "react";
 
 import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
 import { ModrinthProvider } from "./components/providers/ModrinthProvider";
-import { ProcessProvider } from "./lib/context/ProcessProvider";
-import { DownloadProvider } from "@context/DownloadContext";
+import { ProcessProvider } from "@component/providers/ProcessProvider";
 import { queryClient } from "@lib/api/queryClient";
 import { getPCA } from "@auth/msal";
 import { router } from "./router";
@@ -24,9 +23,7 @@ root.render(
 			<MsalProvider instance={msa}>
 				<ProcessProvider>
 					<ModrinthProvider client={mca}>
-						<DownloadProvider>
-							<RouterProvider router={router} />
-						</DownloadProvider>
+						<RouterProvider router={router} />
 					</ModrinthProvider>
 				</ProcessProvider>
 			</MsalProvider>

@@ -1,4 +1,5 @@
 use minecraft_launcher_lib::events::DownloadEvent;
+use minecraft_launcher_lib::installer::content::file;
 use minecraft_launcher_lib::installer::content::ContentType;
 use minecraft_launcher_lib::models::queue::QueueType;
 use tokio::sync::RwLock;
@@ -141,22 +142,20 @@ pub async fn copy_profile(
 
 #[tauri::command]
 pub async fn import_external(
-    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
+    state: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
     src: PathBuf,
     content_type: ContentType,
-) -> Result<(), String> {
-    // TODO: rework to use tauri channels
-
-    /*if let Err(err) = external::install_external(&state, src, profile, content_type).await {
+) -> Result<(), Error> {
+    let db = state.write().await;
+    if let Err(err) = file::install_file(&db, src, profile, content_type).await {
         log::error!("{}", err);
-        return Err(err.into());
+        return Err(Error::Lib(err));
     }
-    Ok(())*/
-    todo!("Update 'import_external'")
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn get_system_ram() -> u64 {
-    minecraft_launcher_lib::get_ram()
+    minecraft_launcher_lib::utils::get_ram_gb()
 }

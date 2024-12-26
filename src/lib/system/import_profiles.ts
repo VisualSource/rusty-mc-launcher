@@ -3,12 +3,12 @@ import { dataDir, join } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
-import type { Profile } from "../models/profiles";
-import { queryClient } from "@lib/api/queryClient";
-import { QueueItemState } from "../QueueItemState";
 import { bulk, transaction } from "../api/plugins/query";
 import { ContentType } from "../models/download_queue";
-import toast from "@/components/ui/toast"
+import { queryClient } from "@lib/api/queryClient";
+import { QueueItemState } from "../QueueItemState";
+import type { Profile } from "../models/profiles";
+import toast from "@/components/ui/toast";
 
 export type Loader = "vanilla" | "forge" | "fabric" | "quilt" | "neoforge";
 

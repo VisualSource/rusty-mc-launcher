@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useSyncExternalStore } from "react";
-import { processContext, type ProcessCrashEvent, CRASH_EVENT } from "@/lib/context/ProcessContext";
+import { CRASH_EVENT, type ProcessCrashEvent } from "@system/processesWatcher";
+import { processContext } from "@/lib/context/ProcessContext";
 
 export const useProcessState = () => {
     const state = useContext(processContext);

@@ -6,13 +6,14 @@ import { lazy } from "react";
 import type { AppContext } from "@/types";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/Footer";
+import AskDialog from "@/components/dialog/AskDialog";
 
 const TanStackRouterDevtools = import.meta.env.DEV
 	? lazy(() =>
-			import("@tanstack/router-devtools").then((res) => ({
-				default: res.TanStackRouterDevtools,
-			})),
-		)
+		import("@tanstack/router-devtools").then((res) => ({
+			default: res.TanStackRouterDevtools,
+		})),
+	)
 	: () => null;
 
 const Index: React.FC = () => {
@@ -29,6 +30,7 @@ const Index: React.FC = () => {
 				position="bottom-right"
 				theme="dark"
 			/>
+			<AskDialog />
 			<ReactQueryDevtools />
 			<TanStackRouterDevtools position="bottom-right" />
 		</>

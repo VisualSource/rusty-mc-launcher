@@ -3,10 +3,8 @@
 //! See <https://ryanccn.dev/posts/inside-a-minecraft-launcher>
 //! for information on how libraries are sturctured
 
-use log::info;
 use normalize_path::NormalizePath;
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::env::consts;
 use std::path::PathBuf;
@@ -60,7 +58,7 @@ impl Manifest {
 
         if do_inhert {
             if let Some(inherts) = &manifest.inherits_from {
-                info!("Inherting manifest");
+                log::debug!("Inherting manifest from {}", inherts);
                 let root_dir = manifest_dir
                     .parent()
                     .ok_or_else(|| Error::Generic("Failed to get parent dir".into()))?
@@ -79,7 +77,7 @@ impl Manifest {
                 let raw = tokio::fs::read_to_string(&path).await?;
                 let base_manifest = serde_json::from_str::<Manifest>(&raw)?;
 
-                manifest = base_manifest.inherit(manifest);
+                manifest = base_manifest.inherit(manifest)?;
             }
         }
 
@@ -87,7 +85,7 @@ impl Manifest {
     }
 
     /// Merges two manifests together
-    pub fn inherit(mut self, manifest: Manifest) -> Manifest {
+    pub fn inherit(mut self, manifest: Manifest) -> Result<Manifest, Error> {
         self.id = manifest.id;
         self.release_time = manifest.release_time;
         self.time = manifest.time;
@@ -100,33 +98,30 @@ impl Manifest {
 
         self.libraries.extend(manifest.libraries);
 
-        let mut seen = HashMap::<String, String>::new();
-        for lib in &self.libraries {
+        let mut seen = HashMap::<String, Library>::new();
+        for lib in self.libraries.drain(..) {
             let name = lib.name.as_string_without_version();
             if seen.contains_key(&name) {
-                let seen_version = seen.get(&name).unwrap();
+                let current = seen
+                    .get(&name)
+                    .ok_or_else(|| Error::NotFound("Failed to find lib".to_string()))?;
 
-                if semver_rs::compare(&lib.name.version, seen_version, None).unwrap()
-                    == Ordering::Greater
-                {
-                    seen.insert(name, lib.name.version.clone());
+                let other = lenient_semver::parse(&lib.name.version)
+                    .map_err(|err| Error::Generic(err.to_string()))?;
+                let target = lenient_semver::parse(&current.name.version)
+                    .map_err(|err| Error::Generic(err.to_string()))?;
+
+                if target > other {
+                    continue;
                 }
-            } else {
-                seen.insert(name, lib.name.version.clone());
             }
+
+            seen.insert(name, lib);
         }
 
-        self.libraries.retain(|lib| {
-            let name = lib.name.as_string_without_version();
-            if seen.contains_key(&name) {
-                return seen
-                    .get(&name)
-                    .map_or_else(|| true, |version| version == &lib.name.version);
-            }
-            false
-        });
+        self.libraries = seen.into_values().collect::<Vec<_>>();
 
-        self
+        Ok(self)
     }
 
     /// convert libraries vector into a string with class path.
@@ -172,7 +167,7 @@ pub struct JavaVersion {
 }
 
 #[derive(Debug, Clone)]
-pub struct LibVersion {
+pub struct MavenRepository {
     package: String,
     name: String,
     version: String,
@@ -180,8 +175,8 @@ pub struct LibVersion {
     native: Option<String>,
 }
 
-impl LibVersion {
-    pub fn parse(buf: &str) -> Result<LibVersion, Error> {
+impl MavenRepository {
+    pub fn parse(buf: &str) -> Result<MavenRepository, Error> {
         let name_items = buf.split(':').collect::<Vec<&str>>();
 
         let package = name_items.first().ok_or_else(|| {
@@ -204,7 +199,7 @@ impl LibVersion {
             })?;
             let ext = version_ext.get(1);
 
-            Ok(LibVersion {
+            Ok(MavenRepository {
                 package: package.to_string(),
                 name: name.to_string(),
                 version: version.to_string(),
@@ -226,7 +221,7 @@ impl LibVersion {
             })?;
             let ext = data_ext.get(1);
 
-            Ok(LibVersion {
+            Ok(MavenRepository {
                 package: package.to_string(),
                 name: name.to_string(),
                 version: version.to_string(),
@@ -263,7 +258,7 @@ impl LibVersion {
 
     /// Parse a library's name into it's parts so be can do operations on it
     /// <https://brokenco.de/2020/08/03/serde-deserialize-with-string.html>
-    fn deserialize<'de, D>(deserializer: D) -> Result<LibVersion, D::Error>
+    fn deserialize<'de, D>(deserializer: D) -> Result<MavenRepository, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -271,7 +266,7 @@ impl LibVersion {
 
         Self::parse(&buf).map_err(|x| serde::de::Error::custom(x.to_string()))
     }
-    fn serialize<S>(lib: &LibVersion, serialize: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(lib: &MavenRepository, serialize: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -284,8 +279,8 @@ impl LibVersion {
 #[serde(rename_all = "camelCase")]
 pub struct Library {
     pub downloads: Option<LibraryDownloads>,
-    #[serde(with = "LibVersion")]
-    pub name: LibVersion,
+    #[serde(with = "MavenRepository")]
+    pub name: MavenRepository,
     pub url: Option<String>,
     pub sha1: Option<String>,
     pub natives: Option<std::collections::HashMap<String, String>>,
@@ -433,7 +428,7 @@ mod tests {
                 "sha1": "f0ed132a49244b042cd0e15702ab9f2ce3cc8436",
                 "sha256": "8cadd43ac5eb6d09de05faecca38b917a040bb9139c7edeb4cc81c740b713281",
                 "size": 126093,
-                "name": "org.ow2.asm:asm:9.7.1",
+                "name": "org.ow2.asm:asm:9.7",
                 "sha512": "4767b01603dad5c79cc1e2b5f3722f72b1059d928f184f446ba11badeb1b381b3a3a9a801cc43d25d396df950b09d19597c73173c411b1da890de808b94f1f50",
                 "url": "https://maven.fabricmc.net/",
                 "md5": "e2cdd32d198ad31427d298eee9d39d8d"
@@ -486,10 +481,82 @@ mod tests {
             }
         "#).expect("Failed to parse");
 
-        let updated = manifset_source.inherit(manifset_two);
+        let updated = manifset_two
+            .inherit(manifset_source)
+            .expect("Failed to inherit");
         log::debug!("{:#?}", updated);
 
         assert!(updated.libraries.len() == 3)
+    }
+
+    #[test]
+    fn test_duplicate_same_libs() {
+        init();
+        let manifset_source: Manifest = serde_json::from_str(
+            r#"{
+        "inheritsFrom": "1.21.4",
+        "releaseTime": "2024-12-25T08:28:30+0000",
+        "mainClass": "net.fabricmc.loader.impl.launch.knot.KnotClient",
+        "libraries": [
+            {
+                "name": "com.google.code.gson:gson:2.11.0",
+                "downloads": {
+                    "artifact": {
+                    "sha1": "527175ca6d81050b53bdd4c457a6d6e017626b0e",
+                    "size": 298435,
+                    "url": "https://libraries.minecraft.net/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar",
+                    "path": "com/google/code/gson/gson/2.11.0/gson-2.11.0.jar"
+                    }
+                }
+            }
+        ],
+        "arguments": {
+            "jvm": [
+                "-DFabricMcEmu= net.minecraft.client.main.Main "
+            ],
+            "game": []
+        },
+        "id": "fabric-loader-0.16.9-1.21.4",
+        "time": "2024-12-25T08:28:30+0000",
+        "type": "release"
+    }"#,
+        )
+        .expect("Failed to parse manifset");
+        let manifset_two: Manifest = serde_json::from_str(r#"
+        {
+                "releaseTime": "2024-12-25T08:28:30+0000",
+                "mainClass": "net.fabricmc.loader.impl.launch.knot.KnotClient",
+                "libraries": [
+                     {
+                        "downloads": {
+                            "artifact": {
+                                "path": "com/google/code/gson/gson/2.11.0/gson-2.11.0.jar",
+                                "sha1": "527175ca6d81050b53bdd4c457a6d6e017626b0e",
+                                "size": 298435,
+                                "url": "https://libraries.minecraft.net/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar"
+                            }
+                        },
+                        "name": "com.google.code.gson:gson:2.11.0"
+                    }
+                ],
+                "arguments": {
+                    "jvm": [
+                        "-DFabricMcEmu= net.minecraft.client.main.Main "
+                    ],
+                    "game": []
+                },
+                "id": "fabric-loader-0.16.9-1.21.4",
+                "time": "2024-12-25T08:28:30+0000",
+                "type": "release"
+            }
+        "#).expect("Failed to parse");
+
+        let updated = manifset_two
+            .inherit(manifset_source)
+            .expect("Failed to inherit");
+        log::debug!("{:#?}", updated);
+
+        assert!(updated.libraries.len() == 1)
     }
 
     #[test]

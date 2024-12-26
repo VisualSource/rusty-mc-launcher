@@ -12,16 +12,22 @@ pub struct Processes {
 
 impl Processes {
     pub fn insert(&mut self, process: Process) {
-        self.active.push(process.uuid.clone());
+        self.active.push(process.profile_id.clone());
         self.state.insert(process.uuid.clone(), process);
     }
     pub fn remove(&mut self, uuid: &str) {
-        self.state.remove(uuid);
+        if let Some(data) = self.state.remove(uuid) {
+            self.active.retain(|x| x != &data.profile_id);
+        }
+    }
+
+    pub fn get_running(&self) -> &Vec<String> {
+        &self.active
     }
 
     pub fn remove_list(&mut self, uuids: &Vec<&String>) {
         for uuid in uuids {
-            self.state.remove(*uuid);
+            self.remove(uuid);
         }
     }
 
@@ -48,7 +54,7 @@ impl Processes {
         items: &Vec<String>,
     ) -> Result<()> {
         for uuid in items {
-            self.state.remove(uuid);
+            self.remove(uuid);
             sqlx::query!("DELETE FROM processes WHERE uuid = ?", uuid)
                 .execute(&db.0)
                 .await?;
@@ -58,14 +64,13 @@ impl Processes {
     }
 
     /// Loads processes from db.
-    pub async fn load_cache(&mut self, db: &crate::database::Database) -> Result<Vec<String>> {
+    pub async fn load_cache(&mut self, db: &crate::database::Database) -> Result<()> {
         let processes: Vec<Process> = sqlx::query_as("SELECT * FROM processes;")
             .fetch_all(&db.0)
             .await?;
         // delete old processes
         sqlx::query("DELETE FROM processes;").execute(&db.0).await?;
 
-        let mut running_profiles = Vec::new();
         let system = sysinfo::System::new();
         for mut cache in processes {
             if let Some(process) = system.process(sysinfo::Pid::from_u32(cache.pid as u32)) {
@@ -81,14 +86,14 @@ impl Processes {
                     continue;
                 }
 
-                running_profiles.push(cache.profile_id.clone());
+                self.active.push(cache.profile_id.clone());
 
                 cache.child = InstanceType::Partial(process.pid().as_u32());
                 self.insert(cache);
             }
         }
 
-        Ok(running_profiles)
+        Ok(())
     }
     pub async fn cache(&self, db: &crate::database::Database) -> Result<()> {
         for item in self.state.values() {
@@ -126,11 +131,12 @@ impl Process {
         profile_id: String,
         game_directory: &Path,
     ) -> Result<Self> {
-        log::debug!("{} {}", exe, args.join(" "),);
         let uuid = Uuid::new_v4().to_string();
 
         let ps = Command::new(&exe)
             .current_dir(game_directory)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
             .args(args)
             .spawn()?;
 

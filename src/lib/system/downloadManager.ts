@@ -1,27 +1,19 @@
 import { Channel } from "@tauri-apps/api/core";
 
 import { type DownloadCurrentItem, registerDownloadListener, type DownloadEvent } from "../api/plugins/content";
-import { queryClient } from "@lib/api/queryClient";
+import { invalidateQueries } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 
 export const DOWNLOAD_MANAGER_EVENT_PROGRESS = "update::progress";
 export const DOWNLOAD_MANAGER_EVENT_CURRENT = "update::current";
 
-const UpdateQueues = () => Promise.all([
-    queryClient.invalidateQueries({
-        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
-    }),
-    queryClient.invalidateQueries({
-        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
-    }),
-    queryClient.invalidateQueries({
-        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
-    }),
-    queryClient.invalidateQueries({
-        queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
-    })
-])
+const UpdateQueues = () => invalidateQueries([
+    [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
+    [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
+    [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
+    [KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED]
+]);
 
 class DownloadManager extends EventTarget {
     static INSTANCE: DownloadManager | null = null;

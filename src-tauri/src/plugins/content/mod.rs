@@ -1,19 +1,14 @@
 mod commands;
 mod desktop;
+use minecraft_launcher_lib::events::DownloadEvent;
 use std::time::Duration;
-use tokio_util::sync::CancellationToken;
-use minecraft_launcher_lib::{
-    database::Database,
-    events::DownloadEvent,
-    models:: queue::{QueueItem, QueueState, QueueType},
-};
 use tauri::{
     ipc::Channel,
     plugin::{Builder, TauriPlugin},
     Manager, RunEvent, Runtime,
 };
 use tokio::{select, sync::Mutex};
-use tokio::sync::RwLock;
+use tokio_util::sync::CancellationToken;
 
 use crate::error::Error;
 
@@ -35,95 +30,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                             break;
                         }
                         _ = tokio::time::sleep(Duration::from_secs(5)) => {
-                            let state = app_handle.state::<RwLock<Database>>();
-                            let emitter_state = app_handle.state::<Mutex<Option<Channel<DownloadEvent>>>>();
-        
-                            let item = {
-                                let db = state.read().await;
-                                QueueItem::get_pending(&db).await
-                            };
-                            match item {
-                                Ok(Some(item)) => {
-                                    log::debug!("Processing Item: {}", item.id);
-                                    let emitter_c = emitter_state.lock().await;
-                                    if emitter_c.is_none() {
-                                        log::warn!("Download listener not registered: waiting for listener");
-                                        continue;
-                                    }
-
-                                    {
-                                        let db = state.write().await;
-                                        if let Err(err) = QueueItem::set_state(&item.id, QueueState::Current, &db).await 
-                                        {
-                                            log::error!("{}", err);
-                                            continue
-                                        }
-                                    }
-                                
-                                    let emitter = emitter_c.as_ref().unwrap();
-                                    if let Err(err) = emitter.send(DownloadEvent::Init{
-                                        display_name: item.display_name.clone(),
-                                        icon: item.icon.clone(),
-                                        content_type: item.content_type.clone()
-                                    }){
-                                        log::error!("{}",err)
-                                    }
-                                    tokio::time::sleep(Duration::from_secs(2)).await;
-                                    
-                                    match &item.content_type {
-                                        QueueType::Client => {
-                                            if let Err(err) =
-                                                desktop::install_client(&item, &state, emitter).await
-                                            {
-                                                // handler error
-                                                let db = state.write().await;
-                                                log::error!("{}", err);
-                                                if let Err(err) = QueueItem::set_state(&item.id, QueueState::Errored, &db).await
-                                                {
-                                                    log::error!("{}", err);
-                                                }
-                                            }
-                                        }
-                                        QueueType::Modpack
-                                        | QueueType::Mod
-                                        | QueueType::Shader
-                                        | QueueType::Resourcepack => {
-                                            if let Err(err) = desktop::install_content(&item, &state, emitter).await {
-                                                let db = state.write().await;
-                                                log::error!("{}", err);
-                                                if let Err(err) = QueueItem::set_state(&item.id, QueueState::Errored, &db).await
-                                                {
-                                                    log::error!("{}", err);
-                                                }
-                                            }
-                                        },
-                                        QueueType::Datapack => {
-                                            log::error!("Datapack install has no support for installing yet");
-                                            let db = state.write().await;
-                                            if let Err(err) =
-                                                QueueItem::set_state(&item.id, QueueState::Errored, &db)
-                                                    .await
-                                            {
-                                                log::error!("{}", err);
-                                            }
-                                        }
-                                        QueueType::CurseforgeModpack => {
-                                            if let Err(err) = desktop::install_cf_modpack(&item, &state, emitter).await {
-                                                let db = state.write().await;
-                                                log::error!("{}", err);
-                                                if let Err(err) = QueueItem::set_state(&item.id, QueueState::Errored, &db).await
-                                                {
-                                                    log::error!("{}", err);
-                                                }
-                                            }
-                                        },
-                                    }
-                                }
-                                Ok(None) => continue,
-                                Err(err) => {
-                                    log::error!("{}", err);
-                                }
-                            }
+                            desktop::install(&app_handle).await;
                         }
                     }
                 }

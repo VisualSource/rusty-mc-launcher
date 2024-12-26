@@ -1,4 +1,5 @@
-import { processContext, ProcessState } from "./ProcessContext";
+import { ProcessState } from "@system/processesWatcher";
+import { processContext } from "@context/ProcessContext";
 import GameCrash from "@/components/dialog/GameCrash";
 
 const client = new ProcessState();

@@ -56,6 +56,7 @@ export class QueueItem {
 	public content_type: z.infer<typeof contentTypeSchema>;
 	public state: keyof typeof QueueItemState = "PENDING";
 	constructor(args: QueryResult) {
+		this.state = args.state as keyof typeof QueueItemState;
 		this.id = args.id as string;
 		this.display = (args.display as number) === 0;
 		this.priority = args.priority as number;

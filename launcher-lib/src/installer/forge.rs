@@ -1,4 +1,4 @@
-use super::download_libraries;
+use super::download::download_libraries;
 use log::info;
 use normalize_path::NormalizePath;
 use std::{
@@ -17,7 +17,7 @@ use super::{
 use crate::{
     error::{Error, Result},
     events::DownloadEvent,
-    manifest::{LibVersion, Library, Manifest},
+    manifest::{Library, Manifest, MavenRepository},
 };
 
 const FORGE_VERSION_LIST_URL: &str =
@@ -31,7 +31,7 @@ struct Mapping {
 impl Mapping {
     fn get_client(&self, libary_path: &Path) -> Result<String> {
         if self.client.starts_with('[') && self.client.ends_with(']') {
-            let path = LibVersion::parse(&self.client.replace(['[', ']'], ""))?.as_classpath();
+            let path = MavenRepository::parse(&self.client.replace(['[', ']'], ""))?.as_classpath();
 
             Ok(libary_path
                 .join(path)
@@ -79,7 +79,7 @@ impl Processor {
                     )))?;
                 args.push(mapping.1.to_owned());
             } else if arg.starts_with('[') && arg.ends_with(']') {
-                let path = LibVersion::parse(&arg.replace(['[', ']'], ""))?.as_classpath();
+                let path = MavenRepository::parse(&arg.replace(['[', ']'], ""))?.as_classpath();
 
                 args.push(
                     library_directory
@@ -155,7 +155,7 @@ impl InstallProfile {
         for processor in processors {
             let mut classpath = Vec::new();
             for lib in &processor.classpath {
-                let path = LibVersion::parse(lib)?.as_classpath();
+                let path = MavenRepository::parse(lib)?.as_classpath();
 
                 classpath.push(
                     library_directory
@@ -166,7 +166,7 @@ impl InstallProfile {
                 );
             }
 
-            let jar_path = LibVersion::parse(&processor.jar)?.as_classpath();
+            let jar_path = MavenRepository::parse(&processor.jar)?.as_classpath();
             let main_jar = library_directory.join(jar_path).normalize();
 
             classpath.push(main_jar.to_string_lossy().to_string());

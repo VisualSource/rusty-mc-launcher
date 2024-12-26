@@ -56,23 +56,23 @@ pub async fn download_file(
 
     if output_directory.exists() && output_directory.is_file() {
         if let Some(hash) = sha1 {
-            info!("File exists and has sha1 hash");
+            log::debug!("File exists and has sha1 hash");
             let mut file = File::open(&output_directory)
                 .await?
                 .try_into_std()
-                .map_err(|_| Error::Generic("".to_string()))?;
+                .map_err(|_| Error::Generic("io error".to_string()))?;
             let mut hasher = Sha1::new();
 
             let size = std::io::copy(&mut file, &mut hasher)?;
 
             let file_hash = hasher.finalize();
 
-            info!("Current size of file on disk: {}", size);
+            log::debug!("Current size of file on disk: {}", size);
             if hex::encode(file_hash) == hash {
                 return Ok(());
             }
         } else {
-            warn!("File was found on disk but now removing it and redownloading from source as it can not be verified.");
+            warn!("File was found on disk but now removing it and redownloading from source as it can not be verified. {:?}",output_directory);
             tokio::fs::remove_file(&output_directory).await?;
         }
     }
@@ -83,7 +83,7 @@ pub async fn download_file(
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
         if attempt > 1 {
-            info!(
+            log::debug!(
                 "Fetch Attempt {} | Duration {}ms | Task {}",
                 attempt,
                 15_000 * attempt,

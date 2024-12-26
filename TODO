@@ -1,12 +1,11 @@
 Todo:
-  ✔ Finished rewrite on installs @done(24-12-25 19:55)
-  ☐ Fix content uninstall
+  ☐ Fix content uninstall (NEEDS TESTING)
   ☐ Update content check deps
   ☐ update to latest version (for vanilla)
   ☐ Validate Content
-  ☐ Working neoforge install
+ 
   ☐ performance changes
-  ☐ Resourcepack mod checks
+  ☐ Resourcepack's mod requirement checks
   ☐ Add Completed timestamp to download queue
   
   
@@ -15,6 +14,8 @@ Bugs:
   ☐ (Modrinth) OAuth2 Bug: https://github.com/modrinth/code/issues/2339
 
 Archive:
+  ✔ Finished rewrite on installs @done(24-12-25 19:55)
+  ✔ Working neoforge install @done(24-12-26 17:26)
   ✔ modrinth login fix @done(24-07-17 13:59)
   ✔ crash reporting @done(24-07-17 00:02)
   ✔ editable home page @started(24-07-06 11:49) @done(24-07-06 17:28) @lasted(5h39m17s)

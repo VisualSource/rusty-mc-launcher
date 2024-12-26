@@ -27,3 +27,7 @@ export async function stop(id: string) {
 		id
 	});
 }
+
+export async function listActiveProcesses(): Promise<{ type: "List", data: string[] }> {
+	return invoke<{ type: "List", data: string[] }>("plugin:rmcl-game|list_active_processes");
+}

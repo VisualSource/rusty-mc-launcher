@@ -3,21 +3,15 @@ mod desktop;
 
 use std::time::Duration;
 
-use desktop::{
-    PluginGameState, ProcessCrashEvent, ProcessStatePayload, PROCESSES_STATE_EVENT,
-    PROCESS_CRASH_EVENT,
-};
+use desktop::{process_watcher, PluginGameState, PROCESSES_STATE_EVENT};
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    Emitter, Manager, RunEvent, Runtime,
+    Manager, RunEvent, Runtime,
 };
 use tokio_util::sync::CancellationToken;
 
-use minecraft_launcher_lib::{
-    database::Database,
-    process::{InstanceType, Processes},
-};
-use tokio::{io::AsyncReadExt, select, sync::RwLock};
+use minecraft_launcher_lib::{database::Database, process::Processes};
+use tokio::{select, sync::RwLock};
 
 use crate::error::Error;
 
@@ -33,11 +27,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                 let state = app.state::<RwLock<Database>>();
                 let db = state.write().await;
 
-                let active = data.load_cache(&db).await.map_err(Error::Lib)?;
-
-                if let Err(err) = app.emit(PROCESSES_STATE_EVENT, ProcessStatePayload::Init(active)) {
-                    log::error!("{}",err);
-                }
+                data.load_cache(&db).await.map_err(Error::Lib)?;
 
                 Ok::<Processes, Error>(data)
             })?;
@@ -62,75 +52,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                             break;
                         }
                         _ = tokio::time::sleep(Duration::from_secs(4)) => {
-                            let state = handle.state::<PluginGameState>();
-                            let removable = {
-                                let mut ps_list = state.0.write().await;
-
-                                let mut removable = Vec::new();
-                                for (uuid, ps) in &mut ps_list.state {
-                                    let profile_id = ps.profile_id.clone();
-
-                                    let status = ps
-                                        .status()
-                                        .await
-                                        .map(|status| status.unwrap_or(-1))
-                                        .unwrap_or_default();
-
-                                    match status {
-                                        // no exit code
-                                        e if e < 0 => continue,
-                                        // error exit code
-                                        e if e > 0 => {
-                                            if let InstanceType::Full(child) = &mut ps.child {
-                                                if let Some(mut output) = child.stderr.take() {
-                                                    let mut io = String::new();
-                                                    if let Err(err) = output.read_to_string(&mut io).await {
-                                                        log::error!("{}",err);
-                                                    };
-                                                    log::debug!("{:#?}",io);
-                                                }
-                                            }
-
-                                            if let Err(err) = handle.emit(
-                                                PROCESS_CRASH_EVENT,
-                                                ProcessCrashEvent::new(profile_id.clone(),e),
-                                            ) {
-                                                log::error!("{}", err);
-                                            }
-                                            log::debug!("Process crashed: {}",uuid);
-                                            removable.push((uuid.clone(),profile_id));
-                                        }
-                                        // 0 exit code
-                                        _ => {
-                                            log::debug!("Process exited: {}",uuid);
-                                            removable.push((uuid.clone(),profile_id));
-                                        }
-                                    }
-                                }
-                                removable
-                            };
-                            // drop old processes
-                            if !removable.is_empty() {
-                                let s_db =
-                                    handle.state::<RwLock<minecraft_launcher_lib::database::Database>>();
-
-                                log::debug!("Removing old processes: {:?}",removable);
-
-                                let (process_ids,profile_ids) = removable.into_iter().unzip();
-
-                                let mut state = state.0.write().await;
-                                let db = s_db.write().await;
-                                if let Err(err) = state.remove_from_cache(&db, &process_ids).await {
-                                    log::error!("{}", err);
-                                }
-
-                                if let Err(err) = handle.emit(
-                                    PROCESSES_STATE_EVENT,
-                                    ProcessStatePayload::Remove(profile_ids),
-                                ) {
-                                    log::error!("{}", err);
-                                }
-                            }
+                           process_watcher(&handle).await;
                         }
                     }
                 }
@@ -151,7 +73,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             commands::launch_game,
             commands::is_running,
-            commands::stop
+            commands::stop,
+            commands::list_active_processes
         ])
         .build()
 }
