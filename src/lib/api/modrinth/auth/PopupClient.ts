@@ -1,7 +1,7 @@
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { open } from "@tauri-apps/plugin-shell";
 import { BrowserAuthErrorCodes } from "@azure/msal-browser";
-import { toast } from "react-toastify";
+import toast from "@component/ui/toast"
 
 export type AuthResponse = {
 	access_token: string;
@@ -18,10 +18,10 @@ export class PopupClient {
 	public acquireToken() {
 		try {
 			const res = this.acquireTokenPopupAsync();
-			toast.success("Logged into Modrinth");
+			toast({ variant: "success", title: "Logged into Modrinth" });
 			return res;
 		} catch (error) {
-			toast.error("Modrinth Login failed", { data: error });
+			toast({ variant: "error", title: "Modrinth Login failed", error });
 			return Promise.reject(error);
 		}
 	}

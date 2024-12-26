@@ -12,8 +12,6 @@ import { queryClient } from "@lib/api/queryClient";
 import { getPCA } from "@auth/msal";
 import { router } from "./router";
 import "./index.css";
-import "react-toastify/dist/ReactToastify.css";
-
 
 const msa = getPCA();
 const mca = new ModrinthClientApplication();

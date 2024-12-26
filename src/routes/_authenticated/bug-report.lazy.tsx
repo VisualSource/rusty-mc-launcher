@@ -14,7 +14,8 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+import toast, { updateToast } from "@component/ui/toast"
+import { error } from "@tauri-apps/plugin-log";
 
 export const Route = createLazyFileRoute("/_authenticated/bug-report")({
 	component: BugReport,
@@ -31,7 +32,7 @@ function BugReport() {
 	const form = useForm<FormState>();
 
 	const onSubmit = async (state: FormState) => {
-		const toastId = toast.loading("Submitting report");
+		const toastId = toast({ title: "Submitting report", closeButton: false, opts: { isLoading: true, } })
 
 		try {
 			const response = await fetch(
@@ -56,25 +57,11 @@ function BugReport() {
 
 			const data = (await response.json()) as { html_url: string };
 
-			toast.update(toastId, {
-				isLoading: false,
-				type: "success",
-				autoClose: 5000,
-				data: data.html_url,
-				closeButton: true,
-				render: "Report submited",
-			});
-
+			updateToast(toastId, { data: { variant: "success", title: "Report submited", description: data.html_url }, isLoading: false, autoClose: 5000 });
 			navigate({ to: "/" });
-		} catch (error) {
-			toast.update(toastId, {
-				isLoading: false,
-				type: "error",
-				autoClose: 5000,
-				closeButton: true,
-				render: "Failed to submit bug report",
-				data: error,
-			});
+		} catch (err) {
+			error((err as Error).message);
+			updateToast(toastId, { data: { error: err, variant: "error", title: "Failed to submit bug report" }, isLoading: false, autoClose: 5000 });
 		}
 	};
 

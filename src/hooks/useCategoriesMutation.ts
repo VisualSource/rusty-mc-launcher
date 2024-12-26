@@ -1,10 +1,11 @@
+import { fromZodError } from "zod-validation-error";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+
+import toast from "@component/ui/toast";
+import { query, transaction } from "@lib/api/plugins/query";
 import { queryClient } from "@/lib/api/queryClient";
 import { CATEGORIES_KEY } from "./keys";
-import { query, transaction } from "@lib/api/plugins/query";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "react-toastify";
-import { fromZodError } from "zod-validation-error";
-import { z } from "zod";
 
 export const useCategoriesMutation = () => {
 	return useMutation({
@@ -25,9 +26,7 @@ export const useCategoriesMutation = () => {
 						.safeParse(payload.data);
 					if (content.error) {
 						const message = fromZodError(content.error);
-						toast.error("Failed to delete collection!", {
-							data: message,
-						});
+						toast({ variant: "error", title: "Failed to delete collection!", error: message });
 						throw message;
 					}
 
@@ -40,16 +39,14 @@ export const useCategoriesMutation = () => {
 					if (id.error) {
 						const message = fromZodError(id.error);
 
-						toast.error("Failed to delete collection!", {
-							data: message,
-						});
+						toast({ variant: "error", title: "Failed to delete collection!", error: message });
 
 						throw message;
 					}
 
-					await transaction((tx) => {
-						tx.query`DELETE FROM categories WHERE category = ${id.data};`;
-						tx.query`DELETE FROM settings WHERE key = ${`category.${id.data}`}`;
+					await transaction((query) => {
+						query`DELETE FROM categories WHERE category = ${id.data};`;
+						query`DELETE FROM settings WHERE key = ${`category.${id.data}`};`;
 					});
 					break;
 				}

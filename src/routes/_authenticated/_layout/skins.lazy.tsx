@@ -8,9 +8,9 @@ import { useMutation } from "@tanstack/react-query";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { useAccount } from "@azure/msal-react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { toast } from "react-toastify";
 import { Plus } from "lucide-react";
 
+import toast, { waitToast } from "@component/ui/toast";
 import type { Cape, MinecraftAccount, Skin } from "@/lib/api/minecraftAccount";
 import { Separator } from "@/components/ui/separator";
 import { queryClient } from "@/lib/api/queryClient";
@@ -119,7 +119,7 @@ const DisplayItem = memo(
 		onClick,
 	}: { onClick: () => void; state: string; skin?: string; cape?: string }) => {
 		const target = useRef<HTMLCanvasElement>(null);
-		const viewer = useRef<SkinViewer>();
+		const viewer = useRef<SkinViewer | undefined>(undefined);
 
 		useEffect(() => {
 			if (target.current) {
@@ -156,7 +156,7 @@ const DisplayItem = memo(
 const MinecraftSkinControl: React.FC = memo(() => {
 	const msAccount = useAccount();
 	const target = useRef<HTMLCanvasElement>(null);
-	const viewer = useRef<SkinViewer>();
+	const viewer = useRef<SkinViewer | undefined>(undefined);
 	const { account, isLoading } = useUser();
 	const [content, dispatch] = useReducer(reducer, {
 		isReady: false,
@@ -360,13 +360,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 					<div>
 						<Button
 							disabled={mutation.isPending}
-							onClick={() =>
-								toast.promise(mutation.mutateAsync(), {
-									pending: "Updating",
-									error: "Failed to update",
-									success: "Updated",
-								})
-							}
+							onClick={() => waitToast({ callback: mutation.mutateAsync(), pendingTitle: "Updating", errorTitle: "Failed to update", successTitle: "Updated" })}
 							size="sm"
 						>
 							Save

@@ -46,7 +46,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 				<div>
 					<Button
 						onClick={async () => {
-							await query("DELETE FROM download_queue WHERE id = ?;", [id]).run();
+							await query`DELETE FROM download_queue WHERE id = ${id};`.run();
 							await queryClient.invalidateQueries({
 								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
 							});
@@ -63,7 +63,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 				<div className="flex gap-2">
 					<Button
 						onClick={async () => {
-							await query("UPDATE download_queue SET state = ? WHERE id = ?;", [QueueItemState.PENDING, id]).run();
+							await query`UPDATE download_queue SET state = ${QueueItemState.PENDING} WHERE id = ${id};`.run();
 							await queryClient.invalidateQueries({
 								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 							});
@@ -78,7 +78,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 					</Button>
 					<Button
 						onClick={async () => {
-							await query("DELETE FROM download_queue WHERE id = ?;", [id]).run();
+							await query`DELETE FROM download_queue WHERE id = ${id};"`.run();
 							await queryClient.invalidateQueries({
 								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
 							});

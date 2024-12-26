@@ -1,5 +1,5 @@
 import { coerce, minSatisfying } from "semver";
-import { toast } from "react-toastify";
+import toast, { updateToast } from "@component/ui/toast"
 
 import type {
 	Project,
@@ -239,7 +239,7 @@ export async function install_known(
 }
 
 export async function install(data: Project) {
-	const id = toast.loading("Preparing install...");
+	const id = toast({ title: "Preparing install...", closeButton: false, opts: { isLoading: true } });
 	try {
 		switch (data.project_type) {
 			case "resourcepack":
@@ -249,12 +249,7 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
-						isLoading: false,
-						autoClose: 5000,
-					});
+					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
 					return;
 				}
 
@@ -315,12 +310,7 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
-						isLoading: false,
-						autoClose: 5000,
-					});
+					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
 					return;
 				}
 
@@ -431,12 +421,7 @@ export async function install(data: Project) {
 				});
 
 				if (!gameVersions.length) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
-						isLoading: false,
-						autoClose: 5000,
-					});
+					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
 					return;
 				}
 
@@ -448,12 +433,7 @@ export async function install(data: Project) {
 					options: data.loaders?.map((e) => ({ id: e, name: e })) ?? [],
 				});
 				if (!loaders.length) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
-						isLoading: false,
-						autoClose: 5000,
-					});
+					updateToast(id, { data: { variant: "info", title: "Install canceled" }, isLoading: false, autoClose: 5000 });
 					return;
 				}
 
@@ -510,19 +490,10 @@ export async function install(data: Project) {
 			default:
 				break;
 		}
-		toast.update(id, {
-			render: "Staring Install",
-			type: "success",
-			isLoading: false,
-			autoClose: 5000,
-		});
+
+		updateToast(id, { data: { variant: "success", title: "Staring Install" }, isLoading: false, autoClose: 5000 });
 	} catch (error) {
-		toast.update(id, {
-			render: "Failed to install content",
-			type: "error",
-			isLoading: false,
-			data: { error: (error as Error).message },
-			autoClose: 5000,
-		});
+		console.error(error);
+		updateToast(id, { data: { variant: "success", error, title: "Failed to install content" }, isLoading: false, autoClose: 5000 });
 	}
 }

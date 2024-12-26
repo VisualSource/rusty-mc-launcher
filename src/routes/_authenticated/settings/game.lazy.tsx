@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+
 
 import {
 	Form,
@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import {
-	Setting,
 	isOption,
 	updateConfig,
 	addConfig,
@@ -21,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";
+import toast from "@component/ui/toast";
 
 const OPTION_EXIT_ON_START = "option.exit_on_start";
 
@@ -54,7 +54,7 @@ function GameSettings() {
 			);
 		}
 
-		toast.success("Settings saved");
+		toast({ variant: "success", title: "Settings saved" });
 	};
 
 	return (

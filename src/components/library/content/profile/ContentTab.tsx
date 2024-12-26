@@ -4,7 +4,7 @@ import { UpdateIcon } from "@radix-ui/react-icons";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ask } from "@tauri-apps/plugin-dialog";
-import { toast } from "react-toastify";
+import toast, { updateToast } from "@component/ui/toast";
 import { useRef } from "react";
 
 
@@ -45,8 +45,10 @@ async function uninstall(filename: string, type: keyof typeof ContentType, profi
 		});
 	} catch (error) {
 		console.error(error);
-		toast.error("Failed to uninstall content", {
-			data: { error: (error as Error).message },
+		toast({
+			title: "Failed to uninstall content",
+			description: (error as Error).message,
+			variant: "error"
 		});
 	}
 }
@@ -57,7 +59,7 @@ const checkForUpdate = async (
 	item: ContentItem,
 ) => {
 	if (!project) return;
-	const toastId = toast.loading("Checking for update.");
+	const toastId = toast({ title: "Checking for update.", closeButton: false, opts: { isLoading: true } });
 	try {
 		const { data, error, response } = await getProjectVersions({
 			client: modrinthClient,
@@ -92,13 +94,7 @@ const checkForUpdate = async (
 			);
 
 			if (doUpdate) {
-				toast.update(toastId, {
-					render: "Installing new version",
-					type: "info",
-					isLoading: false,
-					closeButton: true,
-					autoClose: 5000,
-				});
+				updateToast(toastId, { data: { title: "Installing new version", variant: "info" }, isLoading: false, autoClose: 5000 });
 				await install_known(
 					version,
 					{
@@ -112,22 +108,24 @@ const checkForUpdate = async (
 			return;
 		}
 
-		toast.update(toastId, {
-			render: "Lastest version installed",
-			data: `Lastest version installed for ${project.title}`,
+		updateToast(toastId, {
+			data: {
+				title: "Updated to latest version.",
+				description: `Lastest version for ${project.title} installed.`,
+				variant: "info",
+			},
 			isLoading: false,
-			type: "info",
-			closeButton: true,
-			autoClose: 5000,
+			autoClose: 5000
 		});
 	} catch (error) {
 		console.error(error);
-		toast.update(toastId, {
-			render: "Failed to update content",
-			data: error,
-			type: "error",
+		updateToast(toastId, {
+			data: {
+				title: "Failed to update content",
+				description: (error as Error).message,
+				variant: "error"
+			},
 			isLoading: false,
-			closeButton: true,
 			autoClose: 5000,
 		});
 	}

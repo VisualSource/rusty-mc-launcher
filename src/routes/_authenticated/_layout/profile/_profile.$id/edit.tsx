@@ -6,7 +6,6 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { join } from "@tauri-apps/api/path";
 import { useForm } from "react-hook-form";
 import { useEffect, useRef } from "react";
-import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 
 import {
@@ -38,21 +37,22 @@ import {
 import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UNCATEGORIZEDP_GUID, getCategoriesFromProfile } from "@/lib/models/categories";
-import { query, sqlValue } from "@lib/api/plugins/query";
-import { Profile } from "@/lib/models/profiles";
 import { ContentType, QueueItem } from "@/lib/models/download_queue";
+import { getCategoriesFromProfile } from "@/lib/models/categories";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
-import { ContentItem } from "@/lib/models/content";
+import { query, sqlValue } from "@lib/api/plugins/query";
+import { QueueItemState } from "@/lib/QueueItemState";
 import { profileQueryOptions } from "../_profile.$id";
+import { JVMArgForm } from "@/components/JVMArgForm";
 import { queryClient } from "@/lib/api/queryClient";
+import { ContentItem } from "@/lib/models/content";
 import { getConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
+import { Profile } from "@/lib/models/profiles";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import { JVMArgForm } from "@/components/JVMArgForm";
-import { QueueItemState } from "@/lib/QueueItemState";
+import toast from "@component/ui/toast";
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/edit",
@@ -302,8 +302,7 @@ function ProfileEdit() {
 								try {
 									const id = crypto.randomUUID();
 									await copyProfile(profileQuery.data, id);
-
-									toast.success("Copyed profile");
+									toast({ variant: "success", title: "Copyed profile" })
 									navigate({
 										to: "/profile/$id",
 										params: {
@@ -312,9 +311,7 @@ function ProfileEdit() {
 									});
 								} catch (error) {
 									console.error(error);
-									toast.error("Failed to copy", {
-										data: { error: (error as Error).message },
-									});
+									toast({ variant: "error", title: "Failed to copy", error });
 								}
 							}}
 							type="button"

@@ -1,25 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { open } from "@tauri-apps/plugin-dialog";
-import { toast } from "react-toastify";
 import { Import } from "lucide-react";
 import { useState } from "react";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getProjects, versionsFromHashes, } from "@/lib/api/modrinth/services.gen";
 import { ContentTab } from "@/components/library/content/profile/ContentTab";
-
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { modrinthClient } from "@/lib/api/modrinthClient";
 import { profileQueryOptions } from "../_profile.$id";
 import { queryClient } from "@/lib/api/queryClient";
+import { ContentItem } from "@/lib/models/content";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
-import { ContentItem } from "@/lib/models/content";
 import { query } from "@lib/api/plugins/query";
+import toast, { updateToast } from "@component/ui/toast";
 //import { manualContentImport } from "@lib/api/plugins/content";
-import {
-	getProjects,
-	versionsFromHashes,
-} from "@/lib/api/modrinth/services.gen";
-import { modrinthClient } from "@/lib/api/modrinthClient";
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/",
@@ -178,29 +174,20 @@ function ProfileContent() {
 									},
 								],
 							});
-							if (!file || Array.isArray(file)) return;
+							if (!file) return;
 
-							const id = toast.loading("Importing Content");
+							const id = toast({ title: "Importing Content", closeButton: false, opts: { isLoading: true } });
 							try {
 								//TODO: fix this
 								//await manualContentImport(selected, profile.data.id, file);
 								await queryClient.invalidateQueries({
 									queryKey: ["WORKSHOP_CONTENT", selected, profile.data.id],
 								});
-								toast.update(id, {
-									render: "Imported Content",
-									type: "success",
-									isLoading: false,
-									autoClose: 5000,
-								});
+
+								updateToast(id, { isLoading: false, autoClose: 5000, data: { variant: "success", title: "Imported Content" } });
 							} catch (error) {
 								console.error(error);
-								toast.update(id, {
-									render: "Failed to import content",
-									type: "error",
-									isLoading: false,
-									autoClose: 5000,
-								});
+								updateToast(id, { isLoading: false, autoClose: 5000, data: { variant: "error", title: "Failed to import content" } });
 							}
 						}}
 					>

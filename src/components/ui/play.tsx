@@ -1,6 +1,6 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
 import { exit } from "@tauri-apps/plugin-process";
-import { toast } from "react-toastify";
+import toast from "@component/ui/toast"
 
 import { stop, launchGame } from "@/lib/api/plugins/game";
 import { useIsRunning } from "@/hooks/useProcessState";
@@ -71,10 +71,8 @@ const PlayButton: React.FC<
 						exitTimer = setTimeout(() => exit(0), 12_000);
 					}
 				} catch (error) {
-					console.error((error as Error).message);
-					toast.error("Failed to start minecraft", {
-						data: error,
-					});
+					console.error(error);
+					toast({ variant: "error", title: "Failed to start minecraft", error });
 					clearTimeout(exitTimer);
 				}
 			}}
