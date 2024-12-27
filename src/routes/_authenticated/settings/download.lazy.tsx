@@ -19,6 +19,8 @@ import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
+import { checkForAppUpdate } from "@/lib/system/updateCheck";
+import { error } from "@tauri-apps/plugin-log";
 
 const JavaJREForamt =
 	/zulu(?<zulu>\d+\.\d+\.\d+)-ca-jre(?<jre>\d+\.\d+\.\d+)-(?<platform>\w+)/;
@@ -104,6 +106,16 @@ function DownloadSettings() {
 				</p>
 			</div>
 			<Separator />
+
+			<div className="w-full">
+				<Button className="w-full" variant="outline" onClick={() => {
+					checkForAppUpdate(true).catch(e => {
+						if (e instanceof Error) error(e.message);
+						console.error(e);
+					})
+				}}>Check for updates</Button>
+			</div>
+
 			<div>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
