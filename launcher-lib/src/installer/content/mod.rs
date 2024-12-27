@@ -4,6 +4,7 @@ mod mrpack;
 use std::{path::PathBuf, str::FromStr};
 
 use crate::{
+    database::RwDatabase,
     error::{Error, Result},
     events::DownloadEvent,
     installer::utils,
@@ -80,7 +81,7 @@ async fn download_files(output_direcotry: &std::path::Path, files: Vec<InstallFi
 pub async fn install_content(
     config: InstallContent,
     icon: Option<String>,
-    db: &crate::database::Database,
+    db: &RwDatabase,
     on_event: &tauri::ipc::Channel<DownloadEvent>,
 ) -> Result<()> {
     let root = Setting::path("path.app", db)
@@ -120,9 +121,10 @@ pub async fn install_content(
                 })
                 .map_err(|err| Error::Generic(err.to_string()))?;
 
+            let wdb = db.write().await;
             for item in config.files {
                 sqlx::query("INSERT INTO profile_content ('id','sha1','profile','file_name','version','type') VALUES (?,?,?,?,?,'Resourcepack')")
-                .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&db.0).await?;
+                .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&wdb.0).await?;
             }
 
             on_event
@@ -164,9 +166,10 @@ pub async fn install_content(
                 })
                 .map_err(|err| Error::Generic(err.to_string()))?;
 
+            let wdb = db.write().await;
             for item in config.files {
                 sqlx::query("INSERT INTO profile_content ('id','sha1','profile','file_name','version','type') VALUES (?,?,?,?,?,'Shader')")
-                .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&db.0).await?;
+                .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&wdb.0).await?;
             }
 
             on_event
@@ -208,9 +211,10 @@ pub async fn install_content(
                 })
                 .map_err(|err| Error::Generic(err.to_string()))?;
 
+            let wdb = db.write().await;
             for item in config.files {
                 sqlx::query("INSERT INTO profile_content ('id','sha1','profile','file_name','version','type') VALUES (?,?,?,?,?,'Mod')")
-                .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&db.0).await?;
+                .bind(item.id).bind(item.sha1).bind(&config.profile).bind(item.filename).bind(item.version).execute(&wdb.0).await?;
             }
 
             on_event

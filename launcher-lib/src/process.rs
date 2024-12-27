@@ -2,7 +2,10 @@ use std::{collections::HashMap, path::Path};
 use tokio::process::{Child, Command};
 use uuid::Uuid;
 
-use crate::error::{Error, Result};
+use crate::{
+    database::RwDatabase,
+    error::{Error, Result},
+};
 
 #[derive(Default)]
 pub struct Processes {
@@ -50,9 +53,11 @@ impl Processes {
     }
     pub async fn remove_from_cache(
         &mut self,
-        db: &crate::database::Database,
+        rwdb: &RwDatabase,
         items: &Vec<String>,
     ) -> Result<()> {
+        let db = rwdb.write().await;
+
         for uuid in items {
             self.remove(uuid);
             sqlx::query!("DELETE FROM processes WHERE uuid = ?", uuid)
@@ -64,7 +69,9 @@ impl Processes {
     }
 
     /// Loads processes from db.
-    pub async fn load_cache(&mut self, db: &crate::database::Database) -> Result<()> {
+    pub async fn load_cache(&mut self, rwdb: &RwDatabase) -> Result<()> {
+        let db = rwdb.write().await;
+
         let processes: Vec<Process> = sqlx::query_as("SELECT * FROM processes;")
             .fetch_all(&db.0)
             .await?;
@@ -95,7 +102,9 @@ impl Processes {
 
         Ok(())
     }
-    pub async fn cache(&self, db: &crate::database::Database) -> Result<()> {
+    pub async fn cache(&self, dbrw: &RwDatabase) -> Result<()> {
+        let db = dbrw.write().await;
+
         for item in self.state.values() {
             sqlx::query!(
                 "INSERT INTO processes VALUES (?,?,?,?,?);",

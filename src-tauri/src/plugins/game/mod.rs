@@ -10,8 +10,8 @@ use tauri::{
 };
 use tokio_util::sync::CancellationToken;
 
-use minecraft_launcher_lib::{database::Database, process::Processes};
-use tokio::{select, sync::RwLock};
+use minecraft_launcher_lib::{database::RwDatabase, process::Processes};
+use tokio::select;
 
 use crate::error::Error;
 
@@ -24,9 +24,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             let processes = tauri::async_runtime::block_on(async {
                 let mut data = Processes::default();
 
-                let state = app.state::<RwLock<Database>>();
-                let db = state.write().await;
-
+                let db = app.state::<RwDatabase>();
                 data.load_cache(&db).await.map_err(Error::Lib)?;
 
                 Ok::<Processes, Error>(data)

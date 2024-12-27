@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use super::ContentType;
 use crate::{
+    database::RwDatabase,
     error::{Error, Result},
     installer::utils::get_file_hash,
     models::setting::Setting,
@@ -10,7 +11,7 @@ use crate::{
 /// #### Import a local file.
 /// Adds file to db and copies file to profile.
 pub async fn install_file(
-    db: &crate::database::Database,
+    db: &RwDatabase,
     src: PathBuf,
     profile: String,
     content_type: ContentType,
@@ -50,6 +51,7 @@ pub async fn install_file(
     let hash = get_file_hash(&output_filepath).await?;
     let content_name = content_type.as_string();
 
+    let wdb = db.write().await;
     // add to content list
     sqlx::query!(
         "INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)",
@@ -59,7 +61,7 @@ pub async fn install_file(
         filename,
         content_name
     )
-    .execute(&db.0)
+    .execute(&wdb.0)
     .await?;
 
     Ok(())

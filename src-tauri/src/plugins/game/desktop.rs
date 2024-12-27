@@ -1,3 +1,4 @@
+use minecraft_launcher_lib::database::RwDatabase;
 use minecraft_launcher_lib::process::{InstanceType, Processes};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, Runtime};
@@ -98,14 +99,13 @@ pub async fn process_watcher<R: Runtime>(app: &AppHandle<R>) {
 
     // drop old processes
     if !removable.is_empty() {
-        let s_db = app.state::<RwLock<minecraft_launcher_lib::database::Database>>();
+        let db = app.state::<RwDatabase>();
 
         log::debug!("Removing old processes: {:?}", removable);
 
         let (process_ids, profile_ids) = removable.into_iter().unzip();
 
         let mut state = state.0.write().await;
-        let db = s_db.write().await;
         if let Err(err) = state.remove_from_cache(&db, &process_ids).await {
             log::error!("{}", err);
         }

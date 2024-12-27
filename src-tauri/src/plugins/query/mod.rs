@@ -1,5 +1,5 @@
 mod commands;
-use minecraft_launcher_lib::database::Database;
+use minecraft_launcher_lib::database::{Database, RwDatabase};
 use tauri::{
     plugin::{Builder, TauriPlugin},
     Manager, Runtime,
@@ -32,7 +32,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         })
         .on_event(|app, event| {
             if let tauri::RunEvent::Exit = event {
-                let store = app.state::<RwLock<Database>>();
+                let store = app.state::<RwDatabase>();
                 tauri::async_runtime::block_on(async {
                     let db = store.write().await;
                     db.close().await;

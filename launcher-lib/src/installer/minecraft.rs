@@ -4,10 +4,13 @@ use super::{
     metadata::get_launcher_manifest,
     neoforge, quilt, utils, InstallConfig,
 };
-use crate::error::{Error, Result};
 use crate::manifest::Manifest;
 use crate::models::profile::Loader;
 use crate::models::setting::Setting;
+use crate::{
+    database::RwDatabase,
+    error::{Error, Result},
+};
 use normalize_path::NormalizePath;
 /// Download the minecraft client, jre, and a mod loader if needed.
 /// If a modloader was installed the loader version installed is returned.
@@ -20,7 +23,7 @@ use normalize_path::NormalizePath;
 /// - 1  Finished event
 pub async fn install_minecraft(
     config: InstallConfig,
-    db: &crate::database::Database,
+    db: &RwDatabase,
     on_event: &tauri::ipc::Channel<crate::events::DownloadEvent>,
 ) -> Result<Option<String>> {
     on_event

@@ -9,6 +9,7 @@ use std::path::Path;
 use uuid::Uuid;
 
 use crate::{
+    database::RwDatabase,
     error::{Error, Result},
     events::DownloadEvent,
     installer::{
@@ -71,7 +72,7 @@ struct MrPack {
 }
 
 pub async fn install_mrpack(
-    db: &crate::database::Database,
+    db: &RwDatabase,
     on_event: &tauri::ipc::Channel<DownloadEvent>,
     mrpack_path: &Path,
     icon: Option<String>,
@@ -223,21 +224,20 @@ pub async fn install_mrpack(
     .to_string();
 
     let queue_id = Uuid::new_v4().to_string();
-
     let icon = icon.or(pack.icon);
-
     let cicon = icon.clone();
 
+    let wdb = db.write().await;
     sqlx::query!("INSERT INTO download_queue ('id','display','icon','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
-        queue_id,
-        1,
-        cicon,
-        0,
-        title,
-        profile_id,
-        "Client",
-        metadata
-    ).execute(&db.0).await?;
+            queue_id,
+            1,
+            cicon,
+            0,
+            title,
+            profile_id,
+            "Client",
+            metadata
+        ).execute(&wdb.0).await?;
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
@@ -249,17 +249,17 @@ pub async fn install_mrpack(
     let loader = modloader.to_string().to_lowercase();
     sqlx::query!(
         "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,?,current_timestamp,?,?,?,?,?);",
-        profile_id,
-        pack.name,
-        icon,
-        pack.dependencies.minecraft,
-        loader,
-        loader_version,
-        "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
-        "INSTALLED"
-    )
-    .execute(&db.0)
-    .await?;
+            profile_id,
+            pack.name,
+            icon,
+            pack.dependencies.minecraft,
+            loader,
+            loader_version,
+            "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
+            "INSTALLED"
+        )
+        .execute(&wdb.0)
+        .await?;
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
@@ -301,7 +301,7 @@ pub async fn install_mrpack(
             file_name,
             content_type,
         )
-        .execute(&db.0)
+        .execute(&wdb.0)
         .await?;
     }
 

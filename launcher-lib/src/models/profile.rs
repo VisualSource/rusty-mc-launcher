@@ -1,4 +1,7 @@
-use crate::error::{Error, Result};
+use crate::{
+    database::RwDatabase,
+    error::{Error, Result},
+};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -141,17 +144,17 @@ impl Profile {
         }
     }
 
-    pub async fn get(id: &str, db: &crate::database::Database) -> Result<Option<Profile>> {
+    pub async fn get(id: &str, rwdb: &RwDatabase) -> Result<Option<Profile>> {
+        let db = rwdb.read().await;
+
         let query = sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?;", id)
             .fetch_optional(&db.0)
             .await?;
         Ok(query)
     }
-    pub async fn set_loader_version(
-        id: &str,
-        version: &str,
-        db: &crate::database::Database,
-    ) -> Result<()> {
+    pub async fn set_loader_version(id: &str, version: &str, rwdb: &RwDatabase) -> Result<()> {
+        let db = rwdb.write().await;
+
         sqlx::query("UPDATE profiles SET loader_version = ? WHERE id = ?")
             .bind(version)
             .bind(id)
@@ -160,11 +163,9 @@ impl Profile {
 
         Ok(())
     }
-    pub async fn set_state(
-        id: &str,
-        state: ProfileState,
-        db: &crate::database::Database,
-    ) -> Result<()> {
+    pub async fn set_state(id: &str, state: ProfileState, rwdb: &RwDatabase) -> Result<()> {
+        let db = rwdb.write().await;
+
         sqlx::query("UPDATE profiles SET state = ? WHERE id = ?")
             .bind(state.to_string())
             .bind(id)

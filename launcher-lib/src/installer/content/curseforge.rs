@@ -7,6 +7,7 @@
 
 use super::InstallContent;
 use crate::{
+    database::RwDatabase,
     error::{Error, Result},
     events::DownloadEvent,
     installer::{
@@ -67,7 +68,7 @@ struct CFProjectFile {
 }
 
 pub async fn install_curseforge_modpack(
-    db: &crate::database::Database,
+    db: &RwDatabase,
     config: InstallContent,
     on_event: &tauri::ipc::Channel<DownloadEvent>,
 ) -> Result<()> {
@@ -213,20 +214,23 @@ pub async fn install_curseforge_modpack(
     .collect::<Vec<Result<(String, String, String)>>>()
     .await;
 
-    for file in downloads {
-        match file {
-            Ok(content) => {
-                let content_type = match content.2.as_str() {
-                    "mods" => "Mod",
-                    "resourcepacks" => "Resourcepack",
-                    "shaderpacks" => "Shader",
-                    _ => "Unknown",
-                };
+    {
+        let wdb = db.write().await;
+        for file in downloads {
+            match file {
+                Ok(content) => {
+                    let content_type = match content.2.as_str() {
+                        "mods" => "Mod",
+                        "resourcepacks" => "Resourcepack",
+                        "shaderpacks" => "Shader",
+                        _ => "Unknown",
+                    };
 
-                let profile_id = config.profile.clone();
-                sqlx::query!("INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)","",content.1,profile_id,content.0, content_type).execute(&db.0).await?;
+                    let profile_id = config.profile.clone();
+                    sqlx::query!("INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)","",content.1,profile_id,content.0, content_type).execute(&wdb.0).await?;
+                }
+                Err(err) => return Err(err),
             }
-            Err(err) => return Err(err),
         }
     }
 
@@ -289,6 +293,9 @@ pub async fn install_curseforge_modpack(
 
     let queue_id = Uuid::new_v4().to_string();
     let profile_id = config.profile.clone();
+
+    let wdb = db.write().await;
+
     sqlx::query!("INSERT INTO download_queue ('id','display','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,current_timestamp,?,?,'PENDING')",
         queue_id,
         1,
@@ -297,7 +304,7 @@ pub async fn install_curseforge_modpack(
         profile_id,
         "Client",
         metadata
-    ).execute(&db.0).await?;
+    ).execute(&wdb.0).await?;
 
     on_event
         .send(crate::events::DownloadEvent::Progress {
@@ -319,7 +326,7 @@ pub async fn install_curseforge_modpack(
         "-Xmx4G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
         "INSTALLED"
     )
-    .execute(&db.0)
+    .execute(&wdb.0)
     .await?;
 
     on_event

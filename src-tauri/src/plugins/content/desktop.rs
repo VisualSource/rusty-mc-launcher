@@ -1,6 +1,6 @@
 use crate::error::{Error, Result};
 use minecraft_launcher_lib::{
-    database::Database,
+    database::RwDatabase,
     events::DownloadEvent,
     installer::{
         content::{self, curseforge::install_curseforge_modpack, InstallContent},
@@ -14,11 +14,10 @@ use minecraft_launcher_lib::{
 };
 use std::time::Duration;
 use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
-use tokio::sync::RwLock;
 
 async fn install_client(
     item: &QueueItem,
-    db_state: &RwLock<Database>,
+    db: &RwDatabase,
     on_event: &Channel<DownloadEvent>,
 ) -> Result<()> {
     let config = if let Some(metdata) = &item.metadata {
@@ -27,17 +26,13 @@ async fn install_client(
         return Err(Error::Reason("Invalid client metadata".to_string()));
     };
 
-    {
-        let db = db_state.write().await;
-        Profile::set_state(&item.id, ProfileState::Installing, &db).await?;
-    }
+    Profile::set_state(&item.id, ProfileState::Installing, &db).await?;
 
     if let Err(err) = on_event.send(DownloadEvent::RefreshProfile) {
         log::error!("{}", err)
     }
     tokio::time::sleep(Duration::from_secs(1)).await;
 
-    let db = db_state.write().await;
     if let Some(loader_version) = install_minecraft(config, &db, on_event).await? {
         Profile::set_loader_version(&item.profile_id, &loader_version, &db).await?;
     }
@@ -48,7 +43,7 @@ async fn install_client(
 
 async fn install_cf_modpack(
     item: &QueueItem,
-    db_state: &RwLock<Database>,
+    db: &RwDatabase,
     on_event: &Channel<DownloadEvent>,
 ) -> Result<()> {
     let config = if let Some(metadata) = &item.metadata {
@@ -57,7 +52,6 @@ async fn install_cf_modpack(
         return Err(Error::Reason("Invalid metadata config".to_string()));
     };
 
-    let db = db_state.write().await;
     install_curseforge_modpack(&db, config, on_event).await?;
 
     Ok(())
@@ -65,7 +59,7 @@ async fn install_cf_modpack(
 
 async fn install_content(
     item: &QueueItem,
-    db_state: &RwLock<Database>,
+    db: &RwDatabase,
     on_event: &Channel<DownloadEvent>,
 ) -> Result<()> {
     let config = if let Some(metadata) = &item.metadata {
@@ -74,20 +68,16 @@ async fn install_content(
         return Err(Error::Reason("Invalid metadata config".to_string()));
     };
 
-    let db = db_state.write().await;
     content::install_content(config, item.icon.clone(), &db, on_event).await?;
 
     Ok(())
 }
 
 pub async fn install<R: Runtime>(app: &AppHandle<R>) {
-    let state = app.state::<RwLock<Database>>();
+    let db = app.state::<RwDatabase>();
     let emitter_state = app.state::<tokio::sync::Mutex<Option<Channel<DownloadEvent>>>>();
 
-    let item = {
-        let db = state.read().await;
-        QueueItem::get_pending(&db).await
-    };
+    let item = QueueItem::get_pending(&db).await;
 
     match item {
         Ok(Some(item)) => {
@@ -98,12 +88,9 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
                 return;
             }
 
-            {
-                let db = state.write().await;
-                if let Err(err) = QueueItem::set_state(&item.id, QueueState::Current, &db).await {
-                    log::error!("{}", err);
-                    return;
-                }
+            if let Err(err) = QueueItem::set_state(&item.id, QueueState::Current, &db).await {
+                log::error!("{}", err);
+                return;
             }
 
             let emitter = emitter_c.as_ref().unwrap();
@@ -118,13 +105,13 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
             tokio::time::sleep(Duration::from_secs(2)).await;
 
             let result = match &item.content_type {
-                QueueType::Client => install_client(&item, &state, emitter).await,
+                QueueType::Client => install_client(&item, &db, emitter).await,
                 QueueType::Modpack
                 | QueueType::Mod
                 | QueueType::Shader
-                | QueueType::Resourcepack => install_content(&item, &state, emitter).await,
+                | QueueType::Resourcepack => install_content(&item, &db, emitter).await,
                 QueueType::Datapack => Err(Error::Reason("Datapack not supported".to_string())),
-                QueueType::CurseforgeModpack => install_cf_modpack(&item, &state, emitter).await,
+                QueueType::CurseforgeModpack => install_cf_modpack(&item, &db, emitter).await,
             };
 
             let item_state = if let Err(err) = result {
@@ -134,11 +121,8 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
                 QueueState::Completed
             };
 
-            {
-                let db = state.write().await;
-                if let Err(err) = QueueItem::set_state(&item.id, item_state, &db).await {
-                    log::error!("{}", err);
-                }
+            if let Err(err) = QueueItem::set_state(&item.id, item_state, &db).await {
+                log::error!("{}", err);
             }
 
             if let Err(err) = emitter.send(DownloadEvent::Finished {}) {

@@ -1,15 +1,15 @@
 use super::desktop::{PluginGameState, ProcessStatePayload};
 use super::PROCESSES_STATE_EVENT;
+use minecraft_launcher_lib::database::RwDatabase;
 use minecraft_launcher_lib::launcher::{start_game, LaunchConfig};
 use tauri::{Emitter, Runtime};
-use tokio::sync::RwLock;
 
 use crate::error::Error;
 
 #[tauri::command]
 pub async fn launch_game<R: Runtime>(
     app: tauri::AppHandle<R>,
-    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
+    db: tauri::State<'_, RwDatabase>,
     ps: tauri::State<'_, PluginGameState>,
     config: LaunchConfig,
 ) -> Result<(), Error> {
@@ -17,8 +17,7 @@ pub async fn launch_game<R: Runtime>(
 
     log::debug!("Starting processes: Profile UUID: {}", profile_id);
 
-    let dbr = db.write().await;
-    if let Err(err) = start_game(&dbr, &ps.0, config).await.map_err(Error::Lib) {
+    if let Err(err) = start_game(&db, &ps.0, config).await.map_err(Error::Lib) {
         log::error!("{}", err);
         return Err(err);
     }

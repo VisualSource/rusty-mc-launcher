@@ -1,6 +1,9 @@
 use std::{path::PathBuf, str::FromStr};
 
-use crate::error::{Error, Result};
+use crate::{
+    database::RwDatabase,
+    error::{Error, Result},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -11,7 +14,7 @@ pub struct Setting {
 }
 
 impl Setting {
-    pub async fn path(key: &str, db: &crate::database::Database) -> Result<Option<PathBuf>> {
+    pub async fn path(key: &str, db: &RwDatabase) -> Result<Option<PathBuf>> {
         if let Some(setting) = Self::get(key, db).await? {
             let path = PathBuf::from_str(&setting.value)
                 .map_err(|_| Error::Generic("Failed to create pathbuf".to_string()))?;
@@ -21,7 +24,8 @@ impl Setting {
         Ok(None)
     }
 
-    pub async fn get(key: &str, db: &crate::database::Database) -> Result<Option<Setting>> {
+    pub async fn get(key: &str, rwdb: &RwDatabase) -> Result<Option<Setting>> {
+        let db = rwdb.read().await;
         let query = sqlx::query_as!(Setting, "SELECT * FROM settings WHERE key = ?;", key)
             .fetch_optional(&db.0)
             .await?;
@@ -31,8 +35,10 @@ impl Setting {
         key: &str,
         value: String,
         metadata: Option<String>,
-        db: &crate::database::Database,
+        rwdb: &RwDatabase,
     ) -> Result<()> {
+        let db = rwdb.write().await;
+
         sqlx::query("INSERT INTO settings VALUES (?,?,?);")
             .bind(key)
             .bind(metadata)
@@ -41,7 +47,9 @@ impl Setting {
             .await?;
         Ok(())
     }
-    pub async fn has(key: &str, db: &crate::database::Database) -> Result<bool> {
+    pub async fn has(key: &str, rwdb: &RwDatabase) -> Result<bool> {
+        let db = rwdb.read().await;
+
         let query = sqlx::query("SELECT key FROM settings WHERE key = ?;")
             .bind(key)
             .fetch_optional(&db.0)

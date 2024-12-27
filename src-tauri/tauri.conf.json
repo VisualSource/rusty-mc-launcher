@@ -56,12 +56,12 @@
 			{
 				"userAgent": "VisualSource/rusty-mc-launcher/0.10.x",
 				"fullscreen": false,
-				"height": 630,
+				"height": 632,
 				"resizable": true,
 				"minHeight": 630,
 				"minWidth": 1080,
 				"title": "Minecraft Launcher",
-				"width": 1080,
+				"width": 1082,
 				"decorations": false,
 				"dragDropEnabled": false
 			}

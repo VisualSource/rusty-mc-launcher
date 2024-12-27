@@ -1,6 +1,7 @@
 pub mod arguments;
 
 use self::arguments::Arguments;
+use crate::database::RwDatabase;
 use crate::manifest::Library;
 
 use crate::models::{profile::Profile, setting::Setting};
@@ -134,7 +135,7 @@ impl Config {
 }
 
 pub async fn start_game(
-    db: &crate::database::Database,
+    db: &RwDatabase,
     processes: &tokio::sync::RwLock<crate::process::Processes>,
     launch_config: LaunchConfig,
 ) -> Result<()> {

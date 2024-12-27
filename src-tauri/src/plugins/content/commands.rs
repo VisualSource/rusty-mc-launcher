@@ -1,3 +1,4 @@
+use minecraft_launcher_lib::database::RwDatabase;
 use minecraft_launcher_lib::events::DownloadEvent;
 use minecraft_launcher_lib::installer::content::file;
 use minecraft_launcher_lib::installer::content::ContentType;
@@ -109,16 +110,17 @@ pub async fn uninstall_content(
 /// copy file of a profile into a new profile
 #[tauri::command]
 pub async fn copy_profile(
-    db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
+    db: tauri::State<'_, RwDatabase>,
     old_profile: String,
     new_profile: String,
 ) -> Result<(), Error> {
-    let root = db
-        .read()
-        .await
-        .get_setting_as_path("path.app")
-        .await?
-        .join("profiles");
+    let root = {
+        db.read()
+            .await
+            .get_setting_as_path("path.app")
+            .await?
+            .join("profiles")
+    };
 
     let old = root.join(old_profile);
     let new = root.join(new_profile);
@@ -142,12 +144,11 @@ pub async fn copy_profile(
 
 #[tauri::command]
 pub async fn import_external(
-    state: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
+    db: tauri::State<'_, RwDatabase>,
     profile: String,
     src: PathBuf,
     content_type: ContentType,
 ) -> Result<(), Error> {
-    let db = state.write().await;
     if let Err(err) = file::install_file(&db, src, profile, content_type).await {
         log::error!("{}", err);
         return Err(Error::Lib(err));

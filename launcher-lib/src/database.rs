@@ -11,6 +11,8 @@ use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::{Sqlite, SqlitePool, SqlitePoolOptions, SqliteValueRef};
 use sqlx::{migrate::Migrator, Column, Row, TypeInfo, Value, ValueRef};
 
+pub type RwDatabase = tokio::sync::RwLock<Database>;
+
 pub type QueryResult = Vec<IndexMap<String, serde_json::Value>>;
 pub struct Database(pub SqlitePool);
 
@@ -105,7 +107,7 @@ impl Database {
             let mut value = IndexMap::default();
             for (i, col) in row.columns().iter().enumerate() {
                 let v = row.try_get_raw(i)?;
-                let v = to_json(v)?;
+                let v = Self::to_json(v)?;
                 value.insert(col.name().to_string(), v);
             }
             values.push(value);
@@ -113,64 +115,64 @@ impl Database {
 
         Ok(values)
     }
-}
 
-fn to_json(v: SqliteValueRef) -> Result<serde_json::Value> {
-    if v.is_null() {
-        return Ok(serde_json::Value::Null);
-    }
+    fn to_json(v: SqliteValueRef) -> Result<serde_json::Value> {
+        if v.is_null() {
+            return Ok(serde_json::Value::Null);
+        }
 
-    match v.type_info().name() {
-        "TEXT" => v
-            .to_owned()
-            .try_decode()
-            .map(serde_json::Value::String)
-            .or_else(|_| Ok(serde_json::Value::Null)),
-        "REAL" => v
-            .to_owned()
-            .try_decode::<f64>()
-            .map(serde_json::Value::from)
-            .or_else(|_| Ok(serde_json::Value::Null)),
-        "INTEGER" | "NUMERIC" => v
-            .to_owned()
-            .try_decode::<i64>()
-            .map(|v| serde_json::Value::Number(v.into()))
-            .or_else(|_err| Ok(serde_json::Value::Null)),
-        "BOOLEAN" => v
-            .to_owned()
-            .try_decode()
-            .map(serde_json::Value::Bool)
-            .or_else(|_| Ok(serde_json::Value::Null)),
-        "DATE" => v
-            .to_owned()
-            .try_decode::<Date>()
-            .map(|v| serde_json::Value::String(v.to_string()))
-            .or_else(|_| Ok(serde_json::Value::Null)),
-        "TIME" => v
-            .to_owned()
-            .try_decode::<Time>()
-            .map(|v| serde_json::Value::String(v.to_string()))
-            .or_else(|_| Ok(serde_json::Value::Null)),
-        "DATETIME" => v
-            .to_owned()
-            .try_decode::<PrimitiveDateTime>()
-            .map(|v| serde_json::Value::String(v.to_string()))
-            .or_else(|_| Ok(serde_json::Value::Null)),
-        "BLOB" => v
-            .to_owned()
-            .try_decode::<Vec<u8>>()
-            .map(|v| {
-                serde_json::Value::Array(
-                    v.into_iter()
-                        .map(|n| serde_json::Value::Number(n.into()))
-                        .collect(),
-                )
-            })
-            .or_else(|_| Ok(serde_json::Value::Null)),
-        "NULL" => Ok(serde_json::Value::Null),
-        _ => Err(Error::Generic(format!(
-            "UnsupportedDatatype: {}",
-            v.type_info().name()
-        ))),
+        match v.type_info().name() {
+            "TEXT" => v
+                .to_owned()
+                .try_decode()
+                .map(serde_json::Value::String)
+                .or_else(|_| Ok(serde_json::Value::Null)),
+            "REAL" => v
+                .to_owned()
+                .try_decode::<f64>()
+                .map(serde_json::Value::from)
+                .or_else(|_| Ok(serde_json::Value::Null)),
+            "INTEGER" | "NUMERIC" => v
+                .to_owned()
+                .try_decode::<i64>()
+                .map(|v| serde_json::Value::Number(v.into()))
+                .or_else(|_err| Ok(serde_json::Value::Null)),
+            "BOOLEAN" => v
+                .to_owned()
+                .try_decode()
+                .map(serde_json::Value::Bool)
+                .or_else(|_| Ok(serde_json::Value::Null)),
+            "DATE" => v
+                .to_owned()
+                .try_decode::<Date>()
+                .map(|v| serde_json::Value::String(v.to_string()))
+                .or_else(|_| Ok(serde_json::Value::Null)),
+            "TIME" => v
+                .to_owned()
+                .try_decode::<Time>()
+                .map(|v| serde_json::Value::String(v.to_string()))
+                .or_else(|_| Ok(serde_json::Value::Null)),
+            "DATETIME" => v
+                .to_owned()
+                .try_decode::<PrimitiveDateTime>()
+                .map(|v| serde_json::Value::String(v.to_string()))
+                .or_else(|_| Ok(serde_json::Value::Null)),
+            "BLOB" => v
+                .to_owned()
+                .try_decode::<Vec<u8>>()
+                .map(|v| {
+                    serde_json::Value::Array(
+                        v.into_iter()
+                            .map(|n| serde_json::Value::Number(n.into()))
+                            .collect(),
+                    )
+                })
+                .or_else(|_| Ok(serde_json::Value::Null)),
+            "NULL" => Ok(serde_json::Value::Null),
+            _ => Err(Error::Generic(format!(
+                "UnsupportedDatatype: {}",
+                v.type_info().name()
+            ))),
+        }
     }
 }
