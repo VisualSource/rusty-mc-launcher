@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM profiles WHERE id = ?",
+  "query": "SELECT * FROM profiles WHERE id = ?;",
   "describe": {
     "columns": [
       {
@@ -82,5 +82,5 @@
       false
     ]
   },
-  "hash": "2e3b134cf0c2f944f26cdc512dc5b8eb4a0cb116bc7d4d00bae28d5a522c2e91"
+  "hash": "c7ec5a33333cab321e63dbe50d29fa7eb7896608a4316431a364b1f31b737d2d"
 }

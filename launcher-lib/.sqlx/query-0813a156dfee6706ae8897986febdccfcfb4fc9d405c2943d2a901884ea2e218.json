@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM processes WHERE uuid = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "0813a156dfee6706ae8897986febdccfcfb4fc9d405c2943d2a901884ea2e218"
+}

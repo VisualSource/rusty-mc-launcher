@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO processes VALUES (?,?,?,?,?);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "30e54e6e54f7ca248f5210fcb15fac13677ba363e8ed5dba6671d6a69c2b2144"
+}

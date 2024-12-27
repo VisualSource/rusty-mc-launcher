@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM download_queue WHERE state = 'PENDING' ORDER BY install_order DESC LIMIT 1;",
+  "query": "SELECT * FROM download_queue WHERE state = 'CURRENT' ORDER BY priority DESC LIMIT 1;",
   "describe": {
     "columns": [
       {
@@ -14,9 +14,9 @@
         "type_info": "Bool"
       },
       {
-        "name": "install_order",
+        "name": "priority",
         "ordinal": 2,
-        "type_info": "Int64"
+        "type_info": "Integer"
       },
       {
         "name": "display_name",
@@ -70,5 +70,5 @@
       false
     ]
   },
-  "hash": "dc8913265dde78ad47eed29080509e601d445347514df0b8503e7b3774171e35"
+  "hash": "69bfcb4d793d9c2ae77a2dffba12d94b3dd20aa9404a48001dd331edefd4afcf"
 }
