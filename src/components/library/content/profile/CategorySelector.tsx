@@ -17,11 +17,11 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import useCategoryMutation from "@/hooks/useCategoryMutation";
-import { categories } from "@/lib/models/categories";
 import useCategories from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getCategoriesFromProfile } from "@/lib/models/categories";
 
 const CategorySelect: React.FC<{ profile: string }> = ({ profile }) => {
 	return (
@@ -39,7 +39,7 @@ const CategorySelectCore: React.FC<{ profile: string }> = ({ profile }) => {
 
 	const { data, isLoading } = useQuery({
 		queryKey: [KEY_PROFILE_COLLECTION, profile],
-		queryFn: () => categories.getCategoriesForProfile(profile),
+		queryFn: () => getCategoriesFromProfile(profile),
 	});
 	const [open, setOpen] = useState(false);
 

@@ -17,9 +17,9 @@ import {
 	CommandList,
 	CommandLoading,
 } from "../ui/command";
-import { profile, type MinecraftProfile } from "@/lib/models/profiles";
+import { Profile } from "@/lib/models/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { db } from "@/lib/system/commands";
+import { query } from "@/lib/api/plugins/query";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
@@ -30,12 +30,12 @@ const RETURN_KEY = "rmcl://select-profile/return";
 export const selectProfile = async (filter?: {
 	game?: string[];
 	loaders?: string[];
-}): Promise<MinecraftProfile | null> => {
+}): Promise<Profile | null> => {
 	return new Promise((resolve) => {
 		window.addEventListener(
 			RETURN_KEY,
 			(ev) => {
-				const profile = (ev as CustomEvent<MinecraftProfile | null>).detail;
+				const profile = (ev as CustomEvent<Profile | null>).detail;
 				resolve(profile);
 			},
 			{ once: true },
@@ -48,7 +48,7 @@ export const selectProfile = async (filter?: {
 type State = {
 	open: boolean;
 	showAll: boolean;
-	value: MinecraftProfile | null;
+	value: Profile | null;
 	filter: {
 		loaders: string[];
 		game: string[];
@@ -59,7 +59,7 @@ type Action =
 	| { type: "all"; value: State }
 	| { type: "showall"; value: boolean }
 	| { type: "open"; value: boolean }
-	| { type: "value"; value: MinecraftProfile | null }
+	| { type: "value"; value: Profile | null }
 	| { type: "filter"; value: { game: string[]; loaders: string[] } };
 
 const reducer = (state: State, payload: Action): State => {
@@ -110,17 +110,13 @@ const SelectProfile: React.FC = () => {
 		],
 		queryFn: async () => {
 			if (state.showAll) {
-				return db.select({
-					query: "SELECT * FROM profiles",
-					schema: profile.schema,
-				});
+				return query("SELECT * FROM profiles").as(Profile).all();
 			}
-
-			return db.select({
-				query: `SELECT * FROM profiles WHERE version IN (${state.filter.game.map((e) => `'${e}'`).join(", ")}) AND loader IN (${state.filter.loaders.map((e) => `'${e}'`).join(", ")})`,
-				schema: profile.schema,
-				args: [],
-			});
+			return query(
+				`SELECT * FROM profiles WHERE version IN (${state.filter.game.map((e) => `'${e}'`).join(", ")}) AND loader IN (${state.filter.loaders.map((e) => `'${e}'`).join(", ")})`,
+			)
+				.as(Profile)
+				.all();
 		},
 	});
 

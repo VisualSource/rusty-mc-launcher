@@ -1,13 +1,12 @@
 import { useAccount, useMsal } from "@azure/msal-react";
+import type { AccountInfo } from "@azure/msal-browser";
 import { useQuery } from "@tanstack/react-query";
+import { debug } from "@tauri-apps/plugin-log";
 import { useCallback } from "react";
 
+import { startAuthServer, closeAuthServer } from "@lib/api/plugins/auth";
 import { getMinecraftAccount } from "@lib/api/minecraftAccount";
-import { startAuthServer, closeAuthServer } from "@system/commands";
-import type { AccountInfo } from "@masl/index";
-
 import getToken from "@lib/auth/getToken";
-import { auth } from "@system/logger";
 
 const useUser = () => {
 	const msAccount = useAccount();
@@ -33,7 +32,7 @@ const useUser = () => {
 		let port = null;
 		try {
 			port = await startAuthServer();
-			auth.trace(`Watching login port at: ${port}`);
+			debug(`Watching login port at: ${port}`);
 			await instance.loginPopup({
 				scopes: ["User.Read"],
 				extraScopesToConsent: ["XboxLive.SignIn", "XboxLive.offline_access"],
@@ -51,7 +50,7 @@ const useUser = () => {
 			let port = null;
 			try {
 				port = await startAuthServer();
-				auth.trace("Watching logout port at: %d", port);
+				debug(`Watching logout port at: ${port}`);
 				await instance.logoutPopup({
 					postLogoutRedirectUri: `http://localhost:${port}`,
 					account,

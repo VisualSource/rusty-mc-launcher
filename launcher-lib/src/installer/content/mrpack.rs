@@ -1,27 +1,32 @@
+//! Mrpack Installer
+//! The Modrinth modpack format (.mrpack) is a simple format that lets you store modpacks. This is the only format of modpack that can be uploaded to Modrinth.
+//! This module handles the parsing and install of a mrpack
+//!
+//! The mrpack spec can be found here <https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack>
+
 use normalize_path::NormalizePath;
 use std::path::Path;
 use uuid::Uuid;
 
 use crate::{
-    errors::LauncherError,
-    event,
+    database::RwDatabase,
+    error::{Error, Result},
+    events::DownloadEvent,
     installer::{
         compression,
-        utils::{self, ChannelMessage},
+        utils::{self},
     },
-    profile::Loader,
-    AppState,
+    models::profile::Loader,
 };
 use futures::StreamExt;
 use serde::Deserialize;
 use tokio::fs::{self, File};
 
-const WHITELISTED_DOMAINS: [&str; 5] = [
-    "cdn.modrinth.com",
-    "github.com",
-    "raw.githubusercontent.com",
-    "gitlab.com",
-    "mediafilez.forgecdn.net",
+const WHITELISTED_DOMAINS: [&str; 4] = [
+    "https://cdn.modrinth.com",
+    "https://github.com",
+    "https://raw.githubusercontent.com",
+    "https://gitlab.com", //"mediafilez.forgecdn.net", // breaks spec
 ];
 
 #[derive(Debug, Deserialize, Clone)]
@@ -67,28 +72,33 @@ struct MrPack {
 }
 
 pub async fn install_mrpack(
-    app: &AppState,
-    event_channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
+    db: &RwDatabase,
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
     mrpack_path: &Path,
     icon: Option<String>,
     profile_id: String,
     runtime_directory: &Path,
-) -> Result<(), LauncherError> {
+) -> Result<()> {
     let mut archive = compression::open_archive(File::open(&mrpack_path).await?).await?;
-
     let pack = compression::parse_extract::<MrPack>(&mut archive, "modrinth.index.json").await?;
 
     if pack.format_version != 1 {
-        return Err(LauncherError::Generic(
-            "Pack format is not supported".to_string(),
-        ));
+        return Err(Error::Generic(format!(
+            "Pack Format Version {} is not supported",
+            pack.format_version
+        )));
     }
     let current_profile_dir = runtime_directory.join("profiles").join(&profile_id);
     if !current_profile_dir.exists() {
         fs::create_dir_all(&current_profile_dir).await?;
     }
 
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(1),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     // filter download for clients
     let files = pack
@@ -101,37 +111,45 @@ pub async fn install_mrpack(
         .collect::<Vec<PackFile>>();
 
     let data_files = files.clone();
-    event!(&event_channel, "group", { "progress": 0, "max_progress": data_files.len(), "message": "Downloading files" });
+
+    on_event
+        .send(crate::events::DownloadEvent::Started {
+            max_progress: 100 + data_files.len(),
+            message: "Installing Modpack".to_string(),
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let downloads = futures::stream::iter(files.into_iter().map(|file| {
         let dir = current_profile_dir.clone();
         async move {
-            let source = file
-                .downloads
-                .first()
-                .ok_or(LauncherError::NotFound(format!(
-                    "Failed to get download url for {}",
-                    file.path
-                )))?;
+            let source = file.downloads.first().ok_or(Error::NotFound(format!(
+                "Failed to get download url for {}",
+                file.path
+            )))?;
 
-            if !WHITELISTED_DOMAINS
-                .iter()
-                .any(|x| source.starts_with(&format!("https://{}", x)))
-            {
-                return Err(LauncherError::Generic(
-                    "Invalid download source".to_string(),
-                ));
+            if !WHITELISTED_DOMAINS.iter().any(|x| source.starts_with(x)) {
+                return Err(Error::Generic(format!(
+                    "Invalid download source: {}",
+                    source
+                )));
             }
 
             let output = dir.join(&file.path).normalize();
 
             utils::download_file(source, &output, None, Some(&file.hashes.sha1)).await?;
 
-            event!(&event_channel,"update",{ "progress": 1 });
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
             Ok(())
         }
     }))
     .buffer_unordered(50)
-    .collect::<Vec<Result<(), LauncherError>>>()
+    .collect::<Vec<Result<()>>>()
     .await;
 
     if downloads.iter().any(|e| e.is_err()) {
@@ -140,11 +158,8 @@ pub async fn install_mrpack(
                 log::error!("{}", error);
             }
         });
-        return Err(LauncherError::Generic(
-            "Failed to download libraries".to_string(),
-        ));
+        return Err(Error::Generic("Failed to download file(s)".to_string()));
     }
-    event!(&event_channel, "group", { "progress": 0, "max_progress": 6, "message": "Finalizing" });
 
     compression::extract_dir(
         &mut archive,
@@ -153,7 +168,14 @@ pub async fn install_mrpack(
         Some(|file| file.replace("overrides", "")),
     )
     .await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(16),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     compression::extract_dir(
         &mut archive,
         "client-overrides",
@@ -161,7 +183,14 @@ pub async fn install_mrpack(
         Some(|file| file.replace("client-overrides", "")),
     )
     .await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(16),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let (modloader, loader_version) = if let Some(fabric) = pack.dependencies.fabric_loader {
         (Loader::Fabric, Some(fabric))
     } else if let Some(forge) = pack.dependencies.forge {
@@ -174,7 +203,13 @@ pub async fn install_mrpack(
         (Loader::Vanilla, None)
     };
 
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(16),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let title = format!(
         "Minecraft {} {} {}",
         pack.dependencies.minecraft,
@@ -189,50 +224,63 @@ pub async fn install_mrpack(
     .to_string();
 
     let queue_id = Uuid::new_v4().to_string();
-
     let icon = icon.or(pack.icon);
-
     let cicon = icon.clone();
 
-    sqlx::query!("INSERT INTO download_queue ('id','display','icon','install_order','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
-        queue_id,
-        1,
-        cicon,
-        0,
-        title,
-        profile_id,
-        "Client",
-        metadata
-    ).execute(&app.database.0).await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+    let wdb = db.write().await;
+    sqlx::query!("INSERT INTO download_queue ('id','display','icon','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
+            queue_id,
+            1,
+            cicon,
+            0,
+            title,
+            profile_id,
+            "Client",
+            metadata
+        ).execute(&wdb.0).await?;
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(16),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     let loader = modloader.to_string().to_lowercase();
     sqlx::query!(
         "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,?,current_timestamp,?,?,?,?,?);",
-        profile_id,
-        pack.name,
-        icon,
-        pack.dependencies.minecraft,
-        loader,
-        loader_version,
-        "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
-        "INSTALLED"
-    )
-    .execute(&app.database.0)
-    .await?;
-    event!(&event_channel,"update",{ "progress": 1 });
+            profile_id,
+            pack.name,
+            icon,
+            pack.dependencies.minecraft,
+            loader,
+            loader_version,
+            "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
+            "INSTALLED"
+        )
+        .execute(&wdb.0)
+        .await?;
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(16),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     for file in data_files {
         let profile = profile_id.clone();
         let path = Path::new(&file.path);
 
         let file_name = path
             .file_name()
-            .ok_or_else(|| LauncherError::NotFound("Failed to get file name".to_string()))?
+            .ok_or_else(|| Error::NotFound("Failed to get file name".to_string()))?
             .to_string_lossy()
             .to_string();
 
         let parent = path
             .parent()
-            .ok_or_else(|| LauncherError::Generic("Failed to get path parent".to_string()))?
+            .ok_or_else(|| Error::Generic("Failed to get path parent".to_string()))?
             .to_string_lossy()
             .to_string();
         let content_type = if parent.starts_with("mods") {
@@ -253,9 +301,16 @@ pub async fn install_mrpack(
             file_name,
             content_type,
         )
-        .execute(&app.database.0)
+        .execute(&wdb.0)
         .await?;
     }
-    event!(&event_channel,"update",{ "progress": 1 });
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(16),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
     Ok(())
 }

@@ -18,12 +18,12 @@ import {
 } from "@/components/ui/select";
 import { VersionSelector } from "@/components/ui/VersionSelector";
 import { LoaderVersionSelector } from "./LoaderVersionSelector";
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 export const ProfileVersionSelector: React.FC<{
-	form: UseFormReturn<MinecraftProfile, unknown, undefined>;
+	form: UseFormReturn<Profile, unknown, undefined>;
 }> = ({ form }) => {
 	const [showSnapshots, setShowSnapshots] = useState(false);
 

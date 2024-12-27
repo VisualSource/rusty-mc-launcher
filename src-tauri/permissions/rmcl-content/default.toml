@@ -1,0 +1,41 @@
+[default]
+description = "Default permissions for the rmcl-content plugin"
+permissions = ["allow-get-system-ram","downloads-listener","allow-delete-profile","allow-create-profile","allow-copy-profile","allow-uninstall-content","allow-import-external"]
+
+[[permission]]
+identifier = "allow-get-system-ram"
+description = "Allow quering os for installed ram amount"
+commands.allow = ["get_system_ram"]
+
+
+[[permission]]
+identifier = "downloads-listener"
+description = "Allow for listening to download events via channel"
+commands.allow = ["downloads_listener"]
+
+[[permission]]
+identifier = "allow-delete-profile"
+description = "Allow for deleting of a profile's on disk files"
+commands.allow = ["delete_profile"]
+
+[[permission]]
+identifier = "allow-create-profile"
+description = "Allow for creating a profile's on disk files"
+commands.allow = ["create_profile"]
+
+[[permission]]
+identifier = "allow-copy-profile"
+description = "Allow for coping a profile files"
+commands.allow = ["copy_profile"]
+
+
+[[permission]]
+identifier = "allow-uninstall-content"
+description = "Allow for uninstalling content from disk"
+commands.allow = ["uninstall_content"]
+
+[[permission]]
+identifier = "allow-import-external"
+description = "Allow for  importing a external file source"
+commands.allow = ["import_external"]
+

@@ -1,0 +1,14 @@
+[default]
+description = "Default permissions for the rmcl-query plugin"
+permissions = ["allow-execute","allow-select"]
+
+[[permission]]
+identifier = "allow-execute"
+description = "Enables the execute command."
+commands.allow = ["execute"]
+
+
+[[permission]]
+identifier = "allow-select"
+description = "Allow for select operation"
+commands.allow = ["select"]

@@ -1,0 +1,245 @@
+diff --git a/dist/interaction_client/PopupClient.mjs b/dist/interaction_client/PopupClient.mjs
+index 903fa8982896301227f687572c52ed11d1406766..55cefe91aab46cc13319ca3f3eb960531ae238c6 100644
+--- a/dist/interaction_client/PopupClient.mjs
++++ b/dist/interaction_client/PopupClient.mjs
+@@ -11,6 +11,7 @@ import { createBrowserAuthError } from '../error/BrowserAuthError.mjs';
+ import { InteractionHandler } from '../interaction_handler/InteractionHandler.mjs';
+ import { deserializeResponse } from '../response/ResponseHandler.mjs';
+ import { nativeConnectionNotEstablished, emptyNavigateUri, userCancelled, emptyWindowError, popupWindowError } from '../error/BrowserAuthErrorCodes.mjs';
++import { once } from "@tauri-apps/api/event";
+ 
+ /*
+  * Copyright (c) Microsoft Corporation. All rights reserved.
+@@ -271,46 +272,56 @@ class PopupClient extends StandardInteractionClient {
+      * @param timeout - timeout for processing hash once popup is redirected back to application
+      */
+     monitorPopupForHash(popupWindow, popupWindowParent) {
+-        return new Promise((resolve, reject) => {
+-            this.logger.verbose("PopupHandler.monitorPopupForHash - polling started");
+-            const intervalId = setInterval(() => {
+-                // Window is closed
+-                if (popupWindow.closed) {
+-                    this.logger.error("PopupHandler.monitorPopupForHash - window closed");
+-                    clearInterval(intervalId);
+-                    reject(createBrowserAuthError(userCancelled));
+-                    return;
+-                }
+-                let href = "";
+-                try {
+-                    /*
+-                     * Will throw if cross origin,
+-                     * which should be caught and ignored
+-                     * since we need the interval to keep running while on STS UI.
+-                     */
+-                    href = popupWindow.location.href;
+-                }
+-                catch (e) { }
+-                // Don't process blank pages or cross domain
+-                if (!href || href === "about:blank") {
+-                    return;
+-                }
+-                clearInterval(intervalId);
+-                let responseString = "";
+-                const responseType = this.config.auth.OIDCOptions.serverResponseType;
+-                if (popupWindow) {
+-                    if (responseType === ServerResponseType.QUERY) {
+-                        responseString = popupWindow.location.search;
+-                    }
+-                    else {
+-                        responseString = popupWindow.location.hash;
+-                    }
+-                }
+-                this.logger.verbose("PopupHandler.monitorPopupForHash - popup window is on same origin as caller");
+-                resolve(responseString);
+-            }, this.config.system.pollIntervalMilliseconds);
+-        }).finally(() => {
++        let unlisten;
++		let intervalId;
++
++        const hashHandler = new Promise((resolve, reject) => {
++			unlisten = once("auth-response", (ev) => {
++				clearInterval(intervalId);
++				try {
++					if (typeof ev.payload === "string") {
++						this.logger.verbose(
++							"PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
++						);
++
++				        const url = new URL(ev.payload);
++						const responseType = this.config.auth.OIDCOptions.serverResponseType;
++						let responseString = "";
++						if (responseType === ServerResponseType.QUERY) {
++							responseString = url.search;
++						} else {
++							responseString = url.hash;
++						}
++
++						resolve(responseString);
++						return;
++					}
++					throw new Error("Invalid payload");
++				} catch (error) {
++					reject(createBrowserAuthError(
++						BrowserAuthErrorCodes.popupWindowError,
++					));
++				}
++			});
++		});
++
++        const closeHandler = new Promise((_, reject) => {
++    		intervalId = setInterval(() => {
++    				// Window is closed
++    			if (popupWindow.closed) {
++    				this.logger.error("PopupHandler.monitorPopupForHash - window closed");
++    				clearInterval(intervalId);
++    				reject(createBrowserAuthError(BrowserAuthErrorCodes.userCancelled));
++    				return;
++    			}
++    		}, this.config.system.pollIntervalMilliseconds);
++    	});
++
++        return Promise.race([hashHandler,closeHandler]).finally(()=>{
++            clearInterval(intervalId);
+             this.cleanPopup(popupWindow, popupWindowParent);
++            unlisten?.then((unsubscribe) => unsubscribe())
++                     .catch((e) => this.logger.error(e?.message ?? "Failed to unsubscribe."));
+         });
+     }
+     /**
+diff --git a/package.json b/package.json
+index 34a66d0814428e3d5035e57b9f478d21ecc75006..d7c2ee6ef6306bb399e9951b9a2c857bb326df21 100644
+--- a/package.json
++++ b/package.json
+@@ -103,6 +103,7 @@
+     "typescript": "^4.9.5"
+   },
+   "dependencies": {
+-    "@azure/msal-common": "14.16.0"
++    "@azure/msal-common": "14.16.0",
++    "@tauri-apps/api": "2.1.1"
+   }
+ }
+\ No newline at end of file
+diff --git a/src/interaction_client/PopupClient.ts b/src/interaction_client/PopupClient.ts
+index 2fd05de3c52aab59960eb2fef2f0185351c9f958..297270ea378f062bb7431c078900a76a5c241e33 100644
+--- a/src/interaction_client/PopupClient.ts
++++ b/src/interaction_client/PopupClient.ts
+@@ -47,6 +47,7 @@ import { PopupWindowAttributes } from "../request/PopupWindowAttributes.js";
+ import { EventError } from "../event/EventMessage.js";
+ import { AuthenticationResult } from "../response/AuthenticationResult.js";
+ import * as ResponseHandler from "../response/ResponseHandler.js";
++import { once, type UnlistenFn } from "@tauri-apps/api/event";
+ 
+ export type PopupParams = {
+     popup?: Window | null;
+@@ -545,61 +546,56 @@ export class PopupClient extends StandardInteractionClient {
+         popupWindow: Window,
+         popupWindowParent: Window
+     ): Promise<string> {
+-        return new Promise<string>((resolve, reject) => {
+-            this.logger.verbose(
+-                "PopupHandler.monitorPopupForHash - polling started"
+-            );
+-
+-            const intervalId = setInterval(() => {
+-                // Window is closed
+-                if (popupWindow.closed) {
+-                    this.logger.error(
+-                        "PopupHandler.monitorPopupForHash - window closed"
+-                    );
+-                    clearInterval(intervalId);
+-                    reject(
+-                        createBrowserAuthError(
+-                            BrowserAuthErrorCodes.userCancelled
+-                        )
+-                    );
+-                    return;
+-                }
+-
+-                let href = "";
+-                try {
+-                    /*
+-                     * Will throw if cross origin,
+-                     * which should be caught and ignored
+-                     * since we need the interval to keep running while on STS UI.
+-                     */
+-                    href = popupWindow.location.href;
+-                } catch (e) {}
+-
+-                // Don't process blank pages or cross domain
+-                if (!href || href === "about:blank") {
+-                    return;
+-                }
+-                clearInterval(intervalId);
+-
+-                let responseString = "";
+-                const responseType =
+-                    this.config.auth.OIDCOptions.serverResponseType;
+-                if (popupWindow) {
+-                    if (responseType === ServerResponseType.QUERY) {
+-                        responseString = popupWindow.location.search;
+-                    } else {
+-                        responseString = popupWindow.location.hash;
+-                    }
+-                }
+-
+-                this.logger.verbose(
+-                    "PopupHandler.monitorPopupForHash - popup window is on same origin as caller"
+-                );
+-
+-                resolve(responseString);
+-            }, this.config.system.pollIntervalMilliseconds);
+-        }).finally(() => {
++        let unlisten: Promise<UnlistenFn>;
++		let intervalId: NodeJS.Timeout;
++
++        const hashHandler = new Promise<string>((resolve, reject) => {
++			unlisten = once("auth-response", (ev) => {
++				clearInterval(intervalId);
++				try {
++					if (typeof ev.payload === "string") {
++						this.logger.verbose(
++							"PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
++						);
++
++				        const url = new URL(ev.payload);
++						const responseType = this.config.auth.OIDCOptions.serverResponseType;
++						let responseString = "";
++						if (responseType === ServerResponseType.QUERY) {
++							responseString = url.search;
++						} else {
++							responseString = url.hash;
++						}
++
++						resolve(responseString);
++						return;
++					}
++					throw new Error("Invalid payload");
++				} catch (error) {
++					reject(createBrowserAuthError(
++						BrowserAuthErrorCodes.popupWindowError,
++					));
++				}
++			});
++		});
++
++        const closeHandler = new Promise<never>((_, reject) => {
++    		intervalId = setInterval(() => {
++    				// Window is closed
++    			if (popupWindow.closed) {
++    				this.logger.error("PopupHandler.monitorPopupForHash - window closed");
++    				clearInterval(intervalId);
++    				reject(createBrowserAuthError(BrowserAuthErrorCodes.userCancelled));
++    				return;
++    			}
++    		}, this.config.system.pollIntervalMilliseconds);
++    	});
++
++        return Promise.race([hashHandler,closeHandler]).finally(()=>{
++            clearInterval(intervalId);
+             this.cleanPopup(popupWindow, popupWindowParent);
++            unlisten?.then((unsubscribe) => unsubscribe())
++                     .catch((e) => this.logger.error((e as Error)?.message ?? "Failed to unsubscribe."));
+         });
+     }
+ 

@@ -3,36 +3,25 @@ import { formatRelative } from "date-fns/formatRelative";
 import { Archive, Mail } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@component/ui/popover";
+import { useModrinthNotifications } from "@/hooks/useModrinthNoitications";
 import { TypographyH4 } from "../ui/typography";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { useModrinth } from "@/hooks/useModrinth";
-import { useQuery } from "@tanstack/react-query";
-import { getProjects, getVersions } from "@/lib/api/modrinth";
-import { modrinthClient } from "@/lib/api/modrinthClient";
-import { queryClient } from "@/lib/api/queryClient";
-import { useModrinthNotifications } from "@/hooks/useModrinthNoitications";
 
 const DisplayToastData = ({ value }: { value: unknown }) => {
-	if (!value) return null;
-
-	if (value instanceof Error) {
-		return (
-			<pre className="text-xs text-destructive text-wrap">
-				<code>{value.message}</code>
-			</pre>
-		);
-	}
 	if (
-		typeof value === "object" &&
-		"error" in value &&
-		value.error instanceof Error
+		value instanceof Error ||
+		(value &&
+			typeof value === "object" &&
+			"error" in value &&
+			value.error instanceof Error)
 	) {
 		return (
-			<pre className="text-xs text-destructive text-wrap">
-				<code>{value.error.message}</code>
-			</pre>
+			<span className="text-xs text-red-600 break-words text-wrap max-w-64">
+				{(value as Error)?.message ??
+					(value as { error: Error })?.error.message}
+			</span>
 		);
 	}
 
@@ -80,31 +69,37 @@ export const Notifications = () => {
 						{system.notifications.map((value) => (
 							<li
 								key={value.id}
-								className="flex items-center justify-between rounded-lg px-4 py-1 border relative"
+								className="flex items-center justify-between rounded-lg px-4 py-1 border relative overflow-hidden"
 							>
 								{value.read ? null : (
 									<div className="absolute top-0.5 left-0.5 rounded-full bg-destructive h-2 w-2" />
 								)}
-								{(value.icon as React.ReactNode) ?? null}
-								<div>
-									<h1 className="line-clamp-1 font-medium">
-										{value.content as React.ReactNode}
-									</h1>
+								<div className="flex flex-col">
+									<div className="flex flex-col">
+										<div className="flex flex-col overflow-hidden">
+											<h1 className="line-clamp-1 font-medium">
+												{value.content as React.ReactNode}
+											</h1>
 
-									<DisplayToastData value={value.data} />
-
-									<span className="text-muted-foreground text-xs">
-										{formatRelative(new Date(value.createdAt), new Date())}
-									</span>
+											<div className="flex">
+												<DisplayToastData value={value.data} />
+											</div>
+										</div>
+									</div>
+									<div className="flex justify-between items-center">
+										<span className="text-muted-foreground text-xs">
+											{formatRelative(new Date(value.createdAt), new Date())}
+										</span>
+										<Button
+											title="Archive notification"
+											onClick={() => system.remove(value.id)}
+											size="icon"
+											variant="ghost"
+										>
+											<Archive className="h-4 w-4" />
+										</Button>
+									</div>
 								</div>
-								<Button
-									title="Archive notification"
-									onClick={() => system.remove(value.id)}
-									size="icon"
-									variant="ghost"
-								>
-									<Archive className="h-4 w-4" />
-								</Button>
 							</li>
 						))}
 						{modrinth.notifications.map((n) => (
@@ -116,22 +111,29 @@ export const Notifications = () => {
 									<div className="absolute top-0.5 left-0.5 rounded-full bg-destructive h-2 w-2" />
 								)}
 								<div>
-									<h1 className="line-clamp-2 font-medium">{n.title}</h1>
-									<p className="text-xs text-muted-foreground text-wrap">
-										{n.text}
-									</p>
-									<span className="text-muted-foreground text-xs">
-										{formatRelative(new Date(n.created), new Date())}
-									</span>
+									<div className="flex flex-col">
+										<h1 className="line-clamp-2 font-semibold border-b mb-1 pb-1">
+											{n.title}
+										</h1>
+										<p className="text-sm text-muted-foreground text-wrap">
+											{n.text}
+										</p>
+									</div>
+									<div className="flex justify-between items-center mt-4">
+										<div className="text-muted-foreground text-xs">
+											{formatRelative(new Date(n.created), new Date())}
+										</div>
+
+										<Button
+											title="Archive notification"
+											onClick={() => modrinth.remove(n.id)}
+											size="icon"
+											variant="ghost"
+										>
+											<Archive className="h-4 w-4" />
+										</Button>
+									</div>
 								</div>
-								<Button
-									title="Archive notification"
-									onClick={() => modrinth.remove(n.id)}
-									size="icon"
-									variant="ghost"
-								>
-									<Archive className="h-4 w-4" />
-								</Button>
 							</li>
 						))}
 					</ul>

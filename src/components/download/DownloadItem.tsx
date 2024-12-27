@@ -1,4 +1,5 @@
 import {
+	ArrowUpFromLine,
 	FileDiff,
 	Monitor,
 	PackagePlus,
@@ -9,10 +10,91 @@ import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import type { QueueItem } from "@/lib/models/download_queue";
 import { TypographyH4 } from "@component/ui/typography";
 import { QueueItemState } from "@/lib/QueueItemState";
-import { queryClient } from "@/lib/api/queryClient";
+import { queryClient, invalidateQueries } from "@/lib/api/queryClient";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Button } from "../ui/button";
-import { db } from "@system/commands";
+import { query } from "@/lib/api/plugins/query";
+
+const QueuItemContent: React.FC<{ state: QueueItem["state"]; id: string }> = ({
+	state,
+	id,
+}) => {
+	switch (state) {
+		case "ERRORED":
+			return (
+				<div className="flex gap-2">
+					<Button
+						title="Retry"
+						onClick={async () => {
+							await query`UPDATE download_queue SET state = ${QueueItemState.PENDING} WHERE id = ${id};`.run();
+							await invalidateQueries([
+								[KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
+								[KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
+							]);
+						}}
+						size="icon"
+						variant="outline"
+					>
+						<RefreshCcw />
+					</Button>
+					<Button
+						title="Delete"
+						onClick={async () => {
+							await query`DELETE FROM download_queue WHERE id = ${id};"`.run();
+							await queryClient.invalidateQueries({
+								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
+							});
+						}}
+						size="icon"
+						variant="destructive"
+					>
+						<Trash2 />
+					</Button>
+				</div>
+			);
+		case "COMPLETED":
+			return (
+				<div>
+					<Button
+						title="Delete"
+						onClick={async () => {
+							await query`DELETE FROM download_queue WHERE id = ${id};`.run();
+							await queryClient.invalidateQueries({
+								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
+							});
+						}}
+						size="icon"
+						variant="destructive"
+					>
+						<Trash2 />
+					</Button>
+				</div>
+			);
+		case "POSTPONED":
+			return (
+				<div>
+					<Button
+						onClick={async () => {
+							await query`UPDATE download_queue SET state = ${QueueItemState.PENDING} WHERE id = ${id};`.run();
+							await invalidateQueries([
+								[KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
+								[KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
+							]);
+						}}
+						title="Enqueue"
+						size="icon"
+						variant="outline"
+					>
+						<ArrowUpFromLine />
+					</Button>
+				</div>
+			);
+		case "PENDING":
+			return null;
+		default:
+			return null;
+	}
+};
 
 const DownloadItem: React.FC<QueueItem> = ({
 	id,
@@ -42,63 +124,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 				</div>
 			</div>
 
-			{state === "COMPLETED" ? (
-				<div>
-					<Button
-						onClick={async () => {
-							await db.execute({
-								query: "DELETE FROM download_queue WHERE id = ?",
-								args: [id],
-							});
-							await queryClient.invalidateQueries({
-								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
-							});
-						}}
-						size="icon"
-						variant="destructive"
-					>
-						<Trash2 />
-					</Button>
-				</div>
-			) : null}
-
-			{state === "ERRORED" ? (
-				<div className="flex gap-2">
-					<Button
-						onClick={async () => {
-							await db.execute({
-								query: "UPDATE download_queue SET state = ? WHERE id = ?",
-								args: [QueueItemState.PENDING, id],
-							});
-							await queryClient.invalidateQueries({
-								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
-							});
-							await queryClient.invalidateQueries({
-								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
-							});
-						}}
-						size="icon"
-						variant="outline"
-					>
-						<RefreshCcw />
-					</Button>
-					<Button
-						onClick={async () => {
-							await db.execute({
-								query: "DELETE FROM download_queue WHERE id = ?",
-								args: [id],
-							});
-							await queryClient.invalidateQueries({
-								queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
-							});
-						}}
-						size="icon"
-						variant="destructive"
-					>
-						<Trash2 />
-					</Button>
-				</div>
-			) : null}
+			<QueuItemContent state={state} id={id} />
 		</div>
 	);
 };

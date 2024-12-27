@@ -1,16 +1,16 @@
 import { ErrorComponent, createLazyFileRoute } from "@tanstack/react-router";
-import { Body, ResponseType, getClient } from "@tauri-apps/api/http";
+import { fetch } from "@tauri-apps/plugin-http";
 import { memo, useEffect, useReducer, useRef } from "react";
 import { downloadDir, sep } from "@tauri-apps/api/path";
 import { SkinViewer, IdleAnimation } from "skinview3d";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMutation } from "@tanstack/react-query";
-import { readBinaryFile } from "@tauri-apps/api/fs";
+import { readFile } from "@tauri-apps/plugin-fs";
 import { useAccount } from "@azure/msal-react";
-import { open } from "@tauri-apps/api/dialog";
-import { toast } from "react-toastify";
+import { open } from "@tauri-apps/plugin-dialog";
 import { Plus } from "lucide-react";
 
+import toast, { waitToast } from "@component/ui/toast";
 import type { Cape, MinecraftAccount, Skin } from "@/lib/api/minecraftAccount";
 import { Separator } from "@/components/ui/separator";
 import { queryClient } from "@/lib/api/queryClient";
@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Label } from "@/components/ui/label";
 import useUser from "@/hooks/useUser";
-import logger from "@system/logger";
 import { cn } from "@/lib/utils";
 
 type Content = {
@@ -35,6 +34,10 @@ type Action =
 	| { type: "ADD_SKIN"; url: string }
 	| { type: "INIT"; skins: Skin[]; capes: Cape[] };
 
+const MINECRAFT_API_CAPE =
+	"https://api.minecraftservices.com/minecraft/profile/capes/active";
+const MINECRAFT_API_SKIN =
+	"https://api.minecraftservices.com/minecraft/profile/skins";
 const DEFAULT_NAMES = [
 	"X-Steve",
 	"X-Alex",
@@ -116,7 +119,7 @@ const DisplayItem = memo(
 		onClick,
 	}: { onClick: () => void; state: string; skin?: string; cape?: string }) => {
 		const target = useRef<HTMLCanvasElement>(null);
-		const viewer = useRef<SkinViewer>();
+		const viewer = useRef<SkinViewer | undefined>(undefined);
 
 		useEffect(() => {
 			if (target.current) {
@@ -153,7 +156,7 @@ const DisplayItem = memo(
 const MinecraftSkinControl: React.FC = memo(() => {
 	const msAccount = useAccount();
 	const target = useRef<HTMLCanvasElement>(null);
-	const viewer = useRef<SkinViewer>();
+	const viewer = useRef<SkinViewer | undefined>(undefined);
 	const { account, isLoading } = useUser();
 	const [content, dispatch] = useReducer(reducer, {
 		isReady: false,
@@ -172,11 +175,10 @@ const MinecraftSkinControl: React.FC = memo(() => {
 			);
 		},
 		onError(error) {
-			logger.error(error.message);
+			console.error(error);
 		},
 		mutationFn: async () => {
 			if (!account) throw new Error("No profile data");
-			const http = await getClient();
 			const ogCapes = account?.details.capes;
 			let response: MinecraftAccount["details"] | null = null;
 			if (ogCapes) {
@@ -185,44 +187,39 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				if (prev?.id !== nextCape?.id) {
 					// No cape was selected.
 					if (!nextCape) {
-						const request = await http.delete<MinecraftAccount["details"]>(
-							"https://api.minecraftservices.com/minecraft/profile/capes/active",
-							{
-								headers: {
-									Authorization: `Bearer ${account.token.access_token}`,
-								},
-								responseType: ResponseType.JSON,
+						const request = await fetch(MINECRAFT_API_CAPE, {
+							method: "DELETE",
+							headers: {
+								Authorization: `Bearer ${account.token.access_token}`,
 							},
-						);
-						if (!request.ok) {
-							throw new Error(
-								(request.data as never as { errorMessage: string })
-									.errorMessage,
-								{ cause: request },
-							);
-						}
-						response = request.data;
+						});
+						if (!request.ok)
+							throw new Error(request.statusText, { cause: request });
+						const data = (await request.json()) as
+							| { errorMessage: string }
+							| MinecraftAccount["details"];
+						if ("errorMessage" in data) throw new Error(data.errorMessage);
+
+						response = data;
 					} else {
-						const request = await http.request<MinecraftAccount["details"]>({
+						const request = await fetch(MINECRAFT_API_CAPE, {
 							method: "PUT",
 							headers: {
 								Authorization: `Bearer ${account.token.access_token}`,
 								"Content-Type": "application/json",
 							},
-							body: Body.json({
+							body: JSON.stringify({
 								capeId: nextCape.id,
 							}),
-							responseType: ResponseType.JSON,
-							url: "https://api.minecraftservices.com/minecraft/profile/capes/active",
 						});
-						if (!request.ok) {
-							throw new Error(
-								(request.data as never as { errorMessage: string })
-									.errorMessage,
-								{ cause: request },
-							);
-						}
-						response = request.data;
+						if (!request.ok)
+							throw new Error(request.statusText, { cause: request });
+						const data = (await request.json()) as
+							| MinecraftAccount["details"]
+							| { errorMessage: string };
+						if ("errorMessage" in data) throw new Error(data.errorMessage);
+
+						response = data;
 					}
 				}
 			}
@@ -237,7 +234,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				if (!nextSkin) throw new Error("Failed to update player skin");
 
 				let contentType: string;
-				let body: Body;
+				let body: FormData | string;
 				if (isUpload(nextSkin.url)) {
 					contentType = "multipart/form-data";
 
@@ -247,43 +244,41 @@ const MinecraftSkinControl: React.FC = memo(() => {
 						.replace("https://asset.localhost/", "")
 						.replace("asset://", "");
 
-					const filename = filePath.split(sep).at(-1) ?? "player.png";
+					const filename = filePath.split(sep()).at(-1) ?? "player.png";
 
-					const fileContent = await readBinaryFile(filePath);
+					const fileContent = await readFile(filePath);
 					formData.set(
 						"file",
 						new File([fileContent], filename, { type: "image/png" }),
 					);
 
-					body = Body.form(formData);
+					body = formData;
 				} else {
 					contentType = "application/json";
-					body = Body.json({
+					body = JSON.stringify({
 						url: nextSkin.url,
 						variant: nextSkin.variant,
 					});
 				}
 
-				const request = await http.request<MinecraftAccount["details"]>({
+				const request = await fetch(MINECRAFT_API_SKIN, {
 					method: "POST",
-					url: "https://api.minecraftservices.com/minecraft/profile/skins",
 					headers: {
 						Authorization: `Bearer ${account.token.access_token}`,
 						"Content-Type": contentType,
 					},
 					body,
-					responseType: ResponseType.JSON,
 				});
 
-				if (!request.ok) {
-					console.error(request);
-					throw new Error(
-						(request.data as never as { errorMessage: string }).errorMessage,
-						{ cause: request },
-					);
-				}
+				if (!request.ok)
+					throw new Error(request.statusText, { cause: request });
+				const data = (await request.json()) as
+					| MinecraftAccount["details"]
+					| { errorMessage: string };
+				if ("errorMessage" in data)
+					throw new Error(data.errorMessage, { cause: request });
 
-				response = request.data;
+				response = data;
 			}
 
 			return response;
@@ -313,10 +308,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				animation: new IdleAnimation(),
 				width: 300,
 				height: 400,
-				model:
-					activeSkin?.variant === "CLASSIC"
-						? "default"
-						: "slim" ?? "auto-detect",
+				model: activeSkin?.variant === "CLASSIC" ? "default" : "slim",
 				skin: activeSkin?.url,
 				cape: activeCape?.url,
 			});
@@ -366,10 +358,11 @@ const MinecraftSkinControl: React.FC = memo(() => {
 						<Button
 							disabled={mutation.isPending}
 							onClick={() =>
-								toast.promise(mutation.mutateAsync(), {
-									pending: "Updating",
-									error: "Failed to update",
-									success: "Updated",
+								waitToast({
+									callback: mutation.mutateAsync(),
+									pendingTitle: "Updating",
+									errorTitle: "Failed to update",
+									successTitle: "Updated",
 								})
 							}
 							size="sm"

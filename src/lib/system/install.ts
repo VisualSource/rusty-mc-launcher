@@ -1,5 +1,5 @@
 import { coerce, minSatisfying } from "semver";
-import { toast } from "react-toastify";
+import toast, { updateToast } from "@component/ui/toast";
 
 import type {
 	Project,
@@ -12,13 +12,26 @@ import {
 	getVersion,
 	getProject,
 } from "../api/modrinth/services.gen";
-import { type ContentType, download_queue } from "../models/download_queue";
+import {
+	uninstallContentByFilename,
+	uninstallContentById,
+} from "@lib/api/plugins/content";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
-import { askFor } from "@/components/dialog/AskDialog";
-import { workshop_content } from "../models/content";
-import { db, uninstallContent } from "./commands";
-import type { MinecraftProfile } from "../models/profiles";
+import { ContentType } from "@lib/models/download_queue";
 import { modrinthClient } from "../api/modrinthClient";
+import { askFor } from "@/components/dialog/AskDialog";
+import { QueueItem } from "../models/download_queue";
+import { QueueItemState } from "../QueueItemState";
+import type { Profile } from "../models/profiles";
+import { ContentItem } from "../models/content";
+import { query } from "@lib/api/plugins/query";
+
+function asContentType(value: string): keyof typeof ContentType {
+	return value.replace(
+		/^\w/,
+		value[0].toUpperCase(),
+	) as keyof typeof ContentType;
+}
 
 async function getContentVersion(
 	current: VersionDependency,
@@ -79,13 +92,12 @@ async function* getDependencies(
 		if (!file) throw new Error("Missing file download");
 
 		if (current.dependency_type === "incompatible") {
-			const incompatible = await db.select({
-				query: "SELECT * FROM profile_content WHERE id = ? AND profile = ?;",
-				args: [version.project_id, profile],
-				schema: workshop_content.schema,
-			});
+			const incompatible =
+				await query`SELECT * FROM profile_content WHERE id = ${version.project_id} AND profile = ${profile} LIMIT 1;`
+					.as(ContentItem)
+					.get();
 
-			if (incompatible.length) {
+			if (incompatible) {
 				yield { type: "incompatible", dep: current };
 			}
 			continue;
@@ -157,7 +169,7 @@ export async function install_known(
 		type: "shader" | "mod" | "modpack" | "resourcepack";
 		icon?: string | null;
 	},
-	profile: MinecraftProfile,
+	profile: Profile,
 ) {
 	if (project.type === "modpack")
 		throw new Error("Known modpack install is not supported!");
@@ -165,7 +177,11 @@ export async function install_known(
 	const file = version.files.find((e) => e.primary) ?? version.files.at(0);
 	if (!file) throw new Error("No file download was found");
 
-	await uninstallContent(profile.id, version.project_id);
+	await uninstallContentByFilename(
+		asContentType(project.type),
+		profile.id,
+		file.filename,
+	);
 
 	const files = [
 		{
@@ -194,7 +210,11 @@ export async function install_known(
 					case "include": {
 						if (!dep.file) throw new Error("Missing file download");
 
-						await uninstallContent(profile.id, dep.id);
+						await uninstallContentByFilename(
+							asContentType(dep.type),
+							profile.id,
+							file.filename,
+						);
 
 						files.push({
 							sha1: dep.file?.hashes.sha1,
@@ -216,27 +236,33 @@ export async function install_known(
 	const content_id = project.type.replace(
 		/^\w/,
 		project.type[0].toUpperCase(),
-	) as ContentType;
+	) as keyof typeof ContentType;
 	const queue_id = crypto.randomUUID();
 
-	await download_queue.insert(
-		queue_id,
-		true,
-		0,
-		project.title,
-		project.icon ?? null,
-		profile.id,
-		content_id,
-		{
+	await QueueItem.insert({
+		id: queue_id,
+		display: true,
+		priority: 0,
+		display_name: project.title,
+		icon: project.icon ?? null,
+		profile_id: profile.id,
+		content_type: content_id,
+		state: "PENDING",
+		created: new Date().toISOString(),
+		metadata: {
 			content_type: content_id,
 			profile: profile.id,
 			files: files,
 		},
-	);
+	});
 }
 
 export async function install(data: Project) {
-	const id = toast.loading("Preparing install...");
+	const id = toast({
+		title: "Preparing install...",
+		closeButton: false,
+		opts: { isLoading: true },
+	});
 	try {
 		switch (data.project_type) {
 			case "resourcepack":
@@ -246,9 +272,8 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
 						isLoading: false,
 						autoClose: 5000,
 					});
@@ -270,7 +295,11 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContent(profile.id, data.id);
+				await uninstallContentById(
+					asContentType(data.project_type),
+					profile.id,
+					data.id,
+				);
 
 				const files = [
 					{
@@ -284,23 +313,25 @@ export async function install(data: Project) {
 				const content_id = data.project_type.replace(
 					/^\w/,
 					data.project_type[0].toUpperCase(),
-				) as ContentType;
+				) as keyof typeof ContentType;
 				const queue_id = crypto.randomUUID();
 
-				await download_queue.insert(
-					queue_id,
-					true,
-					0,
-					data.title ?? "Unknown",
-					data.icon_url ?? null,
-					profile.id,
-					content_id,
-					{
+				await QueueItem.insert({
+					id: queue_id,
+					display: true,
+					priority: 0,
+					display_name: data.title ?? "Unknown",
+					icon: data.icon_url ?? null,
+					profile_id: profile.id,
+					content_type: content_id,
+					created: new Date().toISOString(),
+					state: QueueItemState.PENDING,
+					metadata: {
 						content_type: content_id,
 						profile: profile.id,
 						files: files,
 					},
-				);
+				});
 
 				break;
 			}
@@ -310,9 +341,8 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
 						isLoading: false,
 						autoClose: 5000,
 					});
@@ -346,7 +376,11 @@ export async function install(data: Project) {
 					version.files.find((e) => e.primary) ?? version.files.at(0);
 				if (!file) throw new Error("No file download was found");
 
-				await uninstallContent(profile.id, data.id);
+				await uninstallContentByFilename(
+					asContentType(data.project_type),
+					profile.id,
+					file.filename,
+				);
 
 				const files = [
 					{
@@ -372,7 +406,11 @@ export async function install(data: Project) {
 							case "include": {
 								if (!dep.file) throw new Error("Missing file download");
 
-								await uninstallContent(profile.id, dep.id);
+								await uninstallContentByFilename(
+									asContentType(data.project_type),
+									profile.id,
+									dep.file.filename,
+								);
 
 								files.push({
 									sha1: dep.file?.hashes.sha1,
@@ -392,23 +430,25 @@ export async function install(data: Project) {
 				const content_id = data.project_type.replace(
 					/^\w/,
 					data.project_type[0].toUpperCase(),
-				) as ContentType;
+				) as keyof typeof ContentType;
 				const queue_id = crypto.randomUUID();
 
-				await download_queue.insert(
-					queue_id,
-					true,
-					0,
-					data.title ?? "Unknown",
-					data.icon_url ?? null,
-					profile.id,
-					content_id,
-					{
+				await QueueItem.insert({
+					id: queue_id,
+					display: true,
+					priority: 0,
+					display_name: data.title ?? "Unknown",
+					icon: data.icon_url ?? null,
+					profile_id: profile.id,
+					content_type: content_id,
+					created: new Date().toISOString(),
+					state: QueueItemState.PENDING,
+					metadata: {
 						content_type: content_id,
 						profile: profile.id,
 						files: files,
 					},
-				);
+				});
 
 				break;
 			}
@@ -424,9 +464,8 @@ export async function install(data: Project) {
 				});
 
 				if (!gameVersions.length) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
 						isLoading: false,
 						autoClose: 5000,
 					});
@@ -441,9 +480,8 @@ export async function install(data: Project) {
 					options: data.loaders?.map((e) => ({ id: e, name: e })) ?? [],
 				});
 				if (!loaders.length) {
-					toast.update(id, {
-						render: "Install canceled",
-						type: "info",
+					updateToast(id, {
+						data: { variant: "info", title: "Install canceled" },
 						isLoading: false,
 						autoClose: 5000,
 					});
@@ -474,16 +512,18 @@ export async function install(data: Project) {
 				const queue_id = crypto.randomUUID();
 				const profile = crypto.randomUUID();
 
-				await download_queue.insert(
-					queue_id,
-					true,
-					0,
-					data.title ?? "Unknown",
-					data.icon_url ?? null,
-					profile,
-					"Modpack",
-					{
-						content_type: "Modpack",
+				await QueueItem.insert({
+					id: queue_id,
+					display: true,
+					priority: 0,
+					display_name: data.title ?? "Unknown",
+					icon: data.icon_url ?? null,
+					profile_id: profile,
+					content_type: ContentType.Modpack,
+					created: new Date().toISOString(),
+					state: QueueItemState.PENDING,
+					metadata: {
+						content_type: ContentType.Modpack,
 						profile,
 						files: [
 							{
@@ -495,24 +535,23 @@ export async function install(data: Project) {
 							},
 						],
 					},
-				);
+				});
 				break;
 			}
 			default:
 				break;
 		}
-		toast.update(id, {
-			render: "Staring Install",
-			type: "success",
+
+		updateToast(id, {
+			data: { variant: "success", title: "Staring Install" },
 			isLoading: false,
 			autoClose: 5000,
 		});
 	} catch (error) {
-		toast.update(id, {
-			render: "Failed to install content",
-			type: "error",
+		console.error(error);
+		updateToast(id, {
+			data: { variant: "success", error, title: "Failed to install content" },
 			isLoading: false,
-			data: { error: (error as Error).message },
 			autoClose: 5000,
 		});
 	}

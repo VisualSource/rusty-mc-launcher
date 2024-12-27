@@ -1,21 +1,22 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import update from "immutability-helper";
 import { Plus } from "lucide-react";
 
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from "./ui/dialog";
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 import { parseJVMArgs, argsToString } from "@/lib/JvmArgs";
 import { MarkedSlider } from "@/components/ui/slider";
-import { getSystemRam } from "@/lib/system/commands";
+import { getSystemRam } from "@lib/api/plugins/content";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { range } from "@/lib/range";
@@ -61,7 +62,7 @@ const TickedSilder: React.FC<{
 };
 
 export const JVMArgForm: React.FC<{
-	controller: ControllerRenderProps<MinecraftProfile>;
+	controller: ControllerRenderProps<Profile>;
 }> = ({ controller: { value, onChange } }) => {
 	const { data: ram } = useSuspenseQuery({
 		networkMode: "offlineFirst",
@@ -145,8 +146,10 @@ export const JVMArgForm: React.FC<{
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Add Arg</DialogTitle>
+								<DialogDescription>
+									New argument to pass to the jvm
+								</DialogDescription>
 							</DialogHeader>
-							<Label>Arg</Label>
 							<Input
 								value={argValue}
 								onChange={(e) => setArgValue(e.target.value)}
@@ -185,7 +188,7 @@ export const JVMArgForm: React.FC<{
 									return data;
 								});
 							}}
-							className="select-none cursor-not-allowed"
+							className="select-none cursor-alias"
 							key={`${i + 1}`}
 						>
 							{e}

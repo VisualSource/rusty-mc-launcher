@@ -20,7 +20,6 @@ import { formatRelative } from "date-fns/formatRelative";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { DiscordLogoIcon } from "@radix-ui/react-icons";
 import ReactMarkdown from "react-markdown";
-import { toast } from "react-toastify";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Suspense } from "react";
@@ -33,6 +32,7 @@ import {
 import { TypographyH1, TypographyH4 } from "@/components/ui/typography";
 import { projectQueryOptions } from "@/lib/query/modrinthProjectQuery";
 import SelectProfile from "@/components/dialog/ProfileSelection";
+import toast, { updateToast } from "@component/ui/toast";
 import { Gallery } from "@/components/workshop/Gallery";
 import { Team } from "@/components/workshop/Team";
 import { Button } from "@/components/ui/button";
@@ -157,7 +157,11 @@ function Project() {
 							<div className="flex items-center gap-2">
 								<Button
 									onClick={async () => {
-										const toastId = toast.loading("Updating");
+										const toastId = toast({
+											closeButton: false,
+											title: "Updating",
+											opts: { isLoading: true },
+										});
 										try {
 											const state =
 												follows.data?.findIndex((e) => e.id === project.id) !==
@@ -167,27 +171,27 @@ function Project() {
 											} else {
 												await modrinth.followProject(project.id);
 											}
-											toast.update(toastId, {
+
+											updateToast(toastId, {
 												isLoading: false,
-												type: "success",
-												render: state
-													? "Unfollowed project"
-													: "Followed Project",
-												data: state
-													? `Unfollowed project: ${project.title}`
-													: `Followed project: ${project.title}`,
-												closeButton: true,
 												autoClose: 5000,
+												data: {
+													variant: "success",
+													title: state
+														? `Unfollowed project: ${project.title}`
+														: `Followed project: ${project.title}`,
+												},
 											});
 										} catch (error) {
 											console.error(error);
-											toast.update(toastId, {
+											updateToast(toastId, {
 												isLoading: false,
-												type: "error",
-												render: "Failed to update project follow",
-												data: error,
-												closeButton: true,
 												autoClose: 5000,
+												data: {
+													error,
+													variant: "error",
+													title: "Failed to update project follow",
+												},
 											});
 										}
 									}}

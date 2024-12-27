@@ -17,15 +17,11 @@ import {
 	SelectValue,
 } from "../ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 import { useProfiles } from "@/hooks/useProfiles";
 
 export const CopyProfileOptions: React.FC<{
-	form: UseFormReturn<
-		MinecraftProfile & { copyOptions?: string },
-		unknown,
-		undefined
-	>;
+	form: UseFormReturn<Profile & { copyOptions?: string }, unknown, undefined>;
 }> = ({ form }) => {
 	const profiles = useProfiles();
 

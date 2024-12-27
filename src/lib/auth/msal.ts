@@ -1,14 +1,15 @@
+import {
+	PublicClientApplication,
+	EventType,
+	type AuthenticationResult,
+	type Configuration,
+} from "@azure/msal-browser";
 import { LogLevel } from "@azure/msal-common";
-
-import type { AuthenticationResult } from "@masl/response/AuthenticationResult";
-import { PublicClientApplication } from "@masl/app/PublicClientApplication";
-import type { Configuration } from "@masl/config/Configuration";
-import { EventType } from "@masl/event/EventType";
-import { auth } from "@system/logger";
+import { error, warn, info, debug, trace } from "@tauri-apps/plugin-log";
 
 const configuration: Configuration = {
 	auth: {
-		clientId: import.meta.env.PUBLIC_VITE_CLIENT_ID,
+		clientId: import.meta.env.VITE_CLIENT_ID,
 		authority: "https://login.microsoftonline.com/consumers/",
 		redirectUri: "http://localhost",
 		postLogoutRedirectUri: "http://localhost",
@@ -22,23 +23,23 @@ const configuration: Configuration = {
 		allowNativeBroker: true,
 		loggerOptions: {
 			piiLoggingEnabled: false,
-			logLevel: import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
+			logLevel: LogLevel.Error, // import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
 			loggerCallback(level: LogLevel, message: string) {
 				switch (level) {
 					case LogLevel.Error:
-						auth.error(message);
+						error(message);
 						break;
 					case LogLevel.Warning:
-						auth.warn(message);
+						warn(message);
 						break;
 					case LogLevel.Info:
-						auth.info(message);
+						info(message);
 						break;
 					case LogLevel.Verbose:
-						auth.verbose(message);
+						debug(message);
 						break;
 					case LogLevel.Trace:
-						auth.trace(message);
+						trace(message);
 						break;
 				}
 			},
@@ -58,11 +59,11 @@ export const getPCA = () => {
 				break;
 			}
 			case EventType.ACCOUNT_ADDED: {
-				auth.debug("New Account Added");
+				debug("New Account Added");
 				break;
 			}
 			case EventType.ACCOUNT_REMOVED: {
-				auth.debug("Account has been removed");
+				debug("Account has been removed");
 				break;
 			}
 		}

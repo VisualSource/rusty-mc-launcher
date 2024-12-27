@@ -1,165 +1,82 @@
 {
-	"$schema": "../node_modules/@tauri-apps/cli/schema.json",
+	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+	"productName": "Rusty Minecraft Launcher",
+	"identifier": "us.visualsource.rmcl",
+	"version": "0.8.0",
 	"build": {
-		"beforeBuildCommand": "pnpm run build",
-		"beforeDevCommand": "pnpm run dev",
-		"devPath": "http://localhost:5173",
-		"distDir": "../dist"
+		"beforeBuildCommand": "pnpm build",
+		"beforeDevCommand": "pnpm dev",
+		"frontendDist": "../dist",
+		"devUrl": "http://localhost:5173"
 	},
-	"package": {
-		"productName": "Rusty Minecraft Launcher",
-		"version": "0.7.3"
+	"bundle": {
+		"active": true,
+		"category": "Utility",
+		"targets": [
+			"msi",
+			"nsis"
+		],
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"windows": {
+			"certificateThumbprint": null,
+			"digestAlgorithm": "sha256",
+			"timestampUrl": ""
+		},
+		"longDescription": "A Minecraft launcher and mod installer.",
+		"resources": [
+			"./migrations/*"
+		],
+		"shortDescription": "Game Launcher",
+		"createUpdaterArtifacts": "v1Compatible"
 	},
-	"tauri": {
-		"allowlist": {
-			"protocol": {
-				"all": false,
-				"asset": true,
-				"assetScope": ["$APPDATA/**/*"]
-			},
-			"process": {
-				"all": false,
-				"exit": true,
-				"relaunch": false,
-				"relaunchDangerousAllowSymlinkMacos": false
-			},
-			"fs": {
-				"exists": true,
-				"writeFile": true,
-				"createDir": true,
-				"readFile": true,
-				"readDir": true,
-				"scope": ["$APPDATA/**"]
-			},
-			"notification": {
-				"all": true
-			},
-			"path": {
-				"all": true
-			},
-			"shell": {
-				"all": false,
-				"execute": false,
-				"open": true,
-				"scope": [],
-				"sidecar": false
-			},
-			"http": {
-				"all": false,
-				"request": true,
-				"scope": [
-					"https://user.auth.xboxlive.com/user/authenticate",
-					"https://xsts.auth.xboxlive.com/xsts/authorize",
-					"https://api.minecraftservices.com/authentication/login_with_xbox",
-					"https://api.minecraftservices.com/minecraft/profile",
-					"https://api.minecraftservices.com/minecraft/profile/capes/active",
-					"https://api.minecraftservices.com/minecraft/profile/skins",
-					"https://api.minecraftservices.com/minecraft/profile/skins/active"
+	"plugins": {
+		"deep-link": {
+			"mobile": [],
+			"desktop": {
+				"schemes": [
+					"rmcl"
 				]
-			},
-			"app": {
-				"all": false,
-				"hide": false,
-				"show": false
-			},
-			"dialog": {
-				"all": false,
-				"ask": true,
-				"confirm": true,
-				"message": true,
-				"open": true,
-				"save": true
-			},
-			"window": {
-				"all": false,
-				"center": false,
-				"close": true,
-				"create": false,
-				"hide": true,
-				"maximize": true,
-				"minimize": true,
-				"print": false,
-				"requestUserAttention": true,
-				"setAlwaysOnTop": false,
-				"setCursorGrab": false,
-				"setCursorIcon": false,
-				"setCursorPosition": false,
-				"setCursorVisible": false,
-				"setDecorations": false,
-				"setFocus": false,
-				"setFullscreen": false,
-				"setIcon": false,
-				"setIgnoreCursorEvents": false,
-				"setMaxSize": false,
-				"setMinSize": false,
-				"setPosition": false,
-				"setResizable": false,
-				"setSize": false,
-				"setSkipTaskbar": false,
-				"setTitle": false,
-				"show": true,
-				"startDragging": true,
-				"unmaximize": true,
-				"unminimize": true
 			}
-		},
-		"bundle": {
-			"active": true,
-			"category": "Utility",
-			"copyright": "",
-			"deb": {
-				"depends": []
-			},
-			"externalBin": [],
-			"icon": [
-				"icons/32x32.png",
-				"icons/128x128.png",
-				"icons/128x128@2x.png",
-				"icons/icon.icns",
-				"icons/icon.ico"
-			],
-			"identifier": "us.visualsource.rmcl",
-			"longDescription": "A Minecraft launcher and mod installer.",
-			"macOS": {
-				"entitlements": null,
-				"exceptionDomain": "",
-				"frameworks": [],
-				"providerShortName": null,
-				"signingIdentity": null
-			},
-			"resources": ["./migrations/*"],
-			"shortDescription": "",
-			"targets": "all",
-			"windows": {
-				"certificateThumbprint": null,
-				"digestAlgorithm": "sha256",
-				"timestampUrl": ""
-			}
-		},
-		"security": {
-			"csp": null
 		},
 		"updater": {
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCRUI2NTY1NDBFQzIwRTEKUldUaElPeEFaV1hyeTFweE15UkJzb1kwMzcrY2NTWkRHR3RBZTdxUWNkQmVpazd3L2ErNXp5TlIK",
-			"active": true,
 			"endpoints": [
 				"https://github.com/VisualSource/rusty-mc-launcher/releases/latest/download/latest.json"
-			],
-			"dialog": true
-		},
+			]
+		}
+	},
+	"app": {
 		"windows": [
 			{
-				"userAgent": "VisualSource/rusty-mc-launcher/0.5.x",
+				"userAgent": "VisualSource/rusty-mc-launcher/0.10.x",
 				"fullscreen": false,
-				"height": 630,
+				"height": 632,
 				"resizable": true,
 				"minHeight": 630,
 				"minWidth": 1080,
 				"title": "Minecraft Launcher",
-				"width": 1080,
+				"width": 1082,
 				"decorations": false,
-				"fileDropEnabled": false
+				"dragDropEnabled": false
 			}
-		]
+		],
+		"security": {
+			"capabilities": [
+				"migrated"
+			],
+			"assetProtocol": {
+				"scope": [
+					"$APPDATA/**/*"
+				],
+				"enable": true
+			},
+			"csp": null
+		}
 	}
 }

@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CATEGORIES_KEY, CATEGORY_KEY, KEY_PROFILE_COLLECTION } from "./keys";
 import type { Category } from "@lib/models/categories";
-import { db } from "@system/commands";
-import logger from "@system/logger";
+import { query } from "@lib/api/plugins/query";
 
 type Query = { type: "add" | "remove"; category: string; profile: string };
 
@@ -19,7 +18,7 @@ const useCategoryMutation = () => {
 			});
 		},
 		onError(error, variables, context) {
-			logger.error(error);
+			console.error(error);
 			client.setQueryData(
 				[KEY_PROFILE_COLLECTION, variables.profile],
 				(context as { previous: Category[] }).previous,
@@ -44,11 +43,8 @@ const useCategoryMutation = () => {
 							{ id: "", category: data.category, profile: data.profile },
 						],
 					);
-					await db.execute({
-						query:
-							"INSERT INTO categories ('profile','category') VALUES (?,?);",
-						args: [data.profile, data.category],
-					});
+
+					await query`INSERT INTO categories ('profile','category') VALUES (${data.profile}, ${data.category});`.run();
 					break;
 				}
 				case "remove": {
@@ -57,10 +53,8 @@ const useCategoryMutation = () => {
 						(old: Category[]) =>
 							old.filter((e) => e.category !== data.category),
 					);
-					await db.execute({
-						query: "DELETE FROM categories WHERE profile = ? AND category = ?",
-						args: [data.profile, data.category],
-					});
+
+					await query`DELETE FROM categories WHERE profile = ${data.profile} AND category = ${data.category}`.run();
 					break;
 				}
 			}

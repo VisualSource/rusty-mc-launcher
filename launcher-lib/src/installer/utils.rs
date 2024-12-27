@@ -1,12 +1,11 @@
 use log::{info, warn};
-use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::path::Path;
 use std::time::Duration;
 use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
 
-use crate::errors::LauncherError;
+use crate::error::{Error, Result};
 
 lazy_static::lazy_static! {
     pub static ref REQUEST_CLIENT: reqwest::Client = {
@@ -26,58 +25,12 @@ lazy_static::lazy_static! {
 }
 const FETCH_ATTEMPTS: usize = 5;
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ChannelMessage {
-    pub event: String,
-    pub value: String,
-}
-
-impl ChannelMessage {
-    pub fn new(event: impl Into<String>, value: impl Into<String>) -> Self {
-        Self {
-            event: event.into(),
-            value: value.into(),
-        }
-    }
-}
-//$event_channel:expr, $event_name:literal,
-#[macro_export]
-macro_rules! event {
-    ($event_channel:expr,$event_name:literal, $($json:tt)+) => {
-        $crate::installer::utils::event_internal::send_event(
-            $event_channel,
-            $event_name,
-            serde_json::json_internal!($($json)+),
-        )
-        .await;
-    };
-}
-
-pub mod event_internal {
-    use super::ChannelMessage;
-    use log::error;
-
-    pub async fn send_event<T>(
-        channel: &tokio::sync::mpsc::Sender<ChannelMessage>,
-        event: T,
-        message: serde_json::Value,
-    ) where
-        T: Into<String>,
-    {
-        if let Err(error) = channel
-            .send(ChannelMessage::new(event.into(), message.to_string()))
-            .await
-        {
-            error!("{}", error);
-        }
-    }
-}
-
-pub async fn get_file_hash(path: &Path) -> Result<String, LauncherError> {
+/// Gets the sha1 hash of a file.
+pub async fn get_file_hash(path: &Path) -> Result<String> {
     let mut file = File::open(path)
         .await?
         .try_into_std()
-        .map_err(|_| LauncherError::Generic("".to_string()))?;
+        .map_err(|_| Error::Generic("Failed to open file as std".to_string()))?;
     let mut hasher = Sha1::new();
     let size = std::io::copy(&mut file, &mut hasher)?;
     let file_hash = hasher.finalize();
@@ -86,12 +39,15 @@ pub async fn get_file_hash(path: &Path) -> Result<String, LauncherError> {
     Ok(hex::encode(file_hash))
 }
 
+/// Tries to download file from source.
+/// If as sha1 hash is given, the output location is checked if the file exists and checks if hash
+/// matches file at that location and does not try to download from remote source if hash matches
 pub async fn download_file(
     source_url: &str,
     output_directory: &Path,
     auth: Option<&str>,
     sha1: Option<&str>,
-) -> Result<(), LauncherError> {
+) -> Result<()> {
     if let Some(parent) = output_directory.parent() {
         if !parent.exists() {
             create_dir_all(&parent).await?;
@@ -100,36 +56,34 @@ pub async fn download_file(
 
     if output_directory.exists() && output_directory.is_file() {
         if let Some(hash) = sha1 {
-            info!("File exists and has sha1 hash");
+            log::debug!("File exists and has sha1 hash");
             let mut file = File::open(&output_directory)
                 .await?
                 .try_into_std()
-                .map_err(|_| LauncherError::Generic("".to_string()))?;
+                .map_err(|_| Error::Generic("io error".to_string()))?;
             let mut hasher = Sha1::new();
 
             let size = std::io::copy(&mut file, &mut hasher)?;
 
             let file_hash = hasher.finalize();
 
-            info!("Current size of file on disk: {}", size);
+            log::debug!("Current size of file on disk: {}", size);
             if hex::encode(file_hash) == hash {
                 return Ok(());
             }
         } else {
-            warn!("File was found on disk but now removing it and redownloading from source as it can not be verified.");
+            warn!("File was found on disk but now removing it and redownloading from source as it can not be verified. {:?}",output_directory);
             tokio::fs::remove_file(&output_directory).await?;
         }
     }
 
     if source_url.is_empty() {
-        return Err(LauncherError::NotFound(
-            "No download url was provided".to_string(),
-        ));
+        return Err(Error::NotFound("No download url was provided".to_string()));
     }
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
         if attempt > 1 {
-            info!(
+            log::debug!(
                 "Fetch Attempt {} | Duration {}ms | Task {}",
                 attempt,
                 15_000 * attempt,
@@ -161,7 +115,7 @@ pub async fn download_file(
                             if attempt <= 3 {
                                 continue;
                             }
-                            return Err(LauncherError::Sha1Error);
+                            return Err(Error::Sha1Error);
                         }
                     }
 

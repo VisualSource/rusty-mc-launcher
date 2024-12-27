@@ -1,4 +1,5 @@
 import { addSeconds } from "date-fns/addSeconds";
+import { error } from "@tauri-apps/plugin-log";
 import {
 	getUserFromAuth,
 	getUserNotifications,
@@ -13,14 +14,14 @@ import {
 import {
 	BrowserAuthError,
 	BrowserAuthErrorCodes,
-} from "@/lib/masl/error/BrowserAuthError";
-import type { EndSessionRequest } from "@/lib/masl/request/EndSessionRequest";
-import type { Configuration } from "@/lib/masl/config/Configuration";
-import type { PopupRequest } from "@/lib/masl/request/PopupRequest";
+	type EndSessionRequest,
+	type Configuration,
+	type PopupRequest,
+} from "@azure/msal-browser";
+
 import { modrinthClient } from "../../modrinthClient";
 import { queryClient } from "../../queryClient";
 import { PopupClient } from "./PopupClient";
-import { auth } from "@/lib/system/logger";
 import type { User } from "../types.gen";
 
 export type AuthenticationResult = {
@@ -51,6 +52,7 @@ const desterilize = (_key: string, value: unknown) => {
 
 export class ModrinthClientApplication extends EventTarget {
 	private data: AuthenticationResult | null = null;
+	public isLoading = false;
 
 	constructor() {
 		super();
@@ -242,15 +244,12 @@ export class ModrinthClientApplication extends EventTarget {
 	initialize(): void {
 		try {
 			this.data = this.readCache();
-		} catch (error) {
-			auth.error(
-				`Failed to load modrinth cache: ${(error as Error).message}`,
-				error,
-			);
+		} catch (er) {
+			error(`Failed to load modrinth cache: ${(er as Error).message}`);
 		}
 	}
 	async acquireTokenPopup(): Promise<AuthenticationResult> {
-		const client = this.createPopupClient();
+		const client = new PopupClient();
 		const token = await client.acquireToken();
 
 		this.data = {
@@ -274,27 +273,34 @@ export class ModrinthClientApplication extends EventTarget {
 	async loginPopup(
 		_request?: PopupRequest | undefined,
 	): Promise<AuthenticationResult> {
-		const account = await this.acquireTokenPopup();
+		this.isLoading = true;
+		try {
+			const account = await this.acquireTokenPopup();
 
-		const response = await getUserFromAuth({
-			client: modrinthClient,
-			headers: {
-				Authorization: account.accessToken,
-			},
-		});
-		if (response.error) throw response.error;
-		if (!response.response.ok || !response.data)
-			throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
+			const response = await getUserFromAuth({
+				client: modrinthClient,
+				headers: {
+					Authorization: account.accessToken,
+				},
+			});
+			if (response.error) throw response.error;
+			if (!response.response.ok || !response.data)
+				throw new BrowserAuthError(BrowserAuthErrorCodes.getRequestFailed);
 
-		if (!this.data)
-			throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
-		this.data.account = response.data;
+			if (!this.data)
+				throw new BrowserAuthError(BrowserAuthErrorCodes.noAccountError);
+			this.data.account = response.data;
 
-		this.writeCache(this.data);
+			this.writeCache(this.data);
 
-		this.dispatchEvent(new Event("update-data"));
-
-		return this.data;
+			this.dispatchEvent(new Event("update-data"));
+			return this.data;
+		} catch (error) {
+			console.error(error);
+			throw error;
+		} finally {
+			this.isLoading = false;
+		}
 	}
 	public async logout(
 		_logoutRequest?: EndSessionRequest | undefined,
@@ -319,8 +325,5 @@ export class ModrinthClientApplication extends EventTarget {
 		const cache = localStorage.getItem(ACCOUNT_KEY);
 		if (!cache) return null;
 		return JSON.parse(cache, desterilize) as AuthenticationResult;
-	}
-	private createPopupClient() {
-		return new PopupClient();
 	}
 }

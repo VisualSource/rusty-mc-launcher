@@ -114,7 +114,7 @@ export function WorkshopPagination({
 				<PaginationItem>
 					<PaginationPrevious
 						disabled={currentPage === 1}
-						search={(prev) => ({
+						search={(prev: Record<string, unknown>) => ({
 							...prev,
 							offset: offsetPrev,
 						})}
@@ -123,7 +123,7 @@ export function WorkshopPagination({
 				<PaginationItem>
 					<PaginationLink
 						isActive={currentPage === 1}
-						search={(prev) => ({ ...prev, offset: 0 })}
+						search={(prev: Record<string, unknown>) => ({ ...prev, offset: 0 })}
 					>
 						1
 					</PaginationLink>
@@ -137,7 +137,7 @@ export function WorkshopPagination({
 					<PaginationItem key={`${componentId}_${item.key}`}>
 						<PaginationLink
 							isActive={currentPage === item.page}
-							search={(prev) => ({
+							search={(prev: Record<string, unknown>) => ({
 								...prev,
 								offset: item.offset,
 							})}
@@ -155,7 +155,10 @@ export function WorkshopPagination({
 					<PaginationItem>
 						<PaginationLink
 							isActive={currentPage === maxPages}
-							search={(prev) => ({ ...prev, offset: totalHits })}
+							search={(prev: Record<string, unknown>) => ({
+								...prev,
+								offset: totalHits,
+							})}
 						>
 							{maxPages}
 						</PaginationLink>
@@ -164,7 +167,7 @@ export function WorkshopPagination({
 				<PaginationItem>
 					<PaginationNext
 						disabled={currentPage === maxPages}
-						search={(prev) => ({
+						search={(prev: Record<string, unknown>) => ({
 							...prev,
 							offset: offsetNext,
 						})}

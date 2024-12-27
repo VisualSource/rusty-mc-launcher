@@ -1,10 +1,11 @@
+import { fromZodError } from "zod-validation-error";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+
+import toast from "@component/ui/toast";
+import { query, transaction } from "@lib/api/plugins/query";
 import { queryClient } from "@/lib/api/queryClient";
 import { CATEGORIES_KEY } from "./keys";
-import { db } from "@/lib/system/commands";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "react-toastify";
-import { fromZodError } from "zod-validation-error";
-import { z } from "zod";
 
 export const useCategoriesMutation = () => {
 	return useMutation({
@@ -16,10 +17,7 @@ export const useCategoriesMutation = () => {
 			switch (payload.type) {
 				case "POST": {
 					const id = crypto.randomUUID();
-					await db.execute({
-						query: "INSERT INTO settings VALUES (?,?,?)",
-						args: [`category.${id}`, id, payload.data.name],
-					});
+					await query`INSERT INTO settings VALUES (${`category.${id}`},${id},${payload.data.name});`.run();
 					break;
 				}
 				case "PATCH": {
@@ -28,16 +26,15 @@ export const useCategoriesMutation = () => {
 						.safeParse(payload.data);
 					if (content.error) {
 						const message = fromZodError(content.error);
-						toast.error("Failed to delete collection!", {
-							data: message,
+						toast({
+							variant: "error",
+							title: "Failed to delete collection!",
+							error: message,
 						});
 						throw message;
 					}
 
-					await db.execute({
-						query: "UPDATE settings SET value = ? WHERE key = ?",
-						args: [content.data.name, `category.${content.data.id}`],
-					});
+					await query`UPDATE settings SET value = ${content.data.name} WHERE key = ${`category.${content.data.id}`};`.run();
 
 					break;
 				}
@@ -46,21 +43,18 @@ export const useCategoriesMutation = () => {
 					if (id.error) {
 						const message = fromZodError(id.error);
 
-						toast.error("Failed to delete collection!", {
-							data: message,
+						toast({
+							variant: "error",
+							title: "Failed to delete collection!",
+							error: message,
 						});
 
 						throw message;
 					}
 
-					await db.execute({
-						query: "DELETE FROM categories WHERE category = ?",
-						args: [id.data],
-					});
-
-					await db.execute({
-						query: "DELETE FROM settings WHERE key = ?",
-						args: [`category.${id.data}`],
+					await transaction((query) => {
+						query`DELETE FROM categories WHERE category = ${id.data};`;
+						query`DELETE FROM settings WHERE key = ${`category.${id.data}`};`;
 					});
 					break;
 				}

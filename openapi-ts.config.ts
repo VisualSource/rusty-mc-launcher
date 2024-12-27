@@ -7,6 +7,5 @@ export default defineConfig({
         lint: "biome",
         path: "./src/lib/api/modrinth"
     },
-    input: "https://docs.modrinth.com/redocusaurus/plugin-redoc-0.yaml",
-    schemas: false,
+    input: "https://raw.githubusercontent.com/modrinth/code/refs/heads/main/apps/docs/public/openapi.yaml",
 });

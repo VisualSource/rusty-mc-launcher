@@ -24,7 +24,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import type { MinecraftProfile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,7 @@ type QuiltMetadata = {
 };
 
 export const LoaderVersionSelector: React.FC<{
-	form: UseFormReturn<MinecraftProfile, unknown, undefined>;
+	form: UseFormReturn<Profile, unknown, undefined>;
 	stable: boolean;
 }> = ({ stable, form }) => {
 	const btn = useRef<HTMLButtonElement>(null);
@@ -142,7 +142,6 @@ export const LoaderVersionSelector: React.FC<{
 									className="w-full"
 									disabled={isError}
 									variant="outline"
-									role="combobox"
 									type="button"
 									aria-expanded={open}
 								>

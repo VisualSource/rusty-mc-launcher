@@ -1,23 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
-import { download_queue } from "@/lib/models/download_queue";
-import { QueueItemState } from "@/lib/QueueItemState";
+import { query, sqlValue } from "@lib/api/plugins/query";
+import { QueueItem } from "@/lib/models/download_queue";
+import type { QueueItemState } from "@/lib/QueueItemState";
 import { KEY_DOWNLOAD_QUEUE } from "./keys";
-import { db } from "@/lib/system/commands";
+import DownloadManager, {
+	DOWNLOAD_MANAGER_EVENT_CURRENT,
+} from "@/lib/system/downloadManager";
+import { useSyncExternalStore } from "react";
+
+function currentSubscription(callback: () => void) {
+	DownloadManager.addEventListener(DOWNLOAD_MANAGER_EVENT_CURRENT, callback);
+	return () => {
+		DownloadManager.removeEventListener(
+			DOWNLOAD_MANAGER_EVENT_CURRENT,
+			callback,
+		);
+	};
+}
 
 export function useCurrentQueue() {
-	return useQuery({
-		queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.CURRENT],
-		initialData: null,
-		refetchInterval: 30_000,
-		queryFn: () =>
-			db
-				.select({
-					schema: download_queue.schema,
-					query:
-						"SELECT * FROM download_queue WHERE state = 'CURRENT' LIMIT 1;",
-				})
-				.then((e) => e.at(0) ?? null),
-	});
+	return useSyncExternalStore(currentSubscription, () =>
+		DownloadManager.getCurrentSnapshot(),
+	);
 }
 
 export function useQueue(
@@ -26,12 +30,9 @@ export function useQueue(
 ) {
 	return useQuery({
 		queryKey: [KEY_DOWNLOAD_QUEUE, queue],
-		refetchInterval: 60_000,
 		queryFn: () =>
-			db.select({
-				schema: download_queue.schema,
-				query: `SELECT * FROM download_queue WHERE state = ? AND display = TRUE ORDER BY install_order ${order};`,
-				args: [queue],
-			}),
+			query`SELECT * FROM download_queue WHERE state = ${queue} AND display = TRUE ORDER BY priority ${sqlValue(order)};`
+				.as(QueueItem)
+				.all(),
 	});
 }

@@ -1,25 +1,33 @@
 import { z } from "zod";
+import { type QueryResult, query } from "../api/plugins/query";
 import { QueueItemState } from "../QueueItemState";
-import { db } from "../system/commands";
 
-const contentTypeSchema = z.enum([
+export const contentTypeSchema = z.enum([
 	"Client",
-	"Modpack",
 	"Mod",
+	"Modpack",
 	"Resourcepack",
 	"Shader",
 	"Datapack",
 	"CurseforgeModpack",
+	"SystemUpdate",
+]);
+export const ContentType = z.util.arrayToEnum([
+	"Client",
+	"Modpack",
+	"Resourcepack",
+	"Mod",
+	"Shader",
+	"Datapack",
+	"CurseforgeModpack",
+	"SystemUpdate",
 ]);
 
-export type ContentType = z.infer<typeof contentTypeSchema>;
-
-export const download_queue = {
-	name: "download_queue",
-	schema: z.object({
+export class QueueItem {
+	static schema = z.object({
 		id: z.string().uuid(),
 		display: z.number().transform((arg) => arg === 1),
-		install_order: z.number().gte(0),
+		priority: z.number().gte(0),
 		display_name: z.string(),
 		icon: z.ostring().nullable().default(null),
 		profile_id: z.string().uuid(),
@@ -47,35 +55,37 @@ export const download_queue = {
 			QueueItemState.PENDING,
 			QueueItemState.POSTPONED,
 		]),
-	}),
-
-	async insert(
-		queue_id: string,
-		display: boolean,
-		priority: number,
-		title: string,
-		icon: string | null,
-		profile_id: string,
-		content_type: ContentType,
-		metadata: Record<string, unknown>,
-		state: keyof typeof QueueItemState = "PENDING",
+	});
+	static async insert(
+		args: z.infer<typeof QueueItem.schema> & {
+			metadata: Record<string, unknown>;
+		},
 	) {
-		return db.execute({
-			query: "INSERT INTO download_queue VALUES (?,?,?,?,?,?,?,?,?,?);",
-			args: [
-				queue_id,
-				display ? 1 : 0,
-				priority,
-				title,
-				icon,
-				profile_id,
-				new Date().toISOString(),
-				content_type,
-				JSON.stringify(metadata),
-				state,
-			],
-		});
-	},
-};
-
-export type QueueItem = z.infer<typeof download_queue.schema>;
+		return query`INSERT INTO download_queue VALUES (${args.id},${args.display ? 0 : 1},${args.priority},${args.display_name},${args.icon},${args.profile_id},${new Date().toISOString()},${args.content_type},${JSON.stringify(args.metadata)},${args.state});`.run();
+	}
+	public id: string;
+	public display: boolean;
+	public priority: number;
+	public display_name: string;
+	public icon: string | null;
+	public profile_id: string;
+	public created: string;
+	public metadata: Record<string, unknown>;
+	public content_type: z.infer<typeof contentTypeSchema>;
+	public state: keyof typeof QueueItemState = "PENDING";
+	constructor(args: QueryResult) {
+		this.state = args.state as keyof typeof QueueItemState;
+		this.id = args.id as string;
+		this.display = (args.display as number) === 0;
+		this.priority = args.priority as number;
+		this.display_name = args.display_name as string;
+		this.icon = args.icon as string | null;
+		this.profile_id = args.profile_id as string;
+		this.created = args.created as string;
+		this.metadata = JSON.parse(args.metadata as string) as Record<
+			string,
+			unknown
+		>;
+		this.content_type = args.content_type as keyof typeof ContentType;
+	}
+}

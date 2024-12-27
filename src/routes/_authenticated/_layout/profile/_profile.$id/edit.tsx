@@ -2,11 +2,10 @@ import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ask } from "@tauri-apps/api/dialog";
+import { ask } from "@tauri-apps/plugin-dialog";
 import { join } from "@tauri-apps/api/path";
 import { useForm } from "react-hook-form";
 import { useEffect, useRef } from "react";
-import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 
 import {
@@ -30,29 +29,30 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import {
-	copy_profile,
-	db,
+	copyProfile,
+	uninstallContentByFilename,
 	deleteProfile,
 	showInFolder,
-	uninstallContent,
-} from "@/lib/system/commands";
+} from "@lib/api/plugins/content";
 import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UNCATEGORIZEDP_GUID, categories } from "@/lib/models/categories";
-import { type MinecraftProfile, profile } from "@/lib/models/profiles";
-import { download_queue } from "@/lib/models/download_queue";
+import { ContentType, QueueItem } from "@/lib/models/download_queue";
+import { getCategoriesFromProfile } from "@/lib/models/categories";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
-import { workshop_content } from "@/lib/models/content";
+import { query, sqlValue } from "@lib/api/plugins/query";
+import { QueueItemState } from "@/lib/QueueItemState";
 import { profileQueryOptions } from "../_profile.$id";
+import { JVMArgForm } from "@/components/JVMArgForm";
 import { queryClient } from "@/lib/api/queryClient";
-import { settings } from "@/lib/models/settings";
+import { ContentItem } from "@/lib/models/content";
+import { getConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
+import { Profile } from "@/lib/models/profiles";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import logger from "@/lib/system/logger";
-import { JVMArgForm } from "@/components/JVMArgForm";
+import toast from "@component/ui/toast";
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/edit",
@@ -61,83 +61,80 @@ export const Route = createFileRoute(
 	pendingComponent: Loading,
 });
 
-const onFormChange = debounce(
-	async (og: MinecraftProfile, profile: MinecraftProfile) => {
-		for (const key of Object.keys(og) as Array<keyof MinecraftProfile>) {
-			if (og[key] !== profile[key]) {
-				if (key === "loader") {
-					if (og[key] !== "vanilla" && profile[key] !== "vanilla") {
-						const deleteMods = await ask(
-							"Changing the loader may cause installed content to not work. Would you like to delete all installed mods?",
-							{ title: "Loader Switch", type: "warning" },
-						);
-						if (deleteMods) {
-							const mods = await db.select({
-								query:
-									"SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ?",
-								args: [og.id],
-								schema: workshop_content.schema,
-							});
-
-							await Promise.allSettled(
-								mods.map((e) => uninstallContent(og.id, e.id)),
-							);
-						}
-					}
-					await download_queue.insert(
-						crypto.randomUUID(),
-						true,
-						1,
-						`${profile.loader} ${profile.loader !== "vanilla" ? profile.loader_version : ""}`,
-						profile.icon ?? null,
-						profile.id,
-						"Client",
-						{
-							version: profile.version,
-							loader: profile.loader?.replace(
-								/^\w/,
-								profile.loader[0].toUpperCase(),
-							),
-							loader_version: profile.loader_version,
-						},
+const onFormChange = debounce(async (og: Profile, profile: Profile) => {
+	for (const key of Object.keys(og) as Array<keyof Profile>) {
+		if (og[key] !== profile[key]) {
+			if (key === "loader") {
+				if (og[key] !== "vanilla" && profile[key] !== "vanilla") {
+					const deleteMods = await ask(
+						"Changing the loader may cause installed content to not work. Would you like to delete all installed mods?",
+						{ title: "Loader Switch", kind: "warning" },
 					);
+					if (deleteMods) {
+						const mods =
+							await query`SELECT * FROM profile_content WHERE type = 'Mod' AND profile = ${og.id}`
+								.as(ContentItem)
+								.all();
+
+						await Promise.allSettled(
+							mods.map((e) =>
+								uninstallContentByFilename(e.type, og.id, e.file_name),
+							),
+						);
+					}
 				}
-				await db.execute({
-					query: `UPDATE profiles SET ${key} = ? WHERE id = ?`,
-					args: [profile[key], og.id],
+				await QueueItem.insert({
+					id: crypto.randomUUID(),
+					display: true,
+					priority: 1,
+					display_name: `${profile.loader} ${profile.loader !== "vanilla" ? profile.loader_version : ""}`,
+					icon: profile.icon ?? null,
+					profile_id: profile.id,
+					content_type: ContentType.Client,
+					state: QueueItemState.PENDING,
+					created: new Date().toISOString(),
+					metadata: {
+						version: profile.version,
+						loader: profile.loader?.replace(
+							/^\w/,
+							profile.loader[0].toUpperCase(),
+						),
+						loader_version: profile.loader_version,
+					},
 				});
 			}
+
+			await query`UPDATE profiles SET ${sqlValue(key)} = ${profile[key]} WHERE id = ${og.id}`.run();
 		}
-		await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
-		const cats = await categories.getCategoriesForProfile(og.id);
-		await Promise.allSettled(
-			cats.map((e) =>
-				queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, e.category] }),
-			),
-		);
-	},
-	500,
-);
+	}
+	await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
+	const cats = await getCategoriesFromProfile(og.id);
+	await Promise.allSettled(
+		cats.map((e) =>
+			queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, e.category] }),
+		),
+	);
+}, 500);
 
 function ProfileEdit() {
 	const navigate = Route.useNavigate();
 	const formRef = useRef<HTMLFormElement>(null);
 	const params = Route.useParams();
-	const query = useSuspenseQuery(profileQueryOptions(params.id));
-	const form = useForm<MinecraftProfile>({
-		resolver: zodResolver(profile.schema),
-		defaultValues: query.data,
+	const profileQuery = useSuspenseQuery(profileQueryOptions(params.id));
+	const form = useForm<Profile>({
+		resolver: zodResolver(Profile.schema),
+		defaultValues: profileQuery.data,
 	});
 
 	useEffect(() => {
-		const callback = () => onFormChange(query.data, form.getValues());
+		const callback = () => onFormChange(profileQuery.data, form.getValues());
 		if (formRef.current) {
 			formRef.current.addEventListener("change", callback);
 		}
 		return () => {
 			formRef.current?.removeEventListener("change", callback);
 		};
-	}, [form.getValues, query.data]);
+	}, [form.getValues, profileQuery.data]);
 
 	return (
 		<Form {...form}>
@@ -265,7 +262,7 @@ function ProfileEdit() {
 				<section className="space-y-4 rounded-lg bg-zinc-900 px-4 py-2 shadow-lg">
 					<TypographyH3>Organiztion</TypographyH3>
 
-					<CategorySelect profile={query.data.id} />
+					<CategorySelect profile={profileQuery.data.id} />
 				</section>
 
 				<section className="space-y-4 rounded-lg bg-zinc-900 px-4 py-2 shadow-lg">
@@ -279,17 +276,14 @@ function ProfileEdit() {
 						<Button
 							className="w-32"
 							onClick={async () => {
-								const setting = await settings.get_setting("path.app");
+								const setting = await getConfig("path.app");
 								if (!setting) return;
 								const path = await join(
 									setting?.value,
 									"profiles",
-									query.data.id,
+									profileQuery.data.id,
 									"/",
 								);
-
-								logger.debug(`Open path ${path}`);
-
 								await showInFolder(path);
 							}}
 							type="button"
@@ -310,31 +304,8 @@ function ProfileEdit() {
 							onClick={async () => {
 								try {
 									const id = crypto.randomUUID();
-									await copy_profile(query.data.id, id);
-
-									await db.execute({
-										query:
-											"INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-										args: [
-											id,
-											`${query.data.name}: Duplicate`,
-											query.data.icon,
-											query.data.date_created,
-											query.data.last_played,
-											query.data.version,
-											query.data.loader,
-											query.data.loader_version,
-											query.data.java_args,
-											query.data.resolution_width,
-											query.data.resolution_height,
-											query.data.state,
-										],
-									});
-
-									await queryClient.invalidateQueries({
-										queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
-									});
-									toast.success("Copyed profile");
+									await copyProfile(profileQuery.data, id);
+									toast({ variant: "success", title: "Copyed profile" });
 									navigate({
 										to: "/profile/$id",
 										params: {
@@ -343,9 +314,7 @@ function ProfileEdit() {
 									});
 								} catch (error) {
 									console.error(error);
-									toast.error("Failed to copy", {
-										data: { error: (error as Error).message },
-									});
+									toast({ variant: "error", title: "Failed to copy", error });
 								}
 							}}
 							type="button"
@@ -398,17 +367,7 @@ function ProfileEdit() {
 									<AlertDialogCancel>Cancel</AlertDialogCancel>
 									<AlertDialogAction
 										onClick={async () => {
-											//navigate("/");
-											const cats = await categories.getCategoriesForProfile(
-												query.data.id,
-											);
-											await profile.delete(query.data.id);
-											for (const cat of cats) {
-												await queryClient.invalidateQueries({
-													queryKey: [CATEGORY_KEY, cat.category],
-												});
-											}
-											await deleteProfile(query.data.id);
+											await deleteProfile(profileQuery.data.id);
 
 											navigate({
 												to: "/",

@@ -3,8 +3,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { UpdateIcon } from "@radix-ui/react-icons";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ask } from "@tauri-apps/api/dialog";
-import { toast } from "react-toastify";
+import { ask } from "@tauri-apps/plugin-dialog";
+import toast, { updateToast } from "@component/ui/toast";
 import { useRef } from "react";
 
 import {
@@ -18,49 +18,52 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getProjectVersions } from "@lib/api/modrinth/services.gen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
-import type { ContentType, ProfileContentItem } from "@/lib/models/content";
+import { uninstallContentByFilename } from "@lib/api/plugins/content";
+import { getProjectVersions } from "@lib/api/modrinth/services.gen";
+import type { ContentType } from "@lib/models/download_queue";
+import type { Project } from "@/lib/api/modrinth/types.gen";
 import { modrinthClient } from "@/lib/api/modrinthClient";
-import { db, uninstallItem } from "@/lib/system/commands";
+import type { ContentItem } from "@/lib/models/content";
+import type { Profile } from "@/lib/models/profiles";
 import { install_known } from "@/lib/system/install";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
-import logger from "@system/logger";
-import type { Project } from "@/lib/api/modrinth/types.gen";
-import type { MinecraftProfile } from "@/lib/models/profiles";
 
-async function uninstall(filename: string, type: string, profile: string) {
+async function uninstall(
+	filename: string,
+	type: keyof typeof ContentType,
+	profile: string,
+) {
 	try {
 		if (!filename) throw new Error("Missing file name");
-		await uninstallItem(type, filename, profile);
-
-		await db.execute({
-			query:
-				"DELETE FROM profile_content WHERE profile = ? AND file_name = ? AND type = ?",
-			args: [profile, filename, type],
-		});
+		await uninstallContentByFilename(type, profile, filename);
 
 		await queryClient.invalidateQueries({
 			queryKey: ["WORKSHOP_CONTENT", type, profile],
 		});
 	} catch (error) {
 		console.error(error);
-		logger.error((error as Error).message);
-		toast.error("Failed to uninstall content", {
-			data: { error: (error as Error).message },
+		toast({
+			title: "Failed to uninstall content",
+			description: (error as Error).message,
+			variant: "error",
 		});
 	}
 }
 
 const checkForUpdate = async (
-	profile: MinecraftProfile,
+	profile: Profile,
 	project: Project | null,
-	item: ProfileContentItem,
+	item: ContentItem,
 ) => {
 	if (!project) return;
-	const toastId = toast.loading("Checking for update.");
+	const toastId = toast({
+		title: "Checking for update.",
+		closeButton: false,
+		opts: { isLoading: true },
+	});
 	try {
 		const { data, error, response } = await getProjectVersions({
 			client: modrinthClient,
@@ -68,7 +71,7 @@ const checkForUpdate = async (
 				"id|slug": project.id,
 			},
 			query: {
-				gameVersions: `["${profile.version}"]`,
+				game_versions: `["${profile.version}"]`,
 				loaders:
 					profile.loader !== "vanilla" ? `["${profile.loader}"]` : undefined,
 			},
@@ -90,16 +93,14 @@ const checkForUpdate = async (
 					title: "Update Avaliable",
 					cancelLabel: "No",
 					okLabel: "Update",
-					type: "info",
+					kind: "info",
 				},
 			);
 
 			if (doUpdate) {
-				toast.update(toastId, {
-					render: "Installing new version",
-					type: "info",
+				updateToast(toastId, {
+					data: { title: "Installing new version", variant: "info" },
 					isLoading: false,
-					closeButton: true,
 					autoClose: 5000,
 				});
 				await install_known(
@@ -115,40 +116,35 @@ const checkForUpdate = async (
 			return;
 		}
 
-		toast.update(toastId, {
-			render: "Lastest version installed",
-			data: `Lastest version installed for ${project.title}`,
+		updateToast(toastId, {
+			data: {
+				title: "Updated to latest version.",
+				description: `Lastest version for ${project.title} installed.`,
+				variant: "info",
+			},
 			isLoading: false,
-			type: "info",
-			closeButton: true,
 			autoClose: 5000,
 		});
 	} catch (error) {
 		console.error(error);
-		toast.update(toastId, {
-			render: "Failed to update content",
-			data: error,
-			type: "error",
+		updateToast(toastId, {
+			data: {
+				title: "Failed to update content",
+				description: (error as Error).message,
+				variant: "error",
+			},
 			isLoading: false,
-			closeButton: true,
 			autoClose: 5000,
 		});
 	}
 };
 
 export const ContentTab: React.FC<{
-	profile: MinecraftProfile;
-	content_type: ContentType;
+	profile: Profile;
+	content_type: keyof typeof ContentType;
 	content: UseQueryResult<
 		{
-			record: {
-				id: string;
-				version: string | null;
-				type: "Mod" | "Resourcepack" | "Shader" | "Datapack";
-				profile: string;
-				file_name: string;
-				sha1: string;
-			};
+			record: ContentItem;
 			project: Project | null;
 		}[],
 		Error
@@ -178,7 +174,7 @@ export const ContentTab: React.FC<{
 					<TypographyH3>Something went wrong:</TypographyH3>
 					<pre className="text-red-300">{error.message}</pre>
 				</div>
-			) : data?.length ?? 0 >= 1 ? (
+			) : (data?.length ?? 0 >= 1) ? (
 				<div
 					className="relative w-full"
 					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}

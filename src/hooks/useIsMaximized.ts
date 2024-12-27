@@ -1,6 +1,7 @@
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import { appWindow } from "@tauri-apps/api/window";
 import { useSyncExternalStore } from "react";
+const appWindow = getCurrentWebviewWindow();
 
 class WindowState extends EventTarget {
 	static INSTANCE: WindowState | null = null;

@@ -1,11 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { profile, type MinecraftProfile } from "@lib/models/profiles";
-import { db } from "@system/commands";
+import { useNavigate } from "@tanstack/react-router";
+import { Profile } from "@lib/models/profiles";
+import { query, sqlValue } from "@lib/api/plugins/query";
 import { KEY_PROFILE } from "./keys";
-import logger from "@system/logger";
 
-type RequestType = { type: "patch"; data: Partial<MinecraftProfile> };
+type RequestType = { type: "patch"; data: Partial<Profile> };
 type RequestDelete = { type: "delete"; data: { id: string } };
 
 const handleMutate = async (ev: RequestType | RequestDelete) => {
@@ -13,20 +12,12 @@ const handleMutate = async (ev: RequestType | RequestDelete) => {
 		const values = Object.entries(ev.data)
 			.filter((e) => e[0] !== "id")
 			.map((key, value) => `${key}='${value.toString()}'`);
-
-		await db.execute({
-			query: `UPDATE profiles SET ${values.join(", ")} WHERE id = ?`,
-			args: [ev.data.id],
-		});
-
+		await query`UPDATE profiles SET ${sqlValue(values.join(", "))} WHERE id = ${ev.data.id}`.run();
 		return ev.data;
 	}
 
 	if (ev.type === "delete") {
-		await db.execute({
-			query: "DELETE FROM profiles WHERE id = ?",
-			args: [ev.data.id],
-		});
+		await query`DELETE FROM profiles WHERE id = ${ev.data.id}`.run();
 		return null;
 	}
 };
@@ -38,14 +29,9 @@ export const useProfile = (id?: string, load = true) => {
 		enabled: !!id && load,
 		queryKey: [KEY_PROFILE, id],
 		queryFn: async () => {
-			logger.info(`Loading Profile ${id}`);
-			const data = await db.select({
-				query: "SELECT * FROM profiles WHERE id = ?",
-				args: [id],
-				schema: profile.schema,
-			});
-			const item = data.at(0);
-
+			const item = await query`SELECT * FROM profiles WHERE id = ${id} LIMIT 1;`
+				.as(Profile)
+				.get();
 			if (!item) throw new Error("Failed to get minecraft profile");
 			return item;
 		},
@@ -56,14 +42,14 @@ export const useProfile = (id?: string, load = true) => {
 
 		async onSuccess(data) {
 			if (!data) {
-				navigate("/library");
+				navigate({ to: "/" });
 				return;
 			}
 
 			await queryClient.cancelQueries({ queryKey: [KEY_PROFILE, id] });
-			queryClient.setQueryData<MinecraftProfile>(
+			queryClient.setQueryData<Profile>(
 				[KEY_PROFILE, id],
-				(old) => data as MinecraftProfile,
+				(_old) => data as Profile,
 			);
 		},
 	});

@@ -142,9 +142,6 @@ impl Arg {
     }
 }
 
-// target ${} in arguments
-/// Python example
-/// https://codeberg.org/JakobDev/minecraft-launcher-lib/src/branch/master/minecraft_launcher_lib/_helper.py#L57
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Arguments {
     #[serde(default)]

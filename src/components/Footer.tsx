@@ -1,6 +1,7 @@
 import {
 	Download,
 	FileDiff,
+	Loader2,
 	Monitor,
 	PackagePlus,
 	PlusSquare,
@@ -10,7 +11,7 @@ import {
 	UnauthenticatedTemplate,
 } from "@azure/msal-react";
 import { downloadDir } from "@tauri-apps/api/path";
-import { open } from "@tauri-apps/api/dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import { Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { memo, useState } from "react";
@@ -32,10 +33,11 @@ import {
 	DialogTrigger,
 } from "./ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
+import { useDownloadProgress } from "@/hooks/useDownloadProgress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { download_queue } from "@/lib/models/download_queue";
 import { TypographyMuted } from "@component/ui/typography";
 import import_profiles from "@/lib/system/import_profiles";
+import { QueueItem } from "@/lib/models/download_queue";
 import { QueueItemState } from "@/lib/QueueItemState";
 import { queryClient } from "@/lib/api/queryClient";
 import { useCurrentQueue } from "@/hooks/useQueue";
@@ -43,14 +45,13 @@ import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Progress } from "@component/ui/progress";
 import { Button } from "@component/ui/button";
 import { Form, FormField } from "./ui/form";
-import useDownload from "@hook/useDownload";
 import { Label } from "./ui/label";
 
 type FormState = { importFrom: "modrinth" | "curseforge" };
 
 const Footer = memo(() => {
 	const [openDialog, setOpen] = useState(false);
-	const { progress } = useDownload();
+	const progress = useDownloadProgress();
 	const queueCurrent = useCurrentQueue();
 
 	const form = useForm<FormState>({
@@ -107,15 +108,19 @@ const Footer = memo(() => {
 		const queue_id = crypto.randomUUID();
 		const profile_id = crypto.randomUUID();
 
-		await download_queue.insert(
-			queue_id,
-			true,
-			0,
-			display.queue.name.replace("$PACK_PATH", result),
-			null,
+		await QueueItem.insert({
+			id: queue_id,
+			display: true,
+			priority: 0,
+			display_name: display.queue.name.replace("$PACK_PATH", result),
+			icon: null,
 			profile_id,
-			display.queue.type as never as "Modpack" | "CurseforgeModpack",
-			{
+			created: new Date().toISOString(),
+			content_type: display.queue.type as never as
+				| "Modpack"
+				| "CurseforgeModpack",
+			state: "PENDING",
+			metadata: {
 				content_type: "Modpack",
 				profile: profile_id,
 				files: [
@@ -128,7 +133,7 @@ const Footer = memo(() => {
 					},
 				],
 			},
-		);
+		});
 		await queryClient.invalidateQueries({
 			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 		});
@@ -237,38 +242,37 @@ const Footer = memo(() => {
 					asChild
 				>
 					<Link to="/downloads" className="group">
-						{queueCurrent.data && progress ? (
+						{queueCurrent && progress ? (
 							<div className="flex items-center gap-3">
 								<Avatar className="rounded-none">
 									<AvatarFallback className="rounded-lg">
-										{queueCurrent.data?.content_type === "Client" ? (
+										{queueCurrent.content_type === "Client" ? (
 											<Monitor />
-										) : queueCurrent?.data?.content_type === "Mod" ? (
+										) : queueCurrent.content_type === "Mod" ? (
 											<PackagePlus />
 										) : (
 											<FileDiff />
 										)}
 									</AvatarFallback>
-									<AvatarImage src={queueCurrent.data.icon ?? undefined} />
+									<AvatarImage src={queueCurrent.icon ?? undefined} />
 								</Avatar>
 								<div className="w-96">
 									<div className="flex w-full justify-between">
 										<TypographyMuted asChild className="mb-1 line-clamp-1">
-											<span>{progress.message}</span>
+											<span>{progress.status}</span>
 										</TypographyMuted>
-										<TypographyMuted asChild>
-											<span>
-												{Math.floor(
-													100 * (progress.progress / progress.max_progress),
-												)}
-												%
-											</span>
-										</TypographyMuted>
+										<div className="flex items-center gap-1">
+											<TypographyMuted asChild>
+												<span>
+													{Math.floor(100 * (progress.amount / progress.max))}%
+												</span>
+											</TypographyMuted>
+											<Loader2 className="animate-spin h-4 w-4" />
+										</div>
 									</div>
 									<Progress
-										value={Math.floor(
-											100 * (progress.progress / progress.max_progress),
-										)}
+										className="h-3"
+										value={Math.floor(100 * (progress.amount / progress.max))}
 									/>
 								</div>
 							</div>

@@ -1,4 +1,4 @@
-use super::{download_libraries, utils::ChannelMessage};
+use super::download::download_libraries;
 use log::info;
 use normalize_path::NormalizePath;
 use std::{
@@ -7,32 +7,34 @@ use std::{
 };
 
 use serde::Deserialize;
-use tokio::{
-    fs::{self, File},
-    sync::mpsc,
-};
+use tokio::fs::{self, File};
 
 use super::{
     compression::{self, open_archive},
     utils,
 };
-use crate::event;
+
 use crate::{
-    errors::LauncherError,
-    manifest::{Library, Manifest},
+    error::{Error, Result},
+    events::DownloadEvent,
+    manifest::{Library, Manifest, MavenRepository},
 };
+
+const FORGE_VERSION_LIST_URL: &str =
+    "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml";
+
 #[derive(Debug, Deserialize)]
 struct Mapping {
     client: String,
     //server: String,
 }
 impl Mapping {
-    fn get_client(&self, libary_path: &Path) -> Result<String, LauncherError> {
+    fn get_client(&self, libary_path: &Path) -> Result<String> {
         if self.client.starts_with('[') && self.client.ends_with(']') {
+            let path = MavenRepository::parse(&self.client.replace(['[', ']'], ""))?.as_classpath();
+
             Ok(libary_path
-                .join(Library::get_artifact_path(
-                    &self.client.replace(['[', ']'], ""),
-                )?)
+                .join(path)
                 .normalize()
                 .to_string_lossy()
                 .to_string())
@@ -63,7 +65,7 @@ impl Processor {
         &self,
         mappings: &[(String, String)],
         library_directory: &Path,
-    ) -> Result<Vec<String>, LauncherError> {
+    ) -> Result<Vec<String>> {
         let mut args = Vec::new();
 
         for arg in &self.args {
@@ -71,13 +73,13 @@ impl Processor {
                 let mapping = mappings
                     .iter()
                     .find(|x| x.0 == arg.replace(['{', '}'], ""))
-                    .ok_or(LauncherError::NotFound(format!(
+                    .ok_or(Error::NotFound(format!(
                         "Failed to find mapping for: {}",
                         arg
                     )))?;
                 args.push(mapping.1.to_owned());
             } else if arg.starts_with('[') && arg.ends_with(']') {
-                let path = Library::get_artifact_path(&arg.replace(['[', ']'], ""))?;
+                let path = MavenRepository::parse(&arg.replace(['[', ']'], ""))?.as_classpath();
 
                 args.push(
                     library_directory
@@ -105,10 +107,7 @@ struct InstallProfile {
 }
 
 impl InstallProfile {
-    fn get_mappings(
-        &self,
-        library_directory: &Path,
-    ) -> Result<Vec<(String, String)>, LauncherError> {
+    fn get_mappings(&self, library_directory: &Path) -> Result<Vec<(String, String)>> {
         let mut mappings = Vec::new();
 
         for (key, mapping) in &self.data {
@@ -129,7 +128,7 @@ impl InstallProfile {
         installer_path: &Path,
         runtime_directory: &Path,
         java: &str,
-    ) -> Result<PathBuf, LauncherError> {
+    ) -> Result<PathBuf> {
         let library_directory = runtime_directory.join("libraries");
         let vanilla_jar = runtime_directory
             .join("versions")
@@ -156,18 +155,19 @@ impl InstallProfile {
         for processor in processors {
             let mut classpath = Vec::new();
             for lib in &processor.classpath {
+                let path = MavenRepository::parse(lib)?.as_classpath();
+
                 classpath.push(
                     library_directory
-                        .join(Library::get_artifact_path(lib)?)
+                        .join(path)
                         .normalize()
                         .to_string_lossy()
                         .to_string(),
                 );
             }
 
-            let main_jar = library_directory
-                .join(Library::get_artifact_path(&processor.jar)?)
-                .normalize();
+            let jar_path = MavenRepository::parse(&processor.jar)?.as_classpath();
+            let main_jar = library_directory.join(jar_path).normalize();
 
             classpath.push(main_jar.to_string_lossy().to_string());
 
@@ -192,122 +192,59 @@ impl InstallProfile {
     }
 }
 
-pub async fn get_latest_neoforge_version(minecraft_version: &str) -> Result<String, LauncherError> {
-    let (_, major, _, minor) =
-        lazy_regex::regex_captures!(r"\d\.(?<major>\d+)(\.(?<minor>\d+))?", minecraft_version)
-            .ok_or_else(|| LauncherError::NotFound("Failed to find captures".to_string()))?;
-
-    let minor = if minor.is_empty() { "0" } else { minor };
-
-    let response = utils::REQUEST_CLIENT
-        .get("https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")
-        .send()
-        .await?;
-
-    let data = response.text().await?;
-
-    let regex = regex::Regex::new(&format!(
-        r"<version>(?<loader_version>{}\.{}\.(?<value>\d+)(-beta)?)</version>",
-        major, minor
-    ))?;
-    let caps = regex
-        .captures_iter(&data)
-        .flat_map(|cap| {
-            let rev = if let Some(value) = cap.name("value") {
-                value
-                    .as_str()
-                    .parse::<u64>()
-                    .map_err(|e| LauncherError::Generic(e.to_string()))
-            } else {
-                Err(LauncherError::NotFound(
-                    "value capture not found".to_string(),
-                ))
-            }?;
-            let v = if let Some(value) = cap.name("loader_version") {
-                Ok(value.as_str().to_string())
-            } else {
-                Err(LauncherError::NotFound(
-                    "Capture loader_version not found".to_string(),
-                ))
-            }?;
-
-            Ok::<(u64, String), LauncherError>((rev, v))
-        })
-        .max_by_key(|x| x.0);
-
-    if let Some(value) = caps {
-        Ok(value.1)
-    } else {
-        Err(LauncherError::NotFound(
-            "No valid loader version could be found".to_string(),
-        ))
-    }
-}
-
-pub async fn get_latest_version(minecraft_version: &str) -> Result<String, LauncherError> {
+/// Get the lastest version of forge
+pub async fn get_latest_version(minecraft_version: &str) -> Result<String> {
     let regex = regex::Regex::new(&format!(
         r"<version>{minecraft_version}-(?<loader_version>\d+\.\d+\.\d+)<\/version>"
     ))?;
 
     let response = utils::REQUEST_CLIENT
-        .get("https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml")
+        .get(FORGE_VERSION_LIST_URL)
         .send()
         .await?;
 
     let data = response.text().await?;
 
-    let cap = regex.captures(&data).ok_or(LauncherError::NotFound(
-        "Failed to find capture".to_string(),
-    ))?;
+    let cap = regex
+        .captures(&data)
+        .ok_or(Error::NotFound("Failed to find capture".to_string()))?;
 
-    let loader_version = cap.name("loader_version").ok_or(LauncherError::NotFound(
-        "Failed to get loader_version".to_string(),
-    ))?;
+    let loader_version = cap
+        .name("loader_version")
+        .ok_or(Error::NotFound("Failed to get loader_version".to_string()))?;
 
     Ok(loader_version.as_str().to_string())
 }
 
+/// Get the installer url for forge
 pub async fn get_installer_download_url(
     minecraft: &str,
     loader_version: Option<String>,
-    neoforge: bool,
-) -> Result<(String, String), LauncherError> {
+) -> Result<(String, String)> {
     let loader_version = if let Some(v) = loader_version {
         v
     } else {
-        match neoforge {
-            true => get_latest_neoforge_version(minecraft).await,
-            false => get_latest_version(minecraft).await,
-        }?
+        get_latest_version(minecraft).await?
     };
 
-    let url = match neoforge {
-        true => {
-            format!(" https://maven.neoforged.net/releases/net/neoforged/neoforge/{0}/neoforge-{0}-installer.jar",loader_version)
-        }
-        false => {
-            let forge_version = format!("{}-{}", minecraft, loader_version);
-            format!(
-                "https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar",
-                forge_version
-            )
-        }
-    };
+    let forge_version = format!("{}-{}", minecraft, loader_version);
+    let url = format!(
+        "https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar",
+        forge_version
+    );
 
     Ok((loader_version, url))
 }
 
 pub async fn run_installer(
-    event_channel: &mpsc::Sender<ChannelMessage>,
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
     version: &str,
     loader_version: Option<String>,
     runtime_directory: &Path,
     java: &str,
-    neoforge: bool,
-) -> Result<String, LauncherError> {
-    event!(&event_channel,"update",{ "message":"Fetching mod manifest" });
+) -> Result<String> {
     let (loader_version, download_url) =
-        get_installer_download_url(version, loader_version, neoforge).await?;
+        get_installer_download_url(version, loader_version).await?;
 
     let temp = std::env::temp_dir();
     let installer_path = temp.join(format!("installer-{}.jar", loader_version));
@@ -356,28 +293,31 @@ pub async fn run_installer(
         (profile, modded_manifest_path)
     };
 
-    let manifest = Manifest::read_manifest(&modded_manifest_path, false).await?;
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(2),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
-    event!(&event_channel,"update",{ "progress": 1, "message": "Installing Libraries" });
+    let manifest = Manifest::read_manifest(&modded_manifest_path, false).await?;
 
     tokio::try_join! {
         // profile libraries
         download_libraries(
-            event_channel,
+            on_event,
             runtime_directory,
             &profile.version,
             profile.libraries.to_owned(),
         ),
         // manifest libraries
         download_libraries(
-            event_channel,
+            on_event,
             runtime_directory,
             &manifest.id,
             manifest.libraries,
         )
     }?;
-
-    event!(&event_channel,"update",{ "progress": 1, "message": "Running Processors" });
 
     let lzma_path = temp.join("data/client.lzma").normalize();
     // run processors
@@ -398,7 +338,12 @@ pub async fn run_installer(
         copyed
     );
 
-    event!(&event_channel,"update",{ "progress": 1, "message": "Cleanup" });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(2),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     fs::remove_file(&installer_path).await?;
     fs::remove_file(&lzma_path).await?;
@@ -407,7 +352,12 @@ pub async fn run_installer(
         fs::remove_dir(parent).await?;
     }
 
-    event!(&event_channel,"update",{ "progress": 1 });
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(2),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
 
     Ok(loader_version)
 }
@@ -423,17 +373,7 @@ mod tests {
             .try_init();
     }
 
-    #[tokio::test]
-    async fn test_get_neoforge_version() {
-        init();
-
-        let r = get_latest_neoforge_version("1.20.6")
-            .await
-            .expect("Failed to get");
-        println!("{}", r);
-    }
-
-    #[tokio::test]
+    /*#[tokio::test]
     async fn test_forge_install() {
         init();
 
@@ -450,9 +390,10 @@ mod tests {
         /*run_installer("1.20.6", None, &runtime_dir, "")
         .await
         .expect("Failed to install");*/
-    }
+    }*/
     #[test]
     fn test_get_processer_args() {
+        init();
         let processor = serde_json::from_str::<Processor>(
             r#"
         {

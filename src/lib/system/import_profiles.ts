@@ -1,14 +1,16 @@
-import { BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
+import { BaseDirectory, readTextFile } from "@tauri-apps/plugin-fs";
 import { dataDir, join } from "@tauri-apps/api/path";
-import { open } from "@tauri-apps/api/dialog";
-import { toast } from "react-toastify";
+import { open } from "@tauri-apps/plugin-dialog";
 import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
-import type { MinecraftProfile } from "../models/profiles";
+import { bulk, transaction } from "../api/plugins/query";
+import { ContentType } from "../models/download_queue";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
-import { type Loader, db } from "./commands";
-import logger from "./logger";
+import type { Profile } from "../models/profiles";
+import toast from "@/components/ui/toast";
+
+export type Loader = "vanilla" | "forge" | "fabric" | "quilt" | "neoforge";
 
 const get_version = (
 	lastVersionId: string,
@@ -45,13 +47,15 @@ const import_profiles = async () => {
 		],
 	});
 
-	if (!result || Array.isArray(result)) {
-		toast.error("Failed to import profiles");
+	if (!result) {
+		toast({ variant: "error", title: "Failed to import profiles" });
 		return;
 	}
 
 	try {
-		const content = await readTextFile(result, { dir: BaseDirectory.AppData });
+		const content = await readTextFile(result, {
+			baseDir: BaseDirectory.AppData,
+		});
 		const data = JSON.parse(content) as {
 			profiles: Record<
 				string,
@@ -70,7 +74,7 @@ const import_profiles = async () => {
 		).then((e) => e.json())) as {
 			latest: { release: string; snapshot: string };
 		};
-		const profiles: MinecraftProfile[] = [];
+		const profiles: Profile[] = [];
 
 		for (const [_key, profile] of Object.entries(data.profiles)) {
 			let [version, loader, loader_version] = get_version(
@@ -107,68 +111,52 @@ const import_profiles = async () => {
 			});
 		}
 
-		await db.execute({
-			query: `INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${Array.from(
-				{ length: profiles.length },
-			)
-				.fill(0)
-				.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?)")
-				.join(", ")};`,
-			args: profiles.flatMap((e) => [
-				e.id,
-				e.name,
-				e.icon,
-				e.date_created,
-				e.last_played,
-				e.version,
-				e.loader,
-				e.loader_version,
-				e.java_args,
-				e.resolution_width,
-				e.resolution_width,
-				e.state,
-			]),
+		await transaction((tx) => {
+			tx`INSERT INTO profiles ('id','name','icon','date_created','last_played','version','loader','loader_version','java_args','resolution_width','resolution_height','state') VALUES ${bulk(
+				profiles.map((e) => [
+					e.id,
+					e.name,
+					e.icon,
+					e.date_created,
+					e.last_played,
+					e.version,
+					e.loader,
+					e.loader_version,
+					e.java_args,
+					e.resolution_width,
+					e.resolution_width,
+					e.state,
+				]),
+			)};`;
+
+			tx`INSERT INTO download_queue ('id','priority','display_name','icon','profile_id','content_type','metadata') VALUES ${bulk(
+				profiles.map((e) => [
+					crypto.randomUUID(),
+					0,
+					e.name,
+					e.icon,
+					e.id,
+					ContentType.Client,
+					JSON.stringify({
+						version: e.version,
+						loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
+						loader_version: e.loader_version,
+					}),
+				]),
+			)}`;
 		});
 
 		await queryClient.invalidateQueries({
 			queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
 		});
-
-		await db.execute({
-			query: `INSERT INTO download_queue VALUES ${Array.from({
-				length: profiles.length,
-			})
-				.fill(0)
-				.map((_) => "(?,?,?,?,?,?,?,?,?,?)")
-				.join(", ")};`,
-			args: profiles.flatMap((e) => [
-				crypto.randomUUID(),
-				1,
-				0,
-				e.name,
-				e.icon,
-				e.id,
-				new Date().toISOString(),
-				"Client",
-				JSON.stringify({
-					version: e.version,
-					loader: e.loader.replace(/^\w/, e.loader[0].toUpperCase()),
-					loader_version: e.loader_version,
-				}),
-				"PENDING",
-			]),
-		});
-
 		await queryClient.invalidateQueries({
 			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 		});
 
-		toast.success("Imported Profiles");
+		toast({ variant: "success", title: "Imported Profiles" });
 	} catch (error) {
-		logger.error(error);
-		toast.error("Import profile error!", {
-			data: { error: (error as Error).message },
-		});
+		console.error(error);
+		toast({ variant: "error", title: "Import profile error!", error });
 	}
 };
 

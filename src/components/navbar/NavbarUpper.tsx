@@ -20,8 +20,9 @@ import {
 	Bug,
 	ScrollText,
 } from "lucide-react";
-import { appWindow } from "@tauri-apps/api/window";
-import { exit } from "@tauri-apps/api/process";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { InteractionStatus } from "@azure/msal-browser";
+import { exit } from "@tauri-apps/plugin-process";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -32,11 +33,12 @@ import {
 	DropdownMenuTrigger,
 } from "@component/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
-import { InteractionStatus } from "@masl/utils/BrowserConstants";
+
 import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
+const appWindow = getCurrentWebviewWindow();
 
 export const NavbarUpper: React.FC = () => {
 	const msal = useMsal();
@@ -71,7 +73,7 @@ export const NavbarUpper: React.FC = () => {
 							</Link>
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
-						<DropdownMenuItem onClick={exit as () => void}>
+						<DropdownMenuItem onClick={() => exit()}>
 							<DoorOpen className="h-4 w-4 mr-2" />
 							Exit
 						</DropdownMenuItem>
@@ -119,7 +121,7 @@ export const NavbarUpper: React.FC = () => {
 									? error?.message
 									: isLoading || msal.inProgress === InteractionStatus.Login
 										? "Loading"
-										: account?.details.name ?? "Login"}
+										: (account?.details.name ?? "Login")}
 							</span>
 							<ChevronDown className="h-4 w-4" />
 						</button>

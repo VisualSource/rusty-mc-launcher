@@ -6,6 +6,7 @@ import { lazy } from "react";
 import type { AppContext } from "@/types";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/Footer";
+import AskDialog from "@/components/dialog/AskDialog";
 
 const TanStackRouterDevtools = import.meta.env.DEV
 	? lazy(() =>
@@ -29,6 +30,7 @@ const Index: React.FC = () => {
 				position="bottom-right"
 				theme="dark"
 			/>
+			<AskDialog />
 			<ReactQueryDevtools />
 			<TanStackRouterDevtools position="bottom-right" />
 		</>

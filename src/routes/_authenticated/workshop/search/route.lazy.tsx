@@ -12,9 +12,10 @@ import {
 	TriangleAlert,
 } from "lucide-react";
 import { formatRelative } from "date-fns/formatRelative";
-import { useQuery } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
 import { memo, Suspense, useCallback } from "react";
-
+import { useQuery } from "@tanstack/react-query";
+import { Route as SerachRoute } from "./route";
 import { searchProjects } from "@lib/api/modrinth/services.gen";
 import {
 	Select,
@@ -30,24 +31,23 @@ import {
 	getOffset,
 } from "@/components/workshop/WorkshopPagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
 import { TypographyH3, TypographyH4 } from "@/components/ui/typography";
+import searchManager, { type IndexType } from "@system/searchManager";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-
+import { SearchFilters } from "@/components/workshop/SearchFilters";
 import { modrinthClient } from "@/lib/api/modrinthClient";
-
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ModrinthSearchParams } from "./route";
 import { Loading } from "@/components/Loading";
+import { useSearch } from "@/hooks/useSearch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import debounce from "lodash.debounce";
-import { SearchFilters } from "@/components/workshop/SearchFilters";
 
 const WorkshopHome: React.FC = memo(() => {
-	const search = Route.useSearch();
-	const navigate = Route.useNavigate();
+	const navigate = SerachRoute.useNavigate();
+	const search = useSearch();
+
 	const queryHandler = useCallback(
 		debounce(
 			(
@@ -78,8 +78,7 @@ const WorkshopHome: React.FC = memo(() => {
 
 	const { isError, isLoading, data, error } = useQuery({
 		queryKey: [
-			"MODRINTH",
-			"SEARCH",
+			"MODRINTH_SERACH",
 			search.query,
 			search.index,
 			search.limit,
@@ -132,9 +131,11 @@ const WorkshopHome: React.FC = memo(() => {
 	return (
 		<div className="flex h-full overflow-hidden bg-accent/35">
 			<aside className="w-60 overflow-y-scroll h-full pl-4 space-y-4 scrollbar pb-4">
-				<Suspense fallback={<Loading />}>
-					<SearchFilters search={search} navigate={navigate} />
-				</Suspense>
+				<ErrorBoundary fallback={<div>Error</div>}>
+					<Suspense fallback={<Loading />}>
+						<SearchFilters />
+					</Suspense>
+				</ErrorBoundary>
 			</aside>
 			<div className="w-full h-full overflow-y-scroll flex flex-col scrollbar">
 				<header className="flex px-4 pt-4">
@@ -157,16 +158,10 @@ const WorkshopHome: React.FC = memo(() => {
 
 						<Label className="text-nowrap">Sort By</Label>
 						<Select
-							onValueChange={(e) =>
-								navigate({
-									search: (prev) => ({
-										...prev,
-										index: e as ModrinthSearchParams["index"],
-										offset: 0,
-									}),
-								})
-							}
 							defaultValue={search.index}
+							onValueChange={(e: IndexType) => {
+								searchManager.setIndex(e).setOffset(0).update();
+							}}
 						>
 							<SelectTrigger className="max-w-min">
 								<SelectValue />
@@ -182,16 +177,13 @@ const WorkshopHome: React.FC = memo(() => {
 
 						<Label className="text-nowrap">Show pre page</Label>
 						<Select
-							onValueChange={(e) =>
-								navigate({
-									search: (prev) => ({
-										...prev,
-										limit: Number.parseInt(e),
-										offset: 0,
-									}),
-								})
-							}
 							defaultValue={search.limit.toString()}
+							onValueChange={(e) => {
+								searchManager
+									.setLimit(Number.parseInt(e))
+									.setOffset(0)
+									.update();
+							}}
 						>
 							<SelectTrigger className="max-w-min">
 								<SelectValue />
@@ -263,7 +255,6 @@ const WorkshopHome: React.FC = memo(() => {
 					) : (
 						data?.hits.map((project) => (
 							<Link
-								search={{} as ModrinthSearchParams}
 								key={project.project_id}
 								to="/workshop/project/$id"
 								params={{ id: project.project_id }}

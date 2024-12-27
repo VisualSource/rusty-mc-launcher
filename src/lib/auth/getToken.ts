@@ -1,6 +1,9 @@
-import type { IPublicClientApplication, SilentRequest } from "@masl/index";
-import { startAuthServer, closeAuthServer } from "@system/commands";
-import logger from "@system/logger";
+import type {
+	IPublicClientApplication,
+	SilentRequest,
+} from "@azure/msal-browser";
+import { startAuthServer, closeAuthServer } from "@lib/api/plugins/auth";
+import { debug } from "@tauri-apps/plugin-log";
 
 const getToken = async (
 	instance: IPublicClientApplication,
@@ -12,7 +15,7 @@ const getToken = async (
 			let port = null;
 			try {
 				port = await startAuthServer();
-				logger.debug(`Login port: (${port})`);
+				debug(`Login port: (${port})`);
 				const token = await instance.acquireTokenPopup({
 					...request,
 					redirectUri: `http://localhost:${port}`,

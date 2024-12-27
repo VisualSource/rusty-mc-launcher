@@ -1,8 +1,7 @@
-import { getClient, Body, ResponseType } from "@tauri-apps/api/http";
+import { message } from "@tauri-apps/plugin-dialog";
 import { compareAsc } from "date-fns/compareAsc";
 import { addSeconds } from "date-fns/addSeconds";
-import { auth } from "@system/logger";
-import { message } from "@tauri-apps/api/dialog";
+import { fetch } from "@tauri-apps/plugin-http";
 
 const MINECRAFT_LOGIN =
 	"https://api.minecraftservices.com/authentication/login_with_xbox";
@@ -63,16 +62,14 @@ export async function getMinecraftAccount(
 			return data;
 		}
 	}
-	const http = await getClient();
 
 	// #region Authenticate with Xbox Live.
-	auth.info("Authenticate With Xbox Live");
-	const authRequest = await http.post<{
-		Token: string;
-		DisplayClaims: { xui: { uhs: string }[] };
-	}>(
-		XBOX_AUTHENTICATE,
-		Body.json({
+	const authResponse = await fetch(XBOX_AUTHENTICATE, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
 			Properties: {
 				AuthMethod: "RPS",
 				SiteName: "user.auth.xboxlive.com",
@@ -81,19 +78,26 @@ export async function getMinecraftAccount(
 			RelyingParty: XBOX_LIVE_RELAY,
 			TokenType: "JWT",
 		}),
-		{ responseType: ResponseType.JSON },
-	);
+	});
+	if (!authResponse.ok)
+		throw new Error(authResponse.statusText, { cause: authResponse });
+	const authRequest = (await authResponse.json()) as {
+		Token: string;
+		DisplayClaims: { xui: { uhs: string }[] };
+	};
 
-	const userHash = authRequest.data.DisplayClaims.xui.at(0)?.uhs;
+	const userHash = authRequest.DisplayClaims.xui.at(0)?.uhs;
 	if (!userHash) throw new Error("Failed to get user hash");
-	const xboxToken = authRequest.data.Token;
+	const xboxToken = authRequest.Token;
 	// #endregion
 
 	// #region Authenticate with XSTS
-	auth.info("Authenticate with XSTS");
-	const liveRequest = await http.post<{ Token: string }>(
-		LIVE_AUTHENTICATE,
-		Body.json({
+	const liveResponse = await fetch(LIVE_AUTHENTICATE, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
 			Properties: {
 				SandboxId: "RETAIL",
 				UserTokens: [xboxToken],
@@ -101,60 +105,71 @@ export async function getMinecraftAccount(
 			RelyingParty: MC_LOGIN_RELAY,
 			TokenType: "JWT",
 		}),
-		{ responseType: ResponseType.JSON },
-	);
-
-	const liveToken = liveRequest.data.Token;
+	});
+	if (!liveResponse.ok)
+		throw new Error(liveResponse.statusText, { cause: liveResponse });
+	const liveToken = await liveResponse
+		.json()
+		.then((e) => (e as { Token: string }).Token);
 	// #endregion
 
 	// #region Authenticate with minecraft
-	auth.info("Authenticate with minecraft");
-	const minecraftLoginRequest = await http.post<{ access_token: string }>(
-		MINECRAFT_LOGIN,
-		Body.json({
+
+	const mclResponse = await fetch(MINECRAFT_LOGIN, {
+		method: "POST",
+		body: JSON.stringify({
 			identityToken: `XBL3.0 x=${userHash};${liveToken}`,
 		}),
-		{ responseType: ResponseType.JSON },
-	);
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+	if (!mclResponse.ok)
+		throw new Error(mclResponse.statusText, { cause: mclResponse });
+	const access_token = await mclResponse
+		.json()
+		.then((e) => (e as { access_token: string }).access_token);
 
-	const jwt = JSON.parse(
-		atob(minecraftLoginRequest.data.access_token.split(".")[1]),
-	) as { xuid: string; exp: number };
+	const jwt = JSON.parse(atob(access_token.split(".")[1])) as {
+		xuid: string;
+		exp: number;
+	};
 	const expDate = addSeconds(UNIX_EPOCH_DATE, jwt.exp).toISOString();
 	// #endregion
 
 	//#region Get Minecraft Profile
-	auth.info("Fetching minecraft profile");
-	const userProfile = await http.get<
-		| MinecraftAccount["details"]
-		| { path: string; error: string; errorMessage: string }
-	>(MINECRAFT_PROFILE, {
+
+	const profileResponse = await fetch(MINECRAFT_PROFILE, {
 		headers: {
-			Authorization: `Bearer ${minecraftLoginRequest.data.access_token}`,
+			Authorization: `Bearer ${access_token}`,
 		},
-		responseType: ResponseType.JSON,
 	});
+	if (!profileResponse.ok)
+		throw new Error(profileResponse.statusText, { cause: profileResponse });
+	const profile = (await profileResponse.json()) as
+		| MinecraftAccount["details"]
+		| { path: string; error: string; errorMessage: string };
 
-	if (!userProfile.ok) throw new Error("Failed to load minecraft profile");
-
-	if ("error" in userProfile) {
+	if ("error" in profile) {
 		await message(
 			"Current Microsoft account does not have a minecraft account",
-			{ title: "Minecraft Login", type: "error" },
+			{ title: "Minecraft Login", kind: "error" },
 		);
 		throw new Error("Current account does not have a minecraft account!");
 	}
 
 	//#endregion
 
-	const profile: MinecraftAccount = {
+	const mcprofile: MinecraftAccount = {
 		exp: expDate,
 		xuid: jwt.xuid,
-		token: minecraftLoginRequest.data,
-		details: userProfile.data as MinecraftAccount["details"],
+		token: {
+			access_token,
+		},
+		details: profile,
 	};
 
-	localStorage.setItem(key, JSON.stringify(profile));
+	localStorage.setItem(key, JSON.stringify(mcprofile));
 
-	return profile;
+	return mcprofile;
 }

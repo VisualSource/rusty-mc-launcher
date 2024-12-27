@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { profile } from "@/lib/models/profiles";
-import { db } from "@lib/system/commands";
+import { Profile } from "@/lib/models/profiles";
+import { query } from "@lib/api/plugins/query";
 import { CATEGORY_KEY } from "./keys";
 
 const useCategoryGroup = (category: string | null) => {
@@ -8,12 +8,9 @@ const useCategoryGroup = (category: string | null) => {
 		queryKey: [CATEGORY_KEY, category],
 		queryFn: async () => {
 			if (!category) throw new Error("Invalid id");
-			return db.select({
-				query:
-					"SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ?;",
-				args: [category],
-				schema: profile.schema,
-			});
+			return query`SELECT profiles.* FROM profiles LEFT JOIN categories on profiles.id = categories.profile WHERE categories.category = ${category};`
+				.as(Profile)
+				.all();
 		},
 	});
 	if (error) throw error;

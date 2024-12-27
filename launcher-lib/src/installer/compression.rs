@@ -10,11 +10,12 @@ use tokio::{
 };
 use tokio_util::compat::{Compat, TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
-use crate::errors::LauncherError;
+use crate::error::{Error, Result};
 
 type Archive = ZipFileReader<Compat<BufReader<File>>>;
 
-pub async fn get_mainclass(file: &Path) -> Result<String, LauncherError> {
+/// Gets the main class from the MANIFEST.MF inside of a java jar file
+pub async fn get_mainclass(file: &Path) -> Result<String> {
     let mut archive = open_archive(File::open(file).await?).await?;
 
     let file_index = archive
@@ -26,9 +27,7 @@ pub async fn get_mainclass(file: &Path) -> Result<String, LauncherError> {
                 .as_str()
                 .is_ok_and(|x| x.ends_with("MANIFEST.MF"))
         })
-        .ok_or(LauncherError::NotFound(
-            "Failed to get index of file".to_string(),
-        ))?;
+        .ok_or(Error::NotFound("Failed to get index of file".to_string()))?;
 
     let mut entry_reader = archive.reader_without_entry(file_index).await?;
 
@@ -37,26 +36,22 @@ pub async fn get_mainclass(file: &Path) -> Result<String, LauncherError> {
     info!("Read {} bytes from archive", bytes);
 
     let (_, main_class) = lazy_regex::regex_captures!(r"Main-Class: (?<main_class>.+)", &buffer)
-        .ok_or(LauncherError::NotFound(
-            "Failed to get main class".to_string(),
-        ))?;
+        .ok_or(Error::NotFound("Failed to get main class".to_string()))?;
 
     Ok(main_class.trim().to_owned())
 }
 
 /// open archive
-pub async fn open_archive(file: File) -> Result<Archive, LauncherError> {
+pub async fn open_archive(file: File) -> Result<Archive> {
     let archive = tokio::io::BufReader::new(file).compat();
-    ZipFileReader::new(archive)
-        .await
-        .map_err(LauncherError::from)
+    ZipFileReader::new(archive).await.map_err(Error::from)
 }
 
-/// extract a file from archive and parse into given value.
+/// extract a file from archive and parse json.
 pub async fn parse_extract<T>(
     reader: &mut ZipFileReader<Compat<BufReader<File>>>,
     filename: &str,
-) -> Result<T, LauncherError>
+) -> Result<T>
 where
     T: DeserializeOwned,
 {
@@ -65,9 +60,7 @@ where
         .entries()
         .iter()
         .position(|item| item.filename().as_str().is_ok_and(|x| x == filename))
-        .ok_or(LauncherError::NotFound(
-            "Failed to get index of file".to_string(),
-        ))?;
+        .ok_or(Error::NotFound("Failed to get index of file".to_string()))?;
 
     let mut entry_reader = reader.reader_without_entry(file_index).await?;
 
@@ -76,39 +69,34 @@ where
 
     info!("Read {} bytes from archive", bytes);
 
-    serde_json::from_slice::<T>(&buffer).map_err(LauncherError::from)
+    serde_json::from_slice::<T>(&buffer).map_err(Error::from)
 }
 
-/// extract a file from archive
-pub async fn extract_file_to(
-    archive: &mut Archive,
-    filename: &str,
-    outdir: &Path,
-) -> Result<u64, LauncherError> {
+/// extract a file from a archive
+pub async fn extract_file_to(archive: &mut Archive, filename: &str, outdir: &Path) -> Result<u64> {
     let file_index = archive
         .file()
         .entries()
         .iter()
         .position(|item| item.filename().as_str().is_ok_and(|x| x == filename))
-        .ok_or(LauncherError::NotFound(
-            "Failed to get index of file".to_string(),
-        ))?;
+        .ok_or(Error::NotFound("Failed to get index of file".to_string()))?;
 
     extract_file_at(archive, file_index, outdir, None).await
 }
 
+/// Extract a directory in the archive
 pub async fn extract_dir(
     archive: &mut Archive,
     dir: &str,
     outdir: &Path,
     modpath: Option<fn(&str) -> String>,
-) -> Result<(), LauncherError> {
+) -> Result<()> {
     for index in 0..archive.file().entries().len() {
         let entry = archive
             .file()
             .entries()
             .get(index)
-            .ok_or(LauncherError::Generic("Failed to get entry".to_string()))?;
+            .ok_or(Error::Generic("Failed to get entry".to_string()))?;
 
         let file_name = entry.filename().as_str()?;
         if file_name.starts_with(dir) {
@@ -121,7 +109,7 @@ pub async fn extract_dir(
 }
 
 /// Extract all files from archive
-pub async fn extract_all(archive: &mut Archive, outdir: &Path) -> Result<(), LauncherError> {
+pub async fn extract_all(archive: &mut Archive, outdir: &Path) -> Result<()> {
     for index in 0..archive.file().entries().len() {
         extract_file_at(archive, index, outdir, None).await?;
     }
@@ -134,12 +122,12 @@ async fn extract_file_at(
     index: usize,
     outdir: &Path,
     modpath: Option<fn(&str) -> String>,
-) -> Result<u64, LauncherError> {
+) -> Result<u64> {
     let entry = archive
         .file()
         .entries()
         .get(index)
-        .ok_or(LauncherError::Generic("Failed to get entry".to_string()))?;
+        .ok_or(Error::Generic("Failed to get entry".to_string()))?;
 
     let filename = entry.filename().as_str()?;
 
