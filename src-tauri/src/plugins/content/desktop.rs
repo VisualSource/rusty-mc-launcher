@@ -26,17 +26,17 @@ async fn install_client(
         return Err(Error::Reason("Invalid client metadata".to_string()));
     };
 
-    Profile::set_state(&item.id, ProfileState::Installing, &db).await?;
+    Profile::set_state(&item.id, ProfileState::Installing, db).await?;
 
     if let Err(err) = on_event.send(DownloadEvent::RefreshProfile) {
         log::error!("{}", err)
     }
     tokio::time::sleep(Duration::from_secs(1)).await;
 
-    if let Some(loader_version) = install_minecraft(config, &db, on_event).await? {
-        Profile::set_loader_version(&item.profile_id, &loader_version, &db).await?;
+    if let Some(loader_version) = install_minecraft(config, db, on_event).await? {
+        Profile::set_loader_version(&item.profile_id, &loader_version, db).await?;
     }
-    Profile::set_state(&item.profile_id, ProfileState::Installed, &db).await?;
+    Profile::set_state(&item.profile_id, ProfileState::Installed, db).await?;
 
     Ok(())
 }
@@ -52,7 +52,7 @@ async fn install_cf_modpack(
         return Err(Error::Reason("Invalid metadata config".to_string()));
     };
 
-    install_curseforge_modpack(&db, config, on_event).await?;
+    install_curseforge_modpack(db, config, on_event).await?;
 
     Ok(())
 }
@@ -68,7 +68,7 @@ async fn install_content(
         return Err(Error::Reason("Invalid metadata config".to_string()));
     };
 
-    content::install_content(config, item.icon.clone(), &db, on_event).await?;
+    content::install_content(config, item.icon.clone(), db, on_event).await?;
 
     Ok(())
 }
@@ -125,7 +125,7 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
                 log::error!("{}", err);
             }
 
-            if let Err(err) = emitter.send(DownloadEvent::Finished {}) {
+            if let Err(err) = emitter.send(DownloadEvent::Finished) {
                 log::error!("{}", err);
             }
         }
