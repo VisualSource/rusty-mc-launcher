@@ -53,7 +53,9 @@ const PlayButton: React.FC<
 			{...props}
 			onClick={async () => {
 				if (isRunning) {
-					await stop(profile.id);
+					await stop(profile.id).catch((e) => {
+						console.error(e);
+					});
 					return;
 				}
 				try {
@@ -68,8 +70,8 @@ const PlayButton: React.FC<
 						}),
 						pendingTitle: "Starting Minecrafts",
 						successTitle: "Launched Minecraft",
-						errorTitle: "Failed to start"
-					})
+						errorTitle: "Failed to start",
+					});
 				} catch (error) {
 					console.error(error);
 				}

@@ -30,12 +30,6 @@ pub async fn launch_game<R: Runtime>(
 }
 
 #[tauri::command]
-pub async fn is_running(ps: tauri::State<'_, PluginGameState>, id: String) -> Result<bool, Error> {
-    let mut state = ps.0.write().await;
-    state.is_running(&id).await.map_err(Error::Lib)
-}
-
-#[tauri::command]
 pub async fn stop(ps: tauri::State<'_, PluginGameState>, id: String) -> Result<(), Error> {
     let mut state = ps.0.write().await;
 

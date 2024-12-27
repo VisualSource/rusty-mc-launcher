@@ -68,7 +68,7 @@ export class ProcessState extends EventTarget {
 
 				const exitOnStart = await isOption("option.exit_on_start", "TRUE");
 				if (exitOnStart) {
-					setTimeout(() => exit(0).catch(e => console.error(e)), 6000);
+					setTimeout(() => exit(0).catch((e) => console.error(e)), 6000);
 				}
 				break;
 			}

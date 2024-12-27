@@ -253,6 +253,7 @@ pub async fn start_game(
     args.push(manifest.main_class);
     args.extend(game_args);
 
+    log::debug!("Spawning processes");
     let ps = Process::spawn(java_exe, args, profile.id, &game_directory).await?;
 
     let mut state = processes.write().await;

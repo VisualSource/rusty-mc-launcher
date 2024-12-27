@@ -10,22 +10,24 @@ use crate::{
 #[derive(Default)]
 pub struct Processes {
     pub state: HashMap<String, Process>,
-    active: Vec<String>,
+    // profile id to process id
+    ptu: HashMap<String, String>,
 }
 
 impl Processes {
     pub fn insert(&mut self, process: Process) {
-        self.active.push(process.profile_id.clone());
+        self.ptu
+            .insert(process.profile_id.clone(), process.uuid.clone());
         self.state.insert(process.uuid.clone(), process);
     }
     pub fn remove(&mut self, uuid: &str) {
         if let Some(data) = self.state.remove(uuid) {
-            self.active.retain(|x| x != &data.profile_id);
+            self.ptu.remove(&data.profile_id);
         }
     }
 
-    pub fn get_running(&self) -> &Vec<String> {
-        &self.active
+    pub fn get_running(&self) -> Vec<String> {
+        self.ptu.keys().cloned().collect::<Vec<String>>()
     }
 
     pub fn remove_list(&mut self, uuids: &Vec<&String>) {
@@ -41,16 +43,14 @@ impl Processes {
     pub fn get(&self, uuid: &str) -> Option<&Process> {
         self.state.get(uuid)
     }
-    pub fn get_mut(&mut self, uuid: &str) -> Option<&mut Process> {
-        self.state.get_mut(uuid)
+    pub fn get_mut(&mut self, profile_id: &str) -> Option<&mut Process> {
+        if let Some(uuid) = self.ptu.get(profile_id) {
+            self.state.get_mut(uuid)
+        } else {
+            None
+        }
     }
 
-    pub async fn is_running(&mut self, uuid: &str) -> Result<bool> {
-        if let Some(process) = self.state.get_mut(uuid) {
-            return Ok(process.status().await?.is_none());
-        }
-        Ok(false)
-    }
     pub async fn remove_from_cache(
         &mut self,
         rwdb: &RwDatabase,
@@ -93,7 +93,8 @@ impl Processes {
                     continue;
                 }
 
-                self.active.push(cache.profile_id.clone());
+                self.ptu
+                    .insert(cache.profile_id.clone(), cache.uuid.clone());
 
                 cache.child = InstanceType::Partial(process.pid().as_u32());
                 self.insert(cache);

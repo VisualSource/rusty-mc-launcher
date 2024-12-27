@@ -1,16 +1,16 @@
 [default]
 description = "Default permissions for the rmcl-game plugin"
-permissions = ["allow-launch-game","allow-is-running","allow-list-active-processes"]
+permissions = ["allow-launch-game","allow-list-active-processes","allow-stop"]
+
+[[permission]]
+identifier = "allow-stop"
+description = "Stop a started game"
+commands.allow = ["stop"]
 
 [[permission]]
 identifier = "allow-launch-game"
 description = "Allow for starting the game"
 commands.allow = ["launch_game"]
-
-[[permission]]
-identifier = "allow-is-running"
-description = "Allow for checking if a game profile is running."
-commands.allow = ["is_running"]
 
 [[permission]]
 identifier = "allow-list-active-processes"

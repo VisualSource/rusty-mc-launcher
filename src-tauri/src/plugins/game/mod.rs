@@ -70,7 +70,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         })
         .invoke_handler(tauri::generate_handler![
             commands::launch_game,
-            commands::is_running,
             commands::stop,
             commands::list_active_processes
         ])

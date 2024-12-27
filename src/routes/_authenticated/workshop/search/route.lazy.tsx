@@ -15,7 +15,7 @@ import { formatRelative } from "date-fns/formatRelative";
 import { ErrorBoundary } from "react-error-boundary";
 import { memo, Suspense, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Route as SerachRoute } from "./route"
+import { Route as SerachRoute } from "./route";
 import { searchProjects } from "@lib/api/modrinth/services.gen";
 import {
 	Select,
@@ -67,8 +67,8 @@ const WorkshopHome: React.FC = memo(() => {
 					search: (prev) => ({
 						...prev,
 						query,
-						offset: 0
-					})
+						offset: 0,
+					}),
 				});
 			},
 			500,
@@ -157,9 +157,12 @@ const WorkshopHome: React.FC = memo(() => {
 						</form>
 
 						<Label className="text-nowrap">Sort By</Label>
-						<Select defaultValue={search.index} onValueChange={(e: IndexType) => {
-							searchManager.setIndex(e).setOffset(0).update();
-						}}>
+						<Select
+							defaultValue={search.index}
+							onValueChange={(e: IndexType) => {
+								searchManager.setIndex(e).setOffset(0).update();
+							}}
+						>
 							<SelectTrigger className="max-w-min">
 								<SelectValue />
 							</SelectTrigger>
@@ -173,9 +176,15 @@ const WorkshopHome: React.FC = memo(() => {
 						</Select>
 
 						<Label className="text-nowrap">Show pre page</Label>
-						<Select defaultValue={search.limit.toString()} onValueChange={(e) => {
-							searchManager.setLimit(Number.parseInt(e)).setOffset(0).update();
-						}}>
+						<Select
+							defaultValue={search.limit.toString()}
+							onValueChange={(e) => {
+								searchManager
+									.setLimit(Number.parseInt(e))
+									.setOffset(0)
+									.update();
+							}}
+						>
 							<SelectTrigger className="max-w-min">
 								<SelectValue />
 							</SelectTrigger>

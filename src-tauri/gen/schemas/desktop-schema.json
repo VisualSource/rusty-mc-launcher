@@ -2045,11 +2045,6 @@
           "const": "allow-import-external"
         },
         {
-          "description": "Allow for checking if a game profile is running.",
-          "type": "string",
-          "const": "allow-is-running"
-        },
-        {
           "description": "Allow for starting the game",
           "type": "string",
           "const": "allow-launch-game"
@@ -2068,6 +2063,11 @@
           "description": "Enables the startAuthServer command.",
           "type": "string",
           "const": "allow-start-auth-server"
+        },
+        {
+          "description": "Stop a started game",
+          "type": "string",
+          "const": "allow-stop"
         },
         {
           "description": "Allow for uninstalling content from disk",
@@ -5245,11 +5245,6 @@
           "const": "rmcl-game:default"
         },
         {
-          "description": "Allow for checking if a game profile is running.",
-          "type": "string",
-          "const": "rmcl-game:allow-is-running"
-        },
-        {
           "description": "Allow for starting the game",
           "type": "string",
           "const": "rmcl-game:allow-launch-game"
@@ -5258,6 +5253,11 @@
           "description": "Allow for listing the active minecraft instances",
           "type": "string",
           "const": "rmcl-game:allow-list-active-processes"
+        },
+        {
+          "description": "Stop a started game",
+          "type": "string",
+          "const": "rmcl-game:allow-stop"
         },
         {
           "description": "Default permissions for the rmcl-query plugin",

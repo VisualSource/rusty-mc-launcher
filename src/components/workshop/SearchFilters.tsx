@@ -29,62 +29,66 @@ function filterOn(name: string, list: LoaderTag[]): LoaderTag[] {
 export const SearchFilters: React.FC = () => {
 	const search = useSearch();
 
-	const [categoires, modrinthLoaders, modrinthProjectTypes] = useSuspenseQueries({
-		queries: [
-			{
-				queryKey: ["MODRINTH_TAGS_CATEGORIES"],
-				queryFn: async () => {
-					const { error, data, response } = await categoryList({
-						client: modrinthClient,
-					});
-					if (error) throw error;
-					if (!response.ok || !data)
-						throw new Error("Failed to load categories", { cause: response });
+	const [categoires, modrinthLoaders, modrinthProjectTypes] =
+		useSuspenseQueries({
+			queries: [
+				{
+					queryKey: ["MODRINTH_TAGS_CATEGORIES"],
+					queryFn: async () => {
+						const { error, data, response } = await categoryList({
+							client: modrinthClient,
+						});
+						if (error) throw error;
+						if (!response.ok || !data)
+							throw new Error("Failed to load categories", { cause: response });
 
-					const headers = Object.groupBy(data, (e) => e.header);
+						const headers = Object.groupBy(data, (e) => e.header);
 
-					const output: Record<string, Record<string, CategoryTag[]>> = {};
-					for (const [header, values] of Object.entries(headers)) {
-						if (!values) continue;
+						const output: Record<string, Record<string, CategoryTag[]>> = {};
+						for (const [header, values] of Object.entries(headers)) {
+							if (!values) continue;
 
-						const groups: Record<string, CategoryTag[]> = {};
-						for (const value of values) {
-							if (!groups[value.project_type]) groups[value.project_type] = [];
-							groups[value.project_type].push(value);
+							const groups: Record<string, CategoryTag[]> = {};
+							for (const value of values) {
+								if (!groups[value.project_type])
+									groups[value.project_type] = [];
+								groups[value.project_type].push(value);
+							}
+
+							output[header] = groups;
 						}
 
-						output[header] = groups;
-					}
-
-					return output;
+						return output;
+					},
 				},
-			},
-			{
-				queryKey: ["MODRINTH_TAGS_LOADERS"],
-				queryFn: async () => {
-					const { data, error, response } = await loaderList({
-						client: modrinthClient,
-					});
-					if (error) throw error;
-					if (!response.ok || !data)
-						throw new Error("Failed to load categories", { cause: response });
-					return data;
+				{
+					queryKey: ["MODRINTH_TAGS_LOADERS"],
+					queryFn: async () => {
+						const { data, error, response } = await loaderList({
+							client: modrinthClient,
+						});
+						if (error) throw error;
+						if (!response.ok || !data)
+							throw new Error("Failed to load categories", { cause: response });
+						return data;
+					},
 				},
-			},
-			{
-				queryKey: ["MODRINTH_TAGS_PROJECT_TYPES"],
-				queryFn: async () => {
-					const { data, error, response } = await projectTypeList({
-						client: modrinthClient,
-					});
-					if (error) throw error;
-					if (!response.ok || !data)
-						throw new Error("Failed to load project types", { cause: response });
-					return data.filter((e) => !["plugin", "datapack"].includes(e));
+				{
+					queryKey: ["MODRINTH_TAGS_PROJECT_TYPES"],
+					queryFn: async () => {
+						const { data, error, response } = await projectTypeList({
+							client: modrinthClient,
+						});
+						if (error) throw error;
+						if (!response.ok || !data)
+							throw new Error("Failed to load project types", {
+								cause: response,
+							});
+						return data.filter((e) => !["plugin", "datapack"].includes(e));
+					},
 				},
-			}
-		]
-	});
+			],
+		});
 
 	const projectType = search.facets.getProjectType();
 	const showLoaders = search.facets.isAnyProject(SHOW_LOADERS_ON);
@@ -108,12 +112,13 @@ export const SearchFilters: React.FC = () => {
 		<>
 			<div className="space-y-2">
 				<TypographyH3>Project Type</TypographyH3>
-				<RadioGroup defaultValue={search.facets.getDisplayProjectType()}
+				<RadioGroup
+					defaultValue={search.facets.getDisplayProjectType()}
 					onValueChange={(e) => {
 						searchManager.facets.setProjectType(e);
 						searchManager.setOffset(0).setQuery(undefined).update();
-
-					}}>
+					}}
+				>
 					{modrinthProjectTypes.data?.map((item) => (
 						<div key={item} className="flex items-center space-x-2">
 							<RadioGroupItem value={item} id={`${item}_radio_opt`} />
@@ -161,7 +166,8 @@ export const SearchFilters: React.FC = () => {
 								onChange={() => {
 									searchManager.facets.toggleLoader(item.name);
 									searchManager.update();
-								}} />
+								}}
+							/>
 						))}
 					</ul>
 				</div>
@@ -198,10 +204,12 @@ export const SearchFilters: React.FC = () => {
 							</Label>
 						</li>
 						<li className="flex items-center space-x-2">
-							<Checkbox onCheckedChange={() => {
-								searchManager.facets.toggleEnv("server");
-								searchManager.update();
-							}} />
+							<Checkbox
+								onCheckedChange={() => {
+									searchManager.facets.toggleEnv("server");
+									searchManager.update();
+								}}
+							/>
 							<Label className="inline-flex items-center gap-1">
 								<span className="inline-block h-4 w-4">
 									<svg

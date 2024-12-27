@@ -1,6 +1,11 @@
 import { Facets } from "../Facets";
 
-export type IndexType = "relevance" | "downloads" | "follows" | "newest" | "updated";
+export type IndexType =
+	| "relevance"
+	| "downloads"
+	| "follows"
+	| "newest"
+	| "updated";
 
 const DEFUALT_FACETS = [
 	[
@@ -25,7 +30,7 @@ class SearchManager extends EventTarget {
 		limit: this.limit,
 		offset: this.offset,
 		query: this.query,
-		index: this.index
+		index: this.index,
 	};
 
 	public update() {
@@ -34,8 +39,8 @@ class SearchManager extends EventTarget {
 			limit: this.limit,
 			offset: this.offset,
 			query: this.query,
-			index: this.index
-		}
+			index: this.index,
+		};
 		this.dispatchEvent(new Event("update"));
 	}
 	public setLimit(value: number) {
@@ -44,7 +49,8 @@ class SearchManager extends EventTarget {
 		return this;
 	}
 	public setOffset(value: number) {
-		if (value < 0) throw new Error("Value needs to be greater then or equal to 0");
+		if (value < 0)
+			throw new Error("Value needs to be greater then or equal to 0");
 		this.offset = value;
 		return this;
 	}

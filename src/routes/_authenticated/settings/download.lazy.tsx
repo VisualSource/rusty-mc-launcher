@@ -20,8 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
 
-
-const JavaJREForamt = /zulu(?<zulu>\d+\.\d+\.\d+)-ca-jre(?<jre>\d+\.\d+\.\d+)-(?<platform>\w+)/
+const JavaJREForamt =
+	/zulu(?<zulu>\d+\.\d+\.\d+)-ca-jre(?<jre>\d+\.\d+\.\d+)-(?<platform>\w+)/;
 
 const OPTION_PATH_APP = "path.app";
 const APLICATION_RUNTIMES_AND_VERSIONS = "APPLICATION_RUNTIMES_AND_VERSIONS";
@@ -40,31 +40,35 @@ function DownloadSettings() {
 			const runtime_dir = await join(path.value, "runtime");
 
 			const [versions, java] = await Promise.all([
-				join(runtime_dir, "versions").then(dir => readDir(dir)),
-				join(runtime_dir, "java").then(dir => readDir(dir)).then(dirs => dirs.map(dir => {
-					const match = dir.name.match(JavaJREForamt);
-					if (!match) {
-						return {
-							name: dir.name,
-							folder: dir.name
-						}
-					}
+				join(runtime_dir, "versions").then((dir) => readDir(dir)),
+				join(runtime_dir, "java")
+					.then((dir) => readDir(dir))
+					.then((dirs) =>
+						dirs.map((dir) => {
+							const match = dir.name.match(JavaJREForamt);
+							if (!match) {
+								return {
+									name: dir.name,
+									folder: dir.name,
+								};
+							}
 
-					const zuluBuild = match.groups?.zulu ?? "Unknown"
-					const jre = match.groups?.jre ?? "Unknown";
-					const platform = match.groups?.platform ?? "Unknown";
+							const zuluBuild = match.groups?.zulu ?? "Unknown";
+							const jre = match.groups?.jre ?? "Unknown";
+							const platform = match.groups?.platform ?? "Unknown";
 
-					return {
-						name: `Java ${jre} for ${platform}. (Zulu ${zuluBuild})`,
-						folder: dir.name
-					}
-				}))
+							return {
+								name: `Java ${jre} for ${platform}. (Zulu ${zuluBuild})`,
+								folder: dir.name,
+							};
+						}),
+					),
 			]);
 
 			return {
 				java,
-				versions
-			}
+				versions,
+			};
 		},
 	});
 	const form = useForm<{ dir: string }>({
@@ -141,7 +145,10 @@ function DownloadSettings() {
 				</p>
 				<ul className="w-full max-h-32 overflow-y-scroll divide-y">
 					{data.versions.map((version, key) => (
-						<li className="hover:bg-gray-300/10" key={`${version.name}_${key + 1}`}>
+						<li
+							className="hover:bg-gray-300/10"
+							key={`${version.name}_${key + 1}`}
+						>
 							<button type="button" className="p-2 w-full text-left">
 								{version.name}
 							</button>
@@ -157,7 +164,10 @@ function DownloadSettings() {
 				</p>
 				<ul className="w-full max-h-32 overflow-y-scroll divide-y">
 					{data.java.map((version, key) => (
-						<li className="hover:bg-gray-300/10" key={`${version.name}_${key + 1}`}>
+						<li
+							className="hover:bg-gray-300/10"
+							key={`${version.name}_${key + 1}`}
+						>
 							<button type="button" className="p-2 w-full text-left">
 								{version.name}
 							</button>
@@ -165,7 +175,6 @@ function DownloadSettings() {
 					))}
 				</ul>
 			</section>
-
 		</div>
 	);
 }

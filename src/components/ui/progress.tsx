@@ -1,7 +1,12 @@
 import { Root, Indicator } from "@radix-ui/react-progress";
 import { cn } from "@/lib/utils";
 
-export const Progress: React.FC<React.ComponentPropsWithRef<typeof Root>> = ({ className, value, ref, ...props }) => (
+export const Progress: React.FC<React.ComponentPropsWithRef<typeof Root>> = ({
+	className,
+	value,
+	ref,
+	...props
+}) => (
 	<Root
 		ref={ref}
 		className={cn(

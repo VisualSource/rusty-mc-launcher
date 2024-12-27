@@ -66,35 +66,35 @@ const Footer = memo(() => {
 		const display =
 			state.importFrom === "modrinth"
 				? {
-					queue: {
-						name: "MrPack($PACK_PATH)",
-						type: "Modpack",
-					},
-					dialog: {
-						title: "Import Mrpack",
-						filters: [
-							{
-								name: "Mrpack",
-								extensions: ["mrpack"],
-							},
-						],
-					},
-				}
+						queue: {
+							name: "MrPack($PACK_PATH)",
+							type: "Modpack",
+						},
+						dialog: {
+							title: "Import Mrpack",
+							filters: [
+								{
+									name: "Mrpack",
+									extensions: ["mrpack"],
+								},
+							],
+						},
+					}
 				: {
-					queue: {
-						name: "Curseforge Modpack ($PACK_PATH)",
-						type: "CurseforgeModpack",
-					},
-					dialog: {
-						title: "Import Modpack",
-						filters: [
-							{
-								name: "Zip",
-								extensions: ["zip"],
-							},
-						],
-					},
-				};
+						queue: {
+							name: "Curseforge Modpack ($PACK_PATH)",
+							type: "CurseforgeModpack",
+						},
+						dialog: {
+							title: "Import Modpack",
+							filters: [
+								{
+									name: "Zip",
+									extensions: ["zip"],
+								},
+							],
+						},
+					};
 
 		const result = await open({
 			multiple: false,
@@ -269,9 +269,9 @@ const Footer = memo(() => {
 											</TypographyMuted>
 											<Loader2 className="animate-spin h-4 w-4" />
 										</div>
-
 									</div>
-									<Progress className="h-3"
+									<Progress
+										className="h-3"
 										value={Math.floor(100 * (progress.amount / progress.max))}
 									/>
 								</div>

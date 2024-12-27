@@ -18,7 +18,7 @@ const UpdateQueues = (profile: string) =>
 		[KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
 		[KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
 		[KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
-		[KEY_PROFILE, profile]
+		[KEY_PROFILE, profile],
 	]);
 
 class DownloadManager extends EventTarget {
@@ -84,14 +84,16 @@ class DownloadManager extends EventTarget {
 				this.progress = null;
 				this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_CURRENT));
 				this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_PROGRESS));
-				await UpdateQueues(this.current?.profile ?? "").catch((e) => console.error(e));
+				await UpdateQueues(this.current?.profile ?? "").catch((e) =>
+					console.error(e),
+				);
 				this.current = null;
 				break;
 			}
 			case "refreshProfile":
 				queryClient.invalidateQueries({
-					queryKey: [KEY_PROFILE, this.current?.profile ?? ""]
-				})
+					queryKey: [KEY_PROFILE, this.current?.profile ?? ""],
+				});
 				break;
 			default:
 				break;
