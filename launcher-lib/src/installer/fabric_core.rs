@@ -38,44 +38,7 @@ pub async fn get_latest_installer(url: &str) -> Result<String> {
     Ok(version.to_owned())
 }
 
-pub async fn run_fabric_like_installer(
-    installer_url: &str,
-    cli_args: Vec<&str>,
-    modded_version: &str,
-    vanilla_jar: &Path,
-    runtime_directory: &Path,
-    java: &str,
-    on_event: &tauri::ipc::Channel<DownloadEvent>,
-) -> Result<()> {
-    let temp_name = uuid::Uuid::new_v4();
-    let installer_path = std::env::temp_dir();
-    let installer_file = installer_path
-        .join(format!("fabric-like-installer-{}.jar", temp_name))
-        .normalize();
-
-    utils::download_file(installer_url, &installer_file, None, None).await?;
-
-    if !installer_path.exists() {
-        return Err(Error::NotFound("Failed to find installer".to_string()));
-    }
-
-    on_event
-        .send(crate::events::DownloadEvent::Progress {
-            amount: Some(2),
-            message: None,
-        })
-        .map_err(|err| Error::Generic(err.to_string()))?;
-
-    let mut args = vec![
-        "-jar",
-        installer_file
-            .to_str()
-            .ok_or_else(|| Error::Generic("Failed to get str".to_string()))?,
-    ];
-    args.extend(cli_args);
-
-    log::debug!("Running installer with args {:?}", args);
-
+async fn run_installer(java: &str, installer_path: &Path, args: &Vec<&str>) -> Result<()> {
     let mut child = tokio::process::Command::new(java)
         .current_dir(installer_path)
         .stdout(Stdio::piped())
@@ -134,6 +97,61 @@ pub async fn run_fabric_like_installer(
 
         stdout.consume(stdout_bytes);
         stderr.consume(stderr_bytes);
+    }
+
+    Ok(())
+}
+
+pub async fn run_fabric_like_installer(
+    installer_url: &str,
+    cli_args: Vec<&str>,
+    modded_version: &str,
+    vanilla_jar: &Path,
+    runtime_directory: &Path,
+    java: &str,
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
+) -> Result<()> {
+    let temp_name = uuid::Uuid::new_v4();
+    let installer_path = std::env::temp_dir();
+    let installer_file = installer_path
+        .join(format!("fabric-like-installer-{}.jar", temp_name))
+        .normalize();
+
+    utils::download_file(installer_url, &installer_file, None, None).await?;
+
+    if !installer_path.exists() {
+        return Err(Error::NotFound("Failed to find installer".to_string()));
+    }
+
+    on_event
+        .send(crate::events::DownloadEvent::Progress {
+            amount: Some(2),
+            message: None,
+        })
+        .map_err(|err| Error::Generic(err.to_string()))?;
+
+    let mut args = vec![
+        "-jar",
+        installer_file
+            .to_str()
+            .ok_or_else(|| Error::Generic("Failed to get str".to_string()))?,
+    ];
+    args.extend(cli_args);
+
+    log::debug!("Running installer with args {:?}", args);
+
+    for idx in 0..1 {
+        let result = run_installer(java, &installer_path, &args).await;
+
+        if result.is_ok() {
+            break;
+        }
+
+        log::warn!("Having to running installer again!");
+
+        if result.is_err() && idx == 1 {
+            return result;
+        }
     }
 
     on_event
