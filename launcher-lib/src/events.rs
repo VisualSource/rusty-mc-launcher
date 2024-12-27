@@ -6,6 +6,7 @@ use crate::models::queue::QueueType;
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
 pub enum DownloadEvent {
     Init {
+        profile: String,
         content_type: QueueType,
         icon: Option<String>,
         display_name: String,
@@ -18,5 +19,6 @@ pub enum DownloadEvent {
         amount: Option<usize>,
         message: Option<String>,
     },
-    Finished {},
+    RefreshProfile,
+    Finished,
 }

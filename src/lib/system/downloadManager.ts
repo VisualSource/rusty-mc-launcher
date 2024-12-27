@@ -5,19 +5,20 @@ import {
 	registerDownloadListener,
 	type DownloadEvent,
 } from "../api/plugins/content";
-import { invalidateQueries } from "@lib/api/queryClient";
+import { invalidateQueries, queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
-import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
+import { KEY_DOWNLOAD_QUEUE, KEY_PROFILE } from "@/hooks/keys";
 
 export const DOWNLOAD_MANAGER_EVENT_PROGRESS = "update::progress";
 export const DOWNLOAD_MANAGER_EVENT_CURRENT = "update::current";
 
-const UpdateQueues = () =>
+const UpdateQueues = (profile: string) =>
 	invalidateQueries([
 		[KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 		[KEY_DOWNLOAD_QUEUE, QueueItemState.ERRORED],
 		[KEY_DOWNLOAD_QUEUE, QueueItemState.COMPLETED],
 		[KEY_DOWNLOAD_QUEUE, QueueItemState.POSTPONED],
+		[KEY_PROFILE, profile]
 	]);
 
 class DownloadManager extends EventTarget {
@@ -46,13 +47,12 @@ class DownloadManager extends EventTarget {
 	}
 
 	private handler = async (ev: DownloadEvent) => {
-		console.log(ev);
 		switch (ev.event) {
 			case "init":
 				this.current = ev.data;
 				this.progress = { amount: 0, max: 100, status: "" };
 				this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_CURRENT));
-				await UpdateQueues().catch((e) => console.error(e));
+				await UpdateQueues(this.current.profile).catch((e) => console.error(e));
 				break;
 			case "started": {
 				this.progress = {
@@ -80,13 +80,19 @@ class DownloadManager extends EventTarget {
 			}
 			case "finished": {
 				await new Promise((ok) => setTimeout(ok, 3000));
-				this.current = null;
+
 				this.progress = null;
 				this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_CURRENT));
 				this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_PROGRESS));
-				await UpdateQueues().catch((e) => console.error(e));
+				await UpdateQueues(this.current?.profile ?? "").catch((e) => console.error(e));
+				this.current = null;
 				break;
 			}
+			case "refreshProfile":
+				queryClient.invalidateQueries({
+					queryKey: [KEY_PROFILE, this.current?.profile ?? ""]
+				})
+				break;
 			default:
 				break;
 		}

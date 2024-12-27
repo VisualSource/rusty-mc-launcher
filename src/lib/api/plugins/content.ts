@@ -15,27 +15,28 @@ export type DownloadCurrentItem = {
 	display_name: string;
 	icon: string | null;
 	content_type: keyof typeof ContentType;
+	profile: string;
 };
 export type DownloadEvent =
 	| {
-			event: "init";
-			data: DownloadCurrentItem;
-	  }
+		event: "init";
+		data: DownloadCurrentItem;
+	}
 	| {
-			event: "started";
-			data: {
-				max_progress: number;
-				message: string;
-			};
-	  }
+		event: "started";
+		data: {
+			max_progress: number;
+			message: string;
+		};
+	}
 	| {
-			event: "progress";
-			data: {
-				amount?: number;
-				message?: string;
-			};
-	  }
-	| { event: "finished"; data: unknown };
+		event: "progress";
+		data: {
+			amount?: number;
+			message?: string;
+		};
+	}
+	| { event: "finished"; data: unknown } | { event: "refreshProfile" };
 
 export async function registerDownloadListener(
 	channel: Channel<DownloadEvent>,

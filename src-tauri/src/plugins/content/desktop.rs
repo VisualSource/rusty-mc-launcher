@@ -27,14 +27,20 @@ async fn install_client(
         return Err(Error::Reason("Invalid client metadata".to_string()));
     };
 
+    {
+        let db = db_state.write().await;
+        Profile::set_state(&item.id, ProfileState::Installing, &db).await?;
+    }
+
+    if let Err(err) = on_event.send(DownloadEvent::RefreshProfile) {
+        log::error!("{}", err)
+    }
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
     let db = db_state.write().await;
-
-    Profile::set_state(&item.id, ProfileState::Installing, &db).await?;
-
     if let Some(loader_version) = install_minecraft(config, &db, on_event).await? {
         Profile::set_loader_version(&item.profile_id, &loader_version, &db).await?;
     }
-
     Profile::set_state(&item.profile_id, ProfileState::Installed, &db).await?;
 
     Ok(())
@@ -105,6 +111,7 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
                 display_name: item.display_name.clone(),
                 icon: item.icon.clone(),
                 content_type: item.content_type.clone(),
+                profile: item.profile_id.clone(),
             }) {
                 log::error!("{}", err)
             }

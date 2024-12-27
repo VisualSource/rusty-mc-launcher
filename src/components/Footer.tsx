@@ -1,6 +1,7 @@
 import {
 	Download,
 	FileDiff,
+	Loader2,
 	Monitor,
 	PackagePlus,
 	PlusSquare,
@@ -65,35 +66,35 @@ const Footer = memo(() => {
 		const display =
 			state.importFrom === "modrinth"
 				? {
-						queue: {
-							name: "MrPack($PACK_PATH)",
-							type: "Modpack",
-						},
-						dialog: {
-							title: "Import Mrpack",
-							filters: [
-								{
-									name: "Mrpack",
-									extensions: ["mrpack"],
-								},
-							],
-						},
-					}
+					queue: {
+						name: "MrPack($PACK_PATH)",
+						type: "Modpack",
+					},
+					dialog: {
+						title: "Import Mrpack",
+						filters: [
+							{
+								name: "Mrpack",
+								extensions: ["mrpack"],
+							},
+						],
+					},
+				}
 				: {
-						queue: {
-							name: "Curseforge Modpack ($PACK_PATH)",
-							type: "CurseforgeModpack",
-						},
-						dialog: {
-							title: "Import Modpack",
-							filters: [
-								{
-									name: "Zip",
-									extensions: ["zip"],
-								},
-							],
-						},
-					};
+					queue: {
+						name: "Curseforge Modpack ($PACK_PATH)",
+						type: "CurseforgeModpack",
+					},
+					dialog: {
+						title: "Import Modpack",
+						filters: [
+							{
+								name: "Zip",
+								extensions: ["zip"],
+							},
+						],
+					},
+				};
 
 		const result = await open({
 			multiple: false,
@@ -260,13 +261,17 @@ const Footer = memo(() => {
 										<TypographyMuted asChild className="mb-1 line-clamp-1">
 											<span>{progress.status}</span>
 										</TypographyMuted>
-										<TypographyMuted asChild>
-											<span>
-												{Math.floor(100 * (progress.amount / progress.max))}%
-											</span>
-										</TypographyMuted>
+										<div className="flex items-center gap-1">
+											<TypographyMuted asChild>
+												<span>
+													{Math.floor(100 * (progress.amount / progress.max))}%
+												</span>
+											</TypographyMuted>
+											<Loader2 className="animate-spin h-4 w-4" />
+										</div>
+
 									</div>
-									<Progress
+									<Progress className="h-3"
 										value={Math.floor(100 * (progress.amount / progress.max))}
 									/>
 								</div>
