@@ -50,13 +50,14 @@ export class Facets {
 			}
 		}
 	}
-	private reset() {
+	public reset() {
 		this.facets.categories = [];
 		this.facets.loaders = [];
 		this.facets.server_side = [];
 		this.facets.client_side = [];
 		this.facets.versions = [];
 		this.facets.loaders = [];
+		return this;
 	}
 	public toggleVersion(name: string): this {
 		const idx = this.facets.versions.findIndex((e) => e === name);
@@ -85,7 +86,7 @@ export class Facets {
 		this.facets.categories.splice(idx, 1);
 		return this;
 	}
-	setProjectType(name: string): this {
+	public setProjectType(name: string): this {
 		this.reset();
 		this.facets.project_type = name;
 		switch (name) {
@@ -103,10 +104,10 @@ export class Facets {
 		}
 		return this;
 	}
-	getProjectType(): string {
+	public getProjectType(): string {
 		return this.facets.project_type;
 	}
-	getDisplayProjectType(): string {
+	public getDisplayProjectType(): string {
 		if (
 			this.facets.project_type === "mod" &&
 			this.facets.categories.includes("datapack")
@@ -115,7 +116,7 @@ export class Facets {
 		}
 		return this.facets.project_type;
 	}
-	toggleEnv(name: "client" | "server"): this {
+	public toggleEnv(name: "client" | "server"): this {
 		switch (name) {
 			case "client":
 				if (
@@ -145,7 +146,7 @@ export class Facets {
 
 		return this;
 	}
-	toArray(): string[][] {
+	public toArray(): string[][] {
 		const output: string[][] = [];
 
 		for (const cat of this.facets.categories) {
@@ -170,16 +171,16 @@ export class Facets {
 
 		return output;
 	}
-	isAnyProject(value: readonly string[]): boolean {
+	public isAnyProject(value: readonly string[]): boolean {
 		return value.includes(this.facets.project_type);
 	}
-	hasCategory(name: string): boolean {
+	public hasCategory(name: string): boolean {
 		return this.facets.categories.includes(name);
 	}
-	hasLoader(name: string): boolean {
+	public hasLoader(name: string): boolean {
 		return this.facets.loaders.includes(name);
 	}
-	hasAnyLoader(name: string[]): boolean {
+	public hasAnyLoader(name: string[]): boolean {
 		return this.facets.loaders.some((e) => name.includes(e));
 	}
 }

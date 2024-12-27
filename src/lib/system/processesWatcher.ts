@@ -5,6 +5,8 @@ import {
 } from "@tauri-apps/api/event";
 import { listActiveProcesses } from "../api/plugins/game";
 import { error } from "@tauri-apps/plugin-log";
+import { isOption } from "../models/settings";
+import { exit } from "@tauri-apps/plugin-process";
 
 const EVENT_PROCESS_STATE = "rmcl::process-state";
 const EVENT_PROCESS_CRASH = "rmcl::process-crash";
@@ -40,7 +42,8 @@ export class ProcessState extends EventTarget {
 				for (const id of ev.data) this.state.add(id);
 			})
 			.catch((e) => {
-				error((e as Error).message);
+				console.error(e);
+				//error((e as Error).message);
 			});
 	}
 	public async destory() {
@@ -58,11 +61,17 @@ export class ProcessState extends EventTarget {
 			new CustomEvent<ProcessCrashEvent>(CRASH_EVENT, { detail: ev.payload }),
 		);
 	};
-	private onState = (ev: TauriEvent<ProcessStateEvent>) => {
+	private onState = async (ev: TauriEvent<ProcessStateEvent>) => {
 		switch (ev.payload.type) {
-			case "Add":
+			case "Add": {
 				this.state.add(ev.payload.data);
+
+				const exitOnStart = await isOption("option.exit_on_start", "TRUE");
+				if (exitOnStart) {
+					setTimeout(() => exit(0).catch(e => console.error(e)), 6000);
+				}
 				break;
+			}
 			case "Remove":
 				for (const id of ev.payload.data) this.state.delete(id);
 				break;

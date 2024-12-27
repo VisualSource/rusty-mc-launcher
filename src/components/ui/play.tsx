@@ -1,12 +1,10 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
-import { exit } from "@tauri-apps/plugin-process";
-import toast from "@component/ui/toast";
+import toast, { waitToast } from "@component/ui/toast";
 
 import { stop, launchGame } from "@/lib/api/plugins/game";
 import { useIsRunning } from "@/hooks/useProcessState";
 import type { Profile } from "@/lib/models/profiles";
 import { Button, type ButtonProps } from "./button";
-import { isOption } from "@/lib/models/settings";
 import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 
@@ -58,30 +56,22 @@ const PlayButton: React.FC<
 					await stop(profile.id);
 					return;
 				}
-
-				let exitTimer: ReturnType<typeof setTimeout> | undefined;
 				try {
 					if (!user.account) return;
-					await launchGame({
-						auth_access_token: user.account?.token.access_token,
-						auth_player_name: user.account?.details.name,
-						auth_uuid: user.account?.details.id,
-						auth_xuid: user.account?.xuid,
-						profile_id: profile.id,
-					});
-
-					const exit_on_start = await isOption("option.exit_on_start", "TRUE");
-					if (exit_on_start) {
-						exitTimer = setTimeout(() => exit(0), 12_000);
-					}
+					await waitToast({
+						callback: launchGame({
+							auth_access_token: user.account?.token.access_token,
+							auth_player_name: user.account?.details.name,
+							auth_uuid: user.account?.details.id,
+							auth_xuid: user.account?.xuid,
+							profile_id: profile.id,
+						}),
+						pendingTitle: "Starting Minecrafts",
+						successTitle: "Launched Minecraft",
+						errorTitle: "Failed to start"
+					})
 				} catch (error) {
 					console.error(error);
-					toast({
-						variant: "error",
-						title: "Failed to start minecraft",
-						error,
-					});
-					clearTimeout(exitTimer);
 				}
 			}}
 			disabled={profile.state === "INSTALLING"}

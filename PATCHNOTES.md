@@ -4,6 +4,7 @@
 
 #### New
 - Add Preconnect tags
+- List Installed Java versions
 
 #### Changes 
 - Changed format of modrinth notifications.

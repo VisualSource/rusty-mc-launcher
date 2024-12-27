@@ -50,7 +50,7 @@ class DownloadManager extends EventTarget {
 		switch (ev.event) {
 			case "init":
 				this.current = ev.data;
-				this.progress = { amount: 0, max: 100, status: "" };
+				this.progress = { amount: 0, max: 100, status: "Preparing" };
 				this.dispatchEvent(new Event(DOWNLOAD_MANAGER_EVENT_CURRENT));
 				await UpdateQueues(this.current.profile).catch((e) => console.error(e));
 				break;

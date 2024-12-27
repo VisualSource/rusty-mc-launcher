@@ -2055,6 +2055,11 @@
           "const": "allow-launch-game"
         },
         {
+          "description": "Allow for listing the active minecraft instances",
+          "type": "string",
+          "const": "allow-list-active-processes"
+        },
+        {
           "description": "Allow for select operation",
           "type": "string",
           "const": "allow-select"
@@ -5248,6 +5253,11 @@
           "description": "Allow for starting the game",
           "type": "string",
           "const": "rmcl-game:allow-launch-game"
+        },
+        {
+          "description": "Allow for listing the active minecraft instances",
+          "type": "string",
+          "const": "rmcl-game:allow-list-active-processes"
         },
         {
           "description": "Default permissions for the rmcl-query plugin",

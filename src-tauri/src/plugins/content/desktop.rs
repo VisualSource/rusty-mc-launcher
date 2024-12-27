@@ -26,7 +26,7 @@ async fn install_client(
         return Err(Error::Reason("Invalid client metadata".to_string()));
     };
 
-    Profile::set_state(&item.id, ProfileState::Installing, db).await?;
+    Profile::set_state(&item.profile_id, ProfileState::Installing, db).await?;
 
     if let Err(err) = on_event.send(DownloadEvent::RefreshProfile) {
         log::error!("{}", err)

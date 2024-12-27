@@ -1,6 +1,6 @@
 [default]
 description = "Default permissions for the rmcl-game plugin"
-permissions = ["allow-launch-game","allow-is-running"]
+permissions = ["allow-launch-game","allow-is-running","allow-list-active-processes"]
 
 [[permission]]
 identifier = "allow-launch-game"
@@ -11,3 +11,8 @@ commands.allow = ["launch_game"]
 identifier = "allow-is-running"
 description = "Allow for checking if a game profile is running."
 commands.allow = ["is_running"]
+
+[[permission]]
+identifier = "allow-list-active-processes"
+description = "Allow for listing the active minecraft instances"
+commands.allow = ["list_active_processes"]

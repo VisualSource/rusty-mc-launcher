@@ -1,8 +1,6 @@
-import type { UseNavigateResult } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import type { ModrinthSearchParams } from "@/routes/_authenticated/workshop/search/route";
 import {
 	categoryList,
 	loaderList,
@@ -12,10 +10,11 @@ import type { CategoryTag, LoaderTag } from "@/lib/api/modrinth/types.gen";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { TypographyH3, TypographyH4 } from "../ui/typography";
 import { modrinthClient } from "@/lib/api/modrinthClient";
+import searchManager from "@system/searchManager";
+import { useSearch } from "@/hooks/useSearch";
 import { Checkbox } from "../ui/checkbox";
 import { Selectable } from "./Selectable";
 import { Label } from "../ui/label";
-import type { Facets } from "@/lib/Facets";
 
 const ALLOWED_MOD_LOADERS = ["forge", "fabric", "quilt", "neoforge"] as const;
 const SHOW_LOADERS_ON = ["mod", "modpack", "shader"] as const;
@@ -27,62 +26,66 @@ function filterOn(name: string, list: LoaderTag[]): LoaderTag[] {
 	return list.filter((e) => e.supported_project_types.includes("shader"));
 }
 
-export const SearchFilters: React.FC<{
-	search: ModrinthSearchParams;
-	navigate: UseNavigateResult<string>;
-}> = ({ navigate, search }) => {
-	const categoires = useSuspenseQuery({
-		queryKey: ["MODRINTH_TAGS_CATEGORIES"],
-		queryFn: async () => {
-			const { error, data, response } = await categoryList({
-				client: modrinthClient,
-			});
-			if (error) throw error;
-			if (!response.ok || !data)
-				throw new Error("Failed to load categories", { cause: response });
+export const SearchFilters: React.FC = () => {
+	const search = useSearch();
 
-			const headers = Object.groupBy(data, (e) => e.header);
+	const [categoires, modrinthLoaders, modrinthProjectTypes] = useSuspenseQueries({
+		queries: [
+			{
+				queryKey: ["MODRINTH_TAGS_CATEGORIES"],
+				queryFn: async () => {
+					const { error, data, response } = await categoryList({
+						client: modrinthClient,
+					});
+					if (error) throw error;
+					if (!response.ok || !data)
+						throw new Error("Failed to load categories", { cause: response });
 
-			const output: Record<string, Record<string, CategoryTag[]>> = {};
-			for (const [header, values] of Object.entries(headers)) {
-				if (!values) continue;
+					const headers = Object.groupBy(data, (e) => e.header);
 
-				const groups: Record<string, CategoryTag[]> = {};
-				for (const value of values) {
-					if (!groups[value.project_type]) groups[value.project_type] = [];
-					groups[value.project_type].push(value);
-				}
+					const output: Record<string, Record<string, CategoryTag[]>> = {};
+					for (const [header, values] of Object.entries(headers)) {
+						if (!values) continue;
 
-				output[header] = groups;
+						const groups: Record<string, CategoryTag[]> = {};
+						for (const value of values) {
+							if (!groups[value.project_type]) groups[value.project_type] = [];
+							groups[value.project_type].push(value);
+						}
+
+						output[header] = groups;
+					}
+
+					return output;
+				},
+			},
+			{
+				queryKey: ["MODRINTH_TAGS_LOADERS"],
+				queryFn: async () => {
+					const { data, error, response } = await loaderList({
+						client: modrinthClient,
+					});
+					if (error) throw error;
+					if (!response.ok || !data)
+						throw new Error("Failed to load categories", { cause: response });
+					return data;
+				},
+			},
+			{
+				queryKey: ["MODRINTH_TAGS_PROJECT_TYPES"],
+				queryFn: async () => {
+					const { data, error, response } = await projectTypeList({
+						client: modrinthClient,
+					});
+					if (error) throw error;
+					if (!response.ok || !data)
+						throw new Error("Failed to load project types", { cause: response });
+					return data.filter((e) => !["plugin", "datapack"].includes(e));
+				},
 			}
+		]
+	});
 
-			return output;
-		},
-	});
-	const modrinthLoaders = useSuspenseQuery({
-		queryKey: ["MODRINTH_TAGS_LOADERS"],
-		queryFn: async () => {
-			const { data, error, response } = await loaderList({
-				client: modrinthClient,
-			});
-			if (error) throw error;
-			if (!response.ok || !data)
-				throw new Error("Failed to load categories", { cause: response });
-			return data;
-		},
-	});
-	const modrinthProjectTypes = useSuspenseQuery({
-		queryKey: ["MODRINTH_TAGS_PROJECT_TYPES"],
-		queryFn: async () => {
-			const { data, error, response } = await projectTypeList({
-				client: modrinthClient,
-			});
-			if (error) throw error;
-			if (!response.ok || !data)
-				throw new Error("Failed to load project types", { cause: response });
-			return data.filter((e) => !["plugin", "datapack"].includes(e));
-		},
-	});
 	const projectType = search.facets.getProjectType();
 	const showLoaders = search.facets.isAnyProject(SHOW_LOADERS_ON);
 	const showEnv = search.facets.isAnyProject(["mod", "modpack"]);
@@ -105,19 +108,12 @@ export const SearchFilters: React.FC<{
 		<>
 			<div className="space-y-2">
 				<TypographyH3>Project Type</TypographyH3>
-				<RadioGroup
+				<RadioGroup defaultValue={search.facets.getDisplayProjectType()}
 					onValueChange={(e) => {
-						navigate({
-							search: (prev: { facets?: Facets }) => ({
-								...prev,
-								facets: prev?.facets?.setProjectType(e),
-								offset: 0,
-								query: "",
-							}),
-						});
-					}}
-					defaultValue={search.facets.getDisplayProjectType()}
-				>
+						searchManager.facets.setProjectType(e);
+						searchManager.setOffset(0).setQuery(undefined).update();
+
+					}}>
 					{modrinthProjectTypes.data?.map((item) => (
 						<div key={item} className="flex items-center space-x-2">
 							<RadioGroupItem value={item} id={`${item}_radio_opt`} />
@@ -139,14 +135,10 @@ export const SearchFilters: React.FC<{
 								name={item.name}
 								icon={item.icon}
 								checked={search.facets.hasCategory(item.name)}
-								onChange={() =>
-									navigate({
-										search: (prev: { facets?: Facets }) => ({
-											...prev,
-											facets: prev?.facets?.toggleCategory(item.name),
-										}),
-									})
-								}
+								onChange={() => {
+									searchManager.facets.toggleCategory(item.name);
+									searchManager.update();
+								}}
 							/>
 						))}
 					</ul>
@@ -166,15 +158,10 @@ export const SearchFilters: React.FC<{
 								name={item.name}
 								icon={item.icon}
 								checked={search.facets.hasLoader(item.name)}
-								onChange={() =>
-									navigate({
-										search: (prev: { facets?: Facets }) => ({
-											...prev,
-											facets: prev?.facets?.toggleLoader(item.name),
-										}),
-									})
-								}
-							/>
+								onChange={() => {
+									searchManager.facets.toggleLoader(item.name);
+									searchManager.update();
+								}} />
 						))}
 					</ul>
 				</div>
@@ -186,14 +173,10 @@ export const SearchFilters: React.FC<{
 					<ul className="space-y-2">
 						<li className="flex items-center space-x-2">
 							<Checkbox
-								onClick={() =>
-									navigate({
-										search: (prev: { facets?: Facets }) => ({
-											...prev,
-											facets: prev?.facets?.toggleEnv("client"),
-										}),
-									})
-								}
+								onClick={() => {
+									searchManager.facets.toggleEnv("client");
+									searchManager.update();
+								}}
 							/>
 							<Label className="inline-flex items-center gap-1">
 								<span className="inline-block h-4 w-4">
@@ -215,16 +198,10 @@ export const SearchFilters: React.FC<{
 							</Label>
 						</li>
 						<li className="flex items-center space-x-2">
-							<Checkbox
-								onCheckedChange={() =>
-									navigate({
-										search: (prev: { facets?: Facets }) => ({
-											...prev,
-											facets: prev?.facets?.toggleEnv("server"),
-										}),
-									})
-								}
-							/>
+							<Checkbox onCheckedChange={() => {
+								searchManager.facets.toggleEnv("server");
+								searchManager.update();
+							}} />
 							<Label className="inline-flex items-center gap-1">
 								<span className="inline-block h-4 w-4">
 									<svg
