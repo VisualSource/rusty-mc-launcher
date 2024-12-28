@@ -3,7 +3,6 @@ import {
 	type ToastOptions,
 	type ToastContentProps,
 	type Id,
-	type UpdateOptions,
 } from "react-toastify";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -66,36 +65,13 @@ const ToastClose: React.FC<React.ComponentPropsWithRef<"button">> = ({
 	);
 };
 
-const ToastTitle: React.FC<React.ComponentPropsWithRef<"div">> = ({
-	className,
-	ref,
-	...props
-}) => {
-	return (
-		<div
-			ref={ref}
-			className={cn("text-sm font-semibold", className)}
-			{...props}
-		/>
-	);
-};
-const ToastDescription: React.FC<React.ComponentPropsWithRef<"div">> = ({
-	className,
-	ref,
-	...props
-}) => {
-	return (
-		<div ref={ref} className={cn("text-sm opacity-90", className)} {...props} />
-	);
-};
-
 type ToastProps = VariantProps<typeof toastVariants> & {
 	error?: unknown;
 	title: string;
 	description?: string;
 	closeButton?: boolean;
 };
-const Toast: React.FC<ToastContentProps<ToastProps>> = ({
+export const Toast: React.FC<ToastContentProps<ToastProps>> = ({
 	data: { title, description, closeButton = true },
 	closeToast,
 	toastProps,
@@ -104,14 +80,14 @@ const Toast: React.FC<ToastContentProps<ToastProps>> = ({
 }) => {
 	return (
 		<div className="w-full" {...props}>
-			<ToastTitle>{title}</ToastTitle>
-			<ToastDescription>{description}</ToastDescription>
+			<div className="text-sm font-semibold">{title}</div>
+			<div className="text-sm opacity-90">{description}</div>
 			{closeButton ? <ToastClose onClick={closeToast} /> : null}
 		</div>
 	);
 };
 
-const createToast = ({
+export const createToast = ({
 	variant,
 	opts,
 	...data
@@ -124,10 +100,9 @@ const createToast = ({
 		data,
 	});
 
-export default createToast;
 export const updateToast = (
 	id: Id,
-	{ data, ...opts }: Omit<UpdateOptions<ToastProps>, "type" | "closeButton">,
+	{ opts, ...data }: ToastProps & { opts?: Omit<ToastOptions, "type" | "closeButton"> },
 ) =>
 	toast.update(id, {
 		...opts,
@@ -135,7 +110,7 @@ export const updateToast = (
 		className: toastVariants({ variant: data?.variant }),
 		type: data?.variant ?? "default",
 		closeButton: false,
-		data,
+		data
 	});
 
 export const waitToast = ({

@@ -21,11 +21,11 @@ import { TypographyH3 } from "@/components/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { JVMArgForm } from "@/components/JVMArgForm";
 import { queryClient } from "@/lib/api/queryClient";
+import { createToast } from "@component/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_KEY } from "@/hooks/keys";
-import toast from "@component/ui/toast";
 
 export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 	component: CreateProfile,
@@ -74,7 +74,7 @@ function CreateProfile() {
 				},
 			});
 		} catch (error) {
-			toast({ error, variant: "error", title: "Failed to create profile" });
+			createToast({ error, variant: "error", title: "Failed to create profile" });
 			console.error(error);
 		}
 	};

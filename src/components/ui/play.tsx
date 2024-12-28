@@ -1,5 +1,5 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
-import toast, { waitToast } from "@component/ui/toast";
+import { waitToast } from "@component/ui/toast";
 
 import { stop, launchGame } from "@/lib/api/plugins/game";
 import { useIsRunning } from "@/hooks/useProcessState";

@@ -48,11 +48,11 @@ import { JVMArgForm } from "@/components/JVMArgForm";
 import { queryClient } from "@/lib/api/queryClient";
 import { ContentItem } from "@/lib/models/content";
 import { getConfig } from "@/lib/models/settings";
+import { createToast } from "@component/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Profile } from "@/lib/models/profiles";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import toast from "@component/ui/toast";
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/edit",
@@ -305,7 +305,7 @@ function ProfileEdit() {
 								try {
 									const id = crypto.randomUUID();
 									await copyProfile(profileQuery.data, id);
-									toast({ variant: "success", title: "Copyed profile" });
+									createToast({ variant: "success", title: "Copyed profile" });
 									navigate({
 										to: "/profile/$id",
 										params: {
@@ -314,7 +314,7 @@ function ProfileEdit() {
 									});
 								} catch (error) {
 									console.error(error);
-									toast({ variant: "error", title: "Failed to copy", error });
+									createToast({ variant: "error", title: "Failed to copy", error });
 								}
 							}}
 							type="button"

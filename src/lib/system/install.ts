@@ -1,5 +1,4 @@
 import { coerce, minSatisfying } from "semver";
-import toast, { updateToast } from "@component/ui/toast";
 
 import type {
 	Project,
@@ -17,6 +16,7 @@ import {
 	uninstallContentById,
 } from "@lib/api/plugins/content";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
+import { createToast, updateToast } from "@component/ui/toast";
 import { ContentType } from "@lib/models/download_queue";
 import { modrinthClient } from "../api/modrinthClient";
 import { askFor } from "@/components/dialog/AskDialog";
@@ -258,7 +258,7 @@ export async function install_known(
 }
 
 export async function install(data: Project) {
-	const id = toast({
+	const id = createToast({
 		title: "Preparing install...",
 		closeButton: false,
 		opts: { isLoading: true },
@@ -273,9 +273,12 @@ export async function install(data: Project) {
 				});
 				if (!profile) {
 					updateToast(id, {
-						data: { variant: "info", title: "Install canceled" },
-						isLoading: false,
-						autoClose: 5000,
+						variant: "info",
+						title: "Install canceled",
+						opts: {
+							isLoading: false,
+							autoClose: 5000,
+						}
 					});
 					return;
 				}
@@ -342,9 +345,12 @@ export async function install(data: Project) {
 				});
 				if (!profile) {
 					updateToast(id, {
-						data: { variant: "info", title: "Install canceled" },
-						isLoading: false,
-						autoClose: 5000,
+						variant: "info",
+						title: "Install canceled",
+						opts: {
+							isLoading: false,
+							autoClose: 5000,
+						}
 					});
 					return;
 				}
@@ -465,9 +471,12 @@ export async function install(data: Project) {
 
 				if (!gameVersions.length) {
 					updateToast(id, {
-						data: { variant: "info", title: "Install canceled" },
-						isLoading: false,
-						autoClose: 5000,
+						variant: "info",
+						title: "Install canceled",
+						opts: {
+							isLoading: false,
+							autoClose: 5000,
+						}
 					});
 					return;
 				}
@@ -481,9 +490,12 @@ export async function install(data: Project) {
 				});
 				if (!loaders.length) {
 					updateToast(id, {
-						data: { variant: "info", title: "Install canceled" },
-						isLoading: false,
-						autoClose: 5000,
+						variant: "info",
+						title: "Install canceled",
+						opts: {
+							isLoading: false,
+							autoClose: 5000
+						}
 					});
 					return;
 				}
@@ -543,16 +555,23 @@ export async function install(data: Project) {
 		}
 
 		updateToast(id, {
-			data: { variant: "success", title: "Staring Install" },
-			isLoading: false,
-			autoClose: 5000,
+			variant: "success",
+			title: "Staring Install",
+			opts: {
+				isLoading: false,
+				autoClose: 5000,
+			},
 		});
 	} catch (error) {
 		console.error(error);
 		updateToast(id, {
-			data: { variant: "success", error, title: "Failed to install content" },
-			isLoading: false,
-			autoClose: 5000,
+			variant: "success",
+			error,
+			title: "Failed to install content",
+			opts: {
+				isLoading: false,
+				autoClose: 5000,
+			}
 		});
 	}
 }

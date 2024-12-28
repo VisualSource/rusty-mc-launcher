@@ -2,8 +2,8 @@ import { fromZodError } from "zod-validation-error";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
-import toast from "@component/ui/toast";
 import { query, transaction } from "@lib/api/plugins/query";
+import { createToast } from "@component/ui/toast";
 import { queryClient } from "@/lib/api/queryClient";
 import { CATEGORIES_KEY } from "./keys";
 
@@ -26,7 +26,7 @@ export const useCategoriesMutation = () => {
 						.safeParse(payload.data);
 					if (content.error) {
 						const message = fromZodError(content.error);
-						toast({
+						createToast({
 							variant: "error",
 							title: "Failed to delete collection!",
 							error: message,
@@ -43,7 +43,7 @@ export const useCategoriesMutation = () => {
 					if (id.error) {
 						const message = fromZodError(id.error);
 
-						toast({
+						createToast({
 							variant: "error",
 							title: "Failed to delete collection!",
 							error: message,

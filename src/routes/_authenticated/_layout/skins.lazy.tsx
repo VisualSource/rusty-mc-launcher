@@ -1,19 +1,19 @@
 import { ErrorComponent, createLazyFileRoute } from "@tanstack/react-router";
-import { fetch } from "@tauri-apps/plugin-http";
 import { memo, useEffect, useReducer, useRef } from "react";
 import { downloadDir, sep } from "@tauri-apps/api/path";
 import { SkinViewer, IdleAnimation } from "skinview3d";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMutation } from "@tanstack/react-query";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { useAccount } from "@azure/msal-react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { fetch } from "@tauri-apps/plugin-http";
+import { useAccount } from "@azure/msal-react";
 import { Plus } from "lucide-react";
 
-import toast, { waitToast } from "@component/ui/toast";
 import type { Cape, MinecraftAccount, Skin } from "@/lib/api/minecraftAccount";
 import { Separator } from "@/components/ui/separator";
 import { queryClient } from "@/lib/api/queryClient";
+import { waitToast } from "@component/ui/toast";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";

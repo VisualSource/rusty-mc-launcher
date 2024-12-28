@@ -1,7 +1,7 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { error } from "@tauri-apps/plugin-log";
 import type { Id } from "react-toastify";
-import toast, { updateToast } from "@component/ui/toast";
+import { createToast, updateToast } from "@component/ui/toast";
 import { queryClient } from "@/lib/api/queryClient";
 import { importFile } from "../api/plugins/content";
 
@@ -26,7 +26,7 @@ export async function profileImportFile(
 		});
 		if (!file) return;
 
-		toastId = toast({
+		toastId = createToast({
 			title: "Importing File",
 			closeButton: false,
 			opts: { isLoading: true },
@@ -38,21 +38,24 @@ export async function profileImportFile(
 		});
 
 		updateToast(toastId, {
-			isLoading: false,
-			autoClose: 5000,
-			data: { variant: "success", title: "Imported Content" },
+			variant: "success",
+			title: "Imported Content",
+			opts: {
+				isLoading: false,
+				autoClose: 5000,
+			}
 		});
 	} catch (err) {
 		error((err as Error).message);
 		if (toastId)
 			updateToast(toastId, {
-				isLoading: false,
-				autoClose: 5000,
-				data: {
-					error: err,
-					variant: "error",
-					title: "Failed to import content",
-				},
+				error: err,
+				variant: "error",
+				title: "Failed to import content",
+				opts: {
+					isLoading: false,
+					autoClose: 5000,
+				}
 			});
 	}
 }

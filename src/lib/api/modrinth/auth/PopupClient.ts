@@ -1,7 +1,8 @@
+import { BrowserAuthErrorCodes } from "@azure/msal-browser";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { open } from "@tauri-apps/plugin-shell";
-import { BrowserAuthErrorCodes } from "@azure/msal-browser";
-import toast from "@component/ui/toast";
+
+import { createToast } from "@component/ui/toast";
 
 export type AuthResponse = {
 	access_token: string;
@@ -18,10 +19,10 @@ export class PopupClient {
 	public acquireToken() {
 		try {
 			const res = this.acquireTokenPopupAsync();
-			toast({ variant: "success", title: "Logged into Modrinth" });
+			createToast({ variant: "success", title: "Logged into Modrinth" });
 			return res;
 		} catch (error) {
-			toast({ variant: "error", title: "Modrinth Login failed", error });
+			createToast({ variant: "error", title: "Modrinth Login failed", error });
 			return Promise.reject(error);
 		}
 	}

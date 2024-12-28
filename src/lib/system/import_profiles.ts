@@ -5,10 +5,10 @@ import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
 import { bulk, transaction } from "../api/plugins/query";
 import { ContentType } from "../models/download_queue";
+import { createToast } from "@/components/ui/toast";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import type { Profile } from "../models/profiles";
-import toast from "@/components/ui/toast";
 
 export type Loader = "vanilla" | "forge" | "fabric" | "quilt" | "neoforge";
 
@@ -48,7 +48,7 @@ const import_profiles = async () => {
 	});
 
 	if (!result) {
-		toast({ variant: "error", title: "Failed to import profiles" });
+		createToast({ variant: "error", title: "Failed to import profiles" });
 		return;
 	}
 
@@ -84,10 +84,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-						version.replace(
-							"latest-",
-							"",
-						) as keyof (typeof latest_data)["latest"]
+					version.replace(
+						"latest-",
+						"",
+					) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -153,10 +153,10 @@ const import_profiles = async () => {
 			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 		});
 
-		toast({ variant: "success", title: "Imported Profiles" });
+		createToast({ variant: "success", title: "Imported Profiles" });
 	} catch (error) {
 		console.error(error);
-		toast({ variant: "error", title: "Import profile error!", error });
+		createToast({ variant: "error", title: "Import profile error!", error });
 	}
 };
 

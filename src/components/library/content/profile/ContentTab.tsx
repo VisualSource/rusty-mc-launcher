@@ -1,10 +1,9 @@
 import { AlertTriangle, Box, LoaderCircle, Trash2 } from "lucide-react";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { UpdateIcon } from "@radix-ui/react-icons";
-import type { UseQueryResult } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { ask } from "@tauri-apps/plugin-dialog";
-import toast, { updateToast } from "@component/ui/toast";
+import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 
 import {
@@ -22,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
 import { uninstallContentByFilename } from "@lib/api/plugins/content";
 import { getProjectVersions } from "@lib/api/modrinth/services.gen";
+import { createToast, updateToast } from "@component/ui/toast";
 import type { ContentType } from "@lib/models/download_queue";
 import type { Project } from "@/lib/api/modrinth/types.gen";
 import { modrinthClient } from "@/lib/api/modrinthClient";
@@ -45,7 +45,7 @@ async function uninstall(
 		});
 	} catch (error) {
 		console.error(error);
-		toast({
+		createToast({
 			title: "Failed to uninstall content",
 			description: (error as Error).message,
 			variant: "error",
@@ -59,7 +59,7 @@ const checkForUpdate = async (
 	item: ContentItem,
 ) => {
 	if (!project) return;
-	const toastId = toast({
+	const toastId = createToast({
 		title: "Checking for update.",
 		closeButton: false,
 		opts: { isLoading: true },
@@ -99,9 +99,11 @@ const checkForUpdate = async (
 
 			if (doUpdate) {
 				updateToast(toastId, {
-					data: { title: "Installing new version", variant: "info" },
-					isLoading: false,
-					autoClose: 5000,
+					title: "Installing new version", variant: "info",
+					opts: {
+						isLoading: false,
+						autoClose: 5000,
+					},
 				});
 				await install_known(
 					version,
@@ -117,24 +119,24 @@ const checkForUpdate = async (
 		}
 
 		updateToast(toastId, {
-			data: {
-				title: "Updated to latest version.",
-				description: `Lastest version for ${project.title} installed.`,
-				variant: "info",
-			},
-			isLoading: false,
-			autoClose: 5000,
+			title: "Updated to latest version.",
+			description: `Lastest version for ${project.title} installed.`,
+			variant: "info",
+			opts: {
+				isLoading: false,
+				autoClose: 5000,
+			}
 		});
 	} catch (error) {
 		console.error(error);
 		updateToast(toastId, {
-			data: {
-				title: "Failed to update content",
-				description: (error as Error).message,
-				variant: "error",
-			},
-			isLoading: false,
-			autoClose: 5000,
+			title: "Failed to update content",
+			description: (error as Error).message,
+			variant: "error",
+			opts: {
+				isLoading: false,
+				autoClose: 5000,
+			}
 		});
 	}
 };

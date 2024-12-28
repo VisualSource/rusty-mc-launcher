@@ -1,5 +1,7 @@
-import { Loading } from "@/components/Loading";
-import { Button } from "@/components/ui/button";
+import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
+import { error } from "@tauri-apps/plugin-log";
+import { useForm } from "react-hook-form";
+
 import {
 	Form,
 	FormControl,
@@ -9,13 +11,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { createToast, updateToast } from "@component/ui/toast";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
-import { useForm } from "react-hook-form";
-import toast, { updateToast } from "@component/ui/toast";
-import { error } from "@tauri-apps/plugin-log";
+import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/Loading";
+import { Input } from "@/components/ui/input";
 
 export const Route = createLazyFileRoute("/_authenticated/bug-report")({
 	component: BugReport,
@@ -32,7 +33,7 @@ function BugReport() {
 	const form = useForm<FormState>();
 
 	const onSubmit = async (state: FormState) => {
-		const toastId = toast({
+		const toastId = createToast({
 			title: "Submitting report",
 			closeButton: false,
 			opts: { isLoading: true },
@@ -61,25 +62,25 @@ function BugReport() {
 			const data = (await response.json()) as { html_url: string };
 
 			updateToast(toastId, {
-				data: {
-					variant: "success",
-					title: "Report submited",
-					description: data.html_url,
-				},
-				isLoading: false,
-				autoClose: 5000,
+				variant: "success",
+				title: "Report submited",
+				description: data.html_url,
+				opts: {
+					isLoading: false,
+					autoClose: 5000,
+				}
 			});
 			navigate({ to: "/" });
 		} catch (err) {
 			error((err as Error).message);
 			updateToast(toastId, {
-				data: {
-					error: err,
-					variant: "error",
-					title: "Failed to submit bug report",
-				},
-				isLoading: false,
-				autoClose: 5000,
+				error: err,
+				variant: "error",
+				title: "Failed to submit bug report",
+				opts: {
+					isLoading: false,
+					autoClose: 5000,
+				}
 			});
 		}
 	};

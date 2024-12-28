@@ -1,8 +1,11 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { exists, readDir } from "@tauri-apps/plugin-fs";
+import { error } from "@tauri-apps/plugin-log";
 import { join } from "@tauri-apps/api/path";
 import { useForm } from "react-hook-form";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 import {
 	Form,
@@ -14,13 +17,12 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { getConfig, updateConfig } from "@/lib/models/settings";
+import { checkForAppUpdate } from "@/lib/system/updateCheck";
 import { Separator } from "@/components/ui/separator";
 import { queryClient } from "@/lib/api/queryClient";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import { checkForAppUpdate } from "@/lib/system/updateCheck";
-import { error } from "@tauri-apps/plugin-log";
 
 const JavaJREForamt =
 	/zulu(?<zulu>\d+\.\d+\.\d+)-ca-jre(?<jre>\d+\.\d+\.\d+)-(?<platform>\w+)/;
@@ -32,6 +34,20 @@ export const Route = createLazyFileRoute("/_authenticated/settings/download")({
 	component: DownloadSettings,
 	pendingComponent: Loading,
 });
+
+const UpdateCheckBtn: React.FC = () => {
+	const [isChecking, setIsChecking] = useState(false);
+
+	return (
+		<Button disabled={isChecking} className="w-full" variant="outline" onClick={() => {
+			setIsChecking(true);
+			checkForAppUpdate(true).catch(e => {
+				if (e instanceof Error) error(e.message);
+				console.error(e);
+			}).finally(() => setIsChecking(false))
+		}}>{isChecking ? <span className="inline-flex gap-2 items-center">Looking for updates <Loader2 className="animate-spin" /></span> : <span>Check for updates</span>}</Button>
+	);
+}
 
 function DownloadSettings() {
 	const { data } = useSuspenseQuery({
@@ -108,12 +124,7 @@ function DownloadSettings() {
 			<Separator />
 
 			<div className="w-full">
-				<Button className="w-full" variant="outline" onClick={() => {
-					checkForAppUpdate(true).catch(e => {
-						if (e instanceof Error) error(e.message);
-						console.error(e);
-					})
-				}}>Check for updates</Button>
+				<UpdateCheckBtn />
 			</div>
 
 			<div>

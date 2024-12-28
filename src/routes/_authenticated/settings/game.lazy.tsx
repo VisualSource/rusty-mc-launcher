@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { isOption, updateConfig, addConfig } from "@/lib/models/settings";
+import { createToast } from "@component/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";
-import toast from "@component/ui/toast";
+
 
 const OPTION_EXIT_ON_START = "option.exit_on_start";
 
@@ -49,7 +50,7 @@ function GameSettings() {
 			);
 		}
 
-		toast({ variant: "success", title: "Settings saved" });
+		createToast({ variant: "success", title: "Settings saved" });
 	};
 
 	return (
