@@ -10,8 +10,23 @@ fn main() {
 
             let log_dir = app.path().app_data_dir()?.join("logs");
 
+            let level = match std::env::var("MCL_LOG") {
+                Ok(value) => {
+                    let target = value.to_lowercase();
+                    match target.as_str() {
+                        "error" => log::LevelFilter::Error,
+                        "debug" => log::LevelFilter::Debug,
+                        "trace" => log::LevelFilter::Trace,
+                        "warn" => log::LevelFilter::Warn,
+                        _ => log::LevelFilter::Info,
+                    }
+                }
+                Err(_) => log::LevelFilter::Info,
+            };
+
             let logger = tauri_plugin_log::Builder::new()
                 .clear_targets()
+                .level(level)
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::Stdout,
                 ))
