@@ -44,6 +44,10 @@ jobs:
         run: pnpm install
       - name: Cache rust
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri
+            launcher-lib
       - uses: tauri-apps/tauri-action@dev
         env:
           MCL_LOG: "INFO"
