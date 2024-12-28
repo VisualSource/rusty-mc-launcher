@@ -1,5 +1,4 @@
-# v0.8.0-pre1
-
+# v0.8.0
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.7.3...v0.8.0](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.7.2...v0.8.0)
 
 #### New
