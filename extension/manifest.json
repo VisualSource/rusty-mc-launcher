@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "version": "0.0.1",
+    "version": "0.0.4",
     "name": "Open In RMCL",
     "icons": {
         "32": "icons/logo.svg",
@@ -16,7 +16,10 @@
     "content_scripts": [
         {
             "matches": [
-                "https://www.curseforge.com/minecraft/mc-mods/*"
+                "https://www.curseforge.com/minecraft/mc-mods/*",
+                "https://www.curseforge.com/minecraft/shaders/*",
+                "https://www.curseforge.com/minecraft/modpacks/*",
+                "https://www.curseforge.com/minecraft/texture-packs/*"
             ],
             "js": [
                 "main.js"
