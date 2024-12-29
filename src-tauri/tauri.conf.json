@@ -57,12 +57,12 @@
 				"userAgent": "VisualSource/rusty-mc-launcher/0.10.x",
 				"fullscreen": false,
 				"focus": true,
-				"height": 632,
+				"height": 630,
 				"resizable": true,
 				"minHeight": 630,
 				"minWidth": 1080,
 				"title": "Minecraft Launcher",
-				"width": 1082,
+				"width": 1080,
 				"decorations": false,
 				"dragDropEnabled": false
 			}
@@ -77,7 +77,15 @@
 				],
 				"enable": true
 			},
-			"csp": null
+			"csp": {
+				"default-src": "'self' rmcl: asset:",
+				"connect-src": "ipc: http://ipc.localhost https://cdn.modrinth.com https://api.minecraftservices.com https://launchercontent.mojang.com https://api.modrinth.com/v2 https://github.com/VisualSource",
+				"font-src": [
+					"https://fonts.gstatic.com"
+				],
+				"img-src": "'self' asset: http://asset.localhost https://cdn.modrinth.com https://launchercontent.mojang.com https://github.com/VisualSource blob: data:",
+				"style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com"
+			}
 		}
 	}
 }

@@ -20,6 +20,7 @@ import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticat
 import { Route as AuthenticatedLayoutCollectionsImport } from './routes/_authenticated/_layout/collections'
 import { Route as AuthenticatedWorkshopSearchRouteImport } from './routes/_authenticated/workshop/search/route'
 import { Route as AuthenticatedWorkshopProjectIdRouteImport } from './routes/_authenticated/workshop/project.$id/route'
+import { Route as AuthenticatedWorkshopCurseforgeIdRouteImport } from './routes/_authenticated/workshop/curseforge.$id/route'
 import { Route as AuthenticatedLayoutProfileProfileIdImport } from './routes/_authenticated/_layout/profile/_profile.$id'
 import { Route as AuthenticatedLayoutProfileProfileIdIndexImport } from './routes/_authenticated/_layout/profile/_profile.$id/index'
 import { Route as AuthenticatedLayoutProfileProfileIdScreenshotsImport } from './routes/_authenticated/_layout/profile/_profile.$id/screenshots'
@@ -197,6 +198,17 @@ const AuthenticatedWorkshopProjectIdRouteRoute =
     ),
   )
 
+const AuthenticatedWorkshopCurseforgeIdRouteRoute =
+  AuthenticatedWorkshopCurseforgeIdRouteImport.update({
+    id: '/workshop/curseforge/$id',
+    path: '/workshop/curseforge/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/workshop/curseforge.$id/route.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
 const AuthenticatedLayoutProfileProfileIdRoute =
   AuthenticatedLayoutProfileProfileIdImport.update({
     id: '/profile/_profile/$id',
@@ -334,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLayoutIndexLazyImport
       parentRoute: typeof AuthenticatedLayoutImport
     }
+    '/_authenticated/workshop/curseforge/$id': {
+      id: '/_authenticated/workshop/curseforge/$id'
+      path: '/workshop/curseforge/$id'
+      fullPath: '/workshop/curseforge/$id'
+      preLoaderRoute: typeof AuthenticatedWorkshopCurseforgeIdRouteImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/workshop/project/$id': {
       id: '/_authenticated/workshop/project/$id'
       path: '/workshop/project/$id'
@@ -442,6 +461,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDownloadsLazyRoute: typeof AuthenticatedDownloadsLazyRoute
   AuthenticatedPatchNotesLazyRoute: typeof AuthenticatedPatchNotesLazyRoute
   AuthenticatedWorkshopSearchRouteRoute: typeof AuthenticatedWorkshopSearchRouteRoute
+  AuthenticatedWorkshopCurseforgeIdRouteRoute: typeof AuthenticatedWorkshopCurseforgeIdRouteRoute
   AuthenticatedWorkshopProjectIdRouteRoute: typeof AuthenticatedWorkshopProjectIdRouteRoute
 }
 
@@ -453,6 +473,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDownloadsLazyRoute: AuthenticatedDownloadsLazyRoute,
   AuthenticatedPatchNotesLazyRoute: AuthenticatedPatchNotesLazyRoute,
   AuthenticatedWorkshopSearchRouteRoute: AuthenticatedWorkshopSearchRouteRoute,
+  AuthenticatedWorkshopCurseforgeIdRouteRoute:
+    AuthenticatedWorkshopCurseforgeIdRouteRoute,
   AuthenticatedWorkshopProjectIdRouteRoute:
     AuthenticatedWorkshopProjectIdRouteRoute,
 }
@@ -476,6 +498,7 @@ export interface FileRoutesByFullPath {
   '/settings/game': typeof AuthenticatedSettingsGameLazyRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/': typeof AuthenticatedLayoutIndexLazyRoute
+  '/workshop/curseforge/$id': typeof AuthenticatedWorkshopCurseforgeIdRouteRoute
   '/workshop/project/$id': typeof AuthenticatedWorkshopProjectIdRouteRoute
   '/profile/$id': typeof AuthenticatedLayoutProfileProfileIdRouteWithChildren
   '/profile/$id/edit': typeof AuthenticatedLayoutProfileProfileIdEditRoute
@@ -497,6 +520,7 @@ export interface FileRoutesByTo {
   '/settings/game': typeof AuthenticatedSettingsGameLazyRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/': typeof AuthenticatedLayoutIndexLazyRoute
+  '/workshop/curseforge/$id': typeof AuthenticatedWorkshopCurseforgeIdRouteRoute
   '/workshop/project/$id': typeof AuthenticatedWorkshopProjectIdRouteRoute
   '/profile/$id/edit': typeof AuthenticatedLayoutProfileProfileIdEditRoute
   '/profile/$id/screenshots': typeof AuthenticatedLayoutProfileProfileIdScreenshotsRoute
@@ -520,6 +544,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/game': typeof AuthenticatedSettingsGameLazyRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/_layout/': typeof AuthenticatedLayoutIndexLazyRoute
+  '/_authenticated/workshop/curseforge/$id': typeof AuthenticatedWorkshopCurseforgeIdRouteRoute
   '/_authenticated/workshop/project/$id': typeof AuthenticatedWorkshopProjectIdRouteRoute
   '/_authenticated/_layout/profile/_profile/$id': typeof AuthenticatedLayoutProfileProfileIdRouteWithChildren
   '/_authenticated/_layout/profile/_profile/$id/edit': typeof AuthenticatedLayoutProfileProfileIdEditRoute
@@ -544,6 +569,7 @@ export interface FileRouteTypes {
     | '/settings/game'
     | '/settings/'
     | '/'
+    | '/workshop/curseforge/$id'
     | '/workshop/project/$id'
     | '/profile/$id'
     | '/profile/$id/edit'
@@ -564,6 +590,7 @@ export interface FileRouteTypes {
     | '/settings/game'
     | '/settings'
     | '/'
+    | '/workshop/curseforge/$id'
     | '/workshop/project/$id'
     | '/profile/$id/edit'
     | '/profile/$id/screenshots'
@@ -585,6 +612,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/game'
     | '/_authenticated/settings/'
     | '/_authenticated/_layout/'
+    | '/_authenticated/workshop/curseforge/$id'
     | '/_authenticated/workshop/project/$id'
     | '/_authenticated/_layout/profile/_profile/$id'
     | '/_authenticated/_layout/profile/_profile/$id/edit'
@@ -624,6 +652,7 @@ export const routeTree = rootRoute
         "/_authenticated/downloads",
         "/_authenticated/patch-notes",
         "/_authenticated/workshop/search",
+        "/_authenticated/workshop/curseforge/$id",
         "/_authenticated/workshop/project/$id"
       ]
     },
@@ -694,6 +723,10 @@ export const routeTree = rootRoute
     "/_authenticated/_layout/": {
       "filePath": "_authenticated/_layout/index.lazy.tsx",
       "parent": "/_authenticated/_layout"
+    },
+    "/_authenticated/workshop/curseforge/$id": {
+      "filePath": "_authenticated/workshop/curseforge.$id/route.tsx",
+      "parent": "/_authenticated"
     },
     "/_authenticated/workshop/project/$id": {
       "filePath": "_authenticated/workshop/project.$id/route.tsx",

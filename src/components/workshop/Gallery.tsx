@@ -9,6 +9,9 @@ import {
 } from "../ui/carousel";
 import type { Project } from "@/lib/api/modrinth/types.gen";
 import { Separator } from "../ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Image } from "lucide-react";
+import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 export const Gallery: React.FC<{
 	gallery: NonNullable<Project["gallery"]>;
@@ -24,9 +27,13 @@ export const Gallery: React.FC<{
 			<CarouselContent>
 				{images.map((item, i) => (
 					<CarouselItem key={`carousel_item_${i + 1}`}>
-						<div className="h-96">
-							<img
-								className="h-full w-full object-contain object-center"
+						<div className="flex justify-center items-center h-80">
+							<LazyLoadImage
+								effect="blur"
+								className="object-contain w-full h-full rounded-md"
+								wrapperProps={{
+									style: { transitionDelay: "1s" }
+								}}
 								src={item?.url}
 								alt={item?.title ?? `Gallery Image ${i}`}
 							/>
@@ -35,7 +42,7 @@ export const Gallery: React.FC<{
 				))}
 			</CarouselContent>
 
-			<Separator className="my-4" />
+			<Separator className="my-2" />
 
 			<div className="relative flex items-center justify-between px-6">
 				<CarouselPrevious className="relative bottom-0 left-0 right-0 top-0 translate-y-0" />
@@ -46,19 +53,20 @@ export const Gallery: React.FC<{
 							type="button"
 							key={`preview_image_${i + 1}`}
 							onClick={() => api?.scrollTo(i)}
-							className="h-28 w-28"
+							className="h-20 w-32"
 						>
-							<img
-								className="h-full w-full object-contain object-center"
-								src={item?.url}
-								alt={item?.title ?? `Gallery Image ${i}`}
-							/>
+							<Avatar className="rounded-md h-20 w-32">
+								<AvatarFallback className="rounded-md">
+									<Image />
+								</AvatarFallback>
+								<AvatarImage src={item?.url} alt={item?.title ?? `Gallery Image ${i}`} />
+							</Avatar>
 						</button>
 					))}
 				</div>
 				<CarouselNext className="relative bottom-0 left-0 right-0 top-0 translate-y-0" />
 			</div>
-			<Separator className="my-4" />
+			<Separator className="my-2" />
 		</Carousel>
 	);
 };

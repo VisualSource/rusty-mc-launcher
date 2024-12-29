@@ -1,22 +1,45 @@
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet, useNavigate } from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ToastContainer } from "react-toastify";
-import { lazy } from "react";
-
+import { lazy, useEffect } from "react";
 import type { AppContext } from "@/types";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/Footer";
 import AskDialog from "@/components/dialog/AskDialog";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 
 const TanStackRouterDevtools = import.meta.env.DEV
 	? lazy(() =>
-			import("@tanstack/router-devtools").then((res) => ({
-				default: res.TanStackRouterDevtools,
-			})),
-		)
+		import("@tanstack/router-devtools").then((res) => ({
+			default: res.TanStackRouterDevtools,
+		})),
+	)
 	: () => null;
 
 const Index: React.FC = () => {
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		const listen = onOpenUrl((urls) => {
+			const url = urls.at(0);
+			if (!url || !url.startsWith("rmcl://curseforge/")) return;
+			const id = url.replace("rmcl://curseforge/", "");
+
+			navigate({
+				to: "/workshop/curseforge/$id",
+				params: {
+					id
+				}
+			})
+		});
+
+		return () => {
+			listen.then(e => e()).catch(e => {
+				console.error(e);
+			});
+		}
+	}, [navigate]);
+
 	return (
 		<>
 			<Navbar />

@@ -19,7 +19,7 @@ const ModrinthWorkshopDisplay = memo(
 				<div className="relative">
 					<ScrollArea>
 						<div className="flex space-x-4 pb-4">
-							<ErrorBoundary fallbackRender={ErrorFallback}>
+							<ErrorBoundary fallbackRender={ErrorFallback as () => React.ReactNode}>
 								<Suspense fallback={<WorkshopContentMediumSkeleton />}>
 									<WorkshopContentMedium
 										content={params.content}

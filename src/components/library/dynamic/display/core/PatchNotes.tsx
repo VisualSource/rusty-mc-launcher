@@ -2,8 +2,8 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { compareDesc } from "date-fns/compareDesc";
 import { AlertTriangle, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import { memo, useState } from "react";
+import rehypeRaw from "rehype-raw";
 
 import {
 	Drawer,
@@ -12,9 +12,10 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 } from "@/components/ui/drawer";
-import { Button } from "@component/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loading } from "@/components/Loading";
+import { Button } from "@component/ui/button";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 type Patch = {
 	title: string;
@@ -52,7 +53,7 @@ const PatchNotesRead: React.FC<{
 }> = memo(({ contentPath, open, setOpen }) => {
 	const query = useQuery({
 		enabled: !!contentPath?.length,
-		queryKey: ["MINECRAFT", "PATCH_NODES", contentPath],
+		queryKey: ["MINECRAFT_PATCH_NODES", contentPath],
 		queryFn: () =>
 			fetch(`https://launchercontent.mojang.com/v2/${contentPath}`).then(
 				(e) => e.json() as Promise<Patch>,
@@ -159,13 +160,16 @@ const PatchNotes: React.FC = () => {
 					key={value.id}
 				>
 					<div className="overflow-hidden rounded-md">
-						<img
+						<LazyLoadImage
 							height={150}
 							width={150}
-							className="h-auto w-auto object-cover transition-all hover:scale-105 aspect-[3/4]"
-							src={`https://launchercontent.mojang.com${value.image.url}`}
+							effect="blur"
+							className="h-auto w-auto object-cover !transition-all hover:scale-105 aspect-[3/4]"
 							alt={value.image.title}
-						/>
+							wrapperProps={{
+								style: { transitionDelay: "1s" },
+							}}
+							src={`https://launchercontent.mojang.com${value.image.url}`} />
 					</div>
 					<div className="space-y-1 text-sm text-left">
 						<h3 className="font-medium leading-none">{value.title}</h3>

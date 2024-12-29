@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
 import { searchProjects } from "@lib/api/modrinth/services.gen";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 export const WorkshopContentMediumSkeleton: React.FC = memo(() => {
 	return (
@@ -63,16 +64,19 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 					key={value.project_id}
 				>
 					<div className="overflow-hidden rounded-md h-[200px]">
-						<img
-							className="object-cover transition-all hover:scale-105 aspect-square h-full w-full"
+						<LazyLoadImage
+							effect="blur"
+							className="object-cover !transition-all hover:scale-105 aspect-square h-full w-full"
+							alt={value.title ?? "Unnamed project"}
+							wrapperProps={{
+								style: { transitionDelay: "1s" },
+							}}
 							src={
 								value.featured_gallery ??
 								value.gallery?.at(0) ??
 								value.icon_url ??
 								""
-							}
-							alt={value.title ?? "Unnamed project"}
-						/>
+							} />
 					</div>
 					<div className="space-y-1 text-sm flex items-center gap-2 px-2">
 						<Avatar>

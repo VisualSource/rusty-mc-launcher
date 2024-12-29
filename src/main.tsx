@@ -1,7 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { MsalProvider } from "@azure/msal-react";
-import { error } from "@tauri-apps/plugin-log";
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 
@@ -10,16 +9,13 @@ import { ModrinthProvider } from "./components/providers/ModrinthProvider";
 import { ProcessProvider } from "@component/providers/ProcessProvider";
 import { checkForAppUpdate } from "./lib/system/updateCheck";
 import { queryClient } from "@lib/api/queryClient";
+import { logCatchError } from "./lib/catchError";
 import { getPCA } from "@auth/msal";
 import { router } from "./router";
 import "./index.css";
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
-checkForAppUpdate().catch(e => {
-	if (e instanceof Error) {
-		error(e.message);
-	}
-	console.error(e);
-});
+if (import.meta.env.PROD) checkForAppUpdate().catch(logCatchError);
 
 const msa = getPCA();
 const mca = new ModrinthClientApplication();

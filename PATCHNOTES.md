@@ -2,6 +2,13 @@
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1)
 
 #### Changes 
+- Add Window boarder patch
+- Add a Content Security Policy (CSP)
+
+# v0.8.1
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1)
+
+#### Changes 
 - Add toats to updates check btn
 - Add loaders to update check btn
 - Add disable when checking for updates after clicking btn
