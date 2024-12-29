@@ -42,3 +42,13 @@ Archive:
   ✔ Duplicate Profile @started(24-05-31 16:06) @done(24-05-31 16:59) @lasted(53m53s) @project(Todo)
   ✔ Fix workshop search @started(24-05-31 17:07) @done(24-05-31 17:07) @lasted(12s) @project(Todo)
   ✔ login indicator @started(24-05-31 14:28) @done(24-05-31 14:28) @lasted(16s) @project(Todo)
+
+  {
+				"default-src": "'self' rmcl: asset:",
+				"connect-src": "ipc: http://ipc.localhost https://cdn.modrinth.com https://api.minecraftservices.com https://launchercontent.mojang.com https://api.modrinth.com/v2 https://github.com/VisualSource https://api.cfwidget.com https://media.forgecdn.net/",
+				"font-src": [
+					"https://fonts.gstatic.com"
+				],
+				"img-src": "'self' asset: http://asset.localhost https://cdn.modrinth.com https://launchercontent.mojang.com https://github.com/VisualSource blob: data:",
+				"style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com"
+			}

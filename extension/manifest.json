@@ -1,0 +1,26 @@
+{
+    "manifest_version": 3,
+    "version": "0.0.1",
+    "name": "Open In RMCL",
+    "icons": {
+        "32": "icons/logo.svg",
+        "48": "icons/logo.svg",
+        "96": "icons/logo.svg",
+        "128": "icons/logo.svg"
+    },
+    "description": "Extenstion to add a button to curseforge to allow opening of the project in rmcl",
+    "developer": {
+        "name": "Collin Blosser",
+        "url": "https://github.com/VisualSource"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.curseforge.com/minecraft/mc-mods/*"
+            ],
+            "js": [
+                "main.js"
+            ]
+        }
+    ]
+}

@@ -1,9 +1,12 @@
-# v0.8.1
-**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1)
+# v0.8.2
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.1...v0.8.2](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.1...v0.8.2)
+
+#### New
+- Curseforge project page
 
 #### Changes 
 - Add Window boarder patch
-- Add a Content Security Policy (CSP)
+- Lazy load images
 
 # v0.8.1
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.0...v0.8.1)
