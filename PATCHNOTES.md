@@ -1,3 +1,14 @@
+# v0.8.3
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.3](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.3)
+
+#### Fixes 
+ - Fix border bug on windows 10
+
+#### Changes
+ - Upgrade tailwindcss to v4
+ - Upgrade msal
+ - Upgrade other deps
+
 # v0.8.2
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.1...v0.8.2](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.1...v0.8.2)
 
