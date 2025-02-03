@@ -1,58 +1,15 @@
 diff --git a/dist/interaction_client/PopupClient.mjs b/dist/interaction_client/PopupClient.mjs
-index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b03754cd2c938 100644
+index bf42a8d011665508842488392f31e6f861dc512b..a8eb0760914d01db77f1cd91f4058f0754c5bfd3 100644
 --- a/dist/interaction_client/PopupClient.mjs
 +++ b/dist/interaction_client/PopupClient.mjs
-@@ -1,452 +1,675 @@
- /*! @azure/msal-browser v3.27.0 2024-11-05 */
--'use strict';
--import { OIDC_DEFAULT_SCOPES, invokeAsync, PerformanceEvents, invoke, ThrottlingUtils, ProtocolUtils, AuthError, ProtocolMode, UrlString, ServerResponseType } from '@azure/msal-common/browser';
--import { StandardInteractionClient } from './StandardInteractionClient.mjs';
--import { EventType } from '../event/EventType.mjs';
--import { ApiId, InteractionType, BrowserConstants } from '../utils/BrowserConstants.mjs';
--import { preconnect, getCurrentUri } from '../utils/BrowserUtils.mjs';
--import { NativeInteractionClient } from './NativeInteractionClient.mjs';
--import { NativeMessageHandler } from '../broker/nativeBroker/NativeMessageHandler.mjs';
--import { createBrowserAuthError } from '../error/BrowserAuthError.mjs';
--import { InteractionHandler } from '../interaction_handler/InteractionHandler.mjs';
--import { deserializeResponse } from '../response/ResponseHandler.mjs';
--import { nativeConnectionNotEstablished, emptyNavigateUri, userCancelled, emptyWindowError, popupWindowError } from '../error/BrowserAuthErrorCodes.mjs';
-+"use strict";
+@@ -1,5 +1,6 @@
+ /*! @azure/msal-browser v4.0.2 2025-01-22 */
+ 'use strict';
 +import { once } from "@tauri-apps/api/event";
-+import {
-+	OIDC_DEFAULT_SCOPES,
-+	invokeAsync,
-+	PerformanceEvents,
-+	invoke,
-+	ThrottlingUtils,
-+	ProtocolUtils,
-+	AuthError,
-+	ProtocolMode,
-+	UrlString,
-+	ServerResponseType,
-+} from "@azure/msal-common/browser";
-+import { StandardInteractionClient } from "./StandardInteractionClient.mjs";
-+import { EventType } from "../event/EventType.mjs";
-+import {
-+	ApiId,
-+	InteractionType,
-+	BrowserConstants,
-+} from "../utils/BrowserConstants.mjs";
-+import { preconnect, getCurrentUri } from "../utils/BrowserUtils.mjs";
-+import { NativeInteractionClient } from "./NativeInteractionClient.mjs";
-+import { NativeMessageHandler } from "../broker/nativeBroker/NativeMessageHandler.mjs";
-+import { createBrowserAuthError } from "../error/BrowserAuthError.mjs";
-+import { InteractionHandler } from "../interaction_handler/InteractionHandler.mjs";
-+import { deserializeResponse } from "../response/ResponseHandler.mjs";
-+import {
-+	nativeConnectionNotEstablished,
-+	emptyNavigateUri,
-+	userCancelled,
-+	emptyWindowError,
-+	popupWindowError,
-+} from "../error/BrowserAuthErrorCodes.mjs";
- 
- /*
-  * Copyright (c) Microsoft Corporation. All rights reserved.
+ import { OIDC_DEFAULT_SCOPES, invokeAsync, PerformanceEvents, invoke, ThrottlingUtils, ProtocolUtils, AuthError, ProtocolMode, UrlString, ServerResponseType } from '@azure/msal-common/browser';
+ import { StandardInteractionClient } from './StandardInteractionClient.mjs';
+ import { EventType } from '../event/EventType.mjs';
+@@ -17,436 +18,632 @@ import { nativeConnectionNotEstablished, emptyNavigateUri, userCancelled, emptyW
   * Licensed under the MIT License.
   */
  class PopupClient extends StandardInteractionClient {
@@ -149,17 +106,17 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
 -                requestExtraQueryParameters: validRequest.extraQueryParameters,
 -                account: validRequest.account,
 -            });
--            const isNativeBroker = NativeMessageHandler.isNativeAvailable(this.config, this.logger, this.nativeMessageHandler, request.authenticationScheme);
+-            const isPlatformBroker = NativeMessageHandler.isPlatformBrokerAvailable(this.config, this.logger, this.nativeMessageHandler, request.authenticationScheme);
 -            // Start measurement for server calls with native brokering enabled
 -            let fetchNativeAccountIdMeasurement;
--            if (isNativeBroker) {
+-            if (isPlatformBroker) {
 -                fetchNativeAccountIdMeasurement =
 -                    this.performanceClient.startMeasurement(PerformanceEvents.FetchAccountIdWithNativeBroker, request.correlationId);
 -            }
 -            // Create acquire token url.
 -            const navigateUrl = await authClient.getAuthCodeUrl({
 -                ...validRequest,
--                nativeBroker: isNativeBroker,
+-                platformBroker: isPlatformBroker,
 -            });
 -            // Create popup interaction handler.
 -            const interactionHandler = new InteractionHandler(authClient, this.browserStorage, authCodeRequest, this.logger, this.performanceClient);
@@ -632,7 +589,7 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
 +				requestExtraQueryParameters: validRequest.extraQueryParameters,
 +				account: validRequest.account,
 +			});
-+			const isNativeBroker = NativeMessageHandler.isNativeAvailable(
++			const isPlatformBroker = NativeMessageHandler.isPlatformBrokerAvailable(
 +				this.config,
 +				this.logger,
 +				this.nativeMessageHandler,
@@ -640,7 +597,7 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
 +			);
 +			// Start measurement for server calls with native brokering enabled
 +			let fetchNativeAccountIdMeasurement;
-+			if (isNativeBroker) {
++			if (isPlatformBroker) {
 +				fetchNativeAccountIdMeasurement =
 +					this.performanceClient.startMeasurement(
 +						PerformanceEvents.FetchAccountIdWithNativeBroker,
@@ -650,7 +607,7 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
 +			// Create acquire token url.
 +			const navigateUrl = await authClient.getAuthCodeUrl({
 +				...validRequest,
-+				nativeBroker: isNativeBroker,
++				platformBroker: isPlatformBroker,
 +			});
 +			// Create popup interaction handler.
 +			const interactionHandler = new InteractionHandler(
@@ -902,7 +859,7 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
 +		let unlisten;
 +		let intervalId;
 +
-+		const hasHandler = new Promise((resolve, reject) => {
++		const hashHandler = new Promise((resolve, reject) => {
 +			unlisten = once("auth-response", (ev) => {
 +				clearInterval(intervalId);
 +				try {
@@ -912,7 +869,6 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
 +						);
 +
 +						const url = new URL(ev.payload);
-+
 +						const responseType =
 +							this.config.auth.OIDCOptions.serverResponseType;
 +						let responseString = "";
@@ -945,11 +901,7 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
 +				}
 +			}, this.config.system.pollIntervalMilliseconds);
 +		});
-+
-+		return (async () => {
-+			this.logger.verbose("PopupHandler.monitorPopupForHash - polling started");
-+			return Promise.race([closeHandler, hasHandler]);
-+		})().finally(() => {
++		return Promise.race([hashHandler, closeHandler]).finally(() => {
 +			clearInterval(intervalId);
 +			this.cleanPopup(popupWindow, popupWindowParent);
 +			unlisten
@@ -1121,148 +1073,15 @@ index 7908aec42999054e61235ac28b47fb20c1e35ded..9141952499eb372b5819baaac85b0375
  
  export { PopupClient };
 diff --git a/package.json b/package.json
-index 5f5e35b6386c8d7271272f6a18e1f41dd2b2ab3b..2fe63a37f3c1f11894a58d19018ad90926c25f48 100644
+index 85c44bd37157f71dcb8ebbbd76c0a203788daf68..765cb7a3548dfc1433fbf9c1f1a88e49a94bd42c 100644
 --- a/package.json
 +++ b/package.json
-@@ -73,6 +73,7 @@
-     "apiExtractor": "api-extractor run"
+@@ -103,6 +103,7 @@
+     "typescript": "^4.9.5"
    },
-   "devDependencies": {
-+    "@tauri-apps/api": "^2.0.3",
-     "@azure/storage-blob": "^12.2.1",
-     "@babel/core": "^7.7.2",
-     "@babel/plugin-proposal-class-properties": "^7.7.0",
-diff --git a/src/interaction_client/PopupClient.ts b/src/interaction_client/PopupClient.ts
-index 2fd05de3c52aab59960eb2fef2f0185351c9f958..cfc695aa3448f72860fbc6ce6f278346d10b7eee 100644
---- a/src/interaction_client/PopupClient.ts
-+++ b/src/interaction_client/PopupClient.ts
-@@ -2,7 +2,7 @@
-  * Copyright (c) Microsoft Corporation. All rights reserved.
-  * Licensed under the MIT License.
-  */
--
-+import { once, type UnlistenFn } from "@tauri-apps/api/event";
- import {
-     CommonAuthorizationCodeRequest,
-     AuthorizationCodeClient,
-@@ -545,61 +545,61 @@ export class PopupClient extends StandardInteractionClient {
-         popupWindow: Window,
-         popupWindowParent: Window
-     ): Promise<string> {
--        return new Promise<string>((resolve, reject) => {
--            this.logger.verbose(
--                "PopupHandler.monitorPopupForHash - polling started"
--            );
--
--            const intervalId = setInterval(() => {
--                // Window is closed
--                if (popupWindow.closed) {
--                    this.logger.error(
--                        "PopupHandler.monitorPopupForHash - window closed"
--                    );
--                    clearInterval(intervalId);
--                    reject(
--                        createBrowserAuthError(
--                            BrowserAuthErrorCodes.userCancelled
--                        )
--                    );
--                    return;
--                }
-+        let unlisten: Promise<UnlistenFn> | undefined;
-+        let intervalId: NodeJS.Timeout | undefined;
- 
--                let href = "";
--                try {
--                    /*
--                     * Will throw if cross origin,
--                     * which should be caught and ignored
--                     * since we need the interval to keep running while on STS UI.
--                     */
--                    href = popupWindow.location.href;
--                } catch (e) {}
--
--                // Don't process blank pages or cross domain
--                if (!href || href === "about:blank") {
--                    return;
--                }
-+        const hasHandler = new Promise<string>((resolve, reject) => {
-+            unlisten = once<string>("auth-response", (ev) => {
-                 clearInterval(intervalId);
-+                try {
-+                    if (typeof ev.payload === "string") {
-+                        this.logger.verbose(
-+                            "PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
-+                        );
- 
--                let responseString = "";
--                const responseType =
--                    this.config.auth.OIDCOptions.serverResponseType;
--                if (popupWindow) {
--                    if (responseType === ServerResponseType.QUERY) {
--                        responseString = popupWindow.location.search;
--                    } else {
--                        responseString = popupWindow.location.hash;
-+                        const url = new URL(ev.payload);
-+
-+                        const responseType = this.config.auth.OIDCOptions.serverResponseType;
-+                        let responseString = "";
-+                        if (responseType === ServerResponseType.QUERY) {
-+                            responseString = url.search;
-+                        } else {
-+                            responseString = url.hash;
-+                        }
-+
-+                        resolve(responseString);
-+                        return;
-                     }
-+                    throw new Error("Invalid payload");
-+                } catch (error) {
-+                    reject(createBrowserAuthError(BrowserAuthErrorCodes.popupWindowError));
-                 }
-+            });
-+        });
- 
--                this.logger.verbose(
--                    "PopupHandler.monitorPopupForHash - popup window is on same origin as caller"
--                );
--
--                resolve(responseString);
-+        const closeHandler = new Promise<string>((_, reject) => {
-+            intervalId = setInterval(() => {
-+                // Window is closed
-+                if (popupWindow.closed) {
-+                    this.logger.error("PopupHandler.monitorPopupForHash - window closed");
-+                    clearInterval(intervalId);
-+                    reject(createBrowserAuthError(BrowserAuthErrorCodes.userCancelled));
-+                    return;
-+                }
-             }, this.config.system.pollIntervalMilliseconds);
--        }).finally(() => {
-+        });
-+
-+        return (async () => {
-+            this.logger.verbose("PopupHandler.monitorPopupForHash - polling started");
-+            return Promise.race([closeHandler, hasHandler]);
-+        })().finally(() => {
-+            clearInterval(intervalId);
-             this.cleanPopup(popupWindow, popupWindowParent);
-+            unlisten
-+                ?.then((unsubscribe) => unsubscribe())
-+                .catch((e) =>
-+                    this.logger.error((e as Error)?.message ?? "Failed to unsubscribe."),
-+                );
-         });
-     }
- 
-@@ -779,9 +779,8 @@ export class PopupClient extends StandardInteractionClient {
-      * @param request
-      */
-     generatePopupName(scopes: Array<string>, authority: string): string {
--        return `${BrowserConstants.POPUP_NAME_PREFIX}.${
--            this.config.auth.clientId
--        }.${scopes.join("-")}.${authority}.${this.correlationId}`;
-+        return `${BrowserConstants.POPUP_NAME_PREFIX}.${this.config.auth.clientId
-+            }.${scopes.join("-")}.${authority}.${this.correlationId}`;
-     }
- 
-     /**
+   "dependencies": {
+-    "@azure/msal-common": "15.0.2"
++    "@azure/msal-common": "15.0.2",
++    "@tauri-apps/api": "^2.2.0"
+   }
+ }
