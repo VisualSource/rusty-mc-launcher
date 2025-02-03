@@ -1,7 +1,8 @@
-# v0.8.3
+# v0.8.4
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.3](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.3)
 
 #### Fixes 
+ - Fix build script
  - Fix border bug on windows 10
 
 #### Changes
