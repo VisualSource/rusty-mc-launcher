@@ -65,8 +65,8 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 				>
 					<div className="overflow-hidden rounded-md h-[200px]">
 						<LazyLoadImage
-							effect="blur"
-							className="object-cover !transition-all hover:scale-105 aspect-square h-full w-full"
+							effect="blur-sm"
+							className="object-cover transition-all! hover:scale-105 aspect-square h-full w-full"
 							alt={value.title ?? "Unnamed project"}
 							wrapperProps={{
 								style: { transitionDelay: "1s" },

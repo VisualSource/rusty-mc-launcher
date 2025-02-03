@@ -142,7 +142,7 @@ const Footer = memo(() => {
 	};
 
 	return (
-		<footer className="flex h-16 flex-shrink-0 flex-grow-0 bg-zinc-950 text-zinc-400 shadow">
+		<footer className="flex h-16 shrink-0 grow-0 bg-zinc-950 text-zinc-400 shadow-sm">
 			<AuthenticatedTemplate>
 				<div className="flex h-full w-full shrink items-center justify-start">
 					<Dialog open={openDialog} onOpenChange={setOpen}>

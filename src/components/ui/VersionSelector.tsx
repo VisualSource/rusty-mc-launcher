@@ -56,7 +56,7 @@ export const VersionSelector: React.FC<{
 						<CommandGroup>
 							{data?.map((item) => (
 								<CommandItem
-									className="z-[10000000] w-full"
+									className="z-10000000 w-full"
 									key={item.id}
 									value={item.id}
 									onSelect={(currentValue) => {

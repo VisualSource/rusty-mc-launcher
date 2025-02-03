@@ -148,7 +148,7 @@ function CreateProfile() {
 							name="resolution_width"
 							control={form.control}
 							render={({ field }) => (
-								<FormItem className="flex flex-row items-center justify-between p-3 shadow-sm">
+								<FormItem className="flex flex-row items-center justify-between p-3 shadow-xs">
 									<div className="space-y-0.5">
 										<FormLabel>Window Width</FormLabel>
 										<FormDescription>
@@ -170,7 +170,7 @@ function CreateProfile() {
 							name="resolution_height"
 							control={form.control}
 							render={({ field }) => (
-								<FormItem className="flex flex-row items-center justify-between p-3 shadow-sm">
+								<FormItem className="flex flex-row items-center justify-between p-3 shadow-xs">
 									<div className="space-y-0.5">
 										<FormLabel>Window Height</FormLabel>
 										<FormDescription>

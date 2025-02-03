@@ -209,7 +209,7 @@ const WorkshopHome: React.FC = memo(() => {
 					maxPages={data?.maxPages ?? 0}
 					items={data?.links ?? []}
 				/>
-				<div className="grid flex-1 grid-flow-row grid-cols-1 gap-4 px-4 sm:grid-cols-3 xl:grid-cols-3 flex-grow">
+				<div className="grid flex-1 grid-flow-row grid-cols-1 gap-4 px-4 sm:grid-cols-3 xl:grid-cols-3 grow">
 					{isLoading ? (
 						<>
 							{Array.from({ length: search.limit }).map((_, i) => (
@@ -223,7 +223,7 @@ const WorkshopHome: React.FC = memo(() => {
 											</span>
 										</div>
 									</CardHeader>
-									<CardContent className="flex flex-grow flex-col">
+									<CardContent className="flex grow flex-col">
 										<div className="col-span-3 flex flex-col gap-2 justify-between h-full">
 											<Skeleton className="w-full h-16" />
 											<div className="space-y-1">
@@ -276,7 +276,7 @@ const WorkshopHome: React.FC = memo(() => {
 											</span>
 										</div>
 									</CardHeader>
-									<CardContent className="flex flex-grow flex-col">
+									<CardContent className="flex grow flex-col">
 										<div className="col-span-3 flex flex-col gap-2 justify-between h-full">
 											<p className="line-clamp-5 text-sm xl:text-base xl:py-2">
 												{project.description}

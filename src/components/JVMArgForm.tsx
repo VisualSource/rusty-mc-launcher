@@ -34,7 +34,7 @@ const TickedSilder: React.FC<{
 }> = ({ min, max, disabled, value, onValueChange }) => {
 	const tickRange = useMemo(() => range(min, max, 1), [min, max]);
 	return (
-		<div className="flex-grow items-center">
+		<div className="grow items-center">
 			<MarkedSlider
 				onValueChange={onValueChange}
 				value={value}

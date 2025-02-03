@@ -20,7 +20,7 @@ const SectionDivider: React.FC<React.PropsWithChildren<Props>> = ({
 				</TypographyMuted>
 			</div>
 			<Separator className="h-[2px] shrink dark:bg-zinc-500" />
-			<div className="ml-2 flex flex-grow whitespace-nowrap">{children}</div>
+			<div className="ml-2 flex grow whitespace-nowrap">{children}</div>
 		</div>
 	);
 };

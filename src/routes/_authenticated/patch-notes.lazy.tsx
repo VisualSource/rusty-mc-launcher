@@ -29,7 +29,7 @@ function PatchNotes() {
 	return (
 		<div className="w-full h-full flex flex-col bg-accent/50 overflow-y-auto scrollbar">
 			<ReactMarkdown
-				className="prose prose-invert container max-w-screen-md"
+				className="prose prose-invert container max-w-(--breakpoint-md)"
 				components={{
 					a: ({ children, href }) => (
 						<a target="_blank" rel="noopener noreferrer" href={href}>
