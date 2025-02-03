@@ -54,6 +54,7 @@
 	"app": {
 		"windows": [
 			{
+				"shadow": false,
 				"userAgent": "VisualSource/rusty-mc-launcher/0.10.x",
 				"fullscreen": false,
 				"focus": true,
