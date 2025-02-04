@@ -15,9 +15,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@azure/msal-browser": "^4.0.2",
-		"@azure/msal-common": "^15.0.2",
-		"@azure/msal-react": "^3.0.2",
+		"@azure/msal-browser": "^4.1.0",
+		"@azure/msal-common": "^15.1.0",
+		"@azure/msal-react": "^3.0.3",
 		"@hey-api/client-fetch": "^0.8.0",
 		"@hookform/resolvers": "^3.10.0",
 		"@microsoft/microsoft-graph-client": "^3.0.7",
@@ -50,7 +50,7 @@
 		"@radix-ui/react-tooltip": "^1.1.7",
 		"@tanstack/react-query": "^5.66.0",
 		"@tanstack/react-router": "^1.99.0",
-		"@tanstack/react-virtual": "^3.11.3",
+		"@tanstack/react-virtual": "^3.12.0",
 		"@tauri-apps/api": "^2.2.0",
 		"@tauri-apps/plugin-deep-link": "^2.2.0",
 		"@tauri-apps/plugin-dialog": "^2.2.0",
@@ -80,7 +80,7 @@
 		"react-toastify": "^11.0.3",
 		"rehype-raw": "^7.0.0",
 		"remark-gfm": "^4.0.0",
-		"semver": "^7.7.0",
+		"semver": "^7.7.1",
 		"skinview3d": "^3.1.0",
 		"tailwind-merge": "^3.0.1",
 		"tailwindcss-animate": "^1.0.7",
@@ -92,27 +92,27 @@
 		"@biomejs/biome": "^1.9.4",
 		"@hey-api/openapi-ts": "^0.64.1",
 		"@tailwindcss/container-queries": "^0.1.1",
-		"@tailwindcss/typography": "^0.5.15",
+		"@tailwindcss/typography": "^0.5.16",
 		"@tailwindcss/vite": "^4.0.3",
 		"@tanstack/react-query-devtools": "^5.66.0",
 		"@tanstack/router-devtools": "^1.99.0",
-		"@tanstack/router-plugin": "^1.99.0",
+		"@tanstack/router-plugin": "^1.99.3",
 		"@tauri-apps/cli": "^2.2.7",
 		"@total-typescript/ts-reset": "^0.6.1",
 		"@types/debug": "^4.1.12",
 		"@types/lodash.debounce": "^4.0.9",
-		"@types/node": "^22.13.0",
+		"@types/node": "^22.13.1",
 		"@types/react": "^19.0.8",
 		"@types/react-dom": "^19.0.3",
 		"@types/react-lazy-load-image-component": "^1.6.4",
 		"@types/semver": "^7.5.8",
 		"@vitejs/plugin-react-swc": "^3.7.2",
 		"postcss": "^8.5.1",
-		"tailwindcss": "^4.0.0",
+		"tailwindcss": "^4.0.3",
 		"typescript": "^5.7.3",
 		"vite": "^6.0.11",
 		"vite-plugin-csp-guard": "^2.0.1",
-		"vitest": "^3.0.4"
+		"vitest": "^3.0.5"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
@@ -121,7 +121,7 @@
 			"@azure/msal-browser"
 		],
 		"patchedDependencies": {
-			"@azure/msal-browser@4.0.2": "patches/@azure__msal-browser@4.0.2.patch"
+			"@azure/msal-browser@4.1.0": "patches/@azure__msal-browser@4.1.0.patch"
 		}
 	}
 }
