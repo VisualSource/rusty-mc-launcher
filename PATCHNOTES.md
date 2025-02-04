@@ -1,5 +1,12 @@
+# v0.8.5
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.5](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.5)
+
+#### Fixes
+- Fix Blur bug
+- Fix workshop seach
+
 # v0.8.4
-**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.3](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.3)
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.3](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.2...v0.8.4)
 
 #### Fixes 
  - Fix build script
