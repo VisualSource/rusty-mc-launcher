@@ -74,7 +74,11 @@ function CreateProfile() {
 				},
 			});
 		} catch (error) {
-			createToast({ error, variant: "error", title: "Failed to create profile" });
+			createToast({
+				error,
+				variant: "error",
+				title: "Failed to create profile",
+			});
 			console.error(error);
 		}
 	};

@@ -24,7 +24,9 @@ const CollectionDisplay = memo(
 				<div className="relative">
 					<ScrollArea>
 						<div className="flex space-x-4 pb-4">
-							<ErrorBoundary fallbackRender={ErrorFallback as () => React.ReactNode}>
+							<ErrorBoundary
+								fallbackRender={ErrorFallback as () => React.ReactNode}
+							>
 								<Suspense fallback={<CollectionLargeLoading />}>
 									<CollectionLarge cat={params.id} />
 								</Suspense>

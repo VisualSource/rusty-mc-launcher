@@ -11,7 +11,7 @@ import type { Project } from "@/lib/api/modrinth/types.gen";
 import { Separator } from "../ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Image } from "lucide-react";
-import { LazyLoadImage } from 'react-lazy-load-image-component';
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 export const Gallery: React.FC<{
 	gallery: NonNullable<Project["gallery"]>;
@@ -32,7 +32,7 @@ export const Gallery: React.FC<{
 								effect="blur"
 								className="object-contain w-full h-full rounded-md"
 								wrapperProps={{
-									style: { transitionDelay: "1s" }
+									style: { transitionDelay: "1s" },
 								}}
 								src={item?.url}
 								alt={item?.title ?? `Gallery Image ${i}`}
@@ -59,7 +59,10 @@ export const Gallery: React.FC<{
 								<AvatarFallback className="rounded-md">
 									<Image />
 								</AvatarFallback>
-								<AvatarImage src={item?.url} alt={item?.title ?? `Gallery Image ${i}`} />
+								<AvatarImage
+									src={item?.url}
+									alt={item?.title ?? `Gallery Image ${i}`}
+								/>
 							</Avatar>
 						</button>
 					))}

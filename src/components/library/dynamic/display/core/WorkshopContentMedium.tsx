@@ -74,7 +74,8 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 								value.gallery?.at(0) ??
 								value.icon_url ??
 								""
-							} />
+							}
+						/>
 					</div>
 					<div className="space-y-1 text-sm flex items-center gap-2 px-2">
 						<Avatar>

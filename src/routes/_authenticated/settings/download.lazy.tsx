@@ -39,15 +39,30 @@ const UpdateCheckBtn: React.FC = () => {
 	const [isChecking, setIsChecking] = useState(false);
 
 	return (
-		<Button disabled={isChecking} className="w-full" variant="outline" onClick={() => {
-			setIsChecking(true);
-			checkForAppUpdate(true).catch(e => {
-				if (e instanceof Error) error(e.message);
-				console.error(e);
-			}).finally(() => setIsChecking(false))
-		}}>{isChecking ? <span className="inline-flex gap-2 items-center">Looking for updates <Loader2 className="animate-spin" /></span> : <span>Check for updates</span>}</Button>
+		<Button
+			disabled={isChecking}
+			className="w-full"
+			variant="outline"
+			onClick={() => {
+				setIsChecking(true);
+				checkForAppUpdate(true)
+					.catch((e) => {
+						if (e instanceof Error) error(e.message);
+						console.error(e);
+					})
+					.finally(() => setIsChecking(false));
+			}}
+		>
+			{isChecking ? (
+				<span className="inline-flex gap-2 items-center">
+					Looking for updates <Loader2 className="animate-spin" />
+				</span>
+			) : (
+				<span>Check for updates</span>
+			)}
+		</Button>
 	);
-}
+};
 
 function DownloadSettings() {
 	const { data } = useSuspenseQuery({

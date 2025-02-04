@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";
 
-
 const OPTION_EXIT_ON_START = "option.exit_on_start";
 
 export const Route = createLazyFileRoute("/_authenticated/settings/game")({

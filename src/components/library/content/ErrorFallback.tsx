@@ -3,7 +3,10 @@ import { AlertTriangle, RefreshCcw } from "lucide-react";
 import { TypographyH3 } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 
-export const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
+export const ErrorFallback: React.FC<FallbackProps> = ({
+	error,
+	resetErrorBoundary,
+}) => {
 	return (
 		<div
 			className="flex h-56 w-full flex-col items-center justify-center space-y-6"

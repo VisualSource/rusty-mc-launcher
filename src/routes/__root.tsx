@@ -1,4 +1,8 @@
-import { createRootRouteWithContext, Outlet, useNavigate } from "@tanstack/react-router";
+import {
+	createRootRouteWithContext,
+	Outlet,
+	useNavigate,
+} from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { ToastContainer } from "react-toastify";
@@ -11,10 +15,10 @@ import Footer from "@/components/Footer";
 
 const TanStackRouterDevtools = import.meta.env.DEV
 	? lazy(() =>
-		import("@tanstack/router-devtools").then((res) => ({
-			default: res.TanStackRouterDevtools,
-		})),
-	)
+			import("@tanstack/router-devtools").then((res) => ({
+				default: res.TanStackRouterDevtools,
+			})),
+		)
 	: () => null;
 
 const Index: React.FC = () => {
@@ -29,16 +33,18 @@ const Index: React.FC = () => {
 			navigate({
 				to: "/workshop/curseforge/$id",
 				params: {
-					id
-				}
-			})
+					id,
+				},
+			});
 		});
 
 		return () => {
-			listen.then(e => e()).catch(e => {
-				console.error(e);
-			});
-		}
+			listen
+				.then((e) => e())
+				.catch((e) => {
+					console.error(e);
+				});
+		};
 	}, [navigate]);
 
 	return (

@@ -122,10 +122,7 @@ export function WorkshopPagination({
 					/>
 				</PaginationItem>
 				<PaginationItem>
-					<PaginationLink
-						isActive={currentPage === 1}
-						onClick={(() => goTo(0))}
-					>
+					<PaginationLink isActive={currentPage === 1} onClick={() => goTo(0)}>
 						1
 					</PaginationLink>
 				</PaginationItem>

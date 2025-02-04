@@ -102,7 +102,10 @@ export const createToast = ({
 
 export const updateToast = (
 	id: Id,
-	{ opts, ...data }: ToastProps & { opts?: Omit<ToastOptions, "type" | "closeButton"> },
+	{
+		opts,
+		...data
+	}: ToastProps & { opts?: Omit<ToastOptions, "type" | "closeButton"> },
 ) =>
 	toast.update(id, {
 		...opts,
@@ -110,7 +113,7 @@ export const updateToast = (
 		className: toastVariants({ variant: data?.variant }),
 		type: data?.variant ?? "default",
 		closeButton: false,
-		data
+		data,
 	});
 
 export const waitToast = ({

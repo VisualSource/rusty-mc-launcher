@@ -169,7 +169,8 @@ const PatchNotes: React.FC = () => {
 							wrapperProps={{
 								style: { transitionDelay: "1s" },
 							}}
-							src={`https://launchercontent.mojang.com${value.image.url}`} />
+							src={`https://launchercontent.mojang.com${value.image.url}`}
+						/>
 					</div>
 					<div className="space-y-1 text-sm text-left">
 						<h3 className="font-medium leading-none">{value.title}</h3>

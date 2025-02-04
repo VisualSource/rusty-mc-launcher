@@ -97,7 +97,8 @@ const checkForUpdate = async (
 
 			if (doUpdate) {
 				updateToast(toastId, {
-					title: "Installing new version", variant: "info",
+					title: "Installing new version",
+					variant: "info",
 					opts: {
 						isLoading: false,
 						autoClose: 5000,
@@ -123,7 +124,7 @@ const checkForUpdate = async (
 			opts: {
 				isLoading: false,
 				autoClose: 5000,
-			}
+			},
 		});
 	} catch (error) {
 		console.error(error);
@@ -134,7 +135,7 @@ const checkForUpdate = async (
 			opts: {
 				isLoading: false,
 				autoClose: 5000,
-			}
+			},
 		});
 	}
 };

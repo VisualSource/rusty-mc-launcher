@@ -76,7 +76,12 @@ function Project() {
 					<TypographyH1>{project.title}</TypographyH1>
 				</div>
 
-				{project?.source_url || project.gallery?.length || project?.issues_url || project?.wiki_url || project?.discord_url || project?.donation_urls?.length ? (
+				{project?.source_url ||
+				project.gallery?.length ||
+				project?.issues_url ||
+				project?.wiki_url ||
+				project?.discord_url ||
+				project?.donation_urls?.length ? (
 					<section className="rounded-lg bg-blue-900/10 p-2 shadow-2xl">
 						{project.gallery?.length ? (
 							<Gallery gallery={project.gallery} />
@@ -84,7 +89,8 @@ function Project() {
 
 						<div className="flex flex-wrap gap-2 px-2">
 							{project.source_url ? (
-								<a title={project.source_url}
+								<a
+									title={project.source_url}
 									rel="noopener noreferrer"
 									target="_blank"
 									href={project.source_url}
@@ -132,22 +138,22 @@ function Project() {
 							) : null}
 							{project.donation_urls
 								? project.donation_urls.map((value) => (
-									<a
-										title={value.url}
-										href={value.url}
-										target="_blank"
-										key={value.id}
-										className="rounded-md hover:bg-zinc-600/50 bg-zinc-600 px-2 py-1 text-sm font-bold inline-flex items-center gap-1"
-										rel="noopener noreferrer"
-									>
-										<DollarSign className="h-5 w-5" />
-										{value.platform
-											? "Donate"
-											: value.platform === "Other"
+										<a
+											title={value.url}
+											href={value.url}
+											target="_blank"
+											key={value.id}
+											className="rounded-md hover:bg-zinc-600/50 bg-zinc-600 px-2 py-1 text-sm font-bold inline-flex items-center gap-1"
+											rel="noopener noreferrer"
+										>
+											<DollarSign className="h-5 w-5" />
+											{value.platform
 												? "Donate"
-												: value.platform}
-									</a>
-								))
+												: value.platform === "Other"
+													? "Donate"
+													: value.platform}
+										</a>
+									))
 								: null}
 						</div>
 					</section>
@@ -159,7 +165,8 @@ function Project() {
 							<TypographyH4>{project.title}</TypographyH4>
 
 							<div className="flex items-center gap-2">
-								<Button size="sm"
+								<Button
+									size="sm"
 									onClick={async () => {
 										const toastId = createToast({
 											closeButton: false,
@@ -195,7 +202,7 @@ function Project() {
 												opts: {
 													isLoading: false,
 													autoClose: 5000,
-												}
+												},
 											});
 										}
 									}}
@@ -203,7 +210,7 @@ function Project() {
 									variant="secondary"
 								>
 									{isModrinthAuthed &&
-										follows.data?.findIndex((e) => e.id === project.id) !== -1 ? (
+									follows.data?.findIndex((e) => e.id === project.id) !== -1 ? (
 										<>
 											<HeartOff className="mr-2 h-5 w-5" /> Unfollow
 										</>
@@ -214,7 +221,8 @@ function Project() {
 									)}
 								</Button>
 
-								<Button size="sm"
+								<Button
+									size="sm"
 									title="Install content"
 									onClick={() => install(project)}
 								>
@@ -266,12 +274,16 @@ function Project() {
 							<div className="flex items-center gap-1">
 								<Calendar className="h-5 w-5" />
 								<span className="font-bold">Created</span>
-								<span className="text-sm italic">{formatRelative(project.published, new Date())}</span>
+								<span className="text-sm italic">
+									{formatRelative(project.published, new Date())}
+								</span>
 							</div>
 							<div className="flex items-center gap-1">
 								<RefreshCcw className="h-5 w-5" />
 								<span className="font-bold">Updated</span>
-								<span className="text-sm italic">{formatRelative(project.updated, new Date())}</span>
+								<span className="text-sm italic">
+									{formatRelative(project.updated, new Date())}
+								</span>
 							</div>
 
 							<div className="flex items-center gap-1">

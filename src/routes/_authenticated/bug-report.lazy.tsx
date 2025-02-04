@@ -68,7 +68,7 @@ function BugReport() {
 				opts: {
 					isLoading: false,
 					autoClose: 5000,
-				}
+				},
 			});
 			navigate({ to: "/" });
 		} catch (err) {
@@ -80,7 +80,7 @@ function BugReport() {
 				opts: {
 					isLoading: false,
 					autoClose: 5000,
-				}
+				},
 			});
 		}
 	};

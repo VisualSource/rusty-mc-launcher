@@ -314,7 +314,11 @@ function ProfileEdit() {
 									});
 								} catch (error) {
 									console.error(error);
-									createToast({ variant: "error", title: "Failed to copy", error });
+									createToast({
+										variant: "error",
+										title: "Failed to copy",
+										error,
+									});
 								}
 							}}
 							type="button"

@@ -43,7 +43,7 @@ export async function profileImportFile(
 			opts: {
 				isLoading: false,
 				autoClose: 5000,
-			}
+			},
 		});
 	} catch (err) {
 		error((err as Error).message);
@@ -55,7 +55,7 @@ export async function profileImportFile(
 				opts: {
 					isLoading: false,
 					autoClose: 5000,
-				}
+				},
 			});
 	}
 }

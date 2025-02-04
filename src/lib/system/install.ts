@@ -274,7 +274,7 @@ export async function install(data: Project) {
 						opts: {
 							isLoading: false,
 							autoClose: 5000,
-						}
+						},
 					});
 					return;
 				}
@@ -345,7 +345,7 @@ export async function install(data: Project) {
 						opts: {
 							isLoading: false,
 							autoClose: 5000,
-						}
+						},
 					});
 					return;
 				}
@@ -470,7 +470,7 @@ export async function install(data: Project) {
 						opts: {
 							isLoading: false,
 							autoClose: 5000,
-						}
+						},
 					});
 					return;
 				}
@@ -488,8 +488,8 @@ export async function install(data: Project) {
 						title: "Install canceled",
 						opts: {
 							isLoading: false,
-							autoClose: 5000
-						}
+							autoClose: 5000,
+						},
 					});
 					return;
 				}
@@ -564,7 +564,7 @@ export async function install(data: Project) {
 			opts: {
 				isLoading: false,
 				autoClose: 5000,
-			}
+			},
 		});
 	}
 }
