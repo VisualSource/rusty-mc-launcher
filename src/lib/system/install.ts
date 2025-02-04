@@ -10,7 +10,7 @@ import {
 	getProjectVersions,
 	getVersion,
 	getProject,
-} from "../api/modrinth/services.gen";
+} from "../api/modrinth/sdk.gen";
 import {
 	uninstallContentByFilename,
 	uninstallContentById,
@@ -18,7 +18,6 @@ import {
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { createToast, updateToast } from "@component/ui/toast";
 import { ContentType } from "@lib/models/download_queue";
-import { modrinthClient } from "../api/modrinthClient";
 import { askFor } from "@/components/dialog/AskDialog";
 import { QueueItem } from "../models/download_queue";
 import { QueueItemState } from "../QueueItemState";
@@ -40,7 +39,6 @@ async function getContentVersion(
 ): Promise<Version> {
 	if (current.project_id) {
 		const versions = await getProjectVersions({
-			client: modrinthClient,
 			path: {
 				"id|slug": current.project_id,
 			},
@@ -59,7 +57,6 @@ async function getContentVersion(
 	}
 	if (current.version_id) {
 		const version = await getVersion({
-			client: modrinthClient,
 			path: {
 				id: current.version_id,
 			},
@@ -105,7 +102,6 @@ async function* getDependencies(
 
 		if (current.dependency_type === "optional") {
 			const project = await getProject({
-				client: modrinthClient,
 				path: {
 					"id|slug": version.project_id,
 				},
@@ -284,7 +280,6 @@ export async function install(data: Project) {
 				}
 
 				const versions = await getProjectVersions({
-					client: modrinthClient,
 					path: {
 						"id|slug": data.id,
 					},
@@ -364,7 +359,6 @@ export async function install(data: Project) {
 				const loaders = JSON.stringify([profile.loader]);
 				const gameVersions = JSON.stringify(target);
 				const versions = await getProjectVersions({
-					client: modrinthClient,
 					path: {
 						"id|slug": data.id,
 					},
@@ -501,7 +495,6 @@ export async function install(data: Project) {
 				}
 
 				const version_data = await getProjectVersions({
-					client: modrinthClient,
 					path: {
 						"id|slug": data.id,
 					},

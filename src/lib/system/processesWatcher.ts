@@ -3,10 +3,9 @@ import {
 	listen,
 	type UnlistenFn,
 } from "@tauri-apps/api/event";
-import { listActiveProcesses } from "../api/plugins/game";
-import { error } from "@tauri-apps/plugin-log";
-import { isOption } from "../models/settings";
 import { exit } from "@tauri-apps/plugin-process";
+import { listActiveProcesses } from "../api/plugins/game";
+import { isOption } from "../models/settings";
 
 const EVENT_PROCESS_STATE = "rmcl::process-state";
 const EVENT_PROCESS_CRASH = "rmcl::process-crash";

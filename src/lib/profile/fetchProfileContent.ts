@@ -1,6 +1,5 @@
-import { getProjects, versionsFromHashes } from "../api/modrinth/services.gen";
+import { getProjects, versionsFromHashes } from "../api/modrinth/sdk.gen";
 import type { ContentType } from "../models/download_queue";
-import { modrinthClient } from "../api/modrinthClient";
 import { ContentItem } from "../models/content";
 import { query } from "../api/plugins/query";
 
@@ -34,7 +33,6 @@ export async function fetchProfileContent(
 	const loadIdContent = async () => {
 		const ids = JSON.stringify(idsContent.map((e) => e.id));
 		const projects = await getProjects({
-			client: modrinthClient,
 			query: {
 				ids,
 			},
@@ -49,7 +47,6 @@ export async function fetchProfileContent(
 
 	const loadHashContent = async () => {
 		const hashes = await versionsFromHashes({
-			client: modrinthClient,
 			body: {
 				algorithm: "sha1",
 				hashes: hashesContent.map((e) => e.sha1),
@@ -64,7 +61,6 @@ export async function fetchProfileContent(
 		}));
 
 		const projects = await getProjects({
-			client: modrinthClient,
 			query: {
 				ids: JSON.stringify(items.map((e) => e.version.project_id)),
 			},

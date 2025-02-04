@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { getProjects, getVersions } from "@/lib/api/modrinth/services.gen";
-import { modrinthClient } from "@/lib/api/modrinthClient";
+import { getProjects, getVersions } from "@/lib/api/modrinth/sdk.gen";
 import { queryClient } from "@/lib/api/queryClient";
 import { useModrinth } from "./useModrinth";
 
@@ -32,7 +31,6 @@ export const useModrinthNotifications = () => {
 				.map((e) => `"${e}"`)
 				.join(",");
 			const { error, data, response } = await getProjects({
-				client: modrinthClient,
 				query: {
 					ids: `[${projectIds}]`,
 				},
@@ -63,7 +61,6 @@ export const useModrinthNotifications = () => {
 				error: versionsError,
 				response: versionsResponse,
 			} = await getVersions({
-				client: modrinthClient,
 				query: {
 					ids: `[${versionIds}]`,
 				},

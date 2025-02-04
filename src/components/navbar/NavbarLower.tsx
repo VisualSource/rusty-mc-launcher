@@ -6,7 +6,7 @@ import {
 	NavigationMenuList,
 	NavigationMenuTrigger,
 } from "@component/ui/navigation-menu";
-import type { ModrinthSearchParams } from "@/routes/_authenticated/workshop/search/route";
+
 import { Separator } from "@component/ui/separator";
 import { Button } from "@component/ui/button";
 
@@ -70,7 +70,7 @@ export const NavbarLower: React.FC = () => {
 								activeProps={{
 									className: "border-b-2 border-blue-300 text-blue-300",
 								}}
-								search={{} as ModrinthSearchParams}
+								search={{}}
 							>
 								WORKSHOP
 							</Link>

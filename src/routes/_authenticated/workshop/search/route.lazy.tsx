@@ -16,7 +16,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { memo, Suspense, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Route as SerachRoute } from "./route";
-import { searchProjects } from "@lib/api/modrinth/services.gen";
+import { searchProjects } from "@lib/api/modrinth/sdk.gen";
 import {
 	Select,
 	SelectContent,
@@ -35,7 +35,6 @@ import { TypographyH3, TypographyH4 } from "@/components/ui/typography";
 import searchManager, { type IndexType } from "@system/searchManager";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SearchFilters } from "@/components/workshop/SearchFilters";
-import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loading } from "@/components/Loading";
 import { useSearch } from "@/hooks/useSearch";
@@ -87,7 +86,6 @@ const WorkshopHome: React.FC = memo(() => {
 		],
 		queryFn: async () => {
 			const { error, data, response } = await searchProjects({
-				client: modrinthClient,
 				query: {
 					query: search.query,
 					facets: JSON.stringify(search.facets.toArray()),

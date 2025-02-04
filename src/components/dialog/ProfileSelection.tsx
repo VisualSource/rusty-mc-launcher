@@ -110,13 +110,9 @@ const SelectProfile: React.FC = () => {
 		],
 		queryFn: async () => {
 			if (state.showAll) {
-				return query("SELECT * FROM profiles").as(Profile).all();
+				return query`SELECT * FROM profiles`.as(Profile).all();
 			}
-			return query(
-				`SELECT * FROM profiles WHERE version IN (${state.filter.game.map((e) => `'${e}'`).join(", ")}) AND loader IN (${state.filter.loaders.map((e) => `'${e}'`).join(", ")})`,
-			)
-				.as(Profile)
-				.all();
+			return query`SELECT * FROM profiles WHERE version IN (${state.filter.game.map((e) => `'${e}'`).join(", ")}) AND loader IN (${state.filter.loaders.map((e) => `'${e}'`).join(", ")})`.as(Profile).all();
 		},
 	});
 

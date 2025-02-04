@@ -1,12 +1,13 @@
 import { createRootRouteWithContext, Outlet, useNavigate } from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { ToastContainer } from "react-toastify";
 import { lazy, useEffect } from "react";
-import type { AppContext } from "@/types";
-import Navbar from "@/components/navbar/Navbar";
-import Footer from "@/components/Footer";
+
 import AskDialog from "@/components/dialog/AskDialog";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import Navbar from "@/components/navbar/Navbar";
+import type { AppContext } from "@/types";
+import Footer from "@/components/Footer";
 
 const TanStackRouterDevtools = import.meta.env.DEV
 	? lazy(() =>

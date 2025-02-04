@@ -10,7 +10,7 @@ import {
 	deleteNotification,
 	followProject,
 	unfollowProject,
-} from "../services.gen";
+} from "../sdk.gen";
 import {
 	BrowserAuthError,
 	BrowserAuthErrorCodes,
@@ -19,7 +19,6 @@ import {
 	type PopupRequest,
 } from "@azure/msal-browser";
 
-import { modrinthClient } from "../../modrinthClient";
 import { queryClient } from "../../queryClient";
 import { PopupClient } from "./PopupClient";
 import type { User } from "../types.gen";
@@ -78,7 +77,6 @@ export class ModrinthClientApplication extends EventTarget {
 			);
 
 		const { error, response } = await followProject({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -100,7 +98,6 @@ export class ModrinthClientApplication extends EventTarget {
 			);
 
 		const { error, response } = await unfollowProject({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -122,7 +119,6 @@ export class ModrinthClientApplication extends EventTarget {
 			);
 
 		const { error, data, response } = await getFollowedProjects({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -147,7 +143,6 @@ export class ModrinthClientApplication extends EventTarget {
 			);
 
 		const { error, data, response } = await getUserNotifications({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -170,7 +165,6 @@ export class ModrinthClientApplication extends EventTarget {
 			);
 
 		const { response, error } = await readNotification({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -189,7 +183,6 @@ export class ModrinthClientApplication extends EventTarget {
 				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
 			);
 		const { response, error } = await readNotifications({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -208,7 +201,6 @@ export class ModrinthClientApplication extends EventTarget {
 				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
 			);
 		const { response, error } = await deleteNotification({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -227,7 +219,6 @@ export class ModrinthClientApplication extends EventTarget {
 				BrowserAuthErrorCodes.authCodeOrNativeAccountIdRequired,
 			);
 		const { response, error } = await deleteNotifications({
-			client: modrinthClient,
 			headers: {
 				Authorization: this.data.accessToken,
 			},
@@ -278,7 +269,6 @@ export class ModrinthClientApplication extends EventTarget {
 			const account = await this.acquireTokenPopup();
 
 			const response = await getUserFromAuth({
-				client: modrinthClient,
 				headers: {
 					Authorization: account.accessToken,
 				},
