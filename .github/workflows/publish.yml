@@ -70,6 +70,6 @@ jobs:
           includeUpdaterJson: true
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
           releaseName: "App v__VERSION__"
-          releaseBody: "View patch on Github or View > Patch Notes in app"
+          releaseBody: "View patch on Github or View patch notes in app"
           releaseDraft: true
           prerelease: false
