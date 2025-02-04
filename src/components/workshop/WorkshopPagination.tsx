@@ -8,8 +8,9 @@ import {
 	PaginationPrevious,
 } from "@/components/ui/pagination";
 import { range } from "@/lib/range";
-import { useId } from "react";
+import { useCallback, useId } from "react";
 import { Skeleton } from "../ui/skeleton";
+import searchManager from "@lib/system/searchManager";
 
 type PaginationLinkItem = { key: string; offset: number; page: number };
 
@@ -99,6 +100,9 @@ export function WorkshopPagination({
 	isLoading: boolean;
 	isError: boolean;
 }) {
+	const goTo = useCallback((offset: number) => {
+		searchManager.setOffset(offset).update();
+	}, []);
 	const componentId = useId();
 	if (isError) return null;
 	if (isLoading)
@@ -114,16 +118,13 @@ export function WorkshopPagination({
 				<PaginationItem>
 					<PaginationPrevious
 						disabled={currentPage === 1}
-						search={(prev: Record<string, unknown>) => ({
-							...prev,
-							offset: offsetPrev,
-						})}
+						onClick={() => goTo(offsetPrev)}
 					/>
 				</PaginationItem>
 				<PaginationItem>
 					<PaginationLink
 						isActive={currentPage === 1}
-						search={(prev: Record<string, unknown>) => ({ ...prev, offset: 0 })}
+						onClick={(() => goTo(0))}
 					>
 						1
 					</PaginationLink>
@@ -137,10 +138,7 @@ export function WorkshopPagination({
 					<PaginationItem key={`${componentId}_${item.key}`}>
 						<PaginationLink
 							isActive={currentPage === item.page}
-							search={(prev: Record<string, unknown>) => ({
-								...prev,
-								offset: item.offset,
-							})}
+							onClick={() => goTo(item.offset)}
 						>
 							{item.page}
 						</PaginationLink>
@@ -155,10 +153,7 @@ export function WorkshopPagination({
 					<PaginationItem>
 						<PaginationLink
 							isActive={currentPage === maxPages}
-							search={(prev: Record<string, unknown>) => ({
-								...prev,
-								offset: totalHits,
-							})}
+							onClick={() => goTo(totalHits)}
 						>
 							{maxPages}
 						</PaginationLink>
@@ -167,10 +162,7 @@ export function WorkshopPagination({
 				<PaginationItem>
 					<PaginationNext
 						disabled={currentPage === maxPages}
-						search={(prev: Record<string, unknown>) => ({
-							...prev,
-							offset: offsetNext,
-						})}
+						onClick={() => goTo(offsetNext)}
 					/>
 				</PaginationItem>
 			</PaginationContent>

@@ -20,11 +20,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
 import { uninstallContentByFilename } from "@lib/api/plugins/content";
-import { getProjectVersions } from "@lib/api/modrinth/services.gen";
+import { getProjectVersions } from "@lib/api/modrinth/sdk.gen";
 import { createToast, updateToast } from "@component/ui/toast";
 import type { ContentType } from "@lib/models/download_queue";
 import type { Project } from "@/lib/api/modrinth/types.gen";
-import { modrinthClient } from "@/lib/api/modrinthClient";
 import type { ContentItem } from "@/lib/models/content";
 import type { Profile } from "@/lib/models/profiles";
 import { install_known } from "@/lib/system/install";
@@ -66,7 +65,6 @@ const checkForUpdate = async (
 	});
 	try {
 		const { data, error, response } = await getProjectVersions({
-			client: modrinthClient,
 			path: {
 				"id|slug": project.id,
 			},

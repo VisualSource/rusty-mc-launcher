@@ -15,7 +15,6 @@ import { formatRelative } from "date-fns/formatRelative";
 import { ErrorBoundary } from "react-error-boundary";
 import { memo, Suspense, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Route as SerachRoute } from "./route";
 import { searchProjects } from "@lib/api/modrinth/sdk.gen";
 import {
 	Select,
@@ -44,7 +43,6 @@ import { Label } from "@/components/ui/label";
 import debounce from "lodash.debounce";
 
 const WorkshopHome: React.FC = memo(() => {
-	const navigate = SerachRoute.useNavigate();
 	const search = useSearch();
 
 	const queryHandler = useCallback(
@@ -62,13 +60,7 @@ const WorkshopHome: React.FC = memo(() => {
 					query = (ev.target as HTMLInputElement).value;
 				}
 
-				navigate({
-					search: (prev) => ({
-						...prev,
-						query,
-						offset: 0,
-					}),
-				});
+				searchManager.setOffset(0).setQuery(query).update();
 			},
 			500,
 		),
