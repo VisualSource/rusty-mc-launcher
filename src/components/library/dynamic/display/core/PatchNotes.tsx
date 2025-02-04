@@ -163,7 +163,7 @@ const PatchNotes: React.FC = () => {
 						<LazyLoadImage
 							height={150}
 							width={150}
-							effect="blur-sm"
+							effect="blur"
 							className="h-auto w-auto object-cover transition-all! hover:scale-105 aspect-3/4"
 							alt={value.image.title}
 							wrapperProps={{

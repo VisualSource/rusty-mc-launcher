@@ -23,7 +23,7 @@ export const OPTIONS: Record<
 			(props: { params: Record<string, string> }) => React.ReactNode
 		>;
 		Opts?: React.LazyExoticComponent<
-			({ card, updateCard }: OptsProps) => JSX.Element
+			({ card, updateCard }: OptsProps) => React.ReactNode
 		>;
 	}
 > = {

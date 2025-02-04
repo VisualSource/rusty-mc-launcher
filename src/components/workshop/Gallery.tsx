@@ -29,7 +29,7 @@ export const Gallery: React.FC<{
 					<CarouselItem key={`carousel_item_${i + 1}`}>
 						<div className="flex justify-center items-center h-80">
 							<LazyLoadImage
-								effect="blur-sm"
+								effect="blur"
 								className="object-contain w-full h-full rounded-md"
 								wrapperProps={{
 									style: { transitionDelay: "1s" }

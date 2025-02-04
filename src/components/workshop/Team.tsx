@@ -1,15 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { User2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { getTeamMembers } from "@lib/api/modrinth/services.gen";
-import { modrinthClient } from "@/lib/api/modrinthClient";
+import { getTeamMembers } from "@lib/api/modrinth/sdk.gen";
 
 export const Team: React.FC<{ id: string }> = ({ id }) => {
 	const { data } = useSuspenseQuery({
 		queryKey: ["modrinth", "team", id],
 		queryFn: async () => {
 			const repsonse = await getTeamMembers({
-				client: modrinthClient,
 				path: {
 					id,
 				},

@@ -1,10 +1,10 @@
+import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Settings2 } from "lucide-react";
 import { Suspense } from "react";
 
 import { type Card, DEFAULT_LAYOUT, OPTIONS, STORAGE_KEY } from "./EditConsts";
 import { Button } from "@/components/ui/button";
-import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 
 const ComponentError = (props: FallbackProps) => {
 	return <div>Error: {props.error?.message ?? props.error ?? "Unknown"}</div>;

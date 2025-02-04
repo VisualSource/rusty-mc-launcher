@@ -1,14 +1,13 @@
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { FileImage } from "lucide-react";
 import { memo } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { modrinthClient } from "@/lib/api/modrinthClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@component/ui/avatar";
-import { searchProjects } from "@lib/api/modrinth/services.gen";
-import { LazyLoadImage } from "react-lazy-load-image-component";
+import { searchProjects } from "@lib/api/modrinth/sdk.gen";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export const WorkshopContentMediumSkeleton: React.FC = memo(() => {
 	return (
@@ -39,7 +38,6 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 		queryKey: ["MODRINTH", content, sort],
 		queryFn: async () => {
 			const { error, data } = await searchProjects({
-				client: modrinthClient,
 				query: {
 					limit: 10,
 					facets: `[["project_type:${content}"]]`,
@@ -65,7 +63,7 @@ const WorkshopContentMedium: React.FC<{ content: string; sort: string }> = ({
 				>
 					<div className="overflow-hidden rounded-md h-[200px]">
 						<LazyLoadImage
-							effect="blur-sm"
+							effect="blur"
 							className="object-cover transition-all! hover:scale-105 aspect-square h-full w-full"
 							alt={value.title ?? "Unnamed project"}
 							wrapperProps={{

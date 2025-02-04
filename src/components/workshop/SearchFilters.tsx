@@ -5,11 +5,10 @@ import {
 	categoryList,
 	loaderList,
 	projectTypeList,
-} from "@/lib/api/modrinth/services.gen";
+} from "@/lib/api/modrinth/sdk.gen";
 import type { CategoryTag, LoaderTag } from "@/lib/api/modrinth/types.gen";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { TypographyH3, TypographyH4 } from "../ui/typography";
-import { modrinthClient } from "@/lib/api/modrinthClient";
 import searchManager from "@system/searchManager";
 import { useSearch } from "@/hooks/useSearch";
 import { Checkbox } from "../ui/checkbox";
@@ -35,9 +34,7 @@ export const SearchFilters: React.FC = () => {
 				{
 					queryKey: ["MODRINTH_TAGS_CATEGORIES"],
 					queryFn: async () => {
-						const { error, data, response } = await categoryList({
-							client: modrinthClient,
-						});
+						const { error, data, response } = await categoryList();
 						if (error) throw error;
 						if (!response.ok || !data)
 							throw new Error("Failed to load categories", { cause: response });
@@ -64,9 +61,7 @@ export const SearchFilters: React.FC = () => {
 				{
 					queryKey: ["MODRINTH_TAGS_LOADERS"],
 					queryFn: async () => {
-						const { data, error, response } = await loaderList({
-							client: modrinthClient,
-						});
+						const { data, error, response } = await loaderList();
 						if (error) throw error;
 						if (!response.ok || !data)
 							throw new Error("Failed to load categories", { cause: response });
@@ -76,9 +71,7 @@ export const SearchFilters: React.FC = () => {
 				{
 					queryKey: ["MODRINTH_TAGS_PROJECT_TYPES"],
 					queryFn: async () => {
-						const { data, error, response } = await projectTypeList({
-							client: modrinthClient,
-						});
+						const { data, error, response } = await projectTypeList();
 						if (error) throw error;
 						if (!response.ok || !data)
 							throw new Error("Failed to load project types", {
