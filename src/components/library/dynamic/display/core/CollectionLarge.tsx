@@ -34,7 +34,7 @@ const CollectionLarge: React.FC<{ cat: string }> = ({ cat }) => {
 	return (
 		<>
 			{data.length === 0 ? (
-				<div className="flex h-full w-full items-center justify-center">
+				<div className="flex w-full items-center justify-center h-80">
 					No Profiles Yet!
 				</div>
 			) : (

@@ -114,14 +114,14 @@ PatchNotesRead.displayName = "PatchNotesRead";
 export const PatchNotesSkeletons: React.FC = memo(() => {
 	return (
 		<>
-			{Array.from({ length: 8 }).map((_, i) => (
+			{Array.from({ length: 10 }).map((_, i) => (
 				<div className="space-y-3 w-[150px]" key={`fav_profile_skel_${i + 1}`}>
 					<div className="overflow-hidden rounded-md">
-						<Skeleton className="rounded-lg w-[150px] h-[150px]" />
+						<Skeleton className="rounded-lg w-[150px] h-[200px]" />
 					</div>
-					<div className="space-y-1 text-sm">
-						<Skeleton className="h-5 w-20" />
-						<Skeleton className="h-4 w-10" />
+					<div className="space-y-2 text-sm">
+						<Skeleton className="h-6 w-28" />
+						<Skeleton className="h-4 w-16" />
 					</div>
 				</div>
 			))}

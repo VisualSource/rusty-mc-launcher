@@ -18,11 +18,11 @@ export const WorkshopContentMediumSkeleton: React.FC = memo(() => {
 						<Skeleton className="h-[200px] w-[200px]" />
 					</div>
 					<div className="space-y-1 text-sm flex items-center gap-2 px-2">
-						<Skeleton className="rounded-full h-10 w-10" />
-						<Skeleton className="h-10 w-20" />
+						<Skeleton className="rounded-full h-10 w-10 aspect-square" />
+						<Skeleton className="h-10 w-full" />
 					</div>
 					<div className="space-y-1">
-						<Skeleton className="w-full h-3" />
+						<Skeleton className="w-full h-10" />
 					</div>
 				</div>
 			))}
