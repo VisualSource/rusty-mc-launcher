@@ -166,12 +166,13 @@ const MinecraftSkinControl: React.FC = memo(() => {
 
 	const mutation = useMutation({
 		onSuccess(data) {
+			if (!data) return;
 			queryClient.setQueryData(
 				["account", msAccount?.homeAccountId],
 				(old: MinecraftAccount) => ({
 					...old,
 					details: data,
-				}),
+				})
 			);
 		},
 		onError(error) {

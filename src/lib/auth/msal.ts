@@ -1,6 +1,7 @@
 import {
 	PublicClientApplication,
 	EventType,
+	BrowserCacheLocation,
 	type AuthenticationResult,
 	type Configuration,
 } from "@azure/msal-browser";
@@ -15,11 +16,13 @@ const configuration: Configuration = {
 		postLogoutRedirectUri: "http://localhost",
 	},
 	cache: {
-		temporaryCacheLocation: "sessionStorage",
-		cacheLocation: "localStorage",
+		temporaryCacheLocation: BrowserCacheLocation.SessionStorage,
+		cacheLocation: BrowserCacheLocation.LocalStorage,
 		cacheMigrationEnabled: true,
+
 	},
 	system: {
+		allowPlatformBroker: true,
 		loggerOptions: {
 			piiLoggingEnabled: false,
 			logLevel: LogLevel.Error, // import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,

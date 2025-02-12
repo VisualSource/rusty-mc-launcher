@@ -101,7 +101,7 @@ export const NavbarUpper: React.FC = () => {
 				<Avatar className="h-8 rounded-none rounded-s-lg border-y border-l">
 					<AvatarImage
 						src={
-							account?.details.id
+							account?.details?.id
 								? `https://visage.surgeplay.com/face/256/${account.details.id}`
 								: undefined
 						}
