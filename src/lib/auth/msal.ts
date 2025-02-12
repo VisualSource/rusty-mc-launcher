@@ -22,7 +22,7 @@ const configuration: Configuration = {
 
 	},
 	system: {
-		allowPlatformBroker: true,
+		allowNativeBroker: true,
 		loggerOptions: {
 			piiLoggingEnabled: false,
 			logLevel: LogLevel.Error, // import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
