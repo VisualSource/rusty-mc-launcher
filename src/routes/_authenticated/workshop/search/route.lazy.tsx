@@ -153,7 +153,7 @@ const WorkshopHome: React.FC = memo(() => {
 								searchManager.setIndex(e).setOffset(0).update();
 							}}
 						>
-							<SelectTrigger className="max-w-min">
+							<SelectTrigger className="w-48">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>

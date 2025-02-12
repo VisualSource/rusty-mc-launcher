@@ -105,15 +105,15 @@ export function WorkshopPagination({
 	}, []);
 	const componentId = useId();
 	if (isError) return null;
-	if (isLoading)
+	/*if (isLoading)
 		return (
 			<div className="py-2 px-4 flex justify-center">
 				<Skeleton className="h-10 w-full" />
 			</div>
-		);
+		);*/
 
 	return (
-		<Pagination className="py-2">
+		<Pagination className="py-2 select-none">
 			<PaginationContent>
 				<PaginationItem>
 					<PaginationPrevious
