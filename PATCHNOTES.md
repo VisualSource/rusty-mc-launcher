@@ -1,3 +1,11 @@
+# v0.8.7
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.6...v0.8.7](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.6...v0.8.7)
+
+#### Fixes
+- Fix workshop search filter
+- Fix app breaking bug [Issue 24](https://github.com/VisualSource/rusty-mc-launcher/issues/24)
+- Fix layout movement in workshop search header
+
 # v0.8.6
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.4...v0.8.5](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.4...v0.8.6)
 
