@@ -15,7 +15,7 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@azure/msal-browser": "^4.2.1",
+		"@azure/msal-browser": "^3.28.1",
 		"@azure/msal-common": "^15.1.1",
 		"@azure/msal-react": "^3.0.4",
 		"@hey-api/client-fetch": "^0.8.1",
@@ -121,7 +121,7 @@
 			"@azure/msal-browser"
 		],
 		"patchedDependencies": {
-			"@azure/msal-browser@4.2.1": "patches/@azure__msal-browser@4.2.1.patch"
+			"@azure/msal-browser@3.28.1": "patches/@azure__msal-browser@3.28.1.patch"
 		}
 	}
 }

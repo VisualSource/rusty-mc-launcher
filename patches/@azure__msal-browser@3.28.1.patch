@@ -1,15 +1,15 @@
 diff --git a/dist/interaction_client/PopupClient.mjs b/dist/interaction_client/PopupClient.mjs
-index a268fac3a1743acb01345cbd08dc176aafa8e79a..49c970cda1e17d811bceae2a3c31207fd22283de 100644
+index c70893819444b734aa8edc7435fe736130a8f159..7c8e99b1ad5c0ca2d7dc999f63d140d0137fd2ff 100644
 --- a/dist/interaction_client/PopupClient.mjs
 +++ b/dist/interaction_client/PopupClient.mjs
 @@ -1,5 +1,6 @@
- /*! @azure/msal-browser v4.2.1 2025-02-11 */
+ /*! @azure/msal-browser v3.28.1 2025-01-14 */
  'use strict';
 +import { once } from "@tauri-apps/api/event";
  import { OIDC_DEFAULT_SCOPES, invokeAsync, PerformanceEvents, invoke, ThrottlingUtils, ProtocolUtils, AuthError, ProtocolMode, UrlString, ServerResponseType } from '@azure/msal-common/browser';
  import { StandardInteractionClient } from './StandardInteractionClient.mjs';
  import { EventType } from '../event/EventType.mjs';
-@@ -272,46 +273,59 @@ class PopupClient extends StandardInteractionClient {
+@@ -271,47 +272,60 @@ class PopupClient extends StandardInteractionClient {
       * @param timeout - timeout for processing hash once popup is redirected back to application
       */
      monitorPopupForHash(popupWindow, popupWindowParent) {
@@ -62,19 +62,19 @@ index a268fac3a1743acb01345cbd08dc176aafa8e79a..49c970cda1e17d811bceae2a3c31207f
 +        	try {
 +        		if (typeof ev.payload === "string") {
 +        			this.logger.verbose(
-+        				"PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
-+        			);
++       				"PopupHandler.monitorPopupForHash - popup window is on same origin as caller",
++      			);
 +        
 +        			const url = new URL(ev.payload);
-+        			const responseType =
-+        							this.config.auth.OIDCOptions.serverResponseType;
-+        						let responseString = "";
++       			const responseType =
++       							this.config.auth.OIDCOptions.serverResponseType;
++       						let responseString = "";
 +        						if (responseType === ServerResponseType.QUERY) {
 +        							responseString = url.search;
-+        						} else {
-+        							responseString = url.hash;
-+        						}
-+        
++       						} else {
++       							responseString = url.hash;
++       						}
++       
 +        						resolve(responseString);
 +        						return;
 +        					}
@@ -85,7 +85,7 @@ index a268fac3a1743acb01345cbd08dc176aafa8e79a..49c970cda1e17d811bceae2a3c31207f
 +        					);
 +        				}
 +        			});
-+        		});
++       		});
 +        
 +        const closeHandler = new Promise((_, reject) => {
 +        	intervalId = setInterval(() => {
@@ -97,28 +97,29 @@ index a268fac3a1743acb01345cbd08dc176aafa8e79a..49c970cda1e17d811bceae2a3c31207f
 +        		return;
 +        	}
 +        	}, this.config.system.pollIntervalMilliseconds);
-+        });
+         });
 +        return Promise.race([hashHandler, closeHandler]).finally(() => {
-+        	clearInterval(intervalId);
++       	clearInterval(intervalId);
 +        	this.cleanPopup(popupWindow, popupWindowParent);
-+        	unlisten
++       	unlisten
 +        		?.then((unsubscribe) => unsubscribe())
 +        		.catch((e) =>
-+        			this.logger.error(e?.message ?? "Failed to unsubscribe."),
++     			this.logger.error(e?.message ?? "Failed to unsubscribe."),
 +        		);
-         });
++         });
      }
      /**
+      * @hidden
 diff --git a/package.json b/package.json
-index 2becc1a3eca4f514a9dfdd216215f822d69a8a8b..15bacc857922941f321de170db19d9c6d68ee4bd 100644
+index df7ed69e0bd8a58b295d104fdf8d36b300a55b72..dab8f9241da0b96bd9ebdd0907fb50711ff31e92 100644
 --- a/package.json
 +++ b/package.json
 @@ -103,6 +103,7 @@
      "typescript": "^4.9.5"
    },
    "dependencies": {
--    "@azure/msal-common": "15.1.1"
-+    "@azure/msal-common": "15.1.1",
+-    "@azure/msal-common": "14.16.0"
++    "@azure/msal-common": "14.16.0",
 +    "@tauri-apps/api": "^2.2.0"
    }
  }
