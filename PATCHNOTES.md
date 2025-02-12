@@ -6,6 +6,9 @@
 - Fix app breaking bug [Issue 24](https://github.com/VisualSource/rusty-mc-launcher/issues/24)
 - Fix layout movement in workshop search header
 
+#### Changes
+- Downgrade masl to 3.28.1 as v4 cache no longer persists across browser sessions 
+
 # v0.8.6
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.4...v0.8.5](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.4...v0.8.6)
 
