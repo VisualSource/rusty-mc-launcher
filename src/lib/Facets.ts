@@ -161,10 +161,10 @@ export class Facets {
 			output.push(this.facets.versions.map((e) => `versions:${e}`));
 		}
 		if (this.facets.client_side.length) {
-			output.push(this.facets.client_side.map((e) => `client_size:${e}`));
+			output.push(this.facets.client_side.map((e) => `client_side:${e}`));
 		}
 		if (this.facets.server_side.length) {
-			output.push(this.facets.server_side.map((e) => `client_size:${e}`));
+			output.push(this.facets.server_side.map((e) => `client_side:${e}`));
 		}
 
 		output.push([`project_type:${this.facets.project_type}`]);
