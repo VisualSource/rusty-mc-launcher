@@ -8,7 +8,7 @@ import {
 	PaginationPrevious,
 } from "@/components/ui/pagination";
 import { range } from "@/lib/range";
-import { useCallback, useId } from "react";
+import { memo, useCallback, useId } from "react";
 import { Skeleton } from "../ui/skeleton";
 import searchManager from "@lib/system/searchManager";
 
@@ -81,7 +81,7 @@ export const getPaginationItems = (
 	});
 };
 
-export function WorkshopPagination({
+function WP({
 	isLoading,
 	isError,
 	maxPages,
@@ -100,17 +100,15 @@ export function WorkshopPagination({
 	isLoading: boolean;
 	isError: boolean;
 }) {
-	const goTo = useCallback((offset: number) => {
-		searchManager.setOffset(offset).update();
-	}, []);
+	const goTo = useCallback((offset: number) => { searchManager.setOffset(offset).update(); }, []);
 	const componentId = useId();
 	if (isError) return null;
-	/*if (isLoading)
+	if (isLoading)
 		return (
 			<div className="py-2 px-4 flex justify-center">
 				<Skeleton className="h-10 w-full" />
 			</div>
-		);*/
+		);
 
 	return (
 		<Pagination className="py-2 select-none">
@@ -166,3 +164,7 @@ export function WorkshopPagination({
 		</Pagination>
 	);
 }
+
+
+export const WorkshopPagination = memo(WP);
+WorkshopPagination.displayName = "WorkshopPagination";
