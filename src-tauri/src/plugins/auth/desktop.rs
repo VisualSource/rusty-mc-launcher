@@ -7,7 +7,6 @@ use crate::error::{Error, Result};
 use oauth2::{
     basic::BasicClient,
     basic::{BasicErrorResponseType, BasicTokenType},
-    url::form_urlencoded::Parse,
     AuthUrl, AuthorizationCode, Client, ClientId, CsrfToken, EmptyExtraTokenFields, EndpointNotSet,
     EndpointSet, PkceCodeChallenge, PkceCodeVerifier, RedirectUrl, RefreshToken,
     RevocationErrorResponseType, Scope, StandardErrorResponse, StandardRevocableToken,
@@ -21,6 +20,8 @@ use tauri_plugin_http::reqwest;
 use tokio::sync::Mutex;
 
 pub type AuthAppState = Mutex<AuthState>;
+/// Note: You must use the consumers AAD tenant to sign in with the XboxLive.signin scope.
+const AUTHORITY_ROOT: &str = "https://login.microsoftonline.com/consumers";
 pub const CALLBACK_URI: &str = "rmcl://ms/authorize";
 
 #[derive(Debug, Serialize, Clone)]
@@ -34,6 +35,26 @@ impl LoginResponse {
             access_token,
             refresh_token,
         }
+    }
+}
+
+struct QueryParams(Vec<(String, String)>);
+impl QueryParams {
+    fn from_url(url: Url) -> Self {
+        let pairs = url.query_pairs().into_owned();
+
+        let mut params = Vec::with_capacity(2);
+
+        for (key, value) in pairs {
+            params.push((key, value));
+        }
+
+        Self(params)
+    }
+    fn get_param(&self, param: &str) -> Option<String> {
+        let item = self.0.iter().find(|(key, _)| key == param);
+
+        item.map(|(_, value)| value.to_owned())
     }
 }
 
@@ -64,12 +85,6 @@ pub async fn validate_code<R: tauri::Runtime>(app: tauri::AppHandle<R>, url: Url
     Ok(())
 }
 
-fn get_query_param(query_params: &mut Parse<'_>, param: &str) -> Option<String> {
-    query_params
-        .find(|(key, _)| key == param)
-        .map(|x| x.1.to_string())
-}
-
 pub struct AuthState {
     pub flows: HashMap<String, PkceCodeVerifier>,
     pub client: Client<
@@ -89,12 +104,8 @@ pub struct AuthState {
 impl AuthState {
     pub fn new() -> Result<Self> {
         let client_id = ClientId::new(env!("VITE_CLIENT_ID").to_string());
-        let auth_url = AuthUrl::new(
-            "https://login.microsoftonline.com/common/oauth2/v2.0/authorize".to_string(),
-        )?;
-        let token_url = TokenUrl::new(
-            "https://login.microsoftonline.com/common/oauth2/v2.0/token".to_string(),
-        )?;
+        let auth_url = AuthUrl::new(format!("{}/oauth2/v2.0/authorize", AUTHORITY_ROOT))?;
+        let token_url = TokenUrl::new(format!("{}/oauth2/v2.0/token", AUTHORITY_ROOT))?;
         let redirect_url = RedirectUrl::new(CALLBACK_URI.to_string())?;
 
         let client = BasicClient::new(client_id)
@@ -108,9 +119,10 @@ impl AuthState {
         })
     }
 
-    pub fn generate_url(&mut self, scopes: Vec<Scope>) -> Result<Url> {
-        let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
+    pub fn generate_url(&mut self, scopes: Vec<Scope>) -> Result<String> {
+        log::debug!("Scopes {:#?}", scopes);
 
+        let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
         let (auth_url, csrf_token) = self
             .client
             .authorize_url(CsrfToken::new_random)
@@ -121,7 +133,11 @@ impl AuthState {
         let token_str = csrf_token.into_secret();
         self.flows.insert(token_str, pkce_verifier);
 
-        Ok(auth_url)
+        // the url scopes get concated with '+' by the url package but microsoft oauth expects a space sepearted list of scopes.
+        // so we replace '+' with url expected space
+        let url = auth_url.to_string().replace('+', "%20");
+
+        Ok(url)
     }
 
     pub async fn refresh(&self, refresh_token: &String) -> Result<LoginResponse> {
@@ -144,28 +160,26 @@ impl AuthState {
     }
 
     pub async fn validate(&mut self, url: Url) -> Result<LoginResponse> {
-        let mut query = url.query_pairs();
+        let query = QueryParams::from_url(url);
 
-        if let Some(error_code) = get_query_param(&mut query, "error") {
-            let error_description = get_query_param(&mut query, "error_description")
+        if let Some(code) = query.get_param("error") {
+            let description = query
+                .get_param("error_description")
                 .unwrap_or("Unknown Error".to_string());
-
             return Err(Error::Reason(format!(
-                r#"{{ "code":"{}", "reason":"{}" }}"#,
-                error_code, error_description
+                r#""code":"{}","reason":"{}""#,
+                code, description
             )));
         }
 
-        let code = get_query_param(&mut query, "code").ok_or(Error::Reason(
-            "Oauth request is missing query param 1".to_string(),
-        ))?;
-
-        log::debug!("{:#?}", code);
-        let state = get_query_param(&mut query, "state").ok_or(Error::Reason(
-            "Oauth request is missing query param 2".to_string(),
-        ))?;
-
+        let code = query
+            .get_param("code")
+            .ok_or_else(|| Error::Reason("Missing param 1".to_string()))?;
         let auth_code = AuthorizationCode::new(code);
+
+        let state = query
+            .get_param("state")
+            .ok_or_else(|| Error::Reason("Missing param 3".to_string()))?;
         let pkce = self.flows.remove(&state).ok_or(Error::Reason(
             "Failed to find authentication flow".to_string(),
         ))?;
@@ -177,6 +191,10 @@ impl AuthState {
         let response = self
             .client
             .exchange_code(auth_code)
+            .add_extra_param(
+                "scope",
+                "XboxLive.SignIn XboxLive.offline_access openid profile offline_access",
+            )
             .set_pkce_verifier(pkce)
             .request_async(&http)
             .await?;
