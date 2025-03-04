@@ -16,3 +16,7 @@ export async function authenticate(scopes: string[]) {
 		scopes: Array.from(new Set(scopes).union(DEFAULT_SCOPES))
 	});
 }
+
+export async function logout(): Promise<void> {
+	return invoke("plugin:rmcl-auth|logout");
+}

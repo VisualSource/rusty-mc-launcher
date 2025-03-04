@@ -21,7 +21,8 @@ use tokio::sync::Mutex;
 
 pub type AuthAppState = Mutex<AuthState>;
 /// Note: You must use the consumers AAD tenant to sign in with the XboxLive.signin scope.
-const AUTHORITY_ROOT: &str = "https://login.microsoftonline.com/consumers";
+pub const AUTHORITY_ROOT: &str = "https://login.microsoftonline.com/consumers";
+const SCOPES_SUBSET: &str = "User.Read openid profile offline_access";
 pub const CALLBACK_URI: &str = "rmcl://ms/authorize";
 
 #[derive(Debug, Serialize, Clone)]
@@ -120,8 +121,6 @@ impl AuthState {
     }
 
     pub fn generate_url(&mut self, scopes: Vec<Scope>) -> Result<String> {
-        log::debug!("Scopes {:#?}", scopes);
-
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
         let (auth_url, csrf_token) = self
             .client
@@ -150,6 +149,7 @@ impl AuthState {
         let response = self
             .client
             .exchange_refresh_token(&refresh)
+            .add_extra_param("scope", SCOPES_SUBSET)
             .request_async(&http)
             .await?;
 
@@ -191,10 +191,7 @@ impl AuthState {
         let response = self
             .client
             .exchange_code(auth_code)
-            .add_extra_param(
-                "scope",
-                "XboxLive.SignIn XboxLive.offline_access openid profile offline_access",
-            )
+            .add_extra_param("scope", SCOPES_SUBSET)
             .set_pkce_verifier(pkce)
             .request_async(&http)
             .await?;

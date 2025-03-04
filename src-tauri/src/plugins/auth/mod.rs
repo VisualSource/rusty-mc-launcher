@@ -25,11 +25,12 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     return;
                 }
                 let url = opt_url.expect("There should have been a url in this");
+
+                log::debug!("{:#?}", url);
+
                 if !is_valid_callback(url) {
                     return;
                 }
-
-                log::debug!("GOT LOGIN: {:#?}", url);
 
                 let handle = app_handle.clone();
                 let data = url.clone();
@@ -42,6 +43,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![commands::authenticate,])
+        .invoke_handler(tauri::generate_handler![
+            commands::authenticate,
+            commands::logout
+        ])
         .build()
 }

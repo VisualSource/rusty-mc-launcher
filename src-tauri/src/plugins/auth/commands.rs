@@ -1,7 +1,19 @@
-use super::desktop::AuthAppState;
+use super::desktop::{AuthAppState, AUTHORITY_ROOT};
 use crate::error::Result;
 use tauri::State;
 use tauri_plugin_opener::OpenerExt;
+
+#[tauri::command]
+pub async fn logout<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<()> {
+    app.opener().open_url(
+        format!(
+            "{}/oauth2/v2.0/logout?post_logout_redirect_uri=rmcl%3A%2F%2Fms%2Flogout",
+            AUTHORITY_ROOT
+        ),
+        None::<&str>,
+    )?;
+    Ok(())
+}
 
 #[tauri::command]
 pub async fn authenticate<R: tauri::Runtime>(

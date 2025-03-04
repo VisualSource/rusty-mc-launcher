@@ -2175,11 +2175,6 @@
           "const": "allow-authenticate"
         },
         {
-          "description": "Enables the closeAuthServer comamnd.",
-          "type": "string",
-          "const": "allow-close-auth-server"
-        },
-        {
           "description": "Allow for coping a profile files",
           "type": "string",
           "const": "allow-copy-profile"
@@ -2220,14 +2215,14 @@
           "const": "allow-list-active-processes"
         },
         {
+          "description": "Allow logout",
+          "type": "string",
+          "const": "allow-logout"
+        },
+        {
           "description": "Allow for select operation",
           "type": "string",
           "const": "allow-select"
-        },
-        {
-          "description": "Enables the startAuthServer command.",
-          "type": "string",
-          "const": "allow-start-auth-server"
         },
         {
           "description": "Stop a started game",
@@ -5450,14 +5445,9 @@
           "const": "rmcl-auth:allow-authenticate"
         },
         {
-          "description": "Enables the closeAuthServer comamnd.",
+          "description": "Allow logout",
           "type": "string",
-          "const": "rmcl-auth:allow-close-auth-server"
-        },
-        {
-          "description": "Enables the startAuthServer command.",
-          "type": "string",
-          "const": "rmcl-auth:allow-start-auth-server"
+          "const": "rmcl-auth:allow-logout"
         },
         {
           "description": "Default permissions for the rmcl-content plugin",
