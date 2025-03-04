@@ -1,6 +1,6 @@
 [default]
 description = "Default permissions for the rmcl-auth plugin"
-permissions = ["allow-start-auth-server","allow-close-auth-server"]
+permissions = ["allow-start-auth-server","allow-close-auth-server","allow-authenticate"]
 
 [[permission]]
 identifier = "allow-start-auth-server"
@@ -11,3 +11,8 @@ commands.allow = ["start_auth_server"]
 identifier = "allow-close-auth-server"
 description = "Enables the closeAuthServer comamnd."
 commands.allow = ["close_auth_server"]
+
+[[permission]]
+identifier = "allow-authenticate"
+description = "Allow to start authentication flow"
+commands.allow = ["authenticate"]

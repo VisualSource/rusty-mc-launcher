@@ -8,6 +8,23 @@ pub enum Error {
     Lib(#[from] minecraft_launcher_lib::error::Error),
 
     #[error(transparent)]
+    Opener(#[from] tauri_plugin_opener::Error),
+
+    #[error(transparent)]
+    AuthRequest(#[from] oauth2::reqwest::Error),
+    #[error(transparent)]
+    OAuthResponse(
+        #[from]
+        oauth2::RequestTokenError<
+            oauth2::HttpClientError<oauth2::reqwest::Error>,
+            oauth2::StandardErrorResponse<oauth2::basic::BasicErrorResponseType>,
+        >,
+    ),
+
+    #[error(transparent)]
+    UrlParse(#[from] oauth2::url::ParseError),
+
+    #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
     #[error(transparent)]
     Tauri(#[from] tauri::Error),

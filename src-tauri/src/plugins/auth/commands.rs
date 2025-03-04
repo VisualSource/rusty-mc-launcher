@@ -1,22 +1,18 @@
-use super::desktop::{cancel, start};
+use super::desktop::AuthAppState;
 use crate::error::Result;
-use log::{debug, error};
-use tauri::{Emitter, WebviewWindow};
+use tauri::State;
+use tauri_plugin_opener::OpenerExt;
 
 #[tauri::command]
-pub fn start_auth_server<R: tauri::Runtime>(window: WebviewWindow<R>) -> Result<u16> {
-    let port = start(move |url| {
-        log::debug!("found result");
-        if let Err(err) = window.emit("auth-response", url) {
-            error!("{}", err);
-        }
-    })?;
-    debug!("Starting Auth Server on port: {}", port);
-    Ok(port)
-}
+pub async fn authenticate<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    state: State<'_, AuthAppState>,
+    scopes: Vec<oauth2::Scope>,
+) -> Result<bool> {
+    let mut sl = state.lock().await;
+    let url = sl.generate_url(scopes)?;
 
-#[tauri::command]
-pub fn close_auth_server(port: u16) -> Result<()> {
-    debug!("Closing auth server on port: {port}");
-    cancel(port)
+    app.opener().open_url(url, None::<&str>)?;
+
+    Ok(true)
 }

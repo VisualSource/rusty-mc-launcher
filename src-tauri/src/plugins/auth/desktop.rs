@@ -1,222 +1,189 @@
-//! Tauri oauth plugin
-//! https://github.com/FabianLars/tauri-plugin-oauth
+//! Authorization Code Grant w/ PKCE
+//! https://docs.rs/oauth2/latest/oauth2/index.html#other-examples
+//! https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
+//! https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/login-user.md
 //!
-//! custom version of FabianLars oauth plugin.
-//!
-use crate::error::Error;
-use log::error;
-use std::{
-    io::{Read, Write},
-    net::{SocketAddr, TcpListener, TcpStream},
-    thread,
+use crate::error::{Error, Result};
+use oauth2::{
+    basic::BasicClient,
+    basic::{BasicErrorResponseType, BasicTokenType},
+    url::form_urlencoded::Parse,
+    AuthUrl, AuthorizationCode, Client, ClientId, CsrfToken, EmptyExtraTokenFields, EndpointNotSet,
+    EndpointSet, PkceCodeChallenge, PkceCodeVerifier, RedirectUrl, RefreshToken,
+    RevocationErrorResponseType, Scope, StandardErrorResponse, StandardRevocableToken,
+    StandardTokenIntrospectionResponse, StandardTokenResponse, TokenResponse, TokenUrl,
 };
+use serde::Serialize;
+use std::collections::HashMap;
+use tauri::Manager;
+use tauri::{Emitter, Url};
+use tauri_plugin_http::reqwest;
+use tokio::sync::Mutex;
 
-const EXIT: [u8; 4] = [1, 3, 3, 7];
-const HTTP_RESPONSE: &str = "
-<html>
-    <head>
-        <title>Auth</title>
-        <script>
-            fetch('http://localhost:{PORT}/cb',{
-                headers:{
-                    'X-Full-URL':window.location.href
-                }
-            }).catch(()=>window.close());
-        </script>
-        <style>
-            @media(prefers-color-scheme: dark) {
-                :root {
-                    --bg-color: #121212;
-                    --text-color: #eee;
-                    --spinner: #fffff;
-                }
-            }
-            :root {
-                --bg-color: #ffffff;
-                --text-color: #000000;
-                --spinner: #000000;
-            }
+pub type AuthAppState = Mutex<AuthState>;
+pub const CALLBACK_URI: &str = "rmcl://ms/authorize";
 
-            html,body {
-                height: 100vh;
-                width: 100%;
-                margin: 0;
-                box-sizing: border-box;
-                color: var(--text-color),
-                background-color: var(--bg-color)
-            }
-            #root {
-                height: 100%;
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-            }
-
-            .lds-ring {
-                /* change color here */
-                color: var(--spinner)
-              }
-              .lds-ring,
-              .lds-ring div {
-                box-sizing: border-box;
-              }
-              .lds-ring {
-                display: inline-block;
-                position: relative;
-                width: 80px;
-                height: 80px;
-              }
-              .lds-ring div {
-                box-sizing: border-box;
-                display: block;
-                position: absolute;
-                width: 64px;
-                height: 64px;
-                margin: 8px;
-                border: 8px solid currentColor;
-                border-radius: 50%;
-                animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-                border-color: currentColor transparent transparent transparent;
-              }
-              .lds-ring div:nth-child(1) {
-                animation-delay: -0.45s;
-              }
-              .lds-ring div:nth-child(2) {
-                animation-delay: -0.3s;
-              }
-              .lds-ring div:nth-child(3) {
-                animation-delay: -0.15s;
-              }
-              @keyframes lds-ring {
-                0% {
-                  transform: rotate(0deg);
-                }
-                100% {
-                  transform: rotate(360deg);
-                }
-              }
-        </style>
-    </head>
-    <body>
-        <div id='root'>
-            <div class='lds-ring'>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-        </div>
-    </body>
-</html
-";
-
-enum RequestResult {
-    Ok(String),
-    Exit,
-    None,
+#[derive(Debug, Serialize, Clone)]
+pub struct LoginResponse {
+    access_token: String,
+    refresh_token: Option<String>,
+}
+impl LoginResponse {
+    pub fn new(access_token: String, refresh_token: Option<String>) -> Self {
+        Self {
+            access_token,
+            refresh_token,
+        }
+    }
 }
 
-pub fn start<F: FnMut(String) + Send + 'static>(mut handler: F) -> Result<u16, Error> {
-    let listener = TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], 0)))?;
+pub fn is_valid_callback(url: &Url) -> bool {
+    url.as_str().starts_with(CALLBACK_URI)
+}
 
-    let port = listener.local_addr()?.port();
+pub async fn validate_code<R: tauri::Runtime>(app: tauri::AppHandle<R>, url: Url) -> Result<()> {
+    let state = app.state::<AuthAppState>();
+    let mut ls = state.lock().await;
 
-    thread::spawn(move || {
-        for conn in listener.incoming() {
-            match conn {
-                Ok(conn) => match handle_connection(conn, port) {
-                    Ok(result) => match result {
-                        RequestResult::Ok(url) => {
-                            handler(url);
-                            break;
-                        }
-                        RequestResult::Exit => break,
-                        RequestResult::None => {}
-                    },
-                    Err(err) => {
-                        error!("{}", err);
-                        break;
-                    }
-                },
-                Err(err) => error!("Error reading incoming connection: {}", err.to_string()),
+    let result = ls.validate(url).await;
+    log::debug!("LOGIN result: {:#?}", result);
+
+    match result {
+        Ok(data) => {
+            if let Err(err) = app.emit("login-success", data) {
+                log::error!("{}", err.to_string());
             }
         }
-    });
-
-    Ok(port)
-}
-//error!("Error reading incoming connection: {}", err.to_string());
-fn handle_connection(mut conn: TcpStream, port: u16) -> Result<RequestResult, Error> {
-    let mut buffer = [0; 4048];
-    let _ = conn.read(&mut buffer)?;
-
-    if buffer[..4] == EXIT {
-        return Ok(RequestResult::Exit);
+        Err(error) => {
+            if let Err(err) = app.emit("login-error", error.to_string()) {
+                log::error!("{}", err.to_string());
+            }
+        }
     }
 
-    let mut headers = [httparse::EMPTY_HEADER; 16];
-    let mut request = httparse::Request::new(&mut headers);
-    request.parse(&buffer)?;
-
-    let path = request.path.unwrap_or_default();
-
-    let (result, status, response) = match path {
-        "/exit" => (RequestResult::Exit, "200 Ok", "Ok".to_string()),
-        "/cb" => {
-            if let Some(header) = headers.iter().find(|e| e.name == "X-Full-URL") {
-                let url = format!("http://localhost:{}/", port);
-                let value = String::from_utf8_lossy(header.value);
-
-                if !value.starts_with(&url) {
-                    (
-                        RequestResult::None,
-                        "400 Bad Request",
-                        "Invalid Domain".to_string(),
-                    )
-                } else {
-                    (
-                        RequestResult::Ok(value.to_string()),
-                        "200 Ok",
-                        "Ok".to_string(),
-                    )
-                }
-            } else {
-                (
-                    RequestResult::None,
-                    "400 Bad Request",
-                    "Missing Header".to_string(),
-                )
-            }
-        }
-        _ => (
-            RequestResult::None,
-            "200 Ok",
-            HTTP_RESPONSE.replace("{PORT}", &port.to_string()),
-        ),
-    };
-
-    conn.write_all(
-        format!(
-            "HTTP/1.1 {}\r\nContent-Length: {}\r\n\r\n{}",
-            status,
-            response.len(),
-            response
-        )
-        .as_bytes(),
-    )?;
-    conn.flush()?;
-
-    Ok(result)
+    Ok(())
 }
 
-pub fn cancel(port: u16) -> Result<(), Error> {
-    // Using tcp instead of something global-ish like an AtomicBool,
-    // so we don't have to dive into the set_nonblocking madness.
-    let mut stream = TcpStream::connect(SocketAddr::from(([127, 0, 0, 1], port)))?;
-    stream.write_all(&EXIT)?;
-    stream.flush()?;
+fn get_query_param(query_params: &mut Parse<'_>, param: &str) -> Option<String> {
+    query_params
+        .find(|(key, _)| key == param)
+        .map(|x| x.1.to_string())
+}
 
-    Ok(())
+pub struct AuthState {
+    pub flows: HashMap<String, PkceCodeVerifier>,
+    pub client: Client<
+        StandardErrorResponse<BasicErrorResponseType>,
+        StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
+        StandardTokenIntrospectionResponse<EmptyExtraTokenFields, BasicTokenType>,
+        StandardRevocableToken,
+        StandardErrorResponse<RevocationErrorResponseType>,
+        EndpointSet,
+        EndpointNotSet,
+        EndpointNotSet,
+        EndpointNotSet,
+        EndpointSet,
+    >,
+}
+
+impl AuthState {
+    pub fn new() -> Result<Self> {
+        let client_id = ClientId::new(env!("VITE_CLIENT_ID").to_string());
+        let auth_url = AuthUrl::new(
+            "https://login.microsoftonline.com/common/oauth2/v2.0/authorize".to_string(),
+        )?;
+        let token_url = TokenUrl::new(
+            "https://login.microsoftonline.com/common/oauth2/v2.0/token".to_string(),
+        )?;
+        let redirect_url = RedirectUrl::new(CALLBACK_URI.to_string())?;
+
+        let client = BasicClient::new(client_id)
+            .set_redirect_uri(redirect_url)
+            .set_auth_uri(auth_url)
+            .set_token_uri(token_url);
+
+        Ok(Self {
+            flows: HashMap::new(),
+            client,
+        })
+    }
+
+    pub fn generate_url(&mut self, scopes: Vec<Scope>) -> Result<Url> {
+        let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
+
+        let (auth_url, csrf_token) = self
+            .client
+            .authorize_url(CsrfToken::new_random)
+            .add_scopes(scopes)
+            .set_pkce_challenge(pkce_challenge)
+            .url();
+
+        let token_str = csrf_token.into_secret();
+        self.flows.insert(token_str, pkce_verifier);
+
+        Ok(auth_url)
+    }
+
+    pub async fn refresh(&self, refresh_token: &String) -> Result<LoginResponse> {
+        let refresh = RefreshToken::new(refresh_token.to_owned());
+
+        let http = reqwest::ClientBuilder::new()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?;
+
+        let response = self
+            .client
+            .exchange_refresh_token(&refresh)
+            .request_async(&http)
+            .await?;
+
+        let at = response.access_token().secret();
+        let rt = response.refresh_token().map(|x| x.secret().to_owned());
+
+        Ok(LoginResponse::new(at.to_owned(), rt))
+    }
+
+    pub async fn validate(&mut self, url: Url) -> Result<LoginResponse> {
+        let mut query = url.query_pairs();
+
+        if let Some(error_code) = get_query_param(&mut query, "error") {
+            let error_description = get_query_param(&mut query, "error_description")
+                .unwrap_or("Unknown Error".to_string());
+
+            return Err(Error::Reason(format!(
+                r#"{{ "code":"{}", "reason":"{}" }}"#,
+                error_code, error_description
+            )));
+        }
+
+        let code = get_query_param(&mut query, "code").ok_or(Error::Reason(
+            "Oauth request is missing query param 1".to_string(),
+        ))?;
+
+        log::debug!("{:#?}", code);
+        let state = get_query_param(&mut query, "state").ok_or(Error::Reason(
+            "Oauth request is missing query param 2".to_string(),
+        ))?;
+
+        let auth_code = AuthorizationCode::new(code);
+        let pkce = self.flows.remove(&state).ok_or(Error::Reason(
+            "Failed to find authentication flow".to_string(),
+        ))?;
+
+        let http = reqwest::ClientBuilder::new()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?;
+
+        let response = self
+            .client
+            .exchange_code(auth_code)
+            .set_pkce_verifier(pkce)
+            .request_async(&http)
+            .await?;
+
+        let at = response.access_token().secret();
+        let rt = response.refresh_token().map(|x| x.secret().to_owned());
+
+        Ok(LoginResponse::new(at.to_owned(), rt))
+    }
 }
