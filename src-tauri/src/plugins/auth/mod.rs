@@ -2,10 +2,12 @@ mod commands;
 mod desktop;
 use tokio::sync::Mutex;
 
-use desktop::{is_valid_callback, validate_code, AuthState};
+use desktop::{
+    is_valid_callback, validate_code, AuthAppState, AuthState, EVENT_LOGIN_WINDOW_DESTORYED,
+};
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    Manager, Runtime,
+    Listener, Manager, Runtime,
 };
 use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -16,6 +18,17 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
             let state = AuthState::new()?;
             app.manage(Mutex::new(state));
+
+            let app_handle = app.clone();
+            app.listen(EVENT_LOGIN_WINDOW_DESTORYED, move |_event| {
+                let handle = app_handle.clone();
+                tauri::async_runtime::spawn(async move {
+                    let state = handle.state::<AuthAppState>();
+                    let mut auth_state = state.lock().await;
+                    auth_state.flow = None;
+                });
+                log::debug!("Login window has been destoryed");
+            });
 
             let app_handle = app.clone();
             app.deep_link().on_open_url(move |event| {
@@ -30,6 +43,12 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
                 if !is_valid_callback(url) {
                     return;
+                }
+
+                if let Some(win) = app_handle.get_webview_window("login") {
+                    if let Err(err) = win.close() {
+                        log::error!("{}", err);
+                    }
                 }
 
                 let handle = app_handle.clone();
