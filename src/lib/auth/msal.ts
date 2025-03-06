@@ -1,9 +1,7 @@
 import type {
 	IPublicClientApplication,
 	EventType,
-	BrowserCacheLocation,
 	AuthenticationResult,
-	Configuration,
 	AccountInfo,
 	AuthorizationCodeRequest,
 	BrowserConfiguration,
@@ -21,47 +19,68 @@ import type {
 	SsoSilentRequest,
 	WrapperSKU,
 } from "@azure/msal-browser";
-import { Logger } from "@azure/msal-browser";
-import type { AccountFilter, LogLevel } from "@azure/msal-common";
-import { error, warn, info, debug, trace } from "@tauri-apps/plugin-log";
+import { type Event, once, type UnlistenFn } from "@tauri-apps/api/event";
+import { error, warn, info, trace, debug } from "@tauri-apps/plugin-log";
+import type { AccountFilter } from "@azure/msal-common";
+import { Logger, LogLevel } from "@azure/msal-browser";
 import { authenticate } from "../api/plugins/auth";
-import { Event, once, UnlistenFn } from "@tauri-apps/api/event";
 
 class CustomPublicClientApplication implements IPublicClientApplication {
-	private logger = new Logger({}, "rmcl-auth", "0.0.0");
-	async initialize(request?: InitializeApplicationRequest): Promise<void> {
-		console.debug(request);
+	private logger = new Logger({
+		logLevel: LogLevel.Verbose,
+		loggerCallback: (level, message) => {
+			switch (level) {
+				case LogLevel.Error:
+					error(message);
+					break;
+				case LogLevel.Warning:
+					warn(message);
+					break;
+				case LogLevel.Info:
+					info(message);
+					break;
+				case LogLevel.Verbose:
+					debug(message);
+					break;
+				case LogLevel.Trace:
+					trace(message);
+					break;
+			}
+		},
+	}, "rmcl-auth", "0.0.0");
+	async initialize(_request?: InitializeApplicationRequest): Promise<void> {
+		// init db stuff
 	}
 	async acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
 		throw new Error("Method not implemented.");
 	}
 	acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
-		throw new Error("Method not implemented.");
+		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
 	async acquireTokenSilent(_silentRequest: SilentRequest): Promise<AuthenticationResult> {
 		throw new Error("Method not implemented.");
 	}
 	async acquireTokenByCode(_request: AuthorizationCodeRequest): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
+		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
 	addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
 		console.debug(callback, eventTypes);
 		return null;
 	}
 	removeEventCallback(_callbackId: string): void {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	addPerformanceCallback(_callback: PerformanceCallbackFunction): string {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	removePerformanceCallback(_callbackId: string): boolean {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	enableAccountStorageEvents(): void {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	disableAccountStorageEvents(): void {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	getAccountByHomeId(_homeAccountId: string): AccountInfo | null {
 		throw new Error("Method not implemented.");
@@ -82,24 +101,31 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		const result = new Promise((ok, reject) => {
 			let onSuccess: Promise<UnlistenFn> | undefined = undefined;
 			let onError: Promise<UnlistenFn> | undefined = undefined;
+			let onDestoryed: Promise<UnlistenFn> | undefined = undefined;
 
 			const handleEvent = (ev: Event<unknown>) => {
-				console.log(ev);
 				switch (ev.event) {
-					case "login-error":
+					case "rmcl-auth-login-error":
 						reject(ev.payload);
 						break;
-					case "login-success":
+					case "rmcl-auth-login-window-destroyed":
+						reject(new Error("Login window was closed"));
+						break;
+					case "rmcl-auth-login-success":
 						ok(ev.payload);
 						break;
 					default:
+						reject(new Error(`Unknown event "${ev.event}"`, { cause: ev }));
 						break;
 				}
-				Promise.all([onSuccess, onError]).then(e => e.map(sub => sub?.call(undefined))).catch(e => console.error(e));
+				Promise.all([onSuccess, onError, onDestoryed]).then(e => {
+					for (const unsub of e) unsub?.call(this);
+				}).catch(e => console.error(e));
 			}
 
-			onError = once("login-error", handleEvent);
-			onSuccess = once("login-success", handleEvent);
+			onError = once("rmcl-auth-login-error", handleEvent);
+			onSuccess = once("rmcl-auth-login-success", handleEvent);
+			onDestoryed = once("rmcl-auth-login-window-destroyed", handleEvent);
 		});
 
 		await authenticate(request?.scopes ?? []);
@@ -110,28 +136,26 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		throw new Error("TODO: finish impl");
 	}
 	async loginRedirect(_request?: RedirectRequest): Promise<void> {
-		throw new Error("Method not implemented.");
+		throw new Error("use 'loginPopup'");
 	}
 	async logout(_logoutRequest?: EndSessionRequest): Promise<void> {
-		throw new Error("Method not implemented.");
+		throw new Error("Use 'logoutPopup'");
 	}
 	async logoutRedirect(_logoutRequest?: EndSessionRequest): Promise<void> {
-		throw new Error("Method not implemented.");
+		throw new Error("use 'logoutRedirect'");
 	}
 	async logoutPopup(_logoutRequest?: EndSessionPopupRequest): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
-	async ssoSilent(_request: SsoSilentRequest): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
-	}
+	async ssoSilent(_request: SsoSilentRequest): Promise<AuthenticationResult> { throw new Error("Method not implemented."); }
 	getTokenCache(): ITokenCache {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	getLogger(): Logger {
 		return this.logger;
 	}
 	setLogger(_logger: Logger): void {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	setActiveAccount(_account: AccountInfo | null): void {
 		throw new Error("Method not implemented.");
@@ -146,10 +170,10 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		console.debug(sku, version);
 	}
 	setNavigationClient(_navigationClient: INavigationClient): void {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported");
 	}
 	getConfiguration(): BrowserConfiguration {
-		throw new Error("Method not implemented.");
+		throw new Error("Method not supported.");
 	}
 	async hydrateCache(_result: AuthenticationResult, _request: SilentRequest | SsoSilentRequest | RedirectRequest | PopupRequest): Promise<void> {
 		throw new Error("Method not implemented.");
@@ -202,7 +226,9 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 };*/
 
 export const getPCA = () => {
-	return new CustomPublicClientApplication();
+	const client = new CustomPublicClientApplication();
+	client.initialize().catch(e => console.error(e));
+	return client;
 	/*const pca = new PublicClientApplication(configuration);
 	pca.initialize();
 	pca.addEventCallback((ev) => {

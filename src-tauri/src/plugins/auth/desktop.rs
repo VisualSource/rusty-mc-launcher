@@ -20,7 +20,7 @@ use tokio::sync::Mutex;
 
 pub type AuthAppState = Mutex<AuthState>;
 
-pub const EVENT_LOGIN_WINDOW_DESTORYED: &str = "login-window-destroyed";
+pub const EVENT_LOGIN_WINDOW_DESTORYED: &str = "rmcl-auth-login-window-destroyed";
 /// Note: You must use the consumers AAD tenant to sign in with the XboxLive.signin scope.
 pub const AUTHORITY_ROOT: &str = "https://login.microsoftonline.com/consumers";
 const SCOPES_SUBSET: &str = "User.Read openid profile offline_access";
@@ -174,12 +174,12 @@ pub async fn validate_code<R: tauri::Runtime>(app: tauri::AppHandle<R>, url: Url
 
     match result {
         Ok(data) => {
-            if let Err(err) = app.emit("login-success", data) {
+            if let Err(err) = app.emit("rmcl-auth-login-success", data) {
                 log::error!("{}", err.to_string());
             }
         }
         Err(error) => {
-            if let Err(err) = app.emit("login-error", error.to_string()) {
+            if let Err(err) = app.emit("rmcl-auth-login-error", error.to_string()) {
                 log::error!("{}", err.to_string());
             }
         }
