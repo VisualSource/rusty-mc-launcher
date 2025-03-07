@@ -1,4 +1,5 @@
-use serde::{ser::Serializer, Serialize};
+use openidconnect::core::CoreErrorResponseType;
+use serde::{Serialize, ser::Serializer};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -8,32 +9,32 @@ pub enum Error {
     Lib(#[from] minecraft_launcher_lib::error::Error),
 
     #[error(transparent)]
-    Opener(#[from] tauri_plugin_opener::Error),
+    Tauri(#[from] tauri::Error),
+    #[error(transparent)]
+    TauriOpener(#[from] tauri_plugin_opener::Error),
+    #[error(transparent)]
+    TauriHttp(#[from] tauri_plugin_http::reqwest::Error),
+
+    #[error("{}: {}",_0.error(),_0.error_description().cloned().unwrap_or_default())]
+    Auth(openidconnect::StandardErrorResponse<CoreErrorResponseType>),
 
     #[error(transparent)]
-    AuthRequest(#[from] oauth2::reqwest::Error),
+    AuthUrlParse(#[from] openidconnect::url::ParseError),
     #[error(transparent)]
-    OAuthResponse(
-        #[from]
-        oauth2::RequestTokenError<
-            oauth2::HttpClientError<oauth2::reqwest::Error>,
-            oauth2::StandardErrorResponse<oauth2::basic::BasicErrorResponseType>,
-        >,
-    ),
-
+    AuthSignature(#[from] openidconnect::SignatureVerificationError),
     #[error(transparent)]
-    UrlParse(#[from] oauth2::url::ParseError),
+    AuthClaims(#[from] openidconnect::ClaimsVerificationError),
+    #[error(transparent)]
+    AuthSigning(#[from] openidconnect::SigningError),
 
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
-    #[error(transparent)]
-    Tauri(#[from] tauri::Error),
+
     #[error("{0}")]
     Reason(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
-    #[error(transparent)]
-    Http(#[from] httparse::Error),
+
     #[cfg(mobile)]
     #[error(transparent)]
     PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),

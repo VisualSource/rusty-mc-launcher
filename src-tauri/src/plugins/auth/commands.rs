@@ -1,12 +1,12 @@
-use super::desktop::{AuthAppState, AUTHORITY_ROOT, EVENT_LOGIN_WINDOW_DESTORYED};
+use super::desktop::{AUTHORITY, AuthAppState, EVENT_LOGIN_WINDOW_DESTORYED};
 use crate::error::Result;
-use tauri::{Emitter, Manager, State, Url, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 #[tauri::command]
-pub async fn logout<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<()> {
+pub async fn logout<R: tauri::Runtime>(_app: tauri::AppHandle<R>) -> Result<()> {
     let _logout_url = format!(
         "{}/oauth2/v2.0/logout?post_logout_redirect_uri=rmcl%3A%2F%2Fms%2Flogout",
-        AUTHORITY_ROOT
+        AUTHORITY
     );
     Ok(())
 }
@@ -15,7 +15,7 @@ pub async fn logout<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<()> {
 pub async fn authenticate<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
     state: State<'_, AuthAppState>,
-    scopes: Vec<oauth2::Scope>,
+    scopes: Vec<openidconnect::Scope>,
 ) -> Result<bool> {
     if let Some(window) = app.get_webview_window("login") {
         if let Err(err) = window.close() {
@@ -26,9 +26,7 @@ pub async fn authenticate<R: tauri::Runtime>(
     let mut sl = state.lock().await;
     let url = sl.generate_url(scopes)?;
 
-    let u = Url::parse(&url)?;
-
-    let window = WebviewWindowBuilder::new(&app, "login", WebviewUrl::External(u))
+    let window = WebviewWindowBuilder::new(&app, "login", WebviewUrl::External(url))
         .title("Login")
         .inner_size(484.0, 600.0)
         .focused(true)

@@ -38,7 +38,7 @@ import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
-import { authenticate, logout as newLogout } from "@/lib/api/plugins/auth";
+
 const appWindow = getCurrentWebviewWindow();
 
 export const NavbarUpper: React.FC = () => {
@@ -72,12 +72,6 @@ export const NavbarUpper: React.FC = () => {
 								<Bug className="h-4 w-4 mr-2" />
 								Bug Report
 							</Link>
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => authenticate(["XboxLive.SignIn", "XboxLive.offline_access"]).catch(e => console.error(e))}>
-							Test New Login
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => newLogout().catch(e => console.error(e))}>
-							Logout
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={() => exit()}>

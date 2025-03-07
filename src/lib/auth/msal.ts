@@ -101,15 +101,10 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		const result = new Promise((ok, reject) => {
 			let onSuccess: Promise<UnlistenFn> | undefined = undefined;
 			let onError: Promise<UnlistenFn> | undefined = undefined;
-			let onDestoryed: Promise<UnlistenFn> | undefined = undefined;
-
 			const handleEvent = (ev: Event<unknown>) => {
 				switch (ev.event) {
 					case "rmcl-auth-login-error":
-						reject(ev.payload);
-						break;
-					case "rmcl-auth-login-window-destroyed":
-						reject(new Error("Login window was closed"));
+						reject(new Error(ev.payload as string));
 						break;
 					case "rmcl-auth-login-success":
 						ok(ev.payload);
@@ -118,17 +113,21 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 						reject(new Error(`Unknown event "${ev.event}"`, { cause: ev }));
 						break;
 				}
-				Promise.all([onSuccess, onError, onDestoryed]).then(e => {
+				Promise.all([onSuccess, onError]).then(e => {
 					for (const unsub of e) unsub?.call(this);
 				}).catch(e => console.error(e));
 			}
 
 			onError = once("rmcl-auth-login-error", handleEvent);
 			onSuccess = once("rmcl-auth-login-success", handleEvent);
-			onDestoryed = once("rmcl-auth-login-window-destroyed", handleEvent);
 		});
 
-		await authenticate(request?.scopes ?? []);
+		let scopes = (request?.scopes ?? []);
+		if (request?.extraScopesToConsent?.length) {
+			scopes = scopes.concat(...request.extraScopesToConsent)
+		}
+
+		await authenticate(scopes);
 		const data = await result;
 
 		console.log(data);

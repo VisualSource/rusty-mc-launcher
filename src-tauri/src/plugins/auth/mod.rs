@@ -3,11 +3,11 @@ mod desktop;
 use tokio::sync::Mutex;
 
 use desktop::{
-    is_valid_callback, validate_code, AuthAppState, AuthState, EVENT_LOGIN_WINDOW_DESTORYED,
+    AuthAppState, AuthState, EVENT_LOGIN_WINDOW_DESTORYED, is_valid_callback, validate_code,
 };
 use tauri::{
+    Emitter, Listener, Manager, Runtime,
     plugin::{Builder, TauriPlugin},
-    Listener, Manager, Runtime,
 };
 use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -23,6 +23,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             app.listen(EVENT_LOGIN_WINDOW_DESTORYED, move |_event| {
                 let handle = app_handle.clone();
                 tauri::async_runtime::spawn(async move {
+                    if let Err(error) = handle.emit("rmcl-auth-login-error", "Window was closed") {
+                        log::error!("{}", error);
+                    }
+
                     let state = handle.state::<AuthAppState>();
                     let mut auth_state = state.lock().await;
                     auth_state.flow = None;
@@ -38,17 +42,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     return;
                 }
                 let url = opt_url.expect("There should have been a url in this");
-
-                log::debug!("{:#?}", url);
-
                 if !is_valid_callback(url) {
                     return;
-                }
-
-                if let Some(win) = app_handle.get_webview_window("login") {
-                    if let Err(err) = win.close() {
-                        log::error!("{}", err);
-                    }
                 }
 
                 let handle = app_handle.clone();
