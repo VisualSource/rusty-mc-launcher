@@ -25,7 +25,15 @@ import type { AccountFilter } from "@azure/msal-common";
 import { Logger, LogLevel } from "@azure/msal-browser";
 import { authenticate } from "../api/plugins/auth";
 
+// public db format
+// id          msName    msUsername   xuid   mcId 
+// ID_TOKEN | ID_TOKEN | ID_TOKEN   | MC   | 
+
 class CustomPublicClientApplication implements IPublicClientApplication {
+	private initialized = false;
+	private activeAccount: string | null = null;
+	private accounts: AccountInfo[] = [];
+
 	private logger = new Logger({
 		logLevel: LogLevel.Verbose,
 		loggerCallback: (level, message) => {
@@ -48,10 +56,11 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			}
 		},
 	}, "rmcl-auth", "0.0.0");
-	async initialize(_request?: InitializeApplicationRequest): Promise<void> {
-		// init db stuff
+	public async initialize(_request?: InitializeApplicationRequest): Promise<void> {
+		if (this.initialized) return;
+		this.initialized = true;
 	}
-	async acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
+	public async acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
 		throw new Error("Method not implemented.");
 	}
 	acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
@@ -64,7 +73,6 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
 	addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
-		console.debug(callback, eventTypes);
 		return null;
 	}
 	removeEventCallback(_callbackId: string): void {
@@ -91,11 +99,11 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	getAccountByUsername(_userName: string): AccountInfo | null {
 		throw new Error("Method not implemented.");
 	}
-	getAllAccounts(): AccountInfo[] {
-		return [];
+	public getAllAccounts(): AccountInfo[] {
+		return this.accounts;
 	}
 	async handleRedirectPromise(_hash?: string): Promise<AuthenticationResult | null> {
-		throw new Error("Method not implemented.");
+		return null;
 	}
 	async loginPopup(request?: PopupRequest): Promise<AuthenticationResult> {
 		const result = new Promise((ok, reject) => {
@@ -150,17 +158,34 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	getTokenCache(): ITokenCache {
 		throw new Error("Method not supported.");
 	}
-	getLogger(): Logger {
+	public getLogger(): Logger {
 		return this.logger;
 	}
 	setLogger(_logger: Logger): void {
 		throw new Error("Method not supported.");
 	}
-	setActiveAccount(_account: AccountInfo | null): void {
-		throw new Error("Method not implemented.");
+	public setActiveAccount(account: AccountInfo | null): void {
+		if (!account) {
+			this.activeAccount = null;
+			return;
+		}
+		this.activeAccount = account?.homeAccountId;
 	}
-	getActiveAccount(): AccountInfo | null {
-		return null;
+	public getActiveAccount(): AccountInfo | null {
+		if (!this.activeAccount) return null;
+
+		const account = this.accounts.find(e => e.homeAccountId === this.activeAccount);
+		if (!account) return null;
+		/*
+		{
+			environment: "spa",
+			homeAccountId: "000-",
+			localAccountId: "",
+			tenantId: "",
+			username: "Hello"
+		}
+		*/
+		return account;
 	}
 	getAccount(_filter: AccountFilter): AccountInfo | null {
 		return null;
@@ -175,7 +200,11 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		throw new Error("Method not supported.");
 	}
 	async hydrateCache(_result: AuthenticationResult, _request: SilentRequest | SsoSilentRequest | RedirectRequest | PopupRequest): Promise<void> {
-		throw new Error("Method not implemented.");
+
+
+
+
+
 	}
 	async clearCache(_logoutRequest?: ClearCacheRequest): Promise<void> {
 		throw new Error("Method not implemented.");
@@ -183,79 +212,8 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 }
 
-/*const configuration: Configuration = {
-	auth: {
-		clientId: import.meta.env.VITE_CLIENT_ID,
-		authority: "https://login.microsoftonline.com/consumers/",
-		redirectUri: "http://localhost",
-		postLogoutRedirectUri: "http://localhost",
-	},
-	cache: {
-		temporaryCacheLocation: BrowserCacheLocation.SessionStorage,
-		cacheLocation: BrowserCacheLocation.LocalStorage,
-		cacheMigrationEnabled: true,
-
-	},
-	system: {
-		allowNativeBroker: true,
-		loggerOptions: {
-			piiLoggingEnabled: false,
-			logLevel: LogLevel.Error, // import.meta.env.DEV ? LogLevel.Verbose : LogLevel.Error,
-			loggerCallback(level: LogLevel, message: string) {
-				switch (level) {
-					case LogLevel.Error:
-						error(message);
-						break;
-					case LogLevel.Warning:
-						warn(message);
-						break;
-					case LogLevel.Info:
-						info(message);
-						break;
-					case LogLevel.Verbose:
-						debug(message);
-						break;
-					case LogLevel.Trace:
-						trace(message);
-						break;
-				}
-			},
-		},
-	},
-};*/
-
 export const getPCA = () => {
 	const client = new CustomPublicClientApplication();
 	client.initialize().catch(e => console.error(e));
 	return client;
-	/*const pca = new PublicClientApplication(configuration);
-	pca.initialize();
-	pca.addEventCallback((ev) => {
-		switch (ev.eventType) {
-			case EventType.LOGIN_SUCCESS: {
-				if (!ev.payload) break;
-				const account = (ev.payload as AuthenticationResult).account;
-				pca.setActiveAccount(account);
-				break;
-			}
-			case EventType.ACCOUNT_ADDED: {
-				debug("New Account Added");
-				break;
-			}
-			case EventType.ACCOUNT_REMOVED: {
-				debug("Account has been removed");
-				break;
-			}
-		}
-	});
-
-	if (!pca.getActiveAccount()) {
-		const accounts = pca.getAllAccounts();
-		const account = accounts.at(0);
-		if (account) {
-			pca.setActiveAccount(account);
-		}
-	}*/
-
-	//return pca;
 };

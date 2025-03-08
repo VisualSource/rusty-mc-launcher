@@ -6,11 +6,10 @@
 //!
 use crate::error::{Error, Result};
 use openidconnect::{
-    AccessTokenHash, AuthorizationCode, AuthorizationCodeHash, ClientId, CsrfToken,
-    EmptyAdditionalClaims, EmptyExtraTokenFields, EndpointMaybeSet, EndpointNotSet, EndpointSet,
-    IdToken, IdTokenFields, JsonWebKeySet, Nonce, OAuth2TokenResponse, PkceCodeChallenge,
-    PkceCodeVerifier, RedirectUrl, Scope, StandardErrorResponse, StandardTokenResponse,
-    TokenResponse,
+    AuthorizationCode, AuthorizationCodeHash, ClientId, CsrfToken, EmptyAdditionalClaims,
+    EmptyExtraTokenFields, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenFields,
+    JsonWebKeySet, Nonce, PkceCodeChallenge, PkceCodeVerifier, RedirectUrl, Scope,
+    StandardErrorResponse, StandardTokenResponse,
     core::{
         CoreAuthenticationFlow, CoreClient, CoreErrorResponseType, CoreGenderClaim, CoreJsonWebKey,
         CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreProviderMetadata,
