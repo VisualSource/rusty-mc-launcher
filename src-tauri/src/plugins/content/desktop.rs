@@ -3,9 +3,9 @@ use minecraft_launcher_lib::{
     database::RwDatabase,
     events::DownloadEvent,
     installer::{
-        content::{self, curseforge::install_curseforge_modpack, InstallContent},
-        minecraft::install_minecraft,
         InstallConfig,
+        content::{self, InstallContent, curseforge::install_curseforge_modpack},
+        minecraft::install_minecraft,
     },
     models::{
         profile::{Profile, ProfileState},
@@ -13,7 +13,7 @@ use minecraft_launcher_lib::{
     },
 };
 use std::time::Duration;
-use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
+use tauri::{AppHandle, Manager, Runtime, ipc::Channel};
 
 async fn install_client(
     item: &QueueItem,

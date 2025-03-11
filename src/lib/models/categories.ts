@@ -10,14 +10,18 @@ export class Category {
 		profile: z.string().uuid(),
 		category: z.string().uuid(),
 	});
+	static fromQuery(args: QueryResult) {
+		const data = Category.schema.parse(args);
+		return new Category(data);
 
+	}
 	public id: number;
 	public profile: string;
 	public category: string;
-	constructor(args: QueryResult) {
-		this.id = args.id as number;
-		this.profile = args.profile as string;
-		this.category = args.category as string;
+	constructor(args: z.infer<typeof Category.schema>) {
+		this.id = args.id;
+		this.profile = args.profile;
+		this.category = args.category;
 	}
 }
 

@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod error;
 mod plugins;
+use rand::RngCore;
+use std::io::Write;
 use tauri::Manager;
 
 fn main() {

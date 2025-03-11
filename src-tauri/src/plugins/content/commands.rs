@@ -1,13 +1,13 @@
 use minecraft_launcher_lib::database::RwDatabase;
 use minecraft_launcher_lib::events::DownloadEvent;
-use minecraft_launcher_lib::installer::content::file;
 use minecraft_launcher_lib::installer::content::ContentType;
+use minecraft_launcher_lib::installer::content::file;
 use minecraft_launcher_lib::models::queue::QueueType;
 use tokio::sync::RwLock;
 
 use std::path::PathBuf;
-use tauri::ipc::Channel;
 use tauri::State;
+use tauri::ipc::Channel;
 use tokio::sync::Mutex;
 
 use crate::error::Error;

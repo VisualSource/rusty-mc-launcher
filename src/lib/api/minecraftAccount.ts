@@ -44,6 +44,7 @@ export type MinecraftAccount = {
 /**
  * @see https://wiki.vg/Microsoft_Authentication_Scheme
  *
+ * @deprecated
  * @export
  * @param {string} userId
  * @param {string} accessToken
@@ -114,7 +115,6 @@ export async function getMinecraftAccount(
 	// #endregion
 
 	// #region Authenticate with minecraft
-
 	const mclResponse = await fetch(MINECRAFT_LOGIN, {
 		method: "POST",
 		body: JSON.stringify({
@@ -138,7 +138,6 @@ export async function getMinecraftAccount(
 	// #endregion
 
 	//#region Get Minecraft Profile
-
 	const profileResponse = await fetch(MINECRAFT_PROFILE, {
 		headers: {
 			Authorization: `Bearer ${access_token}`,
@@ -157,7 +156,6 @@ export async function getMinecraftAccount(
 		);
 		throw new Error("Current account does not have a minecraft account!");
 	}
-
 	//#endregion
 
 	const mcprofile: MinecraftAccount = {

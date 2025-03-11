@@ -37,12 +37,17 @@ export class Setting {
 		metadata: z.string().nullable(),
 		value: z.string(),
 	});
+	static fromQuery(args: QueryResult) {
+		const data = Setting.schema.parse(args);
+		return new Setting(data);
+	}
+
 	public key: string;
 	public metadata: string | null;
 	public value: string;
-	constructor(args: QueryResult) {
-		this.key = args.key as string;
-		this.metadata = args.metadata as string | null;
-		this.value = args.value as string;
+	constructor(args: z.infer<typeof Setting.schema>) {
+		this.key = args.key;
+		this.metadata = args.metadata;
+		this.value = args.value;
 	}
 }

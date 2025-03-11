@@ -4,7 +4,7 @@ type Query<T> = {
 	all: () => Promise<T[]>;
 	get: () => Promise<T | undefined>;
 	run: () => Promise<[number, number]>;
-	as: <A>(model: { new (args: QueryResult): A }) => Omit<
+	as: <A>(model: { fromQuery(args: QueryResult): A }) => Omit<
 		Query<A>,
 		"as" | "run"
 	>;
@@ -116,17 +116,17 @@ export function query<T = QueryResult>(
 		all: () => querySelect<T>(stmt, args),
 		get: () => querySelect<T>(stmt, args).then((e) => e.at(0)),
 		run: () => queryExecute(stmt, args),
-		as<A>(Model: { new (args: QueryResult): A }) {
+		as<A>(Model: { fromQuery(args: QueryResult): A }) {
 			return {
 				all: () =>
 					querySelect<QueryResult>(stmt, args).then((r) =>
-						r.map((e) => new Model(e)),
+						r.map(Model.fromQuery),
 					),
 				get: () =>
 					querySelect<QueryResult>(stmt, args).then((r) => {
 						const v = r.at(0);
 						if (!v) return;
-						return new Model(v);
+						return Model.fromQuery(v);
 					}),
 			};
 		},

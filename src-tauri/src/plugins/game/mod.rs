@@ -3,10 +3,10 @@ mod desktop;
 
 use std::time::Duration;
 
-use desktop::{process_watcher, PluginGameState, PROCESSES_STATE_EVENT};
+use desktop::{PROCESSES_STATE_EVENT, PluginGameState, process_watcher};
 use tauri::{
-    plugin::{Builder, TauriPlugin},
     Manager, RunEvent, Runtime,
+    plugin::{Builder, TauriPlugin},
 };
 use tokio_util::sync::CancellationToken;
 

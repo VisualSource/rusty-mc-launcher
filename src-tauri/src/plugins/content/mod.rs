@@ -3,9 +3,9 @@ mod desktop;
 use minecraft_launcher_lib::events::DownloadEvent;
 use std::time::Duration;
 use tauri::{
+    Manager, RunEvent, Runtime,
     ipc::Channel,
     plugin::{Builder, TauriPlugin},
-    Manager, RunEvent, Runtime,
 };
 use tokio::{select, sync::Mutex};
 use tokio_util::sync::CancellationToken;
