@@ -1,6 +1,5 @@
 import type {
 	IPublicClientApplication,
-	EventType,
 	AuthenticationResult,
 	AccountInfo,
 	AuthorizationCodeRequest,
@@ -18,27 +17,23 @@ import type {
 	SilentRequest,
 	SsoSilentRequest,
 	WrapperSKU,
+	EventMessage,
+	EventPayload,
+	EventError,
 } from "@azure/msal-browser";
-import { type Event, once, type UnlistenFn } from "@tauri-apps/api/event";
 import { error, warn, info, trace, debug } from "@tauri-apps/plugin-log";
 import type { AccountFilter } from "@azure/msal-common";
-import { Logger, LogLevel } from "@azure/msal-browser";
-import { authenticate } from "../api/plugins/auth";
+import { InteractionType, Logger, LogLevel, EventType, BrowserAuthError } from "@azure/msal-browser";
+import { authenticate, refresh } from "../api/plugins/auth";
 import { query, transaction } from "../api/plugins/query";
 import { message } from "@tauri-apps/plugin-dialog";
 import { addSeconds } from "date-fns/addSeconds";
 import { fetch } from "@tauri-apps/plugin-http";
 import { Account, type Cape, type Skin } from "../models/account";
 import { Token } from "../models/tokens";
+import { nanoid } from "../nanoid";
 
-type LoginResponse = {
-	access_token: string;
-	expires_in: number;
-	id_token: string;
-	refresh_token: string;
-	scope: string;
-	token_type: string;
-}
+export type AuthenticationResultExtended = AuthenticationResult & { tokens: Token };
 
 const MINECRAFT_LOGIN =
 	"https://api.minecraftservices.com/authentication/login_with_xbox";
@@ -53,6 +48,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	private initialized = false;
 	private activeAccount: string | null = null;
 	private accounts: Account[] = [];
+	private callbacks: Map<string, [EventCallbackFunction, Array<EventType> | undefined]> = new Map();
 
 	private logger = new Logger({
 		logLevel: LogLevel.Verbose,
@@ -77,50 +73,142 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		},
 	}, "rmcl-auth", "0.0.0");
 	public async initialize(_request?: InitializeApplicationRequest): Promise<void> {
-		if (this.initialized) return;
-		this.initialized = true;
-
-		this.activeAccount = localStorage.getItem("active-account");
-
-		this.accounts = await query`SELECT * FROM accounts`.as(Account).all();
-
-		if (this.activeAccount) {
-			const account = this.accounts.find(e => e.homeAccountId === this.activeAccount);
-			if (account) {
-
-
-
+		try {
+			if (this.initialized) {
+				this.logger.info("initialize has already been called, exiting early.");
+				return;
 			}
+			this.initialized = true;
+			this.emit(EventType.INITIALIZE_START);
+
+			this.activeAccount = localStorage.getItem("active-account");
+			console.log(this.activeAccount);
+			this.accounts = await query`SELECT * FROM accounts`.as(Account).all();
+			if (!this.activeAccount && this.accounts.length >= 1) {
+				const id = this.accounts.at(0)?.homeAccountId;
+				if (id) {
+					this.activeAccount = id;
+					localStorage.setItem("active-account", id);
+				}
+			}
+
+
+
+			if (this.activeAccount) {
+				const account = this.accounts.find(e => e.homeAccountId === this.activeAccount);
+				if (account) {
+
+
+
+				}
+			}
+
+
+			this.emit(EventType.INITIALIZE_END);
+		} catch (error) {
+			console.error(error);
 		}
-
-
-
-
-		// load accounts from db 
-		// store in cache
-
-		// check for active account
-
-		// fetch auth tokens for active user
-		// refresh active user token if needed
 	}
-	public async acquireTokenPopup(_request: PopupRequest): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
+	public async acquireTokenPopup(request: PopupRequest): Promise<AuthenticationResultExtended> {
+		const loggedInAccounts = this.getAllAccounts();
+		const isAcquireToken = loggedInAccounts.length > 1;
+
+		try {
+			if (isAcquireToken) {
+				this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Popup, request);
+			} else {
+				this.emit(EventType.LOGIN_START, InteractionType.Popup, request);
+			}
+
+			const data = await this.createPopupClient(request.scopes);
+			const minecraft = await this.minecraftLogin(data.accessToken);
+
+			const result = await this.finish(data, minecraft);
+
+			const isLoggingIn = loggedInAccounts.length < this.getAllAccounts().length;
+			if (isLoggingIn) {
+				this.emit(EventType.LOGIN_SUCCESS, InteractionType.Popup, result);
+			} else {
+				this.emit(EventType.ACQUIRE_TOKEN_SUCCESS, InteractionType.Popup, result);
+			}
+
+			return result;
+		} catch (error) {
+
+			if (isAcquireToken) {
+				this.emit(EventType.ACQUIRE_TOKEN_FAILURE, InteractionType.Popup, null, error as Error);
+			} else {
+				this.emit(EventType.LOGIN_FAILURE, InteractionType.Popup, null, error as Error);
+			}
+
+			throw error;
+
+		}
 	}
 	acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
-	async acquireTokenSilent(_silentRequest: SilentRequest): Promise<AuthenticationResult> {
-		throw new Error("Method not implemented.");
+	async acquireTokenSilent(silentRequest: SilentRequest): Promise<AuthenticationResultExtended> {
+		const account = silentRequest.account ?? this.getActiveAccount();
+		if (!account) throw new BrowserAuthError("no_account_error");
+		try {
+			this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Silent, silentRequest);
+
+			let fromCache = true;
+			const token = await query`SELECT FROM tokens WHERE id = ${account.homeAccountId}`.as(Token).get();
+			if (!token) throw new BrowserAuthError("no_token_request_cache_error");
+
+			if (token.isAccessTokenExpired()) {
+				fromCache = false;
+				const result = await refresh(token.refreshToken);
+				token
+					.setAccessToken(result.access_token)
+					.setAccessTokenExpires(result.expires_in)
+					.setRefreshToken(result.refresh_token);
+				await query`UPDATE tokens SET accessToken = ${token.accessToken}, refreshToken = ${token.refreshToken}, accessTokenExp = ${token.accessTokenExp?.toISOString() ?? null} WHERE id = ${token.id}`.run();
+			}
+
+			if (token.isMcAccessTokenExpired()) {
+				fromCache = false;
+				const result = await this.minecraftAuthenicate(token.accessToken);
+				token.setMcData(result.accessToken, result.expDate);
+				await query`UPDATE tokens SET mcAccessToken = ${token.mcAccessToken ?? null}, mcAccessTokenExp = ${token.mcAccessTokenExp ?? null} WHERE id = ${token.id}`.run();
+			}
+
+			const result = {
+				tokens: token,
+				idToken: "",
+				idTokenClaims: {},
+				scopes: [],
+				tenantId: "",
+				tokenType: "",
+				uniqueId: "",
+				correlationId: "",
+				authority: "MSA",
+				accessToken: token.accessToken,
+				expiresOn: new Date(),
+				fromCache,
+				account,
+			} satisfies AuthenticationResultExtended;
+
+			this.emit(EventType.ACQUIRE_TOKEN_SUCCESS, InteractionType.Silent, result);
+
+			return result;
+		} catch (error) {
+			this.emit(EventType.ACQUIRE_TOKEN_FAILURE, InteractionType.Silent, null, error as Error);
+			throw error;
+		}
 	}
 	async acquireTokenByCode(_request: AuthorizationCodeRequest): Promise<AuthenticationResult> {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
-	addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
-		return null;
+	public addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
+		const id = nanoid();
+		this.callbacks.set(id, [callback, eventTypes]);
+		return id;
 	}
-	removeEventCallback(_callbackId: string): void {
-		throw new Error("Method not supported.");
+	public removeEventCallback(callbackId: string): void {
+		this.callbacks.delete(callbackId);
 	}
 	addPerformanceCallback(_callback: PerformanceCallbackFunction): string {
 		throw new Error("Method not supported.");
@@ -134,14 +222,16 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	disableAccountStorageEvents(): void {
 		throw new Error("Method not supported.");
 	}
-	getAccountByHomeId(_homeAccountId: string): AccountInfo | null {
-		throw new Error("Method not implemented.");
+	public getAccountByHomeId(homeAccountId: string): Account | null {
+		const account = this.accounts.find(e => e.homeAccountId === homeAccountId);
+		return account ?? null;
 	}
 	getAccountByLocalId(_localId: string): AccountInfo | null {
-		throw new Error("Method not implemented.");
+		throw new Error("Use 'getAccountByHomeId'");
 	}
-	getAccountByUsername(_userName: string): AccountInfo | null {
-		throw new Error("Method not implemented.");
+	public getAccountByUsername(userName: string): Account | null {
+		const account = this.accounts.find(e => e.username === userName);
+		return account ?? null;
 	}
 	public getAllAccounts(): AccountInfo[] {
 		return this.accounts;
@@ -149,88 +239,10 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	async handleRedirectPromise(_hash?: string): Promise<AuthenticationResult | null> {
 		return null;
 	}
-	async loginPopup(request?: PopupRequest): Promise<AuthenticationResult> {
-		const result = new Promise<LoginResponse>((ok, reject) => {
-			let onSuccess: Promise<UnlistenFn> | undefined = undefined;
-			let onError: Promise<UnlistenFn> | undefined = undefined;
-			const handleEvent = (ev: Event<unknown>) => {
-				switch (ev.event) {
-					case "rmcl-auth-login-error":
-						reject(new Error(ev.payload as string));
-						break;
-					case "rmcl-auth-login-success": {
-						ok(ev.payload as LoginResponse);
-						break;
-					}
-					default:
-						reject(new Error(`Unknown event "${ev.event}"`, { cause: ev }));
-						break;
-				}
-				Promise.all([onSuccess, onError]).then(e => {
-					for (const unsub of e) unsub?.call(this);
-				}).catch(e => console.error(e));
-			}
-
-			onError = once("rmcl-auth-login-error", handleEvent);
-			onSuccess = once("rmcl-auth-login-success", handleEvent);
+	async loginPopup(request?: PopupRequest): Promise<AuthenticationResultExtended> {
+		return this.acquireTokenPopup(request ?? {
+			scopes: []
 		});
-
-		let scopes = (request?.scopes ?? []);
-		if (request?.extraScopesToConsent?.length) {
-			scopes = scopes.concat(...request.extraScopesToConsent);
-		}
-
-		await authenticate(scopes);
-		const response = await result
-		const mcAuth = await this.minecraftAuthenicate(response.access_token);
-		const mcProfile = await this.getMinecraftProfile(mcAuth.accessToken);
-
-		const msTokenExp = addSeconds(new Date(), response.expires_in - 1);
-		const jwtPayload = response.id_token.split(".").at(0);
-		if (!jwtPayload) throw new Error("Missing id_token payload");
-		const claims = JSON.parse(btoa(jwtPayload)) as { aio: string; aud: string; sub: string; preferred_username: string; };
-
-		await transaction((tx) => {
-			tx`DELETE FROM accounts WHERE homeAccountId = ${claims.sub}`;
-			tx`INSERT INTO accounts VALUES (${claims.sub},${claims.preferred_username},${JSON.stringify(claims)},${mcProfile.name},${mcAuth.xuid},${mcProfile.id},${JSON.stringify(mcProfile.skins)},${JSON.stringify(mcProfile.capes ?? [])},${JSON.stringify(mcProfile.profileActions)});`;
-			tx`INSERT INTO tokens VALUES (${claims.sub},${response.access_token},${response.refresh_token},${msTokenExp.toISOString()},${mcAuth.accessToken},${mcAuth.expDate.toISOString()});`;
-		});
-
-		const account = new Account({
-			authorityType: "MSA",
-			environment: "browser",
-			username: claims.preferred_username,
-			idTokenClaims: claims,
-			idToken: response.id_token,
-			name: mcProfile.name,
-			id: mcProfile.id,
-			capes: mcProfile.capes ?? [],
-			skins: mcProfile.skins,
-			xuid: mcAuth.xuid,
-			homeAccountId: claims.sub,
-			localAccountId: "",
-			tenantId: claims.aud,
-			profileActions: mcProfile.profileActions
-		});
-
-		this.accounts.push(account);
-
-		return {
-			accessToken: response.access_token,
-			account: account,
-			authority: "MSA",
-			uniqueId: claims.aio,
-			tokenType: response.token_type,
-			scopes: response.scope.split(" "),
-			idTokenClaims: claims,
-			idToken: response.id_token,
-			tenantId: claims.aud,
-			fromCache: false,
-			expiresOn: msTokenExp,
-			correlationId: ""
-		} as AuthenticationResult
-
-		//throw new Error("TODO: finish impl");
 	}
 	async loginRedirect(_request?: RedirectRequest): Promise<void> {
 		throw new Error("use 'loginPopup'");
@@ -287,12 +299,127 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		throw new Error("Method not implemented.");
 	}
 
+	private emit(eventType: EventType, interactionType?: InteractionType, payload?: EventPayload, error?: EventError) {
+		const message = {
+			eventType,
+			interactionType: interactionType ?? null,
+			payload: payload ?? null,
+			error: error ?? null,
+			timestamp: Date.now(),
+		} satisfies EventMessage
+		for (const [callback, types] of this.callbacks.values()) {
+			if (types?.length !== 0 || !types.includes(eventType)) continue;
+			callback(message);
+		}
+	}
+
+	private async finish(microsoft: Awaited<ReturnType<CustomPublicClientApplication["createPopupClient"]>>, minecraft: Awaited<ReturnType<CustomPublicClientApplication["minecraftLogin"]>>): Promise<AuthenticationResultExtended> {
+		const claims = microsoft.claims;
+		if (!claims || !claims.sub || !claims.preferred_username || !claims.aud) throw new Error("Missing id_token claims");
+
+		const tokens = new Token({
+			id: claims.sub,
+			accessToken: microsoft.accessToken,
+			refreshToken: microsoft.refreshToken,
+			accessTokenExp: microsoft.expires,
+			mcAccessToken: minecraft.accessToken,
+			mcAccessTokenExp: minecraft.expDate
+		});
+
+		let found = true;
+		let user = this.accounts.find(e => e.homeAccountId === claims.sub);
+		if (!user) {
+			found = false;
+			user = new Account({
+				idTokenClaims: microsoft.claims,
+				authorityType: "MSA",
+				environment: "browser",
+				homeAccountId: claims.sub,
+				username: claims?.preferred_username,
+				name: minecraft.profile.name,
+				id: minecraft.profile.id,
+				profileActions: minecraft.profile.profileActions,
+				skins: minecraft.profile.skins,
+				capes: minecraft.profile.capes ?? [],
+				idToken: microsoft.idToken,
+				localAccountId: "",
+				tenantId: claims.aud,
+				xuid: minecraft.xuid,
+			});
+
+			await transaction((tx) => {
+				tx`DELETE FROM accounts WHERE homeAccountId = ${claims.sub}`;
+				(user as Account).runAsQuery(tx);
+				tokens.runAsQuery(tx);
+			});
+			this.accounts.push(user);
+		} else {
+			await query`UPDATE tokens SET 
+				accessToken = ${tokens.accessToken}, 
+				refreshToken = ${tokens.refreshToken},
+				accessTokenExp = ${tokens.accessTokenExp?.toISOString() ?? null},
+				mcAccessToken = ${tokens.mcAccessToken ?? null},
+				mcAccessTokenExp = ${tokens.mcAccessTokenExp?.toISOString() ?? null} WHERE id = ${claims.sub}`.run();
+		}
+
+		return {
+			tokens: tokens,
+			accessToken: minecraft.accessToken,
+			account: user,
+			authority: "MSA",
+			uniqueId: "",
+			tokenType: microsoft.tokenType,
+			scopes: microsoft.scopes,
+			idTokenClaims: claims,
+			idToken: microsoft.idToken,
+			tenantId: claims.aud,
+			fromCache: false,
+			expiresOn: minecraft.expDate,
+			correlationId: ""
+		} satisfies AuthenticationResultExtended;
+	}
+
+	private async createPopupClient(scopes: string[]): Promise<{
+		claims: AccountInfo["idTokenClaims"],
+		expires: Date,
+		accessToken: string;
+		refreshToken: string;
+		tokenType: string,
+		idToken: string,
+		scopes: string[]
+	}> {
+
+		const response = await authenticate(scopes);
+
+		const expires = addSeconds(new Date(), response.expires_in - 1);
+		const jwtPayload = response.id_token.split(".").at(1);
+		if (!jwtPayload) throw new Error("Missing id_token payload");
+		const claims = JSON.parse(atob(jwtPayload)) as AccountInfo["idTokenClaims"];
+
+		return {
+			idToken: response.id_token,
+			scopes: response.scope.split(" "),
+			tokenType: response.token_type,
+			claims,
+			expires,
+			accessToken: response.access_token,
+			refreshToken: response.refresh_token
+		};
+	}
+
+	private async minecraftLogin(accessToken: string) {
+		const response = await this.minecraftAuthenicate(accessToken);
+		const profile = await this.getMinecraftProfile(response.accessToken);
+
+		return { ...response, profile }
+	}
+
 	/**
 	 * Get minecraft profile
 	 * @param accessToken minecraft access token
 	 * @returns 
 	 */
-	async getMinecraftProfile(accessToken: string) {
+	private async getMinecraftProfile(accessToken: string) {
 		//#region Get Minecraft Profile
 		const profileResponse = await fetch(MINECRAFT_PROFILE, {
 			headers: {
@@ -327,7 +454,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	 * @param accessToken microsoft access token
 	 * @returns 
 	 */
-	async minecraftAuthenicate(accessToken: string) {
+	private async minecraftAuthenicate(accessToken: string) {
 		// #region Authenticate with Xbox Live.
 		const authResponse = await fetch(XBOX_AUTHENTICATE, {
 			method: "POST",
@@ -344,8 +471,8 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				TokenType: "JWT",
 			}),
 		});
-		if (!authResponse.ok)
-			throw new Error(authResponse.statusText, { cause: authResponse });
+
+		if (!authResponse.ok) throw new Error(authResponse.statusText, { cause: authResponse });
 		const authRequest = (await authResponse.json()) as {
 			Token: string;
 			DisplayClaims: { xui: { uhs: string }[] };
@@ -371,6 +498,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				TokenType: "JWT",
 			}),
 		});
+
 		if (!liveResponse.ok)
 			throw new Error(liveResponse.statusText, { cause: liveResponse });
 		const liveToken = await liveResponse

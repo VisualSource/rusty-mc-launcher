@@ -22,7 +22,7 @@ use tauri_plugin_http::reqwest::{ClientBuilder, redirect::Policy};
 use tokio::sync::Mutex;
 
 pub type AuthAppState = Mutex<AuthState>;
-type AuthResponse = StandardTokenResponse<
+pub type AuthResponse = StandardTokenResponse<
     IdTokenFields<
         EmptyAdditionalClaims,
         EmptyExtraTokenFields,
@@ -38,7 +38,7 @@ pub const EVENT_LOGIN_WINDOW_DESTORYED: &str = "rmcl-auth-login-window-destroyed
 /// Dissover: v2.0/.well-known/openid-configuration
 pub const AUTHORITY: &str =
     "https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration";
-const SCOPES_SUBSET: &str = "User.Read openid profile offline_access";
+const SCOPES_SUBSET: &str = "XboxLive.SignIn XboxLive.offline_access openid profile offline_access";
 pub const CALLBACK_URI: &str = "rmcl://ms/authorize";
 
 struct FragmentParams(HashMap<String, String>);
@@ -237,15 +237,21 @@ impl AuthState {
         params.insert("refresh_type", "refresh_token");
         params.insert("refresh_token", refresh_token);
 
-        let response = http_client
-            .post(token_url)
-            .form(&params)
-            .send()
-            .await?
-            .json::<AuthResponse>()
-            .await?;
+        let response = http_client.post(token_url).form(&params).send().await?;
+        let status = response.status();
+        if !status.is_success() {
+            let error_data = response
+                .json::<StandardErrorResponse<CoreErrorResponseType>>()
+                .await?;
 
-        Ok(response)
+            log::error!("{}", error_data);
+
+            return Err(Error::Auth(error_data));
+        }
+
+        let data = response.json::<AuthResponse>().await?;
+
+        Ok(data)
     }
 }
 

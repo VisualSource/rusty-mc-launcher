@@ -2220,6 +2220,11 @@
           "const": "allow-logout"
         },
         {
+          "description": "Allow refresh",
+          "type": "string",
+          "const": "allow-refresh"
+        },
+        {
           "description": "Allow for select operation",
           "type": "string",
           "const": "allow-select"
@@ -5450,6 +5455,11 @@
           "const": "rmcl-auth:allow-logout"
         },
         {
+          "description": "Allow refresh",
+          "type": "string",
+          "const": "rmcl-auth:allow-refresh"
+        },
+        {
           "description": "Default permissions for the rmcl-content plugin",
           "type": "string",
           "const": "rmcl-content:default"
@@ -5578,121 +5588,6 @@
           "description": "Denies the stdin_write command without any pre-configured scope.",
           "type": "string",
           "const": "shell:deny-stdin-write"
-        },
-        {
-          "description": "This permission set configures what kind of\noperations are available from the stronghold plugin.\n\n#### Granted Permissions\n\nAll non-destructive operations are enabled by default.\n\n",
-          "type": "string",
-          "const": "stronghold:default"
-        },
-        {
-          "description": "Enables the create_client command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-create-client"
-        },
-        {
-          "description": "Enables the destroy command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-destroy"
-        },
-        {
-          "description": "Enables the execute_procedure command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-execute-procedure"
-        },
-        {
-          "description": "Enables the get_store_record command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-get-store-record"
-        },
-        {
-          "description": "Enables the initialize command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-initialize"
-        },
-        {
-          "description": "Enables the load_client command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-load-client"
-        },
-        {
-          "description": "Enables the remove_secret command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-remove-secret"
-        },
-        {
-          "description": "Enables the remove_store_record command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-remove-store-record"
-        },
-        {
-          "description": "Enables the save command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-save"
-        },
-        {
-          "description": "Enables the save_secret command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-save-secret"
-        },
-        {
-          "description": "Enables the save_store_record command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:allow-save-store-record"
-        },
-        {
-          "description": "Denies the create_client command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-create-client"
-        },
-        {
-          "description": "Denies the destroy command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-destroy"
-        },
-        {
-          "description": "Denies the execute_procedure command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-execute-procedure"
-        },
-        {
-          "description": "Denies the get_store_record command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-get-store-record"
-        },
-        {
-          "description": "Denies the initialize command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-initialize"
-        },
-        {
-          "description": "Denies the load_client command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-load-client"
-        },
-        {
-          "description": "Denies the remove_secret command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-remove-secret"
-        },
-        {
-          "description": "Denies the remove_store_record command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-remove-store-record"
-        },
-        {
-          "description": "Denies the save command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-save"
-        },
-        {
-          "description": "Denies the save_secret command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-save-secret"
-        },
-        {
-          "description": "Denies the save_store_record command without any pre-configured scope.",
-          "type": "string",
-          "const": "stronghold:deny-save-store-record"
         },
         {
           "description": "This permission set configures which kind of\nupdater functions are exposed to the frontend.\n\n#### Granted Permissions\n\nThe full workflow from checking for updates to installing them\nis enabled.\n\n",

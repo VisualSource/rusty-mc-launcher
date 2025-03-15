@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS tokens (
     id PRIMARY KEY NOT NULL,
     accessToken TEXT NOT NULL,
     refreshToken TEXT NULL NULL,
-    accessTokenExp TEXT
-    mcAccessToken TEXT
+    accessTokenExp TEXT,
+    mcAccessToken TEXT,
     mcAccessTokenExp TEXT
 );
 

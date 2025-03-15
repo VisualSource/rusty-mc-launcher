@@ -14,20 +14,6 @@
       ]
     },
     {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "windows-open-file",
-          "cmd": "explorer",
-          "args": [
-            {
-              "validator": "[a-zA-Z]:\\\\.+"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "identifier": "http:default",
       "allow": [
         {
@@ -96,7 +82,6 @@
     "rmcl-auth:default",
     "rmcl-content:default",
     "rmcl-game:default",
-    "rmcl-query:default",
-    "stronghold:default"
+    "rmcl-query:default"
   ]
 }

@@ -9,7 +9,7 @@ use crate::models::setting::Setting;
 use indexmap::IndexMap;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::{Sqlite, SqlitePool, SqlitePoolOptions, SqliteValueRef};
-use sqlx::{migrate::Migrator, Column, Row, TypeInfo, Value, ValueRef};
+use sqlx::{Column, Row, TypeInfo, Value, ValueRef, migrate::Migrator};
 
 pub type RwDatabase = tokio::sync::RwLock<Database>;
 
@@ -52,9 +52,7 @@ impl Database {
             .map(|(_, a)| format!("sqlite:{}", a))
             .ok_or_else(|| Error::Generic("Failed to get database connection string".into()))?;
 
-        if Sqlite::database_exists(&conn_str).await? {
-            Sqlite::create_database(&conn_str).await?;
-        }
+        Sqlite::create_database(&conn_str).await?;
 
         let db = SqlitePoolOptions::new().connect_lazy(&conn_str)?;
         Ok(Self(db))

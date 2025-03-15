@@ -1,6 +1,6 @@
 import type { AccountInfo, IdTokenClaims } from "@azure/msal-browser";
 import { z } from "zod";
-import type { QueryResult } from "../api/plugins/query";
+import type { QueryResult, TagFunc } from "../api/plugins/query";
 
 export type Skin = {
     id: string;
@@ -22,7 +22,7 @@ export class Account implements AccountInfo {
     static schema = z.object({
         authorityType: z.ostring().default("MSA"),
         environment: z.ostring().default("borwser"),
-        tenantId: z.string().uuid().optional().default(""),
+        tenantId: z.ostring().default(""),
         xuid: z.string().optional().nullable(),
         idTokenClaims: z.string().transform((arg, ctx) => {
             try {
@@ -136,20 +136,16 @@ export class Account implements AccountInfo {
         this.id = data.id;
     }
 
-    public sterilize() {
-        return {
-            homeAccountId: this.homeAccountId,
-            localAccountId: this.localAccountId,
-            idTokenClaims: this.idTokenClaims ? JSON.stringify(this.idTokenClaims) : null,
-            username: this.username,
-            name: this.name?.length ? this.name : null,
-            xuid: this.xuid?.length ? this.xuid : null,
-            id: this.id?.length ? this.id : null,
-            skins: JSON.stringify(this.skins),
-            capes: JSON.stringify(this.capes),
-            profileActions: JSON.stringify(this.profileActions)
-        };
+    public runAsQuery(tx: TagFunc) {
+        tx`INSERT INTO accounts VALUES (
+            ${this.homeAccountId},
+            ${this.username},
+            ${JSON.stringify(this.idTokenClaims)},
+            ${this.name},
+            ${this.xuid},
+            ${this.id},
+            ${JSON.stringify(this.skins)},
+            ${JSON.stringify(this.capes)},
+            ${JSON.stringify(this.profileActions)});`;
     }
-
-
 }

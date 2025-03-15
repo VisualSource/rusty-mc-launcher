@@ -11,3 +11,8 @@ commands.allow = ["authenticate"]
 identifier = "allow-logout"
 description = "Allow logout"
 commands.allow = ["logout"]
+
+[[permission]]
+identifier = "allow-refresh"
+description = "Allow refresh"
+commands.allow = ["refresh"]

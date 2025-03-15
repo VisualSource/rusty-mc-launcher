@@ -1,5 +1,5 @@
 use super::desktop::{AUTHORITY, AuthAppState, EVENT_LOGIN_WINDOW_DESTORYED};
-use crate::error::Result;
+use crate::{error::Result, plugins::auth::desktop::AuthResponse};
 use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 #[tauri::command]
@@ -9,6 +9,12 @@ pub async fn logout<R: tauri::Runtime>(_app: tauri::AppHandle<R>) -> Result<()> 
         AUTHORITY
     );
     Ok(())
+}
+
+#[tauri::command]
+pub async fn refresh(state: State<'_, AuthAppState>, token: String) -> Result<AuthResponse> {
+    let sl = state.lock().await;
+    sl.refresh(&token).await
 }
 
 #[tauri::command]

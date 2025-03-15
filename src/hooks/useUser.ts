@@ -28,11 +28,14 @@ const useUser = () => {
 	});
 
 	const login = useCallback(async () => {
-		await instance.loginPopup({
-			scopes: ["User.Read"],
-			extraScopesToConsent: ["XboxLive.SignIn", "XboxLive.offline_access"],
-			prompt: "select_account",
-		});
+		try {
+			await instance.loginPopup({
+				scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
+				prompt: "select_account",
+			});
+		} catch (error) {
+			console.error(error);
+		}
 	}, [instance]);
 
 	const logout = useCallback(

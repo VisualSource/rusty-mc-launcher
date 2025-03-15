@@ -14,15 +14,15 @@ tauri-build = { version = "2.0", features = [] }
 
 [dependencies]
 tauri = { version = "2.3", features = ["protocol-asset"] }
-tauri-plugin-http = {version ="2.3", features = ["multipart", "blocking", "json"] }
-tauri-plugin-single-instance = { version ="2.2", features = ["deep-link"] }
-tauri-plugin-deep-link = "2.2"
-tauri-plugin-opener = "2.2.6"
-tauri-plugin-process = "2.2"
-tauri-plugin-dialog = "2.2"
-tauri-plugin-shell = "2.2"
-tauri-plugin-log = "2.2"
-tauri-plugin-fs = "2.2"
+tauri-plugin-http = {version ="2", features = ["multipart", "blocking", "json"] }
+tauri-plugin-single-instance = { version ="2", features = ["deep-link"] }
+tauri-plugin-deep-link = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-process = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-log = "2"
+tauri-plugin-fs = "2"
 
 minecraft-launcher-lib = { path = "../launcher-lib"  }
 tokio = { version = "1.44.0", features = ["sync"] }
@@ -38,11 +38,11 @@ log = "0.4.26"
 #base64 = "0.22.1"
 #sha2 = "0.10.8"
 openidconnect = { version = "4.0.0", default-features = false}
-tauri-plugin-stronghold = "2"
-rand = "0.9.0"
+#tauri-plugin-stronghold = "2"
+#rand = "0.9.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-updater = "2.5"
+tauri-plugin-updater = "2"
 
 [profile.release]
 strip = true  # Remove debug symbols
