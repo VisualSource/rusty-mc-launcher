@@ -32,8 +32,14 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { Account, type Cape, type Skin } from "../models/account";
 import { Token } from "../models/tokens";
 import { nanoid } from "../nanoid";
+import type {
+	AuthenticationResult as CommonAuthenticationResult,
+} from "@azure/msal-common/browser";
 
-export type AuthenticationResultExtended = AuthenticationResult & { tokens: Token };
+export type AuthenticationResultExtended = CommonAuthenticationResult & {
+	account: Account,
+	tokens: Token
+};
 
 const MINECRAFT_LOGIN =
 	"https://api.minecraftservices.com/authentication/login_with_xbox";
@@ -78,84 +84,69 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				this.logger.info("initialize has already been called, exiting early.");
 				return;
 			}
-			this.initialized = true;
 			this.emit(EventType.INITIALIZE_START);
-
-			this.activeAccount = localStorage.getItem("active-account");
-			console.log(this.activeAccount);
 			this.accounts = await query`SELECT * FROM accounts`.as(Account).all();
+			this.activeAccount = localStorage.getItem("active-account");
 			if (!this.activeAccount && this.accounts.length >= 1) {
-				const id = this.accounts.at(0)?.homeAccountId;
-				if (id) {
-					this.activeAccount = id;
-					localStorage.setItem("active-account", id);
-				}
+				const account = this.accounts.at(0);
+				if (account) this.setActiveAccount(account);
 			}
-
-
-
-			if (this.activeAccount) {
-				const account = this.accounts.find(e => e.homeAccountId === this.activeAccount);
-				if (account) {
-
-
-
-				}
-			}
-
-
 			this.emit(EventType.INITIALIZE_END);
+			this.initialized = true;
 		} catch (error) {
 			console.error(error);
 		}
 	}
+	//#region acquireToken
 	public async acquireTokenPopup(request: PopupRequest): Promise<AuthenticationResultExtended> {
 		const loggedInAccounts = this.getAllAccounts();
-		const isAcquireToken = loggedInAccounts.length > 1;
-
 		try {
-			if (isAcquireToken) {
-				this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Popup, request);
-			} else {
-				this.emit(EventType.LOGIN_START, InteractionType.Popup, request);
-			}
+			this.emit(
+				loggedInAccounts.length > 0 ?
+					EventType.ACQUIRE_TOKEN_START :
+					EventType.LOGIN_START,
+				InteractionType.Popup,
+				request
+			);
 
 			const data = await this.createPopupClient(request.scopes);
 			const minecraft = await this.minecraftLogin(data.accessToken);
 
-			const result = await this.finish(data, minecraft);
+			const result = await this.generateAuthenticationResult(data, minecraft);
+
+			if (!this.activeAccount) this.setActiveAccount(result.account);
 
 			const isLoggingIn = loggedInAccounts.length < this.getAllAccounts().length;
-			if (isLoggingIn) {
-				this.emit(EventType.LOGIN_SUCCESS, InteractionType.Popup, result);
-			} else {
-				this.emit(EventType.ACQUIRE_TOKEN_SUCCESS, InteractionType.Popup, result);
-			}
-
+			this.emit(isLoggingIn ?
+				EventType.LOGIN_SUCCESS :
+				EventType.ACQUIRE_TOKEN_SUCCESS,
+				InteractionType.Popup,
+				result
+			);
 			return result;
 		} catch (error) {
-
-			if (isAcquireToken) {
-				this.emit(EventType.ACQUIRE_TOKEN_FAILURE, InteractionType.Popup, null, error as Error);
-			} else {
-				this.emit(EventType.LOGIN_FAILURE, InteractionType.Popup, null, error as Error);
-			}
+			this.emit(loggedInAccounts.length > 0 ?
+				EventType.ACQUIRE_TOKEN_FAILURE
+				: EventType.LOGIN_FAILURE,
+				InteractionType.Popup,
+				null,
+				error as Error
+			);
 
 			throw error;
-
 		}
 	}
-	acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
+	async acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
-	async acquireTokenSilent(silentRequest: SilentRequest): Promise<AuthenticationResultExtended> {
-		const account = silentRequest.account ?? this.getActiveAccount();
+	public async acquireTokenSilent(silentRequest: SilentRequest): Promise<AuthenticationResultExtended> {
+		const account = (silentRequest.account as Account | undefined) ?? this.getActiveAccount();
 		if (!account) throw new BrowserAuthError("no_account_error");
 		try {
 			this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Silent, silentRequest);
 
 			let fromCache = true;
-			const token = await query`SELECT FROM tokens WHERE id = ${account.homeAccountId}`.as(Token).get();
+			const token = await query`SELECT * FROM tokens WHERE id = ${account.homeAccountId}`.as(Token).get();
 			if (!token) throw new BrowserAuthError("no_token_request_cache_error");
 
 			if (token.isAccessTokenExpired()) {
@@ -178,15 +169,15 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			const result = {
 				tokens: token,
 				idToken: "",
-				idTokenClaims: {},
+				idTokenClaims: account.idTokenClaims ?? {},
 				scopes: [],
-				tenantId: "",
-				tokenType: "",
+				tenantId: account.idTokenClaims?.aud ?? "",
+				tokenType: "Barrer",
 				uniqueId: "",
 				correlationId: "",
 				authority: "MSA",
 				accessToken: token.accessToken,
-				expiresOn: new Date(),
+				expiresOn: token.accessTokenExp ?? new Date(),
 				fromCache,
 				account,
 			} satisfies AuthenticationResultExtended;
@@ -195,6 +186,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 			return result;
 		} catch (error) {
+			console.log(error);
 			this.emit(EventType.ACQUIRE_TOKEN_FAILURE, InteractionType.Silent, null, error as Error);
 			throw error;
 		}
@@ -202,6 +194,9 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	async acquireTokenByCode(_request: AuthorizationCodeRequest): Promise<AuthenticationResult> {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
+	//#endregion acquireToken
+
+	//#region callbacks
 	public addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
 		const id = nanoid();
 		this.callbacks.set(id, [callback, eventTypes]);
@@ -216,29 +211,56 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	removePerformanceCallback(_callbackId: string): boolean {
 		throw new Error("Method not supported.");
 	}
+	//#endregion callbacks
+
+	//#region storage
 	enableAccountStorageEvents(): void {
 		throw new Error("Method not supported.");
 	}
 	disableAccountStorageEvents(): void {
 		throw new Error("Method not supported.");
 	}
+	//#endregion storage
+
+	//#region account
 	public getAccountByHomeId(homeAccountId: string): Account | null {
-		const account = this.accounts.find(e => e.homeAccountId === homeAccountId);
-		return account ?? null;
+		return this.accounts.find(e => e.homeAccountId === homeAccountId) ?? null;
 	}
-	getAccountByLocalId(_localId: string): AccountInfo | null {
+	public getAccountByLocalId(_localId: string): Account | null {
 		throw new Error("Use 'getAccountByHomeId'");
 	}
 	public getAccountByUsername(userName: string): Account | null {
 		const account = this.accounts.find(e => e.username === userName);
 		return account ?? null;
 	}
-	public getAllAccounts(): AccountInfo[] {
+	public getAllAccounts(): Account[] {
 		return this.accounts;
 	}
-	async handleRedirectPromise(_hash?: string): Promise<AuthenticationResult | null> {
-		return null;
+	public setActiveAccount(account: Account | null): void {
+		if (!account) {
+			localStorage.removeItem("active-account");
+			this.activeAccount = null;
+			return;
+		}
+		this.activeAccount = account.homeAccountId;
+		localStorage.setItem("active-account", this.activeAccount);
 	}
+	public getActiveAccount(): Account | null {
+		if (!this.activeAccount) return null;
+
+		const account = this.accounts.find(e => e.homeAccountId === this.activeAccount);
+		if (!account) return null;
+		return account;
+	}
+	public getAccount(filter: AccountFilter): Account | null {
+		const id = filter.homeAccountId;
+		if (!id) return null;
+
+		return this.accounts.find(e => e.homeAccountId === id) ?? null;
+	}
+	//#endregion account
+
+	//#region login
 	async loginPopup(request?: PopupRequest): Promise<AuthenticationResultExtended> {
 		return this.acquireTokenPopup(request ?? {
 			scopes: []
@@ -250,55 +272,66 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	async logout(_logoutRequest?: EndSessionRequest): Promise<void> {
 		throw new Error("Use 'logoutPopup'");
 	}
+	//#endregion login
+
+	//#region logout
 	async logoutRedirect(_logoutRequest?: EndSessionRequest): Promise<void> {
 		throw new Error("use 'logoutRedirect'");
 	}
-	async logoutPopup(_logoutRequest?: EndSessionPopupRequest): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	async ssoSilent(_request: SsoSilentRequest): Promise<AuthenticationResult> { throw new Error("Method not implemented."); }
-	getTokenCache(): ITokenCache {
-		throw new Error("Method not supported.");
-	}
-	public getLogger(): Logger {
-		return this.logger;
-	}
-	setLogger(_logger: Logger): void {
-		throw new Error("Method not supported.");
-	}
-	public setActiveAccount(account: AccountInfo | null): void {
-		if (!account) {
-			localStorage.removeItem("active-account");
-			this.activeAccount = null;
-			return;
-		}
-		this.activeAccount = account?.homeAccountId;
-		localStorage.setItem("active-account", this.activeAccount);
-	}
-	public getActiveAccount(): AccountInfo | null {
-		if (!this.activeAccount) return null;
+	async logoutPopup(logoutRequest?: EndSessionPopupRequest): Promise<void> {
+		try {
+			this.emit(EventType.LOGOUT_START, InteractionType.Popup, null);
 
-		const account = this.accounts.find(e => e.homeAccountId === this.activeAccount);
-		if (!account) return null;
-		return account;
+			const active = this.getActiveAccount()?.homeAccountId;
+			const current = logoutRequest?.account?.homeAccountId ?? active
+			if (!current) throw new Error("No to account to logout");
+
+			const idx = this.accounts.findIndex(e => e.homeAccountId === current);
+			if (idx === -1) throw new Error("Failed to find account in cache");
+			if (current === active) {
+				this.setActiveAccount(null);
+			}
+			this.accounts.splice(idx, 1);
+			await query`DELETE FROM accounts WHERE homeAccountId = ${current}`.run();
+			this.emit(EventType.LOGOUT_END, InteractionType.Popup, null);
+		} catch (error) {
+			this.emit(EventType.LOGOUT_FAILURE, InteractionType.Popup, null, error as Error);
+			this.emit(EventType.LOGOUT_END, InteractionType.Popup, null);
+			throw error;
+		}
 	}
-	getAccount(_filter: AccountFilter): AccountInfo | null {
-		return null;
-	}
-	initializeWrapperLibrary(sku: WrapperSKU, version: string): void {
-		console.debug(sku, version);
-	}
-	setNavigationClient(_navigationClient: INavigationClient): void {
-		throw new Error("Method not supported");
-	}
-	getConfiguration(): BrowserConfiguration {
+	//#endregion logout
+
+	//#region cache
+	getTokenCache(): ITokenCache {
 		throw new Error("Method not supported.");
 	}
 	async hydrateCache(_result: AuthenticationResult, _request: SilentRequest | SsoSilentRequest | RedirectRequest | PopupRequest): Promise<void> { }
 	async clearCache(_logoutRequest?: ClearCacheRequest): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
-
+	//#endregion cache
+	public async handleRedirectPromise(_hash?: string): Promise<AuthenticationResult | null> {
+		if (!this.initialized) {
+			throw new BrowserAuthError("uninitialized_public_client_application")
+		}
+		return null;
+	}
+	public getLogger(): Logger {
+		return this.logger;
+	}
+	public setLogger(_logger: Logger): void {
+		throw new Error("Method not supported.");
+	}
+	public async ssoSilent(_request: SsoSilentRequest): Promise<AuthenticationResult> { throw new Error("Method not implemented."); }
+	public initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void { }
+	public setNavigationClient(_navigationClient: INavigationClient): void {
+		throw new Error("Method not supported");
+	}
+	public getConfiguration(): BrowserConfiguration {
+		throw new Error("Method not supported.");
+	}
+	//#region helpers
 	private emit(eventType: EventType, interactionType?: InteractionType, payload?: EventPayload, error?: EventError) {
 		const message = {
 			eventType,
@@ -308,12 +341,11 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			timestamp: Date.now(),
 		} satisfies EventMessage
 		for (const [callback, types] of this.callbacks.values()) {
-			if (types?.length !== 0 || !types.includes(eventType)) continue;
+			if (types?.length !== 0 && !types?.includes(eventType)) continue;
 			callback(message);
 		}
 	}
-
-	private async finish(microsoft: Awaited<ReturnType<CustomPublicClientApplication["createPopupClient"]>>, minecraft: Awaited<ReturnType<CustomPublicClientApplication["minecraftLogin"]>>): Promise<AuthenticationResultExtended> {
+	private async generateAuthenticationResult(microsoft: Awaited<ReturnType<CustomPublicClientApplication["createPopupClient"]>>, minecraft: Awaited<ReturnType<CustomPublicClientApplication["minecraftLogin"]>>): Promise<AuthenticationResultExtended> {
 		const claims = microsoft.claims;
 		if (!claims || !claims.sub || !claims.preferred_username || !claims.aud) throw new Error("Missing id_token claims");
 
@@ -378,7 +410,6 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			correlationId: ""
 		} satisfies AuthenticationResultExtended;
 	}
-
 	private async createPopupClient(scopes: string[]): Promise<{
 		claims: AccountInfo["idTokenClaims"],
 		expires: Date,
@@ -406,14 +437,15 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			refreshToken: response.refresh_token
 		};
 	}
+	//#endregion helpers
 
+	//#region minecraft
 	private async minecraftLogin(accessToken: string) {
 		const response = await this.minecraftAuthenicate(accessToken);
 		const profile = await this.getMinecraftProfile(response.accessToken);
 
 		return { ...response, profile }
 	}
-
 	/**
 	 * Get minecraft profile
 	 * @param accessToken minecraft access token
@@ -531,6 +563,8 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 		return { xuid: jwt.xuid, expDate, accessToken: access_token }
 	}
+
+	//#endregion minecraft
 }
 
 export const getPCA = () => {

@@ -17,7 +17,7 @@ function AccountsSettings() {
 	const modrinth = useModrinth();
 	const modrinthAccount = useModrinthAccount();
 	const account = useAccount();
-	const masl = useMsal();
+	const { accounts } = useMsal();
 
 	return (
 		<div className="space-y-6">
@@ -32,8 +32,8 @@ function AccountsSettings() {
 				<div>
 					<h3 className="mb-4 text-lg font-medium">Microsoft Accounts</h3>
 					<ul className="space-y-4">
-						{masl.accounts.length ? (
-							masl.accounts.map((acc) => (
+						{accounts.length ? (
+							accounts.map((acc) => (
 								<li
 									key={acc.homeAccountId}
 									className="flex flex-row items-center justify-between rounded-lg border p-4"

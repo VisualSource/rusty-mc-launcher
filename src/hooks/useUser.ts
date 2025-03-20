@@ -1,70 +1,29 @@
-import { useAccount, useMsal } from "@azure/msal-react";
-import type { AccountInfo } from "@azure/msal-browser";
-import { useQuery } from "@tanstack/react-query";
-import { debug } from "@tauri-apps/plugin-log";
+import { useMsal, useMsalAuthentication } from "@azure/msal-react";
+import { InteractionStatus, InteractionType } from "@azure/msal-browser";
 import { useCallback } from "react";
-
-import { getMinecraftAccount } from "@lib/api/minecraftAccount";
-import getToken from "@lib/auth/getToken";
+import type { Account } from "@/lib/models/account";
 
 const useUser = () => {
-	const msAccount = useAccount();
-	const { instance } = useMsal();
-
-	const mcAccount = useQuery({
-		enabled: !!msAccount?.homeAccountId,
-		queryKey: ["account", msAccount?.homeAccountId],
-		queryFn: async (args) => {
-			const accessToken = await getToken(instance, {
-				scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
-				extraQueryParameters: {
-					response_type: "code",
-				},
-			});
-			const id = args.queryKey.at(1);
-			if (!id) throw new Error("Failed to get userid");
-			return getMinecraftAccount(id, accessToken);
-		},
+	const { acquireToken, login, result, error } = useMsalAuthentication(InteractionType.Popup, {
+		scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
+		prompt: "select_account",
 	});
-
-	const login = useCallback(async () => {
-		try {
-			await instance.loginPopup({
-				scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
-				prompt: "select_account",
-			});
-		} catch (error) {
-			console.error(error);
-		}
-	}, [instance]);
+	const { instance, inProgress } = useMsal();
 
 	const logout = useCallback(
-		async (account: AccountInfo | null) => {
-			if (!account) return;
-			await instance.logoutPopup({
-				account,
-			});
+		async () => {
+			await instance.logoutPopup().catch(e => console.error(e));
 		},
 		[instance],
 	);
 
-	const refresh = useCallback(async () => {
-		if (!msAccount?.homeAccountId) throw new Error("Invalid userid");
-		const accessToken = await getToken(instance, {
-			scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
-			forceRefresh: true,
-		});
-		return getMinecraftAccount(msAccount.homeAccountId, accessToken);
-	}, [instance, msAccount?.homeAccountId]);
-
 	return {
-		account: mcAccount.data,
+		account: (result?.account ?? null) as Account | null,
+		acquireToken,
 		logout,
 		login,
-		refresh,
-		isLoading: mcAccount.isLoading,
-		isError: mcAccount.isError,
-		error: mcAccount.error,
+		error,
+		isLoading: (inProgress === InteractionStatus.Login) || (inProgress === InteractionStatus.Startup),
 	};
 };
 

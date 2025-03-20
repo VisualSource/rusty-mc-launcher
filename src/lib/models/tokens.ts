@@ -28,10 +28,10 @@ export class Token {
     static schema = z.object({
         id: z.string(),
         accessToken: z.string(),
-        accessTokenExp: z.string().date().transform(transformDate),
+        accessTokenExp: z.string().datetime().transform(transformDate),
         refreshToken: z.string(),
         mcAccessToken: z.ostring(),
-        mcAccessTokenExp: z.string().date().optional().transform(transformDate),
+        mcAccessTokenExp: z.string().datetime().optional().transform(transformDate),
     });
     static fromQuery(args: QueryResult) {
         const data = Token.schema.parse(args);
