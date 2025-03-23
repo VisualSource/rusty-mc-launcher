@@ -116,17 +116,14 @@ export const NavbarUpper: React.FC = () => {
 							type="button"
 						>
 							<span className="mr-1 text-sm">
-								{isLoading ? "Loading" : account?.name ?? account?.username ?? "Login"}
+								{isLoading ? "Loading" : !account ? "Login" : account?.name ?? account?.username}
 							</span>
 							<ChevronDown className="h-4 w-4" />
 						</button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
 						<UnauthenticatedTemplate>
-							<DropdownMenuItem onClick={() => {
-								debugger;
-								login().catch(e => console.error(e));
-							}}>
+							<DropdownMenuItem onClick={() => login().catch(e => console.error(e))}>
 								<LogIn className="h-4 w-4 mr-2" />
 								Login
 							</DropdownMenuItem>

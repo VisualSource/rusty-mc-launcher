@@ -1,13 +1,14 @@
-import { useMsal, useMsalAuthentication } from "@azure/msal-react";
+import { useAccount, useMsal, useMsalAuthentication } from "@azure/msal-react";
 import { InteractionStatus, InteractionType } from "@azure/msal-browser";
 import { useCallback } from "react";
 import type { Account } from "@/lib/models/account";
 
 const useUser = () => {
-	const { acquireToken, login, result, error } = useMsalAuthentication(InteractionType.Popup, {
+	const { acquireToken, login, error } = useMsalAuthentication(InteractionType.Popup, {
 		scopes: ["XboxLive.SignIn", "XboxLive.offline_access"],
 		prompt: "select_account",
 	});
+	const account = useAccount();
 	const { instance, inProgress } = useMsal();
 
 	const logout = useCallback(
@@ -18,12 +19,12 @@ const useUser = () => {
 	);
 
 	return {
-		account: (result?.account ?? null) as Account | null,
+		account: account as Account | null,
 		acquireToken,
 		logout,
 		login,
 		error,
-		isLoading: (inProgress === InteractionStatus.Login) || (inProgress === InteractionStatus.Startup),
+		isLoading: (inProgress === InteractionStatus.Logout) || (inProgress === InteractionStatus.Login) || (inProgress === InteractionStatus.Startup),
 	};
 };
 

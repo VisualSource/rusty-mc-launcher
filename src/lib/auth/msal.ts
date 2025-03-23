@@ -21,40 +21,42 @@ import type {
 	EventPayload,
 	EventError,
 } from "@azure/msal-browser";
-import { error, warn, info, trace, debug } from "@tauri-apps/plugin-log";
-import type { AccountFilter } from "@azure/msal-common";
+import {
+	getRequestThumbprint, type AccountFilter, type BaseAuthRequest,
+	type AuthenticationResult as CommonAuthenticationResult,
+} from "@azure/msal-common";
 import { InteractionType, Logger, LogLevel, EventType, BrowserAuthError } from "@azure/msal-browser";
-import { authenticate, refresh } from "../api/plugins/auth";
-import { query, transaction } from "../api/plugins/query";
+import { error, warn, info, trace, debug } from "@tauri-apps/plugin-log";
 import { message } from "@tauri-apps/plugin-dialog";
 import { addSeconds } from "date-fns/addSeconds";
 import { fetch } from "@tauri-apps/plugin-http";
+
+import {
+	createNewGuid,
+	LIVE_AUTHENTICATE,
+	MC_LOGIN_RELAY,
+	MINECRAFT_LOGIN,
+	MINECRAFT_PROFILE,
+	UNIX_EPOCH_DATE,
+	XBOX_AUTHENTICATE,
+	XBOX_LIVE_RELAY
+} from "./utils";
 import { Account, type Cape, type Skin } from "../models/account";
+import { authenticate, refresh } from "../api/plugins/auth";
+import { query, transaction } from "../api/plugins/query";
 import { Token } from "../models/tokens";
 import { nanoid } from "../nanoid";
-import type {
-	AuthenticationResult as CommonAuthenticationResult,
-} from "@azure/msal-common/browser";
 
 export type AuthenticationResultExtended = CommonAuthenticationResult & {
 	account: Account,
 	tokens: Token
 };
-
-const MINECRAFT_LOGIN =
-	"https://api.minecraftservices.com/authentication/login_with_xbox";
-const MINECRAFT_PROFILE = "https://api.minecraftservices.com/minecraft/profile";
-const XBOX_AUTHENTICATE = "https://user.auth.xboxlive.com/user/authenticate";
-const LIVE_AUTHENTICATE = "https://xsts.auth.xboxlive.com/xsts/authorize";
-const MC_LOGIN_RELAY = "rp://api.minecraftservices.com/";
-const XBOX_LIVE_RELAY = "http://auth.xboxlive.com";
-const UNIX_EPOCH_DATE = new Date("1970-01-01T00:00:00Z");
-
 class CustomPublicClientApplication implements IPublicClientApplication {
 	private initialized = false;
 	private activeAccount: string | null = null;
 	private accounts: Account[] = [];
-	private callbacks: Map<string, [EventCallbackFunction, Array<EventType> | undefined]> = new Map();
+	private callbacks: Map<string, [EventCallbackFunction, Array<EventType>]> = new Map();
+	private activeSilentTokenRequests = new Map<string, Promise<AuthenticationResultExtended>>();
 
 	private logger = new Logger({
 		logLevel: LogLevel.Verbose,
@@ -91,8 +93,9 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				const account = this.accounts.at(0);
 				if (account) this.setActiveAccount(account);
 			}
-			this.emit(EventType.INITIALIZE_END);
+
 			this.initialized = true;
+			this.emit(EventType.INITIALIZE_END);
 		} catch (error) {
 			console.error(error);
 		}
@@ -100,23 +103,22 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	//#region acquireToken
 	public async acquireTokenPopup(request: PopupRequest): Promise<AuthenticationResultExtended> {
 		const loggedInAccounts = this.getAllAccounts();
+		this.emit(
+			loggedInAccounts.length > 0 ?
+				EventType.ACQUIRE_TOKEN_START :
+				EventType.LOGIN_START,
+			InteractionType.Popup,
+			request
+		);
+		this.logger.verbose("acquireTokenPopup called");
 		try {
-			this.emit(
-				loggedInAccounts.length > 0 ?
-					EventType.ACQUIRE_TOKEN_START :
-					EventType.LOGIN_START,
-				InteractionType.Popup,
-				request
-			);
-
 			const data = await this.createPopupClient(request.scopes);
 			const minecraft = await this.minecraftLogin(data.accessToken);
 
 			const result = await this.generateAuthenticationResult(data, minecraft);
-
 			if (!this.activeAccount) this.setActiveAccount(result.account);
-
 			const isLoggingIn = loggedInAccounts.length < this.getAllAccounts().length;
+
 			this.emit(isLoggingIn ?
 				EventType.LOGIN_SUCCESS :
 				EventType.ACQUIRE_TOKEN_SUCCESS,
@@ -125,6 +127,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			);
 			return result;
 		} catch (error) {
+			this.logger.error((error as Error).message);
 			this.emit(loggedInAccounts.length > 0 ?
 				EventType.ACQUIRE_TOKEN_FAILURE
 				: EventType.LOGIN_FAILURE,
@@ -132,7 +135,6 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				null,
 				error as Error
 			);
-
 			throw error;
 		}
 	}
@@ -140,10 +142,60 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
 	public async acquireTokenSilent(silentRequest: SilentRequest): Promise<AuthenticationResultExtended> {
-		const account = (silentRequest.account as Account | undefined) ?? this.getActiveAccount();
+		this.logger.verbose("acquireTokenSilent called");
+
+		const account = (silentRequest?.account as Account | undefined) ?? this.getActiveAccount();
 		if (!account) throw new BrowserAuthError("no_account_error");
+
+		const correlationId = this.getRequestCorrelationId();
+
+		return this.acquireTokenSlientDeduped(silentRequest, account, correlationId);
+
+	}
+	private async acquireTokenSlientDeduped(request: SilentRequest, account: Account, correlationId: string): Promise<AuthenticationResultExtended> {
+		const thumbprint = getRequestThumbprint(
+			import.meta.env.VITE_CLIENT_ID,
+			{
+				...request,
+				authority: request.authority ?? "MSA",
+				correlationId,
+			},
+			account.homeAccountId
+		);
+
+		const requestKey = JSON.stringify(thumbprint);
+		const inProgress = this.activeSilentTokenRequests.get(requestKey);
+
+		if (typeof inProgress === "undefined") {
+			const activeRequest = this.acquireTokenSlientAsync({
+				...request,
+				correlationId
+			}, account);
+
+			this.activeSilentTokenRequests.set(requestKey, activeRequest);
+
+			return activeRequest.finally(() => {
+				this.activeSilentTokenRequests.delete(requestKey);
+			});
+		}
+
+		this.logger.verbose(
+			"acquireTokenSilent has been called previously, returning the result from the first call",
+			correlationId
+		);
+
+		return inProgress;
+	}
+
+	private acquireTokenSlientAsync = async (request: SilentRequest & { correlationId: string }, account: Account): Promise<AuthenticationResultExtended> => {
+		this.emit(
+			EventType.ACQUIRE_TOKEN_START,
+			InteractionType.Silent,
+			request
+		);
+
 		try {
-			this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Silent, silentRequest);
+			this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Silent, request);
 
 			let fromCache = true;
 			const token = await query`SELECT * FROM tokens WHERE id = ${account.homeAccountId}`.as(Token).get();
@@ -170,7 +222,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				tokens: token,
 				idToken: "",
 				idTokenClaims: account.idTokenClaims ?? {},
-				scopes: [],
+				scopes: request.scopes,
 				tenantId: account.idTokenClaims?.aud ?? "",
 				tokenType: "Barrer",
 				uniqueId: "",
@@ -183,14 +235,13 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			} satisfies AuthenticationResultExtended;
 
 			this.emit(EventType.ACQUIRE_TOKEN_SUCCESS, InteractionType.Silent, result);
-
 			return result;
 		} catch (error) {
-			console.log(error);
 			this.emit(EventType.ACQUIRE_TOKEN_FAILURE, InteractionType.Silent, null, error as Error);
 			throw error;
 		}
 	}
+
 	async acquireTokenByCode(_request: AuthorizationCodeRequest): Promise<AuthenticationResult> {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
@@ -199,7 +250,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	//#region callbacks
 	public addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
 		const id = nanoid();
-		this.callbacks.set(id, [callback, eventTypes]);
+		this.callbacks.set(id, [callback, eventTypes ?? []]);
 		return id;
 	}
 	public removeEventCallback(callbackId: string): void {
@@ -262,6 +313,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 	//#region login
 	async loginPopup(request?: PopupRequest): Promise<AuthenticationResultExtended> {
+		this.logger.verbose("loginPopup called");
 		return this.acquireTokenPopup(request ?? {
 			scopes: []
 		});
@@ -293,6 +345,8 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			}
 			this.accounts.splice(idx, 1);
 			await query`DELETE FROM accounts WHERE homeAccountId = ${current}`.run();
+
+			this.emit(EventType.LOGOUT_SUCCESS, InteractionType.Popup, null);
 			this.emit(EventType.LOGOUT_END, InteractionType.Popup, null);
 		} catch (error) {
 			this.emit(EventType.LOGOUT_FAILURE, InteractionType.Popup, null, error as Error);
@@ -340,9 +394,12 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			error: error ?? null,
 			timestamp: Date.now(),
 		} satisfies EventMessage
-		for (const [callback, types] of this.callbacks.values()) {
-			if (types?.length !== 0 && !types?.includes(eventType)) continue;
-			callback(message);
+		for (const [id, [callback, types]] of this.callbacks) {
+			if (types?.length === 0 || types.includes(message.eventType)) {
+				this.logger.verbose(`
+					Emitting event to callback: ${id}: ${message.eventType}`)
+				callback.apply(null, [message]);
+			}
 		}
 	}
 	private async generateAuthenticationResult(microsoft: Awaited<ReturnType<CustomPublicClientApplication["createPopupClient"]>>, minecraft: Awaited<ReturnType<CustomPublicClientApplication["minecraftLogin"]>>): Promise<AuthenticationResultExtended> {
@@ -358,10 +415,8 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			mcAccessTokenExp: minecraft.expDate
 		});
 
-		let found = true;
 		let user = this.accounts.find(e => e.homeAccountId === claims.sub);
 		if (!user) {
-			found = false;
 			user = new Account({
 				idTokenClaims: microsoft.claims,
 				authorityType: "MSA",
@@ -378,7 +433,6 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				tenantId: claims.aud,
 				xuid: minecraft.xuid,
 			});
-
 			await transaction((tx) => {
 				tx`DELETE FROM accounts WHERE homeAccountId = ${claims.sub}`;
 				(user as Account).runAsQuery(tx);
@@ -437,6 +491,12 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			refreshToken: response.refresh_token
 		};
 	}
+
+	private getRequestCorrelationId(request?: Partial<BaseAuthRequest>): string {
+		if (request?.correlationId) return request.correlationId;
+		return createNewGuid();
+	}
+
 	//#endregion helpers
 
 	//#region minecraft

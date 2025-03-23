@@ -1,12 +1,16 @@
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { useAccount, useMsal } from "@azure/msal-react";
 import { LogIn, LogOut, User2, Users2 } from "lucide-react";
+import { useAccount, useMsal } from "@azure/msal-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useModrinth, useModrinthAccount } from "@/hooks/useModrinth";
 import { Separator } from "@/components/ui/separator";
+import type { Account } from "@/lib/models/account";
+import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
-import { useModrinth, useModrinthAccount } from "@/hooks/useModrinth";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 export const Route = createLazyFileRoute("/_authenticated/settings/accounts")({
 	component: AccountsSettings,
@@ -38,11 +42,22 @@ function AccountsSettings() {
 									key={acc.homeAccountId}
 									className="flex flex-row items-center justify-between rounded-lg border p-4"
 								>
-									<div className="flex flex-col">
-										<span className="text-lg">{acc.name}</span>
-										<span className="text-muted-foreground text-sm italic">
-											{acc.username}
-										</span>
+									<div className="flex gap-2 items-center">
+										{(acc as Account).id ? (
+											<div className={cn("h-12 w-12 border rounded-lg", { "border-accent-foreground": account?.homeAccountId === acc.homeAccountId })}>
+												<LazyLoadImage
+													alt={(acc as Account).username}
+													effect="blur"
+													src={`https://visage.surgeplay.com/face/256/${(acc as Account).id}`}
+												/>
+											</div>
+										) : null}
+										<div className="flex flex-col">
+											<span className="text-lg">{acc.name}</span>
+											<span className="text-muted-foreground text-sm italic">
+												{acc.username}
+											</span>
+										</div>
 									</div>
 									{account?.homeAccountId === acc.homeAccountId ? (
 										<Badge>Active</Badge>
