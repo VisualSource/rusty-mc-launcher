@@ -120,6 +120,20 @@ export class Account implements AccountInfo {
         this.profileActions = args.profileActions;
     }
 
+    public getActiveSkin() {
+        return this.skins.find(e => e.state === "ACTIVE") ?? null;
+    }
+    public getActiveCape() {
+        return this.capes.find(e => e.state === "ACTIVE") ?? null;
+    }
+
+    public setSkins(skins: Skin[]) {
+        this.skins = skins;
+    }
+    public setCapes(capes: Cape[]) {
+        this.capes = capes;
+    }
+
     public setMCData(data: {
         name: string;
         xuid: string,

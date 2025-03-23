@@ -234,6 +234,7 @@ impl AuthState {
 
         params.insert("client_id", self.client.client_id().as_str());
         params.insert("scope", SCOPES_SUBSET);
+        params.insert("grant_type", "refresh_token");
         params.insert("refresh_type", "refresh_token");
         params.insert("refresh_token", refresh_token);
 

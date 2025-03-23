@@ -188,12 +188,6 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	}
 
 	private acquireTokenSlientAsync = async (request: SilentRequest & { correlationId: string }, account: Account): Promise<AuthenticationResultExtended> => {
-		this.emit(
-			EventType.ACQUIRE_TOKEN_START,
-			InteractionType.Silent,
-			request
-		);
-
 		try {
 			this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Silent, request);
 
@@ -202,6 +196,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			if (!token) throw new BrowserAuthError("no_token_request_cache_error");
 
 			if (token.isAccessTokenExpired()) {
+				this.logger.verbose("refreshing microsoft token");
 				fromCache = false;
 				const result = await refresh(token.refreshToken);
 				token
@@ -212,6 +207,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			}
 
 			if (token.isMcAccessTokenExpired()) {
+				this.logger.verbose("refreshing minecraft token");
 				fromCache = false;
 				const result = await this.minecraftAuthenicate(token.accessToken);
 				token.setMcData(result.accessToken, result.expDate);
@@ -237,6 +233,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			this.emit(EventType.ACQUIRE_TOKEN_SUCCESS, InteractionType.Silent, result);
 			return result;
 		} catch (error) {
+			console.error(error);
 			this.emit(EventType.ACQUIRE_TOKEN_FAILURE, InteractionType.Silent, null, error as Error);
 			throw error;
 		}

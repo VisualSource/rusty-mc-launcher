@@ -1,6 +1,6 @@
 [default]
 description = "Default permissions for the rmcl-auth plugin"
-permissions = ["allow-authenticate","allow-logout"]
+permissions = ["allow-authenticate","allow-logout","allow-refresh"]
 
 [[permission]]
 identifier = "allow-authenticate"
