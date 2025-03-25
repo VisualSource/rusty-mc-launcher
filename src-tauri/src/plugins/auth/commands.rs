@@ -1,6 +1,9 @@
-use super::desktop::{AUTHORITY, AuthAppState, EVENT_LOGIN_WINDOW_DESTORYED};
+use super::desktop::{
+    AUTHORITY, AuthAppState, EVENT_LOGIN_WINDOW_DESTORYED, MODRINTH_CALLBACK_URI,
+    MODRINTH_CLIENT_ID, MODRINTH_ENDPOINT,
+};
 use crate::{error::Result, plugins::auth::desktop::AuthResponse};
-use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::{Emitter, Manager, State, Url, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 #[tauri::command]
 pub async fn logout<R: tauri::Runtime>(_app: tauri::AppHandle<R>) -> Result<()> {
@@ -43,6 +46,42 @@ pub async fn authenticate<R: tauri::Runtime>(
     window.on_window_event(move |event| {
         if let WindowEvent::Destroyed = event {
             if let Err(err) = handle.emit(EVENT_LOGIN_WINDOW_DESTORYED, true) {
+                log::error!("{}", err);
+            };
+        }
+    });
+
+    Ok(true)
+}
+
+const MODRINTH_SCOPES: &str = "NOTIFICATION_READ+NOTIFICATION_WRITE+USER_READ+USER_WRITE";
+const EVENT_MODRINTH_LOGIN_WINDOW_DISTORYED: &str = "rmcl-auth-modrinth-login-window-destoryed";
+
+#[tauri::command]
+pub async fn modrinth_authenticate<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<bool> {
+    if let Some(window) = app.get_webview_window("modrinth-login") {
+        if let Err(err) = window.close() {
+            log::error!("{}", err);
+        }
+    }
+
+    let auth_endpoint = format!(
+        "{}/auth/authorize?client_id={}&redirect_uri={}&scope={}",
+        MODRINTH_ENDPOINT, MODRINTH_CLIENT_ID, MODRINTH_CALLBACK_URI, MODRINTH_SCOPES
+    );
+    let url = Url::parse(&auth_endpoint)?;
+
+    let window = WebviewWindowBuilder::new(&app, "modrinth-login", WebviewUrl::External(url))
+        .title("Modrinth Login")
+        .inner_size(484.0, 600.0)
+        .focused(true)
+        .center()
+        .build()?;
+
+    let handle = app.clone();
+    window.on_window_event(move |event| {
+        if let WindowEvent::Destroyed = event {
+            if let Err(err) = handle.emit(EVENT_MODRINTH_LOGIN_WINDOW_DISTORYED, ()) {
                 log::error!("{}", err);
             };
         }

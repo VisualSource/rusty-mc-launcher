@@ -3,7 +3,7 @@ mod desktop;
 use tokio::sync::Mutex;
 
 use desktop::{
-    AuthAppState, AuthState, EVENT_LOGIN_WINDOW_DESTORYED, is_valid_callback, validate_code,
+    AuthAppState, AuthState, EVENT_LOGIN_WINDOW_DESTORYED, is_microsoft_callback, validate_code,
 };
 use tauri::{
     Emitter, Listener, Manager, Runtime,
@@ -42,17 +42,26 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     return;
                 }
                 let url = opt_url.expect("There should have been a url in this");
-                if !is_valid_callback(url) {
-                    return;
-                }
 
-                let handle = app_handle.clone();
-                let data = url.clone();
-                tauri::async_runtime::spawn(async {
-                    if let Err(err) = validate_code(handle, data).await {
-                        log::error!("{}", err);
+                match url {
+                    e if is_microsoft_callback(e) => {
+                        let handle = app_handle.clone();
+                        let data = url.clone();
+                        tauri::async_runtime::spawn(async {
+                            if let Err(err) = validate_code(handle, data).await {
+                                log::error!("{}", err);
+                            }
+                        });
                     }
-                });
+                    /*e if is_modrinth_callback(e) => {
+                        let handle = app_handle.clone();
+                        let data = url.clone();
+                        tauri::async_runtime::spawn(async {
+                            validate_modrinth(handle, data).await;
+                        });
+                    }*/
+                    _ => {}
+                }
             });
 
             Ok(())
@@ -60,7 +69,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             commands::refresh,
             commands::authenticate,
-            commands::logout
+            commands::logout,
+            //commands::modrinth_authenticate
         ])
         .build()
 }
