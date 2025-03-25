@@ -49,12 +49,12 @@ export class Token {
 
     public isAccessTokenExpired() {
         if (!this.accessTokenExp) return true;
-        return compareAsc(new Date(), this.accessTokenExp) === -1;
+        return compareAsc(new Date(), this.accessTokenExp) >= 0;
     }
 
     public isMcAccessTokenExpired() {
         if (!this.mcAccessTokenExp) return true;
-        return compareAsc(new Date(), this.mcAccessTokenExp) === -1;
+        return compareAsc(new Date(), this.mcAccessTokenExp) >= 0;
     }
 
     public setMcData(at: string, exp: Date) {

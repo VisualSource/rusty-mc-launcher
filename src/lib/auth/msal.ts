@@ -195,6 +195,8 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			const token = await query`SELECT * FROM tokens WHERE id = ${account.homeAccountId}`.as(Token).get();
 			if (!token) throw new BrowserAuthError("no_token_request_cache_error");
 
+			console.log(token);
+
 			if (token.isAccessTokenExpired()) {
 				this.logger.verbose("refreshing microsoft token");
 				fromCache = false;

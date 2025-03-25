@@ -1,15 +1,13 @@
 import { ErrorComponent, createLazyFileRoute } from "@tanstack/react-router";
 import { memo, useEffect, useReducer, useRef } from "react";
-import { downloadDir, sep } from "@tauri-apps/api/path";
+import { downloadDir } from "@tauri-apps/api/path";
 import { SkinViewer, IdleAnimation } from "skinview3d";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMutation } from "@tanstack/react-query";
-import { readFile } from "@tauri-apps/plugin-fs";
 import { open } from "@tauri-apps/plugin-dialog";
-import { fetch } from "@tauri-apps/plugin-http";
-import { Plus, Satellite } from "lucide-react";
+import { Plus } from "lucide-react";
 
-import type { Cape, Skin } from "@/lib/api/minecraftAccount";
+import type { Skin } from "@/lib/api/minecraftAccount";
 import { Separator } from "@/components/ui/separator";
 import { waitToast } from "@component/ui/toast";
 import { Switch } from "@/components/ui/switch";
@@ -20,23 +18,7 @@ import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import type { AuthenticationResultExtended } from "@/lib/auth/msal";
 import { query } from "@/lib/api/plugins/query";
-
-type ApiResponse = {
-	id: string;
-	name: string;
-	activeSkinId: string;
-	activeCapeId?: string;
-	skins: Skin[]
-	capes: Cape[]
-}
-
-type ApiErrorResponse = {
-	path: string;
-	errorType: string;
-	error: string;
-	errorMessage?: string;
-	developerMessage?: string;
-}
+import { setCape, uploadSkin } from "@/lib/api/minecraft/skinUpload";
 
 type Content = {
 	isReady: boolean;
@@ -52,10 +34,6 @@ type Action =
 	| { type: "ADD_SKIN"; url: string }
 	| { type: "INIT"; activeSkinId?: string; activeCapeId?: string, variant: Skin["variant"] };
 
-const MINECRAFT_API_CAPE =
-	"https://api.minecraftservices.com/minecraft/profile/capes/active";
-const MINECRAFT_API_SKIN =
-	"https://api.minecraftservices.com/minecraft/profile/skins";
 const DEFAULT_NAMES = [
 	"X-Steve",
 	"X-Alex",
@@ -67,108 +45,6 @@ const DEFAULT_NAMES = [
 	"X-Sunny",
 	"X-Zuri",
 ] as const;
-
-const isUpload = (url: string): boolean => {
-	return (
-		url.startsWith("https://asset.localhost") || url.startsWith("http://asset.localhost") || url.startsWith("asset://")
-	);
-};
-
-/**
- * Set the minecraft skin
- * @link https://mojang-api-docs.gapple.pw/needs-auth/change-skin
- * @param skin 
- * @param accessToken 
- * @returns 
- */
-const uploadSkin = async (skin: { url: string; variant: string }, accessToken: string) => {
-	let contentType: string;
-	let payload: FormData | string;
-	if (isUpload(skin.url)) {
-		console.log("Upload");
-		contentType = "multipart/form-data";
-
-		const formData = new FormData();
-		formData.set("variant", skin.variant);
-		const filePath = decodeURIComponent(skin.url)
-			.replace("https://asset.localhost/", "")
-			.replace("http://asset.localhost/", "")
-			.replace("asset://", "");
-
-		const filename = filePath.split(sep()).at(-1) ?? "player.png";
-		const fileContent = await readFile(filePath);
-
-		formData.set(
-			"file",
-			new File([fileContent], filename, { type: "image/png" }),
-		);
-
-		payload = formData;
-	} else {
-		contentType = "application/json";
-		payload = JSON.stringify({
-			url: skin.url,
-			variant: skin.variant,
-		});
-	}
-
-	const response = await fetch(MINECRAFT_API_SKIN, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			"Content-Type": contentType,
-		},
-		body: payload
-	});
-
-	if (!response.ok) {
-		const data = await response.text();
-
-		throw new Error("Failed to set minecraft skin", { cause: data });
-	}
-
-	const data = await response.json() as
-		| ApiResponse | ApiErrorResponse;
-	if ("error" in data) {
-		console.error(data);
-		throw new Error(`Failed to set minecraft skin: ${data.errorMessage ?? data.error}`, { cause: data });
-	}
-
-	return data;
-}
-
-/**
- * Enable and set / disable minecraft cape
- * @link https://mojang-api-docs.gapple.pw/needs-auth/change-cape
- * @line https://mojang-api-docs.gapple.pw/needs-auth/disable-cape
- * @param accessToken 
- * @param cape 
- */
-const setCape = async (accessToken: string, capeId?: string) => {
-	const method = capeId ? "PUT" : "DELETE";
-
-	const headers = new Headers({
-		Authorization: `Bearer ${accessToken}`,
-	});
-
-	if (capeId) headers.set("Content-Type", "application/json");
-
-	const payload = capeId ? JSON.stringify({ capeId }) : undefined;
-
-	const response = await fetch(MINECRAFT_API_CAPE, {
-		method,
-		headers,
-		body: payload
-	});
-
-	if (!response.ok) throw new Error("Failed to update cape", { cause: response.statusText });
-
-	const data = (await response.json()) as
-		| ApiResponse
-		| ApiErrorResponse;
-	if ("error" in data) throw new Error(`There was an error setting the cape: ${data.errorMessage ?? data.error}`, { cause: data });
-	return data;
-}
 
 const reducer = (state: Content, payload: Action) => {
 	switch (payload.type) {
