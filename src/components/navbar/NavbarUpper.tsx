@@ -37,13 +37,13 @@ import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
+import { memo } from "react";
 
 const appWindow = getCurrentWebviewWindow();
 
-export const NavbarUpper: React.FC = () => {
+export const NavbarUpper: React.FC = memo(() => {
 	const isMaximized = useIsMaximized();
 	const { account, isLoading, logout, login } = useUser();
-
 
 	return (
 		<section
@@ -175,4 +175,5 @@ export const NavbarUpper: React.FC = () => {
 			</div>
 		</section>
 	);
-};
+});
+NavbarUpper.displayName = "NavbarUpper";
