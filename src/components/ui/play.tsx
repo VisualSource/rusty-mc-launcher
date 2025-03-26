@@ -1,13 +1,16 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
+import type { VariantProps } from "class-variance-authority";
 
 import type { AuthenticationResultExtended } from "@/lib/auth/msal";
 import { stop, launchGame } from "@/lib/api/plugins/game";
 import { useIsRunning } from "@/hooks/useProcessState";
+import { Button, type buttonVariants } from "./button";
 import type { Profile } from "@/lib/models/profiles";
-import { Button, type ButtonProps } from "./button";
 import { waitToast } from "@component/ui/toast";
 import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+
+type Props = VariantProps<typeof buttonVariants> & Omit<React.ComponentProps<"button">, "disabled"> & { profile: Pick<Profile, "id" | "state"> }
 
 const DisplayState: React.FC<{
 	isRunning: boolean;
@@ -43,9 +46,7 @@ const DisplayState: React.FC<{
 	}
 };
 
-const PlayButton: React.FC<
-	ButtonProps & { profile: Pick<Profile, "id" | "state"> }
-> = ({ profile, className, ...props }) => {
+const PlayButton: React.FC<Props> = ({ profile, className, ...props }) => {
 	const { acquireToken } = useUser();
 	const isRunning = useIsRunning(profile.id);
 

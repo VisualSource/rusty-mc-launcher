@@ -21,7 +21,6 @@ export const NavbarLower: React.FC = memo(() => {
 				<NavigationMenuList>
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
-							chevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-active:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-active:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
 							<Link
@@ -48,7 +47,7 @@ export const NavbarLower: React.FC = memo(() => {
 					</NavigationMenuItem>
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
-							chevron={false}
+							showChevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-active:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-active:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
 							<Link
@@ -63,7 +62,7 @@ export const NavbarLower: React.FC = memo(() => {
 					</NavigationMenuItem>
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
-							chevron={false}
+							showChevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-active:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-active:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
 							<Link
@@ -78,7 +77,7 @@ export const NavbarLower: React.FC = memo(() => {
 					</NavigationMenuItem>
 					<NavigationMenuItem>
 						<NavigationMenuTrigger
-							chevron={false}
+							showChevron={false}
 							className="rounded-none bg-transparent px-2 hover:bg-transparent data-active:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:data-active:bg-transparent dark:data-[state=open]:bg-transparent"
 						>
 							<Link

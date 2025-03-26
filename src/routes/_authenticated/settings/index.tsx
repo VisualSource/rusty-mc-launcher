@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { version } from "@azure/msal-browser";
 import { Loading } from "@/components/Loading";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
@@ -44,14 +43,14 @@ function SystemSettings() {
 		},
 	});
 
-	const onSubmit = async () => {};
+	const onSubmit = async () => { };
 
 	return (
 		<div className="space-y-6">
 			<div>
 				<h3 className="text-lg font-medium">System</h3>
 				<p className="text-sm text-muted-foreground">
-					Customize the appearance of the app.
+					General application settings.
 				</p>
 			</div>
 			<Separator />
@@ -125,10 +124,6 @@ function SystemSettings() {
 							<tr>
 								<td className="text-left pr-4">Tauri Version</td>
 								<td className="text-muted-foreground">{data.tauri}</td>
-							</tr>
-							<tr>
-								<td className="text-left pr-4">Msal Version</td>
-								<td className="text-muted-foreground">{version}</td>
 							</tr>
 						</tbody>
 					</table>
