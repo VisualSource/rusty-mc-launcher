@@ -1,7 +1,4 @@
-import {
-	createLazyFileRoute,
-	ErrorComponent,
-} from "@tanstack/react-router";
+import { createLazyFileRoute, ErrorComponent } from "@tanstack/react-router";
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import { RefreshCcw } from "lucide-react";
 import { memo, Suspense } from "react";
@@ -14,16 +11,21 @@ import { Button } from "@/components/ui/button";
 
 const Fallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
 	return (
-		<div role="alert" className="flex flex-col justify-center items-center h-full gap-4">
+		<div
+			role="alert"
+			className="flex flex-col justify-center items-center h-full gap-4"
+		>
 			<p>Something went wrong:</p>
 			<Button size="sm" onClick={resetErrorBoundary}>
 				<RefreshCcw className="h-5 w-5 mr-2" />
 				Retry
 			</Button>
-			<pre className="bg-red-500 text-xs text-wrap text-center rounded-lg py-2 px-1.5">{(error as Error)?.message}</pre>
+			<pre className="bg-red-500 text-xs text-wrap text-center rounded-lg py-2 px-1.5">
+				{(error as Error)?.message}
+			</pre>
 		</div>
 	);
-}
+};
 
 const WorkshopHome: React.FC = memo(() => {
 	return (

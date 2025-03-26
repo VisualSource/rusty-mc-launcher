@@ -44,7 +44,12 @@ function AccountsSettings() {
 								>
 									<div className="flex gap-2 items-center">
 										{(acc as Account).id ? (
-											<div className={cn("h-12 w-12 border rounded-lg", { "border-accent-foreground": account?.homeAccountId === acc.homeAccountId })}>
+											<div
+												className={cn("h-12 w-12 border rounded-lg", {
+													"border-accent-foreground":
+														account?.homeAccountId === acc.homeAccountId,
+												})}
+											>
 												<LazyLoadImage
 													alt={(acc as Account).username}
 													effect="blur"

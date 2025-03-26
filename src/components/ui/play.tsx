@@ -10,7 +10,10 @@ import { waitToast } from "@component/ui/toast";
 import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 
-type Props = VariantProps<typeof buttonVariants> & Omit<React.ComponentProps<"button">, "disabled"> & { profile: Pick<Profile, "id" | "state"> }
+type Props = VariantProps<typeof buttonVariants> &
+	Omit<React.ComponentProps<"button">, "disabled"> & {
+		profile: Pick<Profile, "id" | "state">;
+	};
 
 const DisplayState: React.FC<{
 	isRunning: boolean;
@@ -61,11 +64,17 @@ const PlayButton: React.FC<Props> = ({ profile, className, ...props }) => {
 					return;
 				}
 				try {
-					const result = await acquireToken() as AuthenticationResultExtended | null;
+					const result =
+						(await acquireToken()) as AuthenticationResultExtended | null;
 					if (!result) throw new Error("Failed to get token");
 					const accessToken = result.tokens.mcAccessToken;
 					if (!accessToken) throw new Error("Missing token");
-					if (!result.account.name || !result.account.id || !result.account.xuid) throw new Error("Missing launch params");
+					if (
+						!result.account.name ||
+						!result.account.id ||
+						!result.account.xuid
+					)
+						throw new Error("Missing launch params");
 
 					await waitToast({
 						callback: launchGame({

@@ -79,7 +79,7 @@ export class QueueItem {
 	public state: keyof typeof QueueItemState = "PENDING";
 	constructor(args: z.infer<typeof QueueItem.schema>) {
 		this.state = args.state;
-		this.id = args.id
+		this.id = args.id;
 		this.display = args.display;
 		this.priority = args.priority;
 		this.display_name = args.display_name;

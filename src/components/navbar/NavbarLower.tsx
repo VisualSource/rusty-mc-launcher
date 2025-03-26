@@ -7,15 +7,13 @@ import {
 	NavigationMenuList,
 	NavigationMenuTrigger,
 	navigationMenuTriggerStyle,
-	NavigationMenuLink
+	NavigationMenuLink,
 } from "@component/ui/navigation-menu";
 import { Separator } from "@component/ui/separator";
 
 export const NavbarLower: React.FC = memo(() => {
 	return (
-		<section
-			className="ml-2 flex h-14 items-center p-2"
-			data-tauri-drag-region>
+		<section className="ml-2 flex h-14 items-center p-2" data-tauri-drag-region>
 			<NavigationMenu>
 				<NavigationMenuList>
 					<NavigationMenuItem>
@@ -32,7 +30,6 @@ export const NavbarLower: React.FC = memo(() => {
 						<NavigationMenuContent>
 							<ul>
 								<li>
-
 									<NavigationMenuLink asChild className="flex w-full">
 										<Link className="flex" to="/">
 											Home
@@ -54,7 +51,6 @@ export const NavbarLower: React.FC = memo(() => {
 										<Link className="flex" to="/downloads">
 											Downloads
 										</Link>
-
 									</NavigationMenuLink>
 								</li>
 							</ul>
@@ -94,7 +90,6 @@ export const NavbarLower: React.FC = memo(() => {
 							<NavigationMenuLink className={navigationMenuTriggerStyle()}>
 								DOWNLOADS
 							</NavigationMenuLink>
-
 						</Link>
 					</NavigationMenuItem>
 				</NavigationMenuList>

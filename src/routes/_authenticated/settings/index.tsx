@@ -43,7 +43,7 @@ function SystemSettings() {
 		},
 	});
 
-	const onSubmit = async () => { };
+	const onSubmit = async () => {};
 
 	return (
 		<div className="space-y-6">

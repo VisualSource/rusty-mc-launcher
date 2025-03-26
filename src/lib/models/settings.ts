@@ -32,15 +32,9 @@ export async function isOption(opt: string, value: string) {
 }
 
 export async function upsert(key: string, value: string) {
-	const [affected] = await updateConfig(
-		key,
-		value,
-	);
+	const [affected] = await updateConfig(key, value);
 	if (affected === 0) {
-		await addConfig(
-			key,
-			value,
-		);
+		await addConfig(key, value);
 	}
 }
 

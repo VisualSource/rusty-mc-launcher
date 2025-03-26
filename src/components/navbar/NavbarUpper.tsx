@@ -1,8 +1,6 @@
 import {
 	AuthenticatedTemplate,
-
 	UnauthenticatedTemplate,
-
 } from "@azure/msal-react";
 import {
 	Minus,
@@ -116,14 +114,20 @@ export const NavbarUpper: React.FC = memo(() => {
 							type="button"
 						>
 							<span className="mr-1 text-sm">
-								{isLoading ? "Loading" : !account ? "Login" : account?.name ?? account?.username}
+								{isLoading
+									? "Loading"
+									: !account
+										? "Login"
+										: (account?.name ?? account?.username)}
 							</span>
 							<ChevronDown className="h-4 w-4" />
 						</button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
 						<UnauthenticatedTemplate>
-							<DropdownMenuItem onClick={() => login().catch(e => console.error(e))}>
+							<DropdownMenuItem
+								onClick={() => login().catch((e) => console.error(e))}
+							>
 								<LogIn className="h-4 w-4 mr-2" />
 								Login
 							</DropdownMenuItem>

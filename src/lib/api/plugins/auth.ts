@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { once, type UnlistenFn, type Event } from "@tauri-apps/api/event";
 
-
 export type LoginResponse = {
 	access_token: string;
 	expires_in: number;
@@ -9,7 +8,7 @@ export type LoginResponse = {
 	refresh_token: string;
 	scope: string;
 	token_type: string;
-}
+};
 
 const DEFAULT_SCOPES = new Set(["profile", "offline_access"]);
 export async function authenticate(scopes: string[]) {
@@ -29,21 +28,22 @@ export async function authenticate(scopes: string[]) {
 					reject(new Error(`Unknown event "${ev.event}"`, { cause: ev }));
 					break;
 			}
-			Promise.all([onSuccess, onError]).then(e => {
-				for (const unsub of e) unsub?.call(null);
-			}).catch(e => console.error(e));
-		}
+			Promise.all([onSuccess, onError])
+				.then((e) => {
+					for (const unsub of e) unsub?.call(null);
+				})
+				.catch((e) => console.error(e));
+		};
 
 		onError = once("rmcl-auth-login-error", handleEvent);
 		onSuccess = once("rmcl-auth-login-success", handleEvent);
 	});
 	await invoke("plugin:rmcl-auth|authenticate", {
-		scopes: Array.from(new Set(scopes).union(DEFAULT_SCOPES))
+		scopes: Array.from(new Set(scopes).union(DEFAULT_SCOPES)),
 	});
 
 	return result;
 }
-
 
 export async function refresh(token: string): Promise<LoginResponse> {
 	return invoke("plugin:rmcl-auth|refresh", { token });

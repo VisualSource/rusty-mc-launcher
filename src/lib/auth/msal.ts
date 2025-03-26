@@ -22,10 +22,18 @@ import type {
 	EventError,
 } from "@azure/msal-browser";
 import {
-	getRequestThumbprint, type AccountFilter, type BaseAuthRequest,
+	getRequestThumbprint,
+	type AccountFilter,
+	type BaseAuthRequest,
 	type AuthenticationResult as CommonAuthenticationResult,
 } from "@azure/msal-common";
-import { InteractionType, Logger, LogLevel, EventType, BrowserAuthError } from "@azure/msal-browser";
+import {
+	InteractionType,
+	Logger,
+	LogLevel,
+	EventType,
+	BrowserAuthError,
+} from "@azure/msal-browser";
 import { error, warn, info, trace, debug } from "@tauri-apps/plugin-log";
 import { message } from "@tauri-apps/plugin-dialog";
 import { addSeconds } from "date-fns/addSeconds";
@@ -39,7 +47,7 @@ import {
 	MINECRAFT_PROFILE,
 	UNIX_EPOCH_DATE,
 	XBOX_AUTHENTICATE,
-	XBOX_LIVE_RELAY
+	XBOX_LIVE_RELAY,
 } from "./utils";
 import { Account, type Cape, type Skin } from "../models/account";
 import { authenticate, refresh } from "../api/plugins/auth";
@@ -48,39 +56,49 @@ import { Token } from "../models/tokens";
 import { nanoid } from "../nanoid";
 
 export type AuthenticationResultExtended = CommonAuthenticationResult & {
-	account: Account,
-	tokens: Token
+	account: Account;
+	tokens: Token;
 };
 class CustomPublicClientApplication implements IPublicClientApplication {
 	private initialized = false;
 	private activeAccount: string | null = null;
 	private accounts: Account[] = [];
-	private callbacks: Map<string, [EventCallbackFunction, Array<EventType>]> = new Map();
-	private activeSilentTokenRequests = new Map<string, Promise<AuthenticationResultExtended>>();
+	private callbacks: Map<string, [EventCallbackFunction, Array<EventType>]> =
+		new Map();
+	private activeSilentTokenRequests = new Map<
+		string,
+		Promise<AuthenticationResultExtended>
+	>();
 
-	private logger = new Logger({
-		logLevel: LogLevel.Verbose,
-		loggerCallback: (level, message) => {
-			switch (level) {
-				case LogLevel.Error:
-					error(message);
-					break;
-				case LogLevel.Warning:
-					warn(message);
-					break;
-				case LogLevel.Info:
-					info(message);
-					break;
-				case LogLevel.Verbose:
-					debug(message);
-					break;
-				case LogLevel.Trace:
-					trace(message);
-					break;
-			}
+	private logger = new Logger(
+		{
+			logLevel: LogLevel.Verbose,
+			loggerCallback: (level, message) => {
+				switch (level) {
+					case LogLevel.Error:
+						error(message);
+						break;
+					case LogLevel.Warning:
+						warn(message);
+						break;
+					case LogLevel.Info:
+						info(message);
+						break;
+					case LogLevel.Verbose:
+						debug(message);
+						break;
+					case LogLevel.Trace:
+						trace(message);
+						break;
+				}
+			},
 		},
-	}, "rmcl-auth", "0.0.0");
-	public async initialize(_request?: InitializeApplicationRequest): Promise<void> {
+		"rmcl-auth",
+		"0.0.0",
+	);
+	public async initialize(
+		_request?: InitializeApplicationRequest,
+	): Promise<void> {
 		try {
 			if (this.initialized) {
 				this.logger.info("initialize has already been called, exiting early.");
@@ -101,14 +119,16 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		}
 	}
 	//#region acquireToken
-	public async acquireTokenPopup(request: PopupRequest): Promise<AuthenticationResultExtended> {
+	public async acquireTokenPopup(
+		request: PopupRequest,
+	): Promise<AuthenticationResultExtended> {
 		const loggedInAccounts = this.getAllAccounts();
 		this.emit(
-			loggedInAccounts.length > 0 ?
-				EventType.ACQUIRE_TOKEN_START :
-				EventType.LOGIN_START,
+			loggedInAccounts.length > 0
+				? EventType.ACQUIRE_TOKEN_START
+				: EventType.LOGIN_START,
 			InteractionType.Popup,
-			request
+			request,
 		);
 		this.logger.verbose("acquireTokenPopup called");
 		try {
@@ -117,23 +137,24 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 			const result = await this.generateAuthenticationResult(data, minecraft);
 			if (!this.activeAccount) this.setActiveAccount(result.account);
-			const isLoggingIn = loggedInAccounts.length < this.getAllAccounts().length;
+			const isLoggingIn =
+				loggedInAccounts.length < this.getAllAccounts().length;
 
-			this.emit(isLoggingIn ?
-				EventType.LOGIN_SUCCESS :
-				EventType.ACQUIRE_TOKEN_SUCCESS,
+			this.emit(
+				isLoggingIn ? EventType.LOGIN_SUCCESS : EventType.ACQUIRE_TOKEN_SUCCESS,
 				InteractionType.Popup,
-				result
+				result,
 			);
 			return result;
 		} catch (error) {
 			this.logger.error((error as Error).message);
-			this.emit(loggedInAccounts.length > 0 ?
-				EventType.ACQUIRE_TOKEN_FAILURE
-				: EventType.LOGIN_FAILURE,
+			this.emit(
+				loggedInAccounts.length > 0
+					? EventType.ACQUIRE_TOKEN_FAILURE
+					: EventType.LOGIN_FAILURE,
 				InteractionType.Popup,
 				null,
-				error as Error
+				error as Error,
 			);
 			throw error;
 		}
@@ -141,18 +162,29 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	async acquireTokenRedirect(_request: RedirectRequest): Promise<void> {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
-	public async acquireTokenSilent(silentRequest: SilentRequest): Promise<AuthenticationResultExtended> {
+	public async acquireTokenSilent(
+		silentRequest: SilentRequest,
+	): Promise<AuthenticationResultExtended> {
 		this.logger.verbose("acquireTokenSilent called");
 
-		const account = (silentRequest?.account as Account | undefined) ?? this.getActiveAccount();
+		const account =
+			(silentRequest?.account as Account | undefined) ??
+			this.getActiveAccount();
 		if (!account) throw new BrowserAuthError("no_account_error");
 
 		const correlationId = this.getRequestCorrelationId();
 
-		return this.acquireTokenSlientDeduped(silentRequest, account, correlationId);
-
+		return this.acquireTokenSlientDeduped(
+			silentRequest,
+			account,
+			correlationId,
+		);
 	}
-	private async acquireTokenSlientDeduped(request: SilentRequest, account: Account, correlationId: string): Promise<AuthenticationResultExtended> {
+	private async acquireTokenSlientDeduped(
+		request: SilentRequest,
+		account: Account,
+		correlationId: string,
+	): Promise<AuthenticationResultExtended> {
 		const thumbprint = getRequestThumbprint(
 			import.meta.env.VITE_CLIENT_ID,
 			{
@@ -160,17 +192,20 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				authority: request.authority ?? "MSA",
 				correlationId,
 			},
-			account.homeAccountId
+			account.homeAccountId,
 		);
 
 		const requestKey = JSON.stringify(thumbprint);
 		const inProgress = this.activeSilentTokenRequests.get(requestKey);
 
 		if (typeof inProgress === "undefined") {
-			const activeRequest = this.acquireTokenSlientAsync({
-				...request,
-				correlationId
-			}, account);
+			const activeRequest = this.acquireTokenSlientAsync(
+				{
+					...request,
+					correlationId,
+				},
+				account,
+			);
 
 			this.activeSilentTokenRequests.set(requestKey, activeRequest);
 
@@ -181,18 +216,24 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 		this.logger.verbose(
 			"acquireTokenSilent has been called previously, returning the result from the first call",
-			correlationId
+			correlationId,
 		);
 
 		return inProgress;
 	}
 
-	private acquireTokenSlientAsync = async (request: SilentRequest & { correlationId: string }, account: Account): Promise<AuthenticationResultExtended> => {
+	private acquireTokenSlientAsync = async (
+		request: SilentRequest & { correlationId: string },
+		account: Account,
+	): Promise<AuthenticationResultExtended> => {
 		try {
 			this.emit(EventType.ACQUIRE_TOKEN_START, InteractionType.Silent, request);
 
 			let fromCache = true;
-			const token = await query`SELECT * FROM tokens WHERE id = ${account.homeAccountId}`.as(Token).get();
+			const token =
+				await query`SELECT * FROM tokens WHERE id = ${account.homeAccountId}`
+					.as(Token)
+					.get();
 			if (!token) throw new BrowserAuthError("no_token_request_cache_error");
 
 			console.log(token);
@@ -232,22 +273,36 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 				account,
 			} satisfies AuthenticationResultExtended;
 
-			this.emit(EventType.ACQUIRE_TOKEN_SUCCESS, InteractionType.Silent, result);
+			this.emit(
+				EventType.ACQUIRE_TOKEN_SUCCESS,
+				InteractionType.Silent,
+				result,
+			);
 			return result;
 		} catch (error) {
 			console.error(error);
-			this.emit(EventType.ACQUIRE_TOKEN_FAILURE, InteractionType.Silent, null, error as Error);
+			this.emit(
+				EventType.ACQUIRE_TOKEN_FAILURE,
+				InteractionType.Silent,
+				null,
+				error as Error,
+			);
 			throw error;
 		}
-	}
+	};
 
-	async acquireTokenByCode(_request: AuthorizationCodeRequest): Promise<AuthenticationResult> {
+	async acquireTokenByCode(
+		_request: AuthorizationCodeRequest,
+	): Promise<AuthenticationResult> {
 		throw new Error("Use 'acquireTokenPopup' or 'acquireTokenSilent'");
 	}
 	//#endregion acquireToken
 
 	//#region callbacks
-	public addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
+	public addEventCallback(
+		callback: EventCallbackFunction,
+		eventTypes?: Array<EventType>,
+	): string | null {
 		const id = nanoid();
 		this.callbacks.set(id, [callback, eventTypes ?? []]);
 		return id;
@@ -274,13 +329,13 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 	//#region account
 	public getAccountByHomeId(homeAccountId: string): Account | null {
-		return this.accounts.find(e => e.homeAccountId === homeAccountId) ?? null;
+		return this.accounts.find((e) => e.homeAccountId === homeAccountId) ?? null;
 	}
 	public getAccountByLocalId(_localId: string): Account | null {
 		throw new Error("Use 'getAccountByHomeId'");
 	}
 	public getAccountByUsername(userName: string): Account | null {
-		const account = this.accounts.find(e => e.username === userName);
+		const account = this.accounts.find((e) => e.username === userName);
 		return account ?? null;
 	}
 	public getAllAccounts(): Account[] {
@@ -298,7 +353,9 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	public getActiveAccount(): Account | null {
 		if (!this.activeAccount) return null;
 
-		const account = this.accounts.find(e => e.homeAccountId === this.activeAccount);
+		const account = this.accounts.find(
+			(e) => e.homeAccountId === this.activeAccount,
+		);
 		if (!account) return null;
 		return account;
 	}
@@ -306,16 +363,20 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		const id = filter.homeAccountId;
 		if (!id) return null;
 
-		return this.accounts.find(e => e.homeAccountId === id) ?? null;
+		return this.accounts.find((e) => e.homeAccountId === id) ?? null;
 	}
 	//#endregion account
 
 	//#region login
-	async loginPopup(request?: PopupRequest): Promise<AuthenticationResultExtended> {
+	async loginPopup(
+		request?: PopupRequest,
+	): Promise<AuthenticationResultExtended> {
 		this.logger.verbose("loginPopup called");
-		return this.acquireTokenPopup(request ?? {
-			scopes: []
-		});
+		return this.acquireTokenPopup(
+			request ?? {
+				scopes: [],
+			},
+		);
 	}
 	async loginRedirect(_request?: RedirectRequest): Promise<void> {
 		throw new Error("use 'loginPopup'");
@@ -334,10 +395,10 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			this.emit(EventType.LOGOUT_START, InteractionType.Popup, null);
 
 			const active = this.getActiveAccount()?.homeAccountId;
-			const current = logoutRequest?.account?.homeAccountId ?? active
+			const current = logoutRequest?.account?.homeAccountId ?? active;
 			if (!current) throw new Error("No to account to logout");
 
-			const idx = this.accounts.findIndex(e => e.homeAccountId === current);
+			const idx = this.accounts.findIndex((e) => e.homeAccountId === current);
 			if (idx === -1) throw new Error("Failed to find account in cache");
 			if (current === active) {
 				this.setActiveAccount(null);
@@ -348,7 +409,12 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			this.emit(EventType.LOGOUT_SUCCESS, InteractionType.Popup, null);
 			this.emit(EventType.LOGOUT_END, InteractionType.Popup, null);
 		} catch (error) {
-			this.emit(EventType.LOGOUT_FAILURE, InteractionType.Popup, null, error as Error);
+			this.emit(
+				EventType.LOGOUT_FAILURE,
+				InteractionType.Popup,
+				null,
+				error as Error,
+			);
 			this.emit(EventType.LOGOUT_END, InteractionType.Popup, null);
 			throw error;
 		}
@@ -359,14 +425,19 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	getTokenCache(): ITokenCache {
 		throw new Error("Method not supported.");
 	}
-	async hydrateCache(_result: AuthenticationResult, _request: SilentRequest | SsoSilentRequest | RedirectRequest | PopupRequest): Promise<void> { }
+	async hydrateCache(
+		_result: AuthenticationResult,
+		_request: SilentRequest | SsoSilentRequest | RedirectRequest | PopupRequest,
+	): Promise<void> {}
 	async clearCache(_logoutRequest?: ClearCacheRequest): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
 	//#endregion cache
-	public async handleRedirectPromise(_hash?: string): Promise<AuthenticationResult | null> {
+	public async handleRedirectPromise(
+		_hash?: string,
+	): Promise<AuthenticationResult | null> {
 		if (!this.initialized) {
-			throw new BrowserAuthError("uninitialized_public_client_application")
+			throw new BrowserAuthError("uninitialized_public_client_application");
 		}
 		return null;
 	}
@@ -376,8 +447,12 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	public setLogger(_logger: Logger): void {
 		throw new Error("Method not supported.");
 	}
-	public async ssoSilent(_request: SsoSilentRequest): Promise<AuthenticationResult> { throw new Error("Method not implemented."); }
-	public initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void { }
+	public async ssoSilent(
+		_request: SsoSilentRequest,
+	): Promise<AuthenticationResult> {
+		throw new Error("Method not implemented.");
+	}
+	public initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void {}
 	public setNavigationClient(_navigationClient: INavigationClient): void {
 		throw new Error("Method not supported");
 	}
@@ -385,25 +460,38 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		throw new Error("Method not supported.");
 	}
 	//#region helpers
-	private emit(eventType: EventType, interactionType?: InteractionType, payload?: EventPayload, error?: EventError) {
+	private emit(
+		eventType: EventType,
+		interactionType?: InteractionType,
+		payload?: EventPayload,
+		error?: EventError,
+	) {
 		const message = {
 			eventType,
 			interactionType: interactionType ?? null,
 			payload: payload ?? null,
 			error: error ?? null,
 			timestamp: Date.now(),
-		} satisfies EventMessage
+		} satisfies EventMessage;
 		for (const [id, [callback, types]] of this.callbacks) {
 			if (types?.length === 0 || types.includes(message.eventType)) {
 				this.logger.verbose(`
-					Emitting event to callback: ${id}: ${message.eventType}`)
+					Emitting event to callback: ${id}: ${message.eventType}`);
 				callback.apply(null, [message]);
 			}
 		}
 	}
-	private async generateAuthenticationResult(microsoft: Awaited<ReturnType<CustomPublicClientApplication["createPopupClient"]>>, minecraft: Awaited<ReturnType<CustomPublicClientApplication["minecraftLogin"]>>): Promise<AuthenticationResultExtended> {
+	private async generateAuthenticationResult(
+		microsoft: Awaited<
+			ReturnType<CustomPublicClientApplication["createPopupClient"]>
+		>,
+		minecraft: Awaited<
+			ReturnType<CustomPublicClientApplication["minecraftLogin"]>
+		>,
+	): Promise<AuthenticationResultExtended> {
 		const claims = microsoft.claims;
-		if (!claims || !claims.sub || !claims.preferred_username || !claims.aud) throw new Error("Missing id_token claims");
+		if (!claims || !claims.sub || !claims.preferred_username || !claims.aud)
+			throw new Error("Missing id_token claims");
 
 		const tokens = new Token({
 			id: claims.sub,
@@ -411,10 +499,10 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			refreshToken: microsoft.refreshToken,
 			accessTokenExp: microsoft.expires,
 			mcAccessToken: minecraft.accessToken,
-			mcAccessTokenExp: minecraft.expDate
+			mcAccessTokenExp: minecraft.expDate,
 		});
 
-		let user = this.accounts.find(e => e.homeAccountId === claims.sub);
+		let user = this.accounts.find((e) => e.homeAccountId === claims.sub);
 		if (!user) {
 			user = new Account({
 				idTokenClaims: microsoft.claims,
@@ -460,19 +548,18 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			tenantId: claims.aud,
 			fromCache: false,
 			expiresOn: minecraft.expDate,
-			correlationId: ""
+			correlationId: "",
 		} satisfies AuthenticationResultExtended;
 	}
 	private async createPopupClient(scopes: string[]): Promise<{
-		claims: AccountInfo["idTokenClaims"],
-		expires: Date,
+		claims: AccountInfo["idTokenClaims"];
+		expires: Date;
 		accessToken: string;
 		refreshToken: string;
-		tokenType: string,
-		idToken: string,
-		scopes: string[]
+		tokenType: string;
+		idToken: string;
+		scopes: string[];
 	}> {
-
 		const response = await authenticate(scopes);
 
 		const expires = addSeconds(new Date(), response.expires_in - 1);
@@ -487,7 +574,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			claims,
 			expires,
 			accessToken: response.access_token,
-			refreshToken: response.refresh_token
+			refreshToken: response.refresh_token,
 		};
 	}
 
@@ -503,12 +590,12 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		const response = await this.minecraftAuthenicate(accessToken);
 		const profile = await this.getMinecraftProfile(response.accessToken);
 
-		return { ...response, profile }
+		return { ...response, profile };
 	}
 	/**
 	 * Get minecraft profile
 	 * @param accessToken minecraft access token
-	 * @returns 
+	 * @returns
 	 */
 	private async getMinecraftProfile(accessToken: string) {
 		//#region Get Minecraft Profile
@@ -521,12 +608,12 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			throw new Error(profileResponse.statusText, { cause: profileResponse });
 		const profile = (await profileResponse.json()) as
 			| {
-				capes?: Cape[];
-				id: string;
-				name: string;
-				skins: Skin[];
-				profileActions: Record<string, unknown>;
-			}
+					capes?: Cape[];
+					id: string;
+					name: string;
+					skins: Skin[];
+					profileActions: Record<string, unknown>;
+			  }
 			| { path: string; error: string; errorMessage: string };
 
 		if ("error" in profile) {
@@ -543,7 +630,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	/**
 	 * @see https://wiki.vg/Microsoft_Authentication_Scheme
 	 * @param accessToken microsoft access token
-	 * @returns 
+	 * @returns
 	 */
 	private async minecraftAuthenicate(accessToken: string) {
 		// #region Authenticate with Xbox Live.
@@ -563,7 +650,8 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			}),
 		});
 
-		if (!authResponse.ok) throw new Error(authResponse.statusText, { cause: authResponse });
+		if (!authResponse.ok)
+			throw new Error(authResponse.statusText, { cause: authResponse });
 		const authRequest = (await authResponse.json()) as {
 			Token: string;
 			DisplayClaims: { xui: { uhs: string }[] };
@@ -620,7 +708,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 		const expDate = addSeconds(UNIX_EPOCH_DATE, jwt.exp);
 		// #endregion
 
-		return { xuid: jwt.xuid, expDate, accessToken: access_token }
+		return { xuid: jwt.xuid, expDate, accessToken: access_token };
 	}
 
 	//#endregion minecraft

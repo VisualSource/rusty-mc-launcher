@@ -24,15 +24,20 @@ type Content = {
 	isReady: boolean;
 	activeSkinId?: string;
 	activeCapeId?: string;
-	variant: Skin["variant"]
+	variant: Skin["variant"];
 };
 
 type Action =
 	| { type: "SET_VARIANT"; value: Skin["variant"] }
-	| { type: "SET_SKIN"; id: string; }
-	| { type: "SET_CAPE"; id?: string; }
+	| { type: "SET_SKIN"; id: string }
+	| { type: "SET_CAPE"; id?: string }
 	| { type: "ADD_SKIN"; url: string }
-	| { type: "INIT"; activeSkinId?: string; activeCapeId?: string, variant: Skin["variant"] };
+	| {
+			type: "INIT";
+			activeSkinId?: string;
+			activeCapeId?: string;
+			variant: Skin["variant"];
+	  };
 
 const DEFAULT_NAMES = [
 	"X-Steve",
@@ -53,30 +58,30 @@ const reducer = (state: Content, payload: Action) => {
 				isReady: true,
 				activeCapeId: payload.activeCapeId,
 				activeSkinId: payload.activeSkinId,
-				variant: payload.variant
+				variant: payload.variant,
 			} as Content;
 		case "SET_VARIANT":
 			return {
 				...state,
-				variant: payload.value
-			} as Content
+				variant: payload.value,
+			} as Content;
 		case "SET_CAPE": {
 			return {
 				...state,
-				activeCapeId: payload.id
+				activeCapeId: payload.id,
 			} as Content;
 		}
 		case "SET_SKIN": {
 			return {
 				...state,
-				activeSkinId: payload.id
+				activeSkinId: payload.id,
 			} as Content;
 		}
 		case "ADD_SKIN": {
 			return {
 				...state,
 				activeSkinId: payload.url,
-			}
+			};
 		}
 		default:
 			return state;
@@ -89,7 +94,12 @@ const DisplayItem = memo(
 		skin,
 		active,
 		onClick,
-	}: { onClick: () => void; active: boolean, skin?: string; cape?: string }) => {
+	}: {
+		onClick: () => void;
+		active: boolean;
+		skin?: string;
+		cape?: string;
+	}) => {
 		const target = useRef<HTMLCanvasElement>(null);
 		const viewer = useRef<SkinViewer | undefined>(undefined);
 
@@ -132,7 +142,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 	const { account, isLoading, acquireToken } = useUser();
 	const [content, dispatch] = useReducer(reducer, {
 		isReady: false,
-		variant: "SLIM"
+		variant: "SLIM",
 	});
 
 	const mutation = useMutation({
@@ -146,13 +156,18 @@ const MinecraftSkinControl: React.FC = memo(() => {
 		onError(error) {
 			console.error(error);
 		},
-		mutationFn: async (action: { skinId?: string, capeId?: string, variant: Skin["variant"] }) => {
+		mutationFn: async (action: {
+			skinId?: string;
+			capeId?: string;
+			variant: Skin["variant"];
+		}) => {
 			if (!account) throw new Error("No profile data");
 			if (!action.skinId) throw new Error("Missing skinId");
 
-			const token = await acquireToken() as AuthenticationResultExtended;
+			const token = (await acquireToken()) as AuthenticationResultExtended;
 			const accessToken = token.tokens.mcAccessToken;
-			if (!accessToken) throw new Error("Failed to get minecraft access tokens");
+			if (!accessToken)
+				throw new Error("Failed to get minecraft access tokens");
 
 			const currentSkin = account.getActiveSkin();
 			const currentCape = account.getActiveCape();
@@ -160,24 +175,42 @@ const MinecraftSkinControl: React.FC = memo(() => {
 			let response = null;
 			// We are trying to set skin from https://visage.surgeplay.com/processedskin
 			if (action.skinId[0] === "X") {
-				response = await uploadSkin({
-					url: `https://visage.surgeplay.com/processedskin/${action.skinId}.png`,
-					variant: action.variant
-				}, accessToken);
+				response = await uploadSkin(
+					{
+						url: `https://visage.surgeplay.com/processedskin/${action.skinId}.png`,
+						variant: action.variant,
+					},
+					accessToken,
+				);
 				// this is a upload
-			} else if (action.skinId.startsWith("http") || action.skinId.startsWith("asset://")) {
-				response = await uploadSkin({
-					url: action.skinId,
-					variant: action.variant
-				}, accessToken);
+			} else if (
+				action.skinId.startsWith("http") ||
+				action.skinId.startsWith("asset://")
+			) {
+				response = await uploadSkin(
+					{
+						url: action.skinId,
+						variant: action.variant,
+					},
+					accessToken,
+				);
 				// set skin to a existing skin / variant has changed
-			} else if (action.skinId !== currentSkin?.id || action.variant !== currentSkin.variant) {
-				const skin = account.skins.find(e => e.id === action.skinId);
-				if (!skin) throw new Error("Failed to find skin to set", { cause: action.skinId });
-				response = await uploadSkin({
-					url: action.skinId,
-					variant: action.variant
-				}, accessToken);
+			} else if (
+				action.skinId !== currentSkin?.id ||
+				action.variant !== currentSkin.variant
+			) {
+				const skin = account.skins.find((e) => e.id === action.skinId);
+				if (!skin)
+					throw new Error("Failed to find skin to set", {
+						cause: action.skinId,
+					});
+				response = await uploadSkin(
+					{
+						url: action.skinId,
+						variant: action.variant,
+					},
+					accessToken,
+				);
 			}
 
 			if (action.capeId !== currentCape?.id) {
@@ -207,7 +240,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				type: "INIT",
 				variant: activeSkin?.variant ?? "SLIM",
 				activeSkinId: activeSkin?.id,
-				activeCapeId: activeCape?.id
+				activeCapeId: activeCape?.id,
 			});
 		}
 
@@ -228,15 +261,19 @@ const MinecraftSkinControl: React.FC = memo(() => {
 					<canvas className="w-full h-full" ref={target} />
 					<div className="flex items-center space-x-2 absolute top-0 left-2">
 						<Switch
-							checked={
-								content.variant === "SLIM"
-							}
+							checked={content.variant === "SLIM"}
 							onCheckedChange={(value) => {
-								dispatch({ type: "SET_VARIANT", value: value ? "SLIM" : "CLASSIC" });
-								const data = account?.skins.find(e => e.id === content.activeSkinId);
-								if (data) viewer.current?.loadSkin(data.url, {
-									model: value ? "slim" : "default",
+								dispatch({
+									type: "SET_VARIANT",
+									value: value ? "SLIM" : "CLASSIC",
 								});
+								const data = account?.skins.find(
+									(e) => e.id === content.activeSkinId,
+								);
+								if (data)
+									viewer.current?.loadSkin(data.url, {
+										model: value ? "slim" : "default",
+									});
 							}}
 							id="slim-arms"
 						/>
@@ -250,7 +287,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 									callback: mutation.mutateAsync({
 										capeId: content.activeCapeId,
 										skinId: content.activeSkinId,
-										variant: content.variant
+										variant: content.variant,
 									}),
 									pendingTitle: "Updating",
 									errorTitle: "Failed to update",
@@ -281,13 +318,17 @@ const MinecraftSkinControl: React.FC = memo(() => {
 									key={e.id}
 								/>
 							))}
-							{DEFAULT_NAMES.map(e => (
+							{DEFAULT_NAMES.map((e) => (
 								<DisplayItem
 									onClick={() => {
 										dispatch({ type: "SET_SKIN", id: e });
-										viewer.current?.loadSkin(`https://visage.surgeplay.com/processedskin/${e}.png`, {
-											model: content.variant === "CLASSIC" ? "default" : "slim",
-										});
+										viewer.current?.loadSkin(
+											`https://visage.surgeplay.com/processedskin/${e}.png`,
+											{
+												model:
+													content.variant === "CLASSIC" ? "default" : "slim",
+											},
+										);
 									}}
 									active={false}
 									skin={`https://visage.surgeplay.com/processedskin/${e}.png`}
@@ -341,9 +382,13 @@ const MinecraftSkinControl: React.FC = memo(() => {
 									viewer.current?.loadCape(null);
 									dispatch({ type: "SET_CAPE" });
 								}}
-								className={cn("w-[125px] h-[125px] border rounded-lg transition-all hover:scale-105 aspect-square", {
-									"bg-accent/75 border-accent-foreground": !content.activeCapeId
-								})}
+								className={cn(
+									"w-[125px] h-[125px] border rounded-lg transition-all hover:scale-105 aspect-square",
+									{
+										"bg-accent/75 border-accent-foreground":
+											!content.activeCapeId,
+									},
+								)}
 								type="button"
 							>
 								No Cape

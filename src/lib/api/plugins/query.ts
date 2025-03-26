@@ -11,7 +11,10 @@ type Query<T> = {
 };
 
 type RawSql = { isSql: true; stmt: string; args?: unknown[] };
-export type TagFunc = (strings: TemplateStringsArray, ...args: unknown[]) => void;
+export type TagFunc = (
+	strings: TemplateStringsArray,
+	...args: unknown[]
+) => void;
 export type QueryResult = Record<string, string | number | null | boolean>;
 
 const querySelect = <T>(query: string, args: unknown[]) =>

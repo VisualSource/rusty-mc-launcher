@@ -13,7 +13,6 @@ export class Category {
 	static fromQuery(args: QueryResult) {
 		const data = Category.schema.parse(args);
 		return new Category(data);
-
 	}
 	public id: number;
 	public profile: string;

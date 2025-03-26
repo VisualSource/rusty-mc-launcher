@@ -24,10 +24,10 @@ export class ContentItem {
 	public type: keyof typeof ContentType;
 	constructor(args: z.infer<typeof ContentItem.schema>) {
 		this.id = args.id;
-		this.sha1 = args.sha1
-		this.profile = args.profile
-		this.file_name = args.file_name
-		this.version = args.version
-		this.type = args.type
+		this.sha1 = args.sha1;
+		this.profile = args.profile;
+		this.file_name = args.file_name;
+		this.version = args.version;
+		this.type = args.type;
 	}
 }

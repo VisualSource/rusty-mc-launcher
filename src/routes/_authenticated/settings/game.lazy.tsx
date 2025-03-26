@@ -11,7 +11,13 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { isOption, updateConfig, addConfig, getConfig, upsert } from "@/lib/models/settings";
+import {
+	isOption,
+	updateConfig,
+	addConfig,
+	getConfig,
+	upsert,
+} from "@/lib/models/settings";
 import { createToast } from "@component/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,16 +30,18 @@ import { CopyX, FolderCog } from "lucide-react";
 const OPTION_EXIT_ON_START = "option.exit_on_start";
 const OPTION_COPY_SETTINGS = "option.copy_settings_from";
 
-type State = { exitOnStart: boolean, copyOptionsFrom?: string; }
+type State = { exitOnStart: boolean; copyOptionsFrom?: string };
 
 const selectFile = async () => {
 	const selected = await open({
 		multiple: false,
 		title: "Select File",
-		filters: [{
-			name: "Options",
-			extensions: ["txt"]
-		}]
+		filters: [
+			{
+				name: "Options",
+				extensions: ["txt"],
+			},
+		],
 	});
 
 	if (!selected) return null;
@@ -41,7 +49,7 @@ const selectFile = async () => {
 	if (!isFile) throw new Error("The provided file does not exist");
 
 	return selected;
-}
+};
 
 export const Route = createLazyFileRoute("/_authenticated/settings/game")({
 	component: GameSettings,
@@ -54,8 +62,8 @@ function GameSettings() {
 			try {
 				const [exitOnStart, copyOptionsFrom] = await Promise.all([
 					isOption(OPTION_EXIT_ON_START, "TRUE"),
-					getConfig(OPTION_COPY_SETTINGS).then(e => e?.value)
-				])
+					getConfig(OPTION_COPY_SETTINGS).then((e) => e?.value),
+				]);
 
 				return { exitOnStart, copyOptionsFrom };
 			} catch (error) {
@@ -116,23 +124,36 @@ function GameSettings() {
 										<FormControl>
 											<div className="flex gap-2">
 												<Input readOnly value={field.value} />
-												<Button title="Open" type="button" onClick={() => selectFile().then(e => {
-													field.onChange(e);
-												})}>
+												<Button
+													title="Open"
+													type="button"
+													onClick={() =>
+														selectFile().then((e) => {
+															field.onChange(e);
+														})
+													}
+												>
 													<FolderCog />
 												</Button>
-												<Button title="Clear" variant="destructive" type="button" onClick={() => field.onChange(undefined)}>
+												<Button
+													title="Clear"
+													variant="destructive"
+													type="button"
+													onClick={() => field.onChange(undefined)}
+												>
 													<CopyX />
 												</Button>
 											</div>
 										</FormControl>
 									</div>
 									<FormDescription>
-										Use the game settings from a installed game instance for newly created profiles.
+										Use the game settings from a installed game instance for
+										newly created profiles.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
-							)} />
+							)}
+						/>
 
 						<div className="flex w-full justify-end">
 							<Button type="submit">Save</Button>

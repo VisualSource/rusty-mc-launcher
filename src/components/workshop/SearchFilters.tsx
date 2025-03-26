@@ -25,9 +25,15 @@ function filterOn(name: string, list: LoaderTag[]): LoaderTag[] {
 	return list.filter((e) => e.supported_project_types.includes("shader"));
 }
 
-export const LoaderList: React.FC<{ projectType: string, loaders: LoaderTag[] }> = ({ loaders, projectType }) => {
+export const LoaderList: React.FC<{
+	projectType: string;
+	loaders: LoaderTag[];
+}> = ({ loaders, projectType }) => {
 	const search = useSearch();
-	const data = useMemo(() => filterOn(projectType, loaders), [loaders, projectType]);
+	const data = useMemo(
+		() => filterOn(projectType, loaders),
+		[loaders, projectType],
+	);
 
 	return (
 		<div className="space-y-2">
@@ -48,7 +54,7 @@ export const LoaderList: React.FC<{ projectType: string, loaders: LoaderTag[] }>
 			</ul>
 		</div>
 	);
-}
+};
 
 export const SearchFilters: React.FC = () => {
 	const search = useSearch();

@@ -92,7 +92,7 @@ function WP({
 	offsetNext,
 	totalHits,
 }: {
-	isPlaceHolder: boolean,
+	isPlaceHolder: boolean;
 	currentPage: number;
 	maxPages: number;
 	items: PaginationLinkItem[];
@@ -102,7 +102,9 @@ function WP({
 	isLoading: boolean;
 	isError: boolean;
 }) {
-	const goTo = useCallback((offset: number) => { searchManager.setOffset(offset).update(); }, []);
+	const goTo = useCallback((offset: number) => {
+		searchManager.setOffset(offset).update();
+	}, []);
 	const componentId = useId();
 	if (isError) return null;
 	if (isLoading)
@@ -122,7 +124,11 @@ function WP({
 					/>
 				</PaginationItem>
 				<PaginationItem>
-					<PaginationLink disabled={isPlaceHolder} isActive={currentPage === 1} onClick={() => goTo(0)}>
+					<PaginationLink
+						disabled={isPlaceHolder}
+						isActive={currentPage === 1}
+						onClick={() => goTo(0)}
+					>
 						1
 					</PaginationLink>
 				</PaginationItem>
@@ -168,7 +174,6 @@ function WP({
 		</Pagination>
 	);
 }
-
 
 export const WorkshopPagination = memo(WP);
 WorkshopPagination.displayName = "WorkshopPagination";

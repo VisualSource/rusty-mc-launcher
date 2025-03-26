@@ -19,23 +19,23 @@ export type DownloadCurrentItem = {
 };
 export type DownloadEvent =
 	| {
-		event: "init";
-		data: DownloadCurrentItem;
-	}
+			event: "init";
+			data: DownloadCurrentItem;
+	  }
 	| {
-		event: "started";
-		data: {
-			max_progress: number;
-			message: string;
-		};
-	}
+			event: "started";
+			data: {
+				max_progress: number;
+				message: string;
+			};
+	  }
 	| {
-		event: "progress";
-		data: {
-			amount?: number;
-			message?: string;
-		};
-	}
+			event: "progress";
+			data: {
+				amount?: number;
+				message?: string;
+			};
+	  }
 	| { event: "finished"; data: unknown }
 	| { event: "refreshProfile" };
 
@@ -147,7 +147,7 @@ export async function deleteProfile(profileId: string) {
 	});
 }
 
-/** 
+/**
  * @deprecated use revealItemInDir from "@tauri-apps/plugin-opener";
  */
 export async function showInFolder(path: string) {
