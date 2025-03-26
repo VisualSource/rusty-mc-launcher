@@ -31,18 +31,30 @@ export async function isOption(opt: string, value: string) {
 	return item?.value === value;
 }
 
+export async function upsert(key: string, value: string) {
+	const [affected] = await updateConfig(key, value);
+	if (affected === 0) {
+		await addConfig(key, value);
+	}
+}
+
 export class Setting {
 	static schema = z.object({
 		key: z.string(),
 		metadata: z.string().nullable(),
 		value: z.string(),
 	});
+	static fromQuery(args: QueryResult) {
+		const data = Setting.schema.parse(args);
+		return new Setting(data);
+	}
+
 	public key: string;
 	public metadata: string | null;
 	public value: string;
-	constructor(args: QueryResult) {
-		this.key = args.key as string;
-		this.metadata = args.metadata as string | null;
-		this.value = args.value as string;
+	constructor(args: z.infer<typeof Setting.schema>) {
+		this.key = args.key;
+		this.metadata = args.metadata;
+		this.value = args.value;
 	}
 }

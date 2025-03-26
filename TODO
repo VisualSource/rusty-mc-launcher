@@ -10,7 +10,7 @@ Todo:
   
   
 Bugs:
-  ✔ (Tauri) Window Size and Fullscreen Issues: https://github.com/tauri-apps/tauri/issues/11788 @done(25-03-03 13:01)
+  ✔ (Tauri) Window Size and Fullscreen Issues: https://github.com/tauri-apps/tauri/issues/11788 https://github.com/tauri-apps/tauri/issues/11654 @done(25-03-03 13:01)
   ☐ (Modrinth) OAuth2 Bug: https://github.com/modrinth/code/issues/2339
 
 Archive:

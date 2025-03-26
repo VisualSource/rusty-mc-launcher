@@ -14,11 +14,7 @@ import { getPCA } from "@auth/msal";
 import { router } from "./router";
 import "./index.css";
 import "react-lazy-load-image-component/src/effects/blur.css";
-/**
- * Window 10 border bug
- * @see https://github.com/tauri-apps/tauri/issues/11654
- * @description have to disable shadow on window to fix
- */
+
 if (import.meta.env.PROD) checkForAppUpdate().catch(logCatchError);
 
 const msa = getPCA();

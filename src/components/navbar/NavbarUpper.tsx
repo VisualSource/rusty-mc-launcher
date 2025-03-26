@@ -1,8 +1,6 @@
 import {
 	AuthenticatedTemplate,
-	useAccount,
 	UnauthenticatedTemplate,
-	useMsal,
 } from "@azure/msal-react";
 import {
 	Minus,
@@ -21,7 +19,6 @@ import {
 	ScrollText,
 } from "lucide-react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { InteractionStatus } from "@azure/msal-browser";
 import { exit } from "@tauri-apps/plugin-process";
 import { Link } from "@tanstack/react-router";
 
@@ -38,13 +35,13 @@ import { useIsMaximized } from "@hook/useIsMaximized";
 import { Notifications } from "./Notifications";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
+import { memo } from "react";
+
 const appWindow = getCurrentWebviewWindow();
 
-export const NavbarUpper: React.FC = () => {
-	const msal = useMsal();
+export const NavbarUpper: React.FC = memo(() => {
 	const isMaximized = useIsMaximized();
-	const msAccount = useAccount();
-	const { account, isLoading, logout, login, error, isError } = useUser();
+	const { account, isLoading, logout, login } = useUser();
 
 	return (
 		<section
@@ -55,7 +52,7 @@ export const NavbarUpper: React.FC = () => {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button size="sm" variant="ghost" className="h-full rounded-none">
-							<Hexagon className="pr-2" />
+							<Hexagon />
 							MCL
 						</Button>
 					</DropdownMenuTrigger>
@@ -101,8 +98,8 @@ export const NavbarUpper: React.FC = () => {
 				<Avatar className="h-8 rounded-none rounded-s-lg border-y border-l">
 					<AvatarImage
 						src={
-							account?.details?.id
-								? `https://visage.surgeplay.com/face/256/${account.details.id}`
+							account
+								? `https://visage.surgeplay.com/face/256/${account.id}`
 								: undefined
 						}
 					/>
@@ -117,18 +114,20 @@ export const NavbarUpper: React.FC = () => {
 							type="button"
 						>
 							<span className="mr-1 text-sm">
-								{isError
-									? error?.message
-									: isLoading || msal.inProgress === InteractionStatus.Login
-										? "Loading"
-										: (account?.details.name ?? "Login")}
+								{isLoading
+									? "Loading"
+									: !account
+										? "Login"
+										: (account?.name ?? account?.username)}
 							</span>
 							<ChevronDown className="h-4 w-4" />
 						</button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
 						<UnauthenticatedTemplate>
-							<DropdownMenuItem onClick={() => login()}>
+							<DropdownMenuItem
+								onClick={() => login().catch((e) => console.error(e))}
+							>
 								<LogIn className="h-4 w-4 mr-2" />
 								Login
 							</DropdownMenuItem>
@@ -140,7 +139,7 @@ export const NavbarUpper: React.FC = () => {
 									Accounts
 								</Link>
 							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => logout(msAccount)}>
+							<DropdownMenuItem onClick={() => logout()}>
 								<LogOut className="h-4 w-4 mr-2" /> Signout
 							</DropdownMenuItem>
 						</AuthenticatedTemplate>
@@ -180,4 +179,5 @@ export const NavbarUpper: React.FC = () => {
 			</div>
 		</section>
 	);
-};
+});
+NavbarUpper.displayName = "NavbarUpper";

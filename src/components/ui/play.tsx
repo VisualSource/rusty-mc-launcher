@@ -1,12 +1,19 @@
 import { DatabaseZap, Download, Play, StopCircle } from "lucide-react";
-import { waitToast } from "@component/ui/toast";
+import type { VariantProps } from "class-variance-authority";
 
+import type { AuthenticationResultExtended } from "@/lib/auth/msal";
 import { stop, launchGame } from "@/lib/api/plugins/game";
 import { useIsRunning } from "@/hooks/useProcessState";
+import { Button, type buttonVariants } from "./button";
 import type { Profile } from "@/lib/models/profiles";
-import { Button, type ButtonProps } from "./button";
+import { waitToast } from "@component/ui/toast";
 import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+
+type Props = VariantProps<typeof buttonVariants> &
+	Omit<React.ComponentProps<"button">, "disabled"> & {
+		profile: Pick<Profile, "id" | "state">;
+	};
 
 const DisplayState: React.FC<{
 	isRunning: boolean;
@@ -42,10 +49,8 @@ const DisplayState: React.FC<{
 	}
 };
 
-const PlayButton: React.FC<
-	ButtonProps & { profile: Pick<Profile, "id" | "state"> }
-> = ({ profile, className, ...props }) => {
-	const user = useUser();
+const PlayButton: React.FC<Props> = ({ profile, className, ...props }) => {
+	const { acquireToken } = useUser();
 	const isRunning = useIsRunning(profile.id);
 
 	return (
@@ -59,13 +64,24 @@ const PlayButton: React.FC<
 					return;
 				}
 				try {
-					if (!user.account) return;
+					const result =
+						(await acquireToken()) as AuthenticationResultExtended | null;
+					if (!result) throw new Error("Failed to get token");
+					const accessToken = result.tokens.mcAccessToken;
+					if (!accessToken) throw new Error("Missing token");
+					if (
+						!result.account.name ||
+						!result.account.id ||
+						!result.account.xuid
+					)
+						throw new Error("Missing launch params");
+
 					await waitToast({
 						callback: launchGame({
-							auth_access_token: user.account?.token.access_token,
-							auth_player_name: user.account?.details.name,
-							auth_uuid: user.account?.details.id,
-							auth_xuid: user.account?.xuid,
+							auth_access_token: accessToken,
+							auth_player_name: result.account.name,
+							auth_uuid: result.account.id,
+							auth_xuid: result.account?.xuid,
 							profile_id: profile.id,
 						}),
 						pendingTitle: "Starting Minecrafts",

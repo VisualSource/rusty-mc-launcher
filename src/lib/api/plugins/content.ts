@@ -147,6 +147,9 @@ export async function deleteProfile(profileId: string) {
 	});
 }
 
+/**
+ * @deprecated use revealItemInDir from "@tauri-apps/plugin-opener";
+ */
 export async function showInFolder(path: string) {
 	// TODO: add support for other systems
 	const cmd = Command.create("windows-open-file", [path]);

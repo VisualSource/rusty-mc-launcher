@@ -26,7 +26,7 @@ export const ContentType = z.util.arrayToEnum([
 export class QueueItem {
 	static schema = z.object({
 		id: z.string().uuid(),
-		display: z.number().transform((arg) => arg === 1),
+		display: z.coerce.boolean(),
 		priority: z.number().gte(0),
 		display_name: z.string(),
 		icon: z.ostring().nullable().default(null),
@@ -40,7 +40,7 @@ export class QueueItem {
 				} catch (error) {
 					ctx.addIssue({
 						fatal: true,
-						message: (error as Error).message,
+						message: (error as Error)?.message,
 						code: "custom",
 					});
 					return z.NEVER;
@@ -63,6 +63,10 @@ export class QueueItem {
 	) {
 		return query`INSERT INTO download_queue VALUES (${args.id},${args.display ? 0 : 1},${args.priority},${args.display_name},${args.icon},${args.profile_id},${new Date().toISOString()},${args.content_type},${JSON.stringify(args.metadata)},${args.state});`.run();
 	}
+	static fromQuery(args: QueryResult) {
+		const data = QueueItem.schema.parse(args);
+		return new QueueItem(data);
+	}
 	public id: string;
 	public display: boolean;
 	public priority: number;
@@ -73,19 +77,16 @@ export class QueueItem {
 	public metadata: Record<string, unknown>;
 	public content_type: z.infer<typeof contentTypeSchema>;
 	public state: keyof typeof QueueItemState = "PENDING";
-	constructor(args: QueryResult) {
-		this.state = args.state as keyof typeof QueueItemState;
-		this.id = args.id as string;
-		this.display = (args.display as number) === 0;
-		this.priority = args.priority as number;
-		this.display_name = args.display_name as string;
-		this.icon = args.icon as string | null;
-		this.profile_id = args.profile_id as string;
-		this.created = args.created as string;
-		this.metadata = JSON.parse(args.metadata as string) as Record<
-			string,
-			unknown
-		>;
-		this.content_type = args.content_type as keyof typeof ContentType;
+	constructor(args: z.infer<typeof QueueItem.schema>) {
+		this.state = args.state;
+		this.id = args.id;
+		this.display = args.display;
+		this.priority = args.priority;
+		this.display_name = args.display_name;
+		this.icon = args.icon;
+		this.profile_id = args.profile_id;
+		this.created = args.created;
+		this.metadata = args.metadata;
+		this.content_type = args.content_type;
 	}
 }

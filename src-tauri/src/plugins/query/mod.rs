@@ -1,8 +1,8 @@
 mod commands;
 use minecraft_launcher_lib::database::{Database, RwDatabase};
 use tauri::{
-    plugin::{Builder, TauriPlugin},
     Manager, Runtime,
+    plugin::{Builder, TauriPlugin},
 };
 use tokio::sync::RwLock;
 

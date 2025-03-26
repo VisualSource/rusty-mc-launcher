@@ -5,7 +5,7 @@ import { NavbarUpper } from "./NavbarUpper";
 const Navbar = memo(() => {
 	return (
 		<header
-			className="z-50 shrink-0 grow-0 bg-zinc-950 text-zinc-400 shadow-md"
+			className="z-50 shrink-0 grow-0 shadow-md border-b"
 			data-tauri-drag-region
 		>
 			<NavbarUpper />

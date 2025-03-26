@@ -46,7 +46,7 @@ export const Notifications = () => {
 				<button
 					type="button"
 					className={cn(
-						"mr-2 flex items-center px-2.5 text-white transition-colors",
+						"mr-2 flex items-center px-2.5 text-white transition-colors group",
 						{
 							"bg-green-500": unreadCount > 0,
 							"bg-zinc-800": unreadCount === 0,
@@ -56,7 +56,7 @@ export const Notifications = () => {
 					{unreadCount > 0 ? (
 						<span className="mr-2 text-sm">{unreadCount}</span>
 					) : null}
-					<Mail className="h-5 w-5" />
+					<Mail className="h-5 w-5 group-hover:scale-110 transition-transform duration-500" />
 				</button>
 			</PopoverTrigger>
 			<PopoverContent align="end" sideOffset={4} className="w-80">

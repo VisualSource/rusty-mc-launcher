@@ -28,6 +28,7 @@ import { Route as AuthenticatedLayoutProfileProfileIdEditImport } from './routes
 
 // Create Virtual Routes
 
+const AuthenticatedSkinsLazyImport = createFileRoute('/_authenticated/skins')()
 const AuthenticatedPatchNotesLazyImport = createFileRoute(
   '/_authenticated/patch-notes',
 )()
@@ -52,9 +53,6 @@ const AuthenticatedSettingsDownloadLazyImport = createFileRoute(
 const AuthenticatedSettingsAccountsLazyImport = createFileRoute(
   '/_authenticated/settings/accounts',
 )()
-const AuthenticatedLayoutSkinsLazyImport = createFileRoute(
-  '/_authenticated/_layout/skins',
-)()
 
 // Create/Update Routes
 
@@ -62,6 +60,14 @@ const AuthenticatedRoute = AuthenticatedImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRoute,
 } as any)
+
+const AuthenticatedSkinsLazyRoute = AuthenticatedSkinsLazyImport.update({
+  id: '/skins',
+  path: '/skins',
+  getParentRoute: () => AuthenticatedRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/skins.lazy').then((d) => d.Route),
+)
 
 const AuthenticatedPatchNotesLazyRoute =
   AuthenticatedPatchNotesLazyImport.update({
@@ -158,15 +164,6 @@ const AuthenticatedSettingsAccountsLazyRoute =
     import('./routes/_authenticated/settings/accounts.lazy').then(
       (d) => d.Route,
     ),
-  )
-
-const AuthenticatedLayoutSkinsLazyRoute =
-  AuthenticatedLayoutSkinsLazyImport.update({
-    id: '/skins',
-    path: '/skins',
-    getParentRoute: () => AuthenticatedLayoutRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/_layout/skins.lazy').then((d) => d.Route),
   )
 
 const AuthenticatedLayoutCollectionsRoute =
@@ -290,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPatchNotesLazyImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/skins': {
+      id: '/_authenticated/skins'
+      path: '/skins'
+      fullPath: '/skins'
+      preLoaderRoute: typeof AuthenticatedSkinsLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/workshop/search': {
       id: '/_authenticated/workshop/search'
       path: '/workshop/search'
@@ -302,13 +306,6 @@ declare module '@tanstack/react-router' {
       path: '/collections'
       fullPath: '/collections'
       preLoaderRoute: typeof AuthenticatedLayoutCollectionsImport
-      parentRoute: typeof AuthenticatedLayoutImport
-    }
-    '/_authenticated/_layout/skins': {
-      id: '/_authenticated/_layout/skins'
-      path: '/skins'
-      fullPath: '/skins'
-      preLoaderRoute: typeof AuthenticatedLayoutSkinsLazyImport
       parentRoute: typeof AuthenticatedLayoutImport
     }
     '/_authenticated/settings/accounts': {
@@ -416,14 +413,12 @@ const AuthenticatedLayoutProfileProfileIdRouteWithChildren =
 
 interface AuthenticatedLayoutRouteChildren {
   AuthenticatedLayoutCollectionsRoute: typeof AuthenticatedLayoutCollectionsRoute
-  AuthenticatedLayoutSkinsLazyRoute: typeof AuthenticatedLayoutSkinsLazyRoute
   AuthenticatedLayoutIndexLazyRoute: typeof AuthenticatedLayoutIndexLazyRoute
   AuthenticatedLayoutProfileProfileIdRoute: typeof AuthenticatedLayoutProfileProfileIdRouteWithChildren
 }
 
 const AuthenticatedLayoutRouteChildren: AuthenticatedLayoutRouteChildren = {
   AuthenticatedLayoutCollectionsRoute: AuthenticatedLayoutCollectionsRoute,
-  AuthenticatedLayoutSkinsLazyRoute: AuthenticatedLayoutSkinsLazyRoute,
   AuthenticatedLayoutIndexLazyRoute: AuthenticatedLayoutIndexLazyRoute,
   AuthenticatedLayoutProfileProfileIdRoute:
     AuthenticatedLayoutProfileProfileIdRouteWithChildren,
@@ -460,6 +455,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCreateProfileLazyRoute: typeof AuthenticatedCreateProfileLazyRoute
   AuthenticatedDownloadsLazyRoute: typeof AuthenticatedDownloadsLazyRoute
   AuthenticatedPatchNotesLazyRoute: typeof AuthenticatedPatchNotesLazyRoute
+  AuthenticatedSkinsLazyRoute: typeof AuthenticatedSkinsLazyRoute
   AuthenticatedWorkshopSearchRouteRoute: typeof AuthenticatedWorkshopSearchRouteRoute
   AuthenticatedWorkshopCurseforgeIdRouteRoute: typeof AuthenticatedWorkshopCurseforgeIdRouteRoute
   AuthenticatedWorkshopProjectIdRouteRoute: typeof AuthenticatedWorkshopProjectIdRouteRoute
@@ -472,6 +468,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCreateProfileLazyRoute: AuthenticatedCreateProfileLazyRoute,
   AuthenticatedDownloadsLazyRoute: AuthenticatedDownloadsLazyRoute,
   AuthenticatedPatchNotesLazyRoute: AuthenticatedPatchNotesLazyRoute,
+  AuthenticatedSkinsLazyRoute: AuthenticatedSkinsLazyRoute,
   AuthenticatedWorkshopSearchRouteRoute: AuthenticatedWorkshopSearchRouteRoute,
   AuthenticatedWorkshopCurseforgeIdRouteRoute:
     AuthenticatedWorkshopCurseforgeIdRouteRoute,
@@ -490,9 +487,9 @@ export interface FileRoutesByFullPath {
   '/create-profile': typeof AuthenticatedCreateProfileLazyRoute
   '/downloads': typeof AuthenticatedDownloadsLazyRoute
   '/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
+  '/skins': typeof AuthenticatedSkinsLazyRoute
   '/workshop/search': typeof AuthenticatedWorkshopSearchRouteRoute
   '/collections': typeof AuthenticatedLayoutCollectionsRoute
-  '/skins': typeof AuthenticatedLayoutSkinsLazyRoute
   '/settings/accounts': typeof AuthenticatedSettingsAccountsLazyRoute
   '/settings/download': typeof AuthenticatedSettingsDownloadLazyRoute
   '/settings/game': typeof AuthenticatedSettingsGameLazyRoute
@@ -512,9 +509,9 @@ export interface FileRoutesByTo {
   '/create-profile': typeof AuthenticatedCreateProfileLazyRoute
   '/downloads': typeof AuthenticatedDownloadsLazyRoute
   '/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
+  '/skins': typeof AuthenticatedSkinsLazyRoute
   '/workshop/search': typeof AuthenticatedWorkshopSearchRouteRoute
   '/collections': typeof AuthenticatedLayoutCollectionsRoute
-  '/skins': typeof AuthenticatedLayoutSkinsLazyRoute
   '/settings/accounts': typeof AuthenticatedSettingsAccountsLazyRoute
   '/settings/download': typeof AuthenticatedSettingsDownloadLazyRoute
   '/settings/game': typeof AuthenticatedSettingsGameLazyRoute
@@ -536,9 +533,9 @@ export interface FileRoutesById {
   '/_authenticated/create-profile': typeof AuthenticatedCreateProfileLazyRoute
   '/_authenticated/downloads': typeof AuthenticatedDownloadsLazyRoute
   '/_authenticated/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
+  '/_authenticated/skins': typeof AuthenticatedSkinsLazyRoute
   '/_authenticated/workshop/search': typeof AuthenticatedWorkshopSearchRouteRoute
   '/_authenticated/_layout/collections': typeof AuthenticatedLayoutCollectionsRoute
-  '/_authenticated/_layout/skins': typeof AuthenticatedLayoutSkinsLazyRoute
   '/_authenticated/settings/accounts': typeof AuthenticatedSettingsAccountsLazyRoute
   '/_authenticated/settings/download': typeof AuthenticatedSettingsDownloadLazyRoute
   '/_authenticated/settings/game': typeof AuthenticatedSettingsGameLazyRoute
@@ -561,9 +558,9 @@ export interface FileRouteTypes {
     | '/create-profile'
     | '/downloads'
     | '/patch-notes'
+    | '/skins'
     | '/workshop/search'
     | '/collections'
-    | '/skins'
     | '/settings/accounts'
     | '/settings/download'
     | '/settings/game'
@@ -582,9 +579,9 @@ export interface FileRouteTypes {
     | '/create-profile'
     | '/downloads'
     | '/patch-notes'
+    | '/skins'
     | '/workshop/search'
     | '/collections'
-    | '/skins'
     | '/settings/accounts'
     | '/settings/download'
     | '/settings/game'
@@ -604,9 +601,9 @@ export interface FileRouteTypes {
     | '/_authenticated/create-profile'
     | '/_authenticated/downloads'
     | '/_authenticated/patch-notes'
+    | '/_authenticated/skins'
     | '/_authenticated/workshop/search'
     | '/_authenticated/_layout/collections'
-    | '/_authenticated/_layout/skins'
     | '/_authenticated/settings/accounts'
     | '/_authenticated/settings/download'
     | '/_authenticated/settings/game'
@@ -651,6 +648,7 @@ export const routeTree = rootRoute
         "/_authenticated/create-profile",
         "/_authenticated/downloads",
         "/_authenticated/patch-notes",
+        "/_authenticated/skins",
         "/_authenticated/workshop/search",
         "/_authenticated/workshop/curseforge/$id",
         "/_authenticated/workshop/project/$id"
@@ -661,7 +659,6 @@ export const routeTree = rootRoute
       "parent": "/_authenticated",
       "children": [
         "/_authenticated/_layout/collections",
-        "/_authenticated/_layout/skins",
         "/_authenticated/_layout/",
         "/_authenticated/_layout/profile/_profile/$id"
       ]
@@ -692,16 +689,16 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/patch-notes.lazy.tsx",
       "parent": "/_authenticated"
     },
+    "/_authenticated/skins": {
+      "filePath": "_authenticated/skins.lazy.tsx",
+      "parent": "/_authenticated"
+    },
     "/_authenticated/workshop/search": {
       "filePath": "_authenticated/workshop/search/route.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/_layout/collections": {
       "filePath": "_authenticated/_layout/collections.tsx",
-      "parent": "/_authenticated/_layout"
-    },
-    "/_authenticated/_layout/skins": {
-      "filePath": "_authenticated/_layout/skins.lazy.tsx",
       "parent": "/_authenticated/_layout"
     },
     "/_authenticated/settings/accounts": {

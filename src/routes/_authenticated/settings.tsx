@@ -34,7 +34,7 @@ function Settings() {
 						)}
 						to="/settings"
 					>
-						<LaptopMinimal className="pr-2" /> System
+						<LaptopMinimal /> System
 					</Link>
 					<Link
 						className={cn(
@@ -46,7 +46,7 @@ function Settings() {
 						)}
 						to="/settings/game"
 					>
-						<Gamepad2 className="pr-2" /> Game
+						<Gamepad2 /> Game
 					</Link>
 					<Link
 						className={cn(
@@ -58,7 +58,7 @@ function Settings() {
 						)}
 						to="/settings/accounts"
 					>
-						<Users2 className="pr-2" /> Accounts
+						<Users2 /> Accounts
 					</Link>
 					<Link
 						className={cn(
@@ -70,7 +70,7 @@ function Settings() {
 						)}
 						to="/settings/download"
 					>
-						<HardDriveDownload className="pr-2" /> Downloads
+						<HardDriveDownload /> Downloads
 					</Link>
 				</nav>
 			</aside>

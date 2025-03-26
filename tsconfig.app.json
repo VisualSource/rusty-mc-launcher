@@ -31,9 +31,10 @@
       "@system/*": ["./src/lib/system/*"],
       "@masl/*": ["./src/lib/masl/*"],
       "@component/*": ["./src/components/*"],
+      "@ui/*": ["./src/components/ui/*"],
       "@lib/*": ["./src/lib/*"],
-      "@polyfill/*": ["./src/lib/polyfill/*"],
       "@hook/*": ["./src/hooks/*"],
+      "@hooks/*": ["./src/hooks/*"],
       "@auth/*": ["./src/lib/auth/*"],
       "@page/*": ["./src/pages/*"],
       "@util/*": ["./src/utils/*"]

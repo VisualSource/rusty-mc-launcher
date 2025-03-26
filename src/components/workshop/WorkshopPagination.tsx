@@ -82,6 +82,7 @@ export const getPaginationItems = (
 };
 
 function WP({
+	isPlaceHolder,
 	isLoading,
 	isError,
 	maxPages,
@@ -91,6 +92,7 @@ function WP({
 	offsetNext,
 	totalHits,
 }: {
+	isPlaceHolder: boolean;
 	currentPage: number;
 	maxPages: number;
 	items: PaginationLinkItem[];
@@ -100,7 +102,9 @@ function WP({
 	isLoading: boolean;
 	isError: boolean;
 }) {
-	const goTo = useCallback((offset: number) => { searchManager.setOffset(offset).update(); }, []);
+	const goTo = useCallback((offset: number) => {
+		searchManager.setOffset(offset).update();
+	}, []);
 	const componentId = useId();
 	if (isError) return null;
 	if (isLoading)
@@ -115,12 +119,16 @@ function WP({
 			<PaginationContent>
 				<PaginationItem>
 					<PaginationPrevious
-						disabled={currentPage === 1}
+						disabled={isPlaceHolder || currentPage === 1}
 						onClick={() => goTo(offsetPrev)}
 					/>
 				</PaginationItem>
 				<PaginationItem>
-					<PaginationLink isActive={currentPage === 1} onClick={() => goTo(0)}>
+					<PaginationLink
+						disabled={isPlaceHolder}
+						isActive={currentPage === 1}
+						onClick={() => goTo(0)}
+					>
 						1
 					</PaginationLink>
 				</PaginationItem>
@@ -132,6 +140,7 @@ function WP({
 				{items.map((item) => (
 					<PaginationItem key={`${componentId}_${item.key}`}>
 						<PaginationLink
+							disabled={isPlaceHolder}
 							isActive={currentPage === item.page}
 							onClick={() => goTo(item.offset)}
 						>
@@ -147,6 +156,7 @@ function WP({
 				{maxPages > 5 ? (
 					<PaginationItem>
 						<PaginationLink
+							disabled={isPlaceHolder}
 							isActive={currentPage === maxPages}
 							onClick={() => goTo(totalHits)}
 						>
@@ -156,7 +166,7 @@ function WP({
 				) : null}
 				<PaginationItem>
 					<PaginationNext
-						disabled={currentPage === maxPages}
+						disabled={isPlaceHolder || currentPage === maxPages}
 						onClick={() => goTo(offsetNext)}
 					/>
 				</PaginationItem>
@@ -164,7 +174,6 @@ function WP({
 		</Pagination>
 	);
 }
-
 
 export const WorkshopPagination = memo(WP);
 WorkshopPagination.displayName = "WorkshopPagination";

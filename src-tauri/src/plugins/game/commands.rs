@@ -1,7 +1,7 @@
-use super::desktop::{PluginGameState, ProcessStatePayload};
 use super::PROCESSES_STATE_EVENT;
+use super::desktop::{PluginGameState, ProcessStatePayload};
 use minecraft_launcher_lib::database::RwDatabase;
-use minecraft_launcher_lib::launcher::{start_game, LaunchConfig};
+use minecraft_launcher_lib::launcher::{LaunchConfig, start_game};
 use tauri::{Emitter, Runtime};
 
 use crate::error::Error;
