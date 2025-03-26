@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 
@@ -6,7 +7,7 @@ export const Selectable: React.FC<{
 	name: string;
 	icon?: string;
 	onChange: () => void;
-}> = ({ onChange, name, icon, checked }) => {
+}> = memo(({ onChange, name, icon, checked }) => {
 	return (
 		<li className="flex items-center space-x-2">
 			<Checkbox checked={checked} onCheckedChange={onChange} />
@@ -22,4 +23,5 @@ export const Selectable: React.FC<{
 			</Label>
 		</li>
 	);
-};
+});
+Selectable.displayName = "SelectableFilterItem";

@@ -1,5 +1,5 @@
 import { useSuspenseQueries } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 
 import {
 	categoryList,
@@ -23,6 +23,31 @@ function filterOn(name: string, list: LoaderTag[]): LoaderTag[] {
 		return list.filter((e) => ALLOWED_MOD_LOADERS.includes(e.name));
 	}
 	return list.filter((e) => e.supported_project_types.includes("shader"));
+}
+
+export const LoaderList: React.FC<{ projectType: string, loaders: LoaderTag[] }> = ({ loaders, projectType }) => {
+	const search = useSearch();
+	const data = useMemo(() => filterOn(projectType, loaders), [loaders, projectType]);
+
+	return (
+		<div className="space-y-2">
+			<TypographyH3>Loaders</TypographyH3>
+			<ul className="space-y-2">
+				{data?.map((item) => (
+					<Selectable
+						key={item.name}
+						name={item.name}
+						icon={item.icon}
+						checked={search.facets.hasLoader(item.name)}
+						onChange={() => {
+							searchManager.facets.toggleLoader(item.name);
+							searchManager.update();
+						}}
+					/>
+				))}
+			</ul>
+		</div>
+	);
 }
 
 export const SearchFilters: React.FC = () => {
@@ -144,26 +169,7 @@ export const SearchFilters: React.FC = () => {
 			))}
 
 			{showLoaders ? (
-				<div className="space-y-2">
-					<TypographyH3>Loaders</TypographyH3>
-					<ul className="space-y-2">
-						{filterOn(
-							search.facets.getProjectType(),
-							modrinthLoaders.data,
-						)?.map((item) => (
-							<Selectable
-								key={item.name}
-								name={item.name}
-								icon={item.icon}
-								checked={search.facets.hasLoader(item.name)}
-								onChange={() => {
-									searchManager.facets.toggleLoader(item.name);
-									searchManager.update();
-								}}
-							/>
-						))}
-					</ul>
-				</div>
+				<LoaderList projectType={projectType} loaders={modrinthLoaders.data} />
 			) : null}
 
 			{showEnv ? (
