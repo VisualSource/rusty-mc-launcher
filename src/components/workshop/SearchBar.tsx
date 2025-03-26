@@ -32,7 +32,7 @@ export const SearchBar: React.FC = memo(() => {
     );
 
     return (
-        <header className="flex px-4 pt-4">
+        <header className="flex px-4 py-4">
             <search className="flex w-full gap-4 items-center">
                 <form
                     className="w-full"

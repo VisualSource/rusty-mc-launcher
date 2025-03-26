@@ -35,23 +35,23 @@ function Layout() {
 				maxSize={22}
 				className="@container/main bg-accent/25"
 			>
-				<div className="overflow-hidden animate-in fade-in-5 ">
+				<div className="overflow-hidden animate-in fade-in-5">
 					{(panel.current?.isExpanded() ?? true) ? (
 						<div>
-							<div className="flex gap-1 bg-zinc-950 p-2 shadow-lg">
+							<div className="flex gap-1.5 bg-zinc-950 p-2 shadow-lg">
 								<Button
 									size="sm"
 									variant="secondary"
-									className="w-full justify-start rounded-sm"
+									className="w-full justify-start rounded-sm shrink"
 									asChild
 								>
 									<Link to="/">HOME</Link>
 								</Button>
 								<Button
 									size="sm"
-									variant="ghost"
-									className="rounded-sm text-zinc-700"
+									variant="outline"
 									asChild
+									className="rounded-sm"
 								>
 									<Link title="View collections" to="/collections">
 										<Grid2X2 />
@@ -67,7 +67,7 @@ function Layout() {
 					) : null}
 				</div>
 			</ResizablePanel>
-			<ResizableHandle />
+			<ResizableHandle withHandle />
 			<ResizablePanel
 				tagName="section"
 				order={1}

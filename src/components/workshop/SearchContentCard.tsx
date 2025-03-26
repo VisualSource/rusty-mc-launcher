@@ -16,13 +16,15 @@ export const SearchContentCard: React.FC<{ project: ProjectResult }> = memo(({ p
             params={{ id: project.project_id }}
         >
             <Card className="h-full flex flex-col">
-                <CardHeader className="flex-row gap-4 space-y-0 pb-2">
-                    <Avatar className="h-12 w-12">
-                        <AvatarFallback>
-                            <FileImage />
-                        </AvatarFallback>
-                        <AvatarImage src={project.icon_url ?? undefined} />
-                    </Avatar>
+                <CardHeader className="flex-row gap-4 space-y-0 pb-2 flex">
+                    <div className="flex justify-center items-center">
+                        <Avatar className="h-15 w-15">
+                            <AvatarFallback>
+                                <FileImage />
+                            </AvatarFallback>
+                            <AvatarImage src={project.icon_url ?? undefined} />
+                        </Avatar>
+                    </div>
                     <div title={project.title}>
                         <TypographyH4 className="line-clamp-1">
                             {project.title ?? "Unknown Project"}

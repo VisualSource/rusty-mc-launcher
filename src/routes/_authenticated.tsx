@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import { Loader2 } from "lucide-react";
-import bg from "../images/Vanilla-PMP_Collection-Carousel-0_Tricky-Trials_1280x768.jpg";
+import bg from "../images/background.png";
 import { TypographyH4 } from "@/components/ui/typography";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated")({
 					<img
 						src={bg}
 						alt="tricky-trials"
-						className="h-full w-full object-fill"
+						className="h-full w-full object-center"
 					/>
 				</div>
 			);

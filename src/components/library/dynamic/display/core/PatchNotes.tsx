@@ -130,7 +130,7 @@ export const PatchNotesSkeletons: React.FC = memo(() => {
 });
 PatchNotesSkeletons.displayName = "PatchNotesSkeletion";
 
-const PatchNotes: React.FC = () => {
+const PatchNotes: React.FC = memo(() => {
 	const [openNotes, setOpenNotes] = useState(false);
 	const [contentPath, setContentPath] = useState<string>();
 	const { data, error } = useSuspenseQuery({
@@ -185,6 +185,6 @@ const PatchNotes: React.FC = () => {
 			/>
 		</>
 	);
-};
-
+});
+PatchNotes.displayName = "PatchNotes";
 export default PatchNotes;

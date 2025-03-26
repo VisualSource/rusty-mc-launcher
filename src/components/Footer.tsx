@@ -66,35 +66,35 @@ const Footer = memo(() => {
 		const display =
 			state.importFrom === "modrinth"
 				? {
-						queue: {
-							name: "MrPack($PACK_PATH)",
-							type: "Modpack",
-						},
-						dialog: {
-							title: "Import Mrpack",
-							filters: [
-								{
-									name: "Mrpack",
-									extensions: ["mrpack"],
-								},
-							],
-						},
-					}
+					queue: {
+						name: "MrPack($PACK_PATH)",
+						type: "Modpack",
+					},
+					dialog: {
+						title: "Import Mrpack",
+						filters: [
+							{
+								name: "Mrpack",
+								extensions: ["mrpack"],
+							},
+						],
+					},
+				}
 				: {
-						queue: {
-							name: "Curseforge Modpack ($PACK_PATH)",
-							type: "CurseforgeModpack",
-						},
-						dialog: {
-							title: "Import Modpack",
-							filters: [
-								{
-									name: "Zip",
-									extensions: ["zip"],
-								},
-							],
-						},
-					};
+					queue: {
+						name: "Curseforge Modpack ($PACK_PATH)",
+						type: "CurseforgeModpack",
+					},
+					dialog: {
+						title: "Import Modpack",
+						filters: [
+							{
+								name: "Zip",
+								extensions: ["zip"],
+							},
+						],
+					},
+				};
 
 		const result = await open({
 			multiple: false,
@@ -210,7 +210,7 @@ const Footer = memo(() => {
 									variant="ghost"
 									className="group dark:hover:bg-transparent"
 								>
-									<PlusSquare className="pr-2" />
+									<PlusSquare />
 									<TypographyMuted className="transition-colors dark:group-hover:text-zinc-300">
 										Add a Profile
 									</TypographyMuted>
@@ -278,8 +278,8 @@ const Footer = memo(() => {
 							</div>
 						) : (
 							<>
-								<Download className="pr-2" />
-								<TypographyMuted className="transition-colors dark:group-hover:text-zinc-300">
+								<Download />
+								<TypographyMuted className="group-hover:text-zinc-300 transition-colors">
 									Manage Downloads
 								</TypographyMuted>
 							</>

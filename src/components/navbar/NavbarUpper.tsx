@@ -54,7 +54,7 @@ export const NavbarUpper: React.FC = memo(() => {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button size="sm" variant="ghost" className="h-full rounded-none">
-							<Hexagon className="pr-2" />
+							<Hexagon />
 							MCL
 						</Button>
 					</DropdownMenuTrigger>

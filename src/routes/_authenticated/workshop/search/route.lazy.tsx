@@ -28,7 +28,7 @@ const Fallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
 const WorkshopHome: React.FC = memo(() => {
 	return (
 		<div className="flex h-full overflow-hidden bg-accent/35">
-			<aside className="w-60 overflow-y-scroll h-full pl-4 space-y-4 scrollbar pb-4">
+			<aside className="w-60 overflow-y-scroll h-full pl-4 space-y-4 scrollbar pb-6">
 				<ErrorBoundary FallbackComponent={Fallback}>
 					<Suspense fallback={<Loading />}>
 						<SearchFilters />

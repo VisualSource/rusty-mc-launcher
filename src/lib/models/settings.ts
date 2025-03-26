@@ -31,6 +31,19 @@ export async function isOption(opt: string, value: string) {
 	return item?.value === value;
 }
 
+export async function upsert(key: string, value: string) {
+	const [affected] = await updateConfig(
+		key,
+		value,
+	);
+	if (affected === 0) {
+		await addConfig(
+			key,
+			value,
+		);
+	}
+}
+
 export class Setting {
 	static schema = z.object({
 		key: z.string(),
