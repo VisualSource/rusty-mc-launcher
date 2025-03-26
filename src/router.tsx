@@ -1,7 +1,6 @@
 import {
 	createRouter,
 	ErrorComponent,
-	stringifySearchWith,
 } from "@tanstack/react-router";
 import { queryClient } from "@lib/api/queryClient";
 
