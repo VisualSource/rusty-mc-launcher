@@ -6,10 +6,11 @@ import {
 } from "@tanstack/react-router";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { ToastContainer } from "react-toastify";
 import { AlertTriangle } from "lucide-react";
-import { lazy, useEffect } from "react";
+import { useEffect } from "react";
 
 import { TypographyH1 } from "@/components/ui/typography";
 import AskDialog from "@/components/dialog/AskDialog";
@@ -18,14 +19,6 @@ import type { AppContext } from "@/types";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 
-
-const TanStackRouterDevtools = import.meta.env.DEV
-	? lazy(() =>
-		import("@tanstack/router-devtools").then((res) => ({
-			default: res.TanStackRouterDevtools,
-		})),
-	)
-	: () => null;
 
 const Index: React.FC = () => {
 	const navigate = useNavigate();

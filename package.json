@@ -97,6 +97,7 @@
 		"@tailwindcss/typography": "^0.5.16",
 		"@tailwindcss/vite": "^4.0.15",
 		"@tanstack/react-query-devtools": "^5.69.0",
+		"@tanstack/react-router-devtools": "^1.114.27",
 		"@tanstack/router-devtools": "^1.114.27",
 		"@tanstack/router-plugin": "^1.114.27",
 		"@tauri-apps/cli": "^2.4.0",
