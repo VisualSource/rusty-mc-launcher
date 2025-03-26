@@ -16,10 +16,9 @@ use openidconnect::{
         CoreResponseType, CoreTokenType,
     },
 };
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, str::FromStr};
 use tauri::{Emitter, Manager, Url};
-use tauri_plugin_http::reqwest::{self, ClientBuilder, redirect::Policy};
+use tauri_plugin_http::reqwest::{ClientBuilder, redirect::Policy};
 use tokio::sync::Mutex;
 
 pub type AuthAppState = Mutex<AuthState>;
@@ -34,7 +33,7 @@ pub type AuthResponse = StandardTokenResponse<
     CoreTokenType,
 >;
 
-pub const MODRINTH_CLIENT_ID: &str = env!("VITE_MODRINTH_CLIENT_ID");
+//pub const MODRINTH_CLIENT_ID: &str = env!("VITE_MODRINTH_CLIENT_ID");
 pub const EVENT_LOGIN_WINDOW_DESTORYED: &str = "rmcl-auth-login-window-destroyed";
 /// Note: You must use the consumers AAD tenant to sign in with the XboxLive.signin scope.
 /// Dissover: v2.0/.well-known/openid-configuration
@@ -42,8 +41,8 @@ pub const AUTHORITY: &str =
     "https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration";
 const SCOPES_SUBSET: &str = "XboxLive.SignIn XboxLive.offline_access openid profile offline_access";
 pub const CALLBACK_URI: &str = "rmcl://ms/authorize";
-pub const MODRINTH_CALLBACK_URI: &str = "rmcl://modrinth/authorize";
-pub const MODRINTH_ENDPOINT: &str = "https://api.modrinth.com";
+//pub const MODRINTH_CALLBACK_URI: &str = "rmcl://modrinth/authorize";
+//pub const MODRINTH_ENDPOINT: &str = "https://api.modrinth.com";
 struct FragmentParams(HashMap<String, String>);
 
 impl FragmentParams {
@@ -263,9 +262,9 @@ pub fn is_microsoft_callback(url: &Url) -> bool {
     url.as_str().starts_with(CALLBACK_URI)
 }
 
-pub fn is_modrinth_callback(url: &Url) -> bool {
+/*pub fn is_modrinth_callback(url: &Url) -> bool {
     url.as_str().starts_with(MODRINTH_CALLBACK_URI)
-}
+}*/
 
 pub async fn validate_code<R: tauri::Runtime>(app: tauri::AppHandle<R>, url: Url) -> Result<()> {
     let state = app.state::<AuthAppState>();
@@ -276,12 +275,12 @@ pub async fn validate_code<R: tauri::Runtime>(app: tauri::AppHandle<R>, url: Url
     match result {
         Ok(data) => {
             if let Err(err) = app.emit("rmcl-auth-login-success", data) {
-                log::error!("{}", err.to_string());
+                log::error!("{}", err);
             }
         }
         Err(error) => {
             if let Err(err) = app.emit("rmcl-auth-login-error", error.to_string()) {
-                log::error!("{}", err.to_string());
+                log::error!("{}", err);
             }
         }
     }
@@ -295,7 +294,7 @@ pub async fn validate_code<R: tauri::Runtime>(app: tauri::AppHandle<R>, url: Url
     Ok(())
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+/*#[derive(Debug, Clone, Deserialize, Serialize)]
 struct ModrinthResponse {
     access_token: String,
     token_type: String,
@@ -354,3 +353,4 @@ pub async fn validate_modrinth<R: tauri::Runtime>(app: tauri::AppHandle<R>, url:
         }
     }
 }
+*/

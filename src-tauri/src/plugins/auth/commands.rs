@@ -1,9 +1,6 @@
-use super::desktop::{
-    AUTHORITY, AuthAppState, EVENT_LOGIN_WINDOW_DESTORYED, MODRINTH_CALLBACK_URI,
-    MODRINTH_CLIENT_ID, MODRINTH_ENDPOINT,
-};
+use super::desktop::{AUTHORITY, AuthAppState, EVENT_LOGIN_WINDOW_DESTORYED};
 use crate::{error::Result, plugins::auth::desktop::AuthResponse};
-use tauri::{Emitter, Manager, State, Url, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 #[tauri::command]
 pub async fn logout<R: tauri::Runtime>(_app: tauri::AppHandle<R>) -> Result<()> {
@@ -54,10 +51,10 @@ pub async fn authenticate<R: tauri::Runtime>(
     Ok(true)
 }
 
-const MODRINTH_SCOPES: &str = "NOTIFICATION_READ+NOTIFICATION_WRITE+USER_READ+USER_WRITE";
-const EVENT_MODRINTH_LOGIN_WINDOW_DISTORYED: &str = "rmcl-auth-modrinth-login-window-destoryed";
+//const MODRINTH_SCOPES: &str = "NOTIFICATION_READ+NOTIFICATION_WRITE+USER_READ+USER_WRITE";
+//const EVENT_MODRINTH_LOGIN_WINDOW_DISTORYED: &str = "rmcl-auth-modrinth-login-window-destoryed";
 
-#[tauri::command]
+/*#[tauri::command]
 pub async fn modrinth_authenticate<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<bool> {
     if let Some(window) = app.get_webview_window("modrinth-login") {
         if let Err(err) = window.close() {
@@ -88,4 +85,4 @@ pub async fn modrinth_authenticate<R: tauri::Runtime>(app: tauri::AppHandle<R>) 
     });
 
     Ok(true)
-}
+}*/

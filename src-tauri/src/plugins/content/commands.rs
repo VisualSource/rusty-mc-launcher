@@ -136,7 +136,7 @@ pub async fn copy_profile(
     }
 
     if let Err(err) = copy_dir::copy_dir(&old, &new) {
-        log::error!("{}", err.to_string());
+        log::error!("{}", err);
     }
 
     Ok(())
