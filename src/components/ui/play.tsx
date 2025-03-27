@@ -9,6 +9,7 @@ import type { Profile } from "@/lib/models/profiles";
 import { waitToast } from "@component/ui/toast";
 import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+import { query } from "@/lib/api/plugins/query";
 
 type Props = VariantProps<typeof buttonVariants> &
 	Omit<React.ComponentProps<"button">, "disabled"> & {
@@ -76,6 +77,7 @@ const PlayButton: React.FC<Props> = ({ profile, className, ...props }) => {
 					)
 						throw new Error("Missing launch params");
 
+					await query`UPDATE profiles SET last_played = current_timestamp WHERE id = ${profile.id}`.run();
 					await waitToast({
 						callback: launchGame({
 							auth_access_token: accessToken,

@@ -5,7 +5,6 @@
 //! The mrpack spec can be found here <https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack>
 
 use normalize_path::NormalizePath;
-use sqlx::QueryBuilder;
 use std::path::Path;
 use uuid::Uuid;
 

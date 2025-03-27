@@ -19,10 +19,10 @@ export class Profile {
 	static schema = z.object({
 		id: z.string().uuid(),
 		name: z.string(),
-		date_created: z.string().datetime(),
+		date_created: z.string(),
 		version: z.string(),
 		loader: loaderSchema,
-		last_played: z.string().datetime().optional().nullable().default(null),
+		last_played: z.string().optional().nullable().default(null),
 		icon: z.ostring().nullable().default(null),
 		is_modpack: z.ostring().nullable().default(null),
 		loader_version: z.ostring().nullable().default(null),

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import PlayButton from "@/components/ui/play";
 import { KEY_PROFILE } from "@/hooks/keys";
+import { formatRelative } from "date-fns/formatRelative";
 
 export const profileQueryOptions = (id: string) =>
 	queryOptions({
@@ -73,16 +74,17 @@ function ProfilePage() {
 						{data.loader.replace(/^./, data.loader[0].toUpperCase())}{" "}
 						{data.version}
 					</p>
+					<span className="text-xs text-muted-foreground">
+						<span className="font-bold">Last Played: </span>
+						<span>{data.last_played ? formatRelative(new Date(data.last_played), new Date()) : "Never"}</span>
+					</span>
 				</div>
 				<div className="flex justify-evenly gap-1">
 					<PlayButton
 						className="w-full"
 						profile={{
 							id: data.id,
-							state: data.state.toUpperCase() as
-								| "UNINSTALLED"
-								| "INSTALLING"
-								| "INSTALLED",
+							state: data.state
 						}}
 					/>
 				</div>
