@@ -1,4 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
+import { open } from "@tauri-apps/plugin-dialog";
+import { CopyX, FolderCog } from "lucide-react";
+import { exists } from "@tauri-apps/plugin-fs";
 import { useForm } from "react-hook-form";
 
 import {
@@ -13,8 +16,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
 	isOption,
-	updateConfig,
-	addConfig,
 	getConfig,
 	upsert,
 } from "@/lib/models/settings";
@@ -23,14 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import { open } from "@tauri-apps/plugin-dialog";
-import { exists } from "@tauri-apps/plugin-fs";
-import { CopyX, FolderCog } from "lucide-react";
+
+type State = { exitOnStart: boolean; copyOptionsFrom?: string };
 
 const OPTION_EXIT_ON_START = "option.exit_on_start";
 const OPTION_COPY_SETTINGS = "option.copy_settings_from";
-
-type State = { exitOnStart: boolean; copyOptionsFrom?: string };
 
 const selectFile = async () => {
 	const selected = await open({
@@ -44,7 +42,7 @@ const selectFile = async () => {
 		],
 	});
 
-	if (!selected) return null;
+	if (!selected) return;
 	const isFile = await exists(selected);
 	if (!isFile) throw new Error("The provided file does not exist");
 

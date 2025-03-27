@@ -50,12 +50,12 @@ CREATE TABLE IF NOT EXISTS profile_content (
     type TEXT NOT NULL
 );
 
-CREATE TRIGGER profile_insert AFTER INSERT ON profiles
+CREATE TRIGGER IF NOT EXISTS profile_insert AFTER INSERT ON profiles
 BEGIN
     INSERT INTO categories ('profile','category') VALUES (NEW.id,'40b8bf8c-5768-4c0d-82ba-8c00bb181cd8');
 END;
 
-CREATE TRIGGER profile_delete AFTER DELETE ON profiles 
+CREATE TRIGGER IF NOT EXISTS profile_delete AFTER DELETE ON profiles 
 BEGIN
     DELETE FROM categories WHERE profile = OLD.id;
     DELETE FROM download_queue WHERE profile_id = OLD.id AND (state = 'PENDING' OR state = 'POSTPONED');

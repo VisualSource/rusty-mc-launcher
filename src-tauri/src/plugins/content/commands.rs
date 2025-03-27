@@ -50,7 +50,7 @@ pub async fn delete_profile(
 pub async fn create_profile(
     db: tauri::State<'_, RwLock<minecraft_launcher_lib::database::Database>>,
     profile: String,
-    copy_from: Option<String>,
+    copy_from: Option<std::path::PathBuf>,
 ) -> Result<(), Error> {
     let root_dir = db
         .read()
@@ -66,10 +66,18 @@ pub async fn create_profile(
     }
 
     if let Some(options) = copy_from {
-        let op = root_dir.join(options).join("options.txt");
+        if !options.ends_with("options.txt") {
+            return Err(Error::Reason("Invalid options file".into()));
+        }
+        if !options.exists() || !options.is_file() {
+            return Err(Error::Reason(
+                "Provided option file is not a file or does not exist".into(),
+            ));
+        }
+
         let out = new_profile.join("options.txt");
-        if op.exists() && op.is_file() && !out.exists() {
-            tokio::fs::copy(op, out).await?;
+        if !out.exists() {
+            tokio::fs::copy(options, out).await?;
         }
     }
 

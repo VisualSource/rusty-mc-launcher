@@ -66,7 +66,7 @@ export const ProfileVersionSelector: React.FC<{
 						<FormLabel>Mod Loader</FormLabel>
 						<FormControl>
 							<Select value={field.value} onValueChange={field.onChange}>
-								<SelectTrigger>
+								<SelectTrigger className="w-full">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>

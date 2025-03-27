@@ -33,11 +33,11 @@ type Action =
 	| { type: "SET_CAPE"; id?: string }
 	| { type: "ADD_SKIN"; url: string }
 	| {
-			type: "INIT";
-			activeSkinId?: string;
-			activeCapeId?: string;
-			variant: Skin["variant"];
-	  };
+		type: "INIT";
+		activeSkinId?: string;
+		activeCapeId?: string;
+		variant: Skin["variant"];
+	};
 
 const DEFAULT_NAMES = [
 	"X-Steve",
@@ -151,7 +151,6 @@ const MinecraftSkinControl: React.FC = memo(() => {
 			await query`UPDATE accounts SET capes = ${JSON.stringify(data.capes)}, skins = ${JSON.stringify(data.skins)} WHERE homeAccountId = ${account?.homeAccountId}`.run();
 			account?.setCapes(data.capes);
 			account?.setSkins(data.skins);
-			console.log("Update content", data);
 		},
 		onError(error) {
 			console.error(error);
@@ -302,7 +301,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 				</div>
 				<aside className="w-56 border-l overflow-y-scroll space-y-4 pb-2">
 					<div className="space-y-4">
-						<h1 className="font-bold mb-0 px-2 py-1.5 bg-zinc-900">Skins</h1>
+						<h1 className="font-bold mb-0 px-2 py-1.5 bg-accent">Skins</h1>
 						<Separator />
 						<div className="flex flex-col items-center space-y-4">
 							{account?.skins.map((e) => (
@@ -363,7 +362,7 @@ const MinecraftSkinControl: React.FC = memo(() => {
 						</div>
 					</div>
 					<div className="space-y-4">
-						<h1 className="px-2 font-bold mb-0 py-1.5 bg-zinc-900">Capes</h1>
+						<h1 className="px-2 font-bold mb-0 py-1.5 bg-accent">Capes</h1>
 						<Separator />
 						<div className="flex flex-col items-center space-y-4">
 							{account?.capes.map((e) => (

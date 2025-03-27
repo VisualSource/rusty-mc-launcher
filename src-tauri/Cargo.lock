@@ -2875,7 +2875,7 @@ dependencies = [
 
 [[package]]
 name = "minecraft-launcher-lib"
-version = "0.10.2"
+version = "0.10.4"
 dependencies = [
  "async_zip",
  "futures",

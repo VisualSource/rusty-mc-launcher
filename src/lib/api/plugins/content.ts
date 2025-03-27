@@ -1,5 +1,4 @@
 import { invoke, type Channel } from "@tauri-apps/api/core";
-import { Command } from "@tauri-apps/plugin-shell";
 import type { z } from "zod";
 import {
 	getCategoriesFromProfile,
@@ -10,6 +9,7 @@ import type { Profile } from "@/lib/models/profiles";
 import { bulk, query, transaction } from "./query";
 import { queryClient } from "../queryClient";
 import { CATEGORY_KEY } from "@/hooks/keys";
+import { exists } from "@tauri-apps/plugin-fs";
 
 export type DownloadCurrentItem = {
 	display_name: string;
@@ -19,23 +19,23 @@ export type DownloadCurrentItem = {
 };
 export type DownloadEvent =
 	| {
-			event: "init";
-			data: DownloadCurrentItem;
-	  }
+		event: "init";
+		data: DownloadCurrentItem;
+	}
 	| {
-			event: "started";
-			data: {
-				max_progress: number;
-				message: string;
-			};
-	  }
+		event: "started";
+		data: {
+			max_progress: number;
+			message: string;
+		};
+	}
 	| {
-			event: "progress";
-			data: {
-				amount?: number;
-				message?: string;
-			};
-	  }
+		event: "progress";
+		data: {
+			amount?: number;
+			message?: string;
+		};
+	}
 	| { event: "finished"; data: unknown }
 	| { event: "refreshProfile" };
 
@@ -73,10 +73,21 @@ export async function uninstallContentByFilename(
 	});
 }
 
+/**
+ * 
+ * @param args 
+ * @param copy path to options.txt
+ */
 export async function createProfile(
 	args: z.infer<typeof Profile.schema>,
 	copy?: string,
 ) {
+
+	if (copy) {
+		const doesFileExist = await exists(copy);
+		if (!doesFileExist) throw new Error(`File at "${copy}" does not exist!`);
+	}
+
 	const queueId = crypto.randomUUID();
 	await invoke<void>("plugin:rmcl-content|create_profile", {
 		profile: args.id,
@@ -145,15 +156,6 @@ export async function deleteProfile(profileId: string) {
 	await invoke<void>("plugin:rmcl-content|delete_profile", {
 		profile: profileId,
 	});
-}
-
-/**
- * @deprecated use revealItemInDir from "@tauri-apps/plugin-opener";
- */
-export async function showInFolder(path: string) {
-	// TODO: add support for other systems
-	const cmd = Command.create("windows-open-file", [path]);
-	await cmd.execute();
 }
 
 export async function importFile(

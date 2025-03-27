@@ -51,6 +51,7 @@ impl From<String> for Loader {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum ProfileState {
     Installing,
     Installed,
@@ -73,17 +74,15 @@ impl From<String> for ProfileState {
 
 impl Display for ProfileState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                ProfileState::Installing => "Installing",
-                ProfileState::Installed => "Installed",
-                ProfileState::Uninstalled => "Uninstalled",
-                ProfileState::Errored => "Errored",
-                ProfileState::Unknown => "Unknown",
-            }
-        )
+        let value = match self {
+            Self::Installing => "INSTALLING",
+            Self::Installed => "INSTALLED",
+            Self::Uninstalled => "UNINSTALLED",
+            Self::Errored => "ERRORED",
+            _ => "UNKNOWN",
+        };
+
+        write!(f, "{value}")
     }
 }
 
@@ -97,6 +96,8 @@ pub struct Profile {
 
     pub version: String,
     pub loader: Loader,
+
+    pub is_modpack: Option<String>,
 
     pub last_played: Option<time::OffsetDateTime>,
     pub icon: Option<String>,

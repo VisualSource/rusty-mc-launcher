@@ -6,7 +6,6 @@ import {
 	NavigationMenuItem,
 	NavigationMenuList,
 	NavigationMenuTrigger,
-	navigationMenuTriggerStyle,
 	NavigationMenuLink,
 } from "@component/ui/navigation-menu";
 import { Separator } from "@component/ui/separator";
@@ -57,40 +56,39 @@ export const NavbarLower: React.FC = memo(() => {
 						</NavigationMenuContent>
 					</NavigationMenuItem>
 					<NavigationMenuItem>
-						<Link
-							to="/skins"
-							activeProps={{
-								className: "border-b-2 border-blue-300 text-blue-300",
-							}}
-						>
-							<NavigationMenuLink className={navigationMenuTriggerStyle()}>
+						<NavigationMenuLink asChild>
+							<Link
+								to="/skins"
+								activeProps={{
+									className: "border-b-2 border-blue-300 text-blue-300",
+								}}
+							>
 								SKINS
-							</NavigationMenuLink>
-						</Link>
+							</Link>
+						</NavigationMenuLink>
 					</NavigationMenuItem>
 					<NavigationMenuItem>
-						<Link
-							to="/workshop/search"
-							activeProps={{
-								className: "border-b-2 border-blue-300 text-blue-300",
-							}}
-						>
-							<NavigationMenuLink className={navigationMenuTriggerStyle()}>
-								WORKSHOP
-							</NavigationMenuLink>
-						</Link>
+						<NavigationMenuLink asChild>
+							<Link
+								to="/workshop/search"
+								activeProps={{
+									className: "border-b-2 border-blue-300 text-blue-300",
+								}}
+							>WORKSHOP
+
+							</Link>
+						</NavigationMenuLink>
 					</NavigationMenuItem>
 					<NavigationMenuItem>
-						<Link
-							to="/downloads"
-							activeProps={{
-								className: "border-b-2 border-blue-300 text-blue-300",
-							}}
-						>
-							<NavigationMenuLink className={navigationMenuTriggerStyle()}>
-								DOWNLOADS
-							</NavigationMenuLink>
-						</Link>
+						<NavigationMenuLink asChild>
+							<Link
+								to="/downloads"
+								activeProps={{
+									className: "border-b-2 border-blue-300 text-blue-300",
+								}}
+							>DOWNLOADS
+							</Link>
+						</NavigationMenuLink>
 					</NavigationMenuItem>
 				</NavigationMenuList>
 			</NavigationMenu>

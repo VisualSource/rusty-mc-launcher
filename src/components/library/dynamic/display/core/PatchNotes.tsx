@@ -9,6 +9,7 @@ import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
+	DrawerDescription,
 	DrawerHeader,
 	DrawerTitle,
 } from "@/components/ui/drawer";
@@ -61,9 +62,10 @@ const PatchNotesRead: React.FC<{
 	});
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerContent className="overflow-hidden max-h-screen">
+			<DrawerContent className="overflow-hidden max-h-screen pb-4">
 				<DrawerHeader>
 					<DrawerTitle>Patch Notes</DrawerTitle>
+					<DrawerDescription>Notes on Minecraft {query.data?.version}</DrawerDescription>
 					<div className="flex justify-end">
 						<DrawerClose asChild>
 							<Button variant="outline">
@@ -72,7 +74,7 @@ const PatchNotesRead: React.FC<{
 						</DrawerClose>
 					</div>
 				</DrawerHeader>
-				<div className="w-full flex justify-center overflow-y-scroll scrollbar">
+				<div className="w-full flex justify-center overflow-y-scroll scrollbar pb-4">
 					<div className="max-h-full md:max-w-3xl xl:max-w-5xl prose prose-invert">
 						{query.isError ? (
 							<div className="p-2 text-2xl h-full w-full flex justify-center items-center">

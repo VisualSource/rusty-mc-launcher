@@ -1,4 +1,5 @@
 import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,7 +33,6 @@ import {
 	copyProfile,
 	uninstallContentByFilename,
 	deleteProfile,
-	showInFolder,
 } from "@lib/api/plugins/content";
 import { ProfileVersionSelector } from "@/components/library/content/profile/ProfileVersionSelector";
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
@@ -284,7 +284,7 @@ function ProfileEdit() {
 									profileQuery.data.id,
 									"/",
 								);
-								await showInFolder(path);
+								await revealItemInDir(path);
 							}}
 							type="button"
 							variant="secondary"

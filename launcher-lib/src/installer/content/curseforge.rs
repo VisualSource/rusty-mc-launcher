@@ -5,14 +5,14 @@
 //! download urls for mods as curseforge does not provide a api for resloving mod project id's
 //! the stibility of this method is unstable as the third party api may not work in the future`
 
-use super::InstallContent;
+use super::{InstallContent, insert_bluk_profile_content};
 use crate::{
     database::RwDatabase,
     error::{Error, Result},
     events::DownloadEvent,
     installer::{
         compression,
-        utils::{self, get_file_hash, REQUEST_CLIENT},
+        utils::{self, REQUEST_CLIENT, get_file_hash},
     },
     models::{profile::Loader, setting::Setting},
 };
@@ -216,7 +216,9 @@ pub async fn install_curseforge_modpack(
 
     {
         let wdb = db.write().await;
+        let mut data = Vec::new();
         for file in downloads {
+            let profile_id = config.profile.clone();
             match file {
                 Ok(content) => {
                     let content_type = match content.2.as_str() {
@@ -224,21 +226,29 @@ pub async fn install_curseforge_modpack(
                         "resourcepacks" => "Resourcepack",
                         "shaderpacks" => "Shader",
                         _ => "Unknown",
-                    };
+                    }
+                    .to_string();
 
-                    let profile_id = config.profile.clone();
-                    sqlx::query!("INSERT INTO profile_content (id,sha1,profile,file_name,type) VALUES (?,?,?,?,?)","",content.1,profile_id,content.0, content_type).execute(&wdb.0).await?;
+                    data.push((
+                        String::new(),
+                        content.1,
+                        profile_id,
+                        content.0,
+                        content_type,
+                    ));
                 }
                 Err(err) => return Err(err),
             }
         }
+
+        insert_bluk_profile_content(data, &wdb).await?;
     }
 
     compression::extract_dir(
         &mut archive,
         &pack.overrides,
         &profile_direcotry,
-        // TODO: use pack.overrides prop to replace the file path rather then have it had coded
+        // TODO: use pack.overrides prop to replace the file path rather then have it hard coded
         Some(|file| file.replace("overrides", "")),
     )
     .await?;

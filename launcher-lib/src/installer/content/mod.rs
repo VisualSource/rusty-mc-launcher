@@ -4,7 +4,7 @@ mod mrpack;
 use std::{path::PathBuf, str::FromStr};
 
 use crate::{
-    database::RwDatabase,
+    database::{Database, RwDatabase},
     error::{Error, Result},
     events::DownloadEvent,
     installer::utils,
@@ -14,6 +14,7 @@ use crate::{
 use futures::StreamExt;
 pub use mrpack::install_mrpack;
 use serde::Deserialize;
+use sqlx::QueryBuilder;
 use tokio::fs;
 
 #[derive(Debug, Deserialize)]
@@ -74,6 +75,37 @@ async fn download_files(output_direcotry: &std::path::Path, files: Vec<InstallFi
         });
         return Err(Error::Generic("Failed to download libraries".to_string()));
     }
+
+    Ok(())
+}
+
+const BIND_LIMIT: usize = 65535 / 5;
+pub async fn insert_bluk_profile_content(
+    data: Vec<(String, String, String, String, String)>,
+    db: &Database,
+) -> Result<()> {
+    let mut query_builder =
+        QueryBuilder::new("INSERT INTO profile_content (id,sha1,profile,file_name,type) ");
+
+    let len = data.len();
+    if len > BIND_LIMIT {
+        return Err(Error::Generic(format!(
+            "count exceeded the bind limt. {} > {}",
+            len, BIND_LIMIT
+        )));
+    }
+    let iter_data = data.iter();
+
+    query_builder.push_values(iter_data.take(BIND_LIMIT), |mut b, con| {
+        b.push_bind(con.0.clone())
+            .push_bind(con.1.clone())
+            .push_bind(con.2.clone())
+            .push_bind(con.3.clone())
+            .push_bind(con.4.clone());
+    });
+
+    let query = query_builder.build();
+    query.execute(&db.0).await?;
 
     Ok(())
 }
@@ -267,8 +299,16 @@ pub async fn install_content(
                 })
                 .map_err(|err| Error::Generic(err.to_string()))?;
 
-            if let Err(err) =
-                mrpack::install_mrpack(db, on_event, &file_path, icon, config.profile, &root).await
+            if let Err(err) = mrpack::install_mrpack(
+                db,
+                on_event,
+                &file_path,
+                icon,
+                config.profile,
+                &root,
+                Some(file.id.clone()),
+            )
+            .await
             {
                 if !from_path {
                     tokio::fs::remove_file(&file_path).await?;

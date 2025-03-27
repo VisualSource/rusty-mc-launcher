@@ -5,6 +5,7 @@
 //! The mrpack spec can be found here <https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack>
 
 use normalize_path::NormalizePath;
+use sqlx::QueryBuilder;
 use std::path::Path;
 use uuid::Uuid;
 
@@ -21,6 +22,8 @@ use crate::{
 use futures::StreamExt;
 use serde::Deserialize;
 use tokio::fs::{self, File};
+
+use super::insert_bluk_profile_content;
 
 const WHITELISTED_DOMAINS: [&str; 4] = [
     "https://cdn.modrinth.com",
@@ -78,6 +81,7 @@ pub async fn install_mrpack(
     icon: Option<String>,
     profile_id: String,
     runtime_directory: &Path,
+    pack_id: Option<String>,
 ) -> Result<()> {
     let mut archive = compression::open_archive(File::open(&mrpack_path).await?).await?;
     let pack = compression::parse_extract::<MrPack>(&mut archive, "modrinth.index.json").await?;
@@ -248,7 +252,7 @@ pub async fn install_mrpack(
 
     let loader = modloader.to_string().to_lowercase();
     sqlx::query!(
-        "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,?,current_timestamp,?,?,?,?,?);",
+        "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state','is_modpack') VALUES (?,?,?,current_timestamp,?,?,?,?,?,?);",
             profile_id,
             pack.name,
             icon,
@@ -256,7 +260,8 @@ pub async fn install_mrpack(
             loader,
             loader_version,
             "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
-            "INSTALLED"
+            "INSTALLED",
+            pack_id
         )
         .execute(&wdb.0)
         .await?;
@@ -268,6 +273,7 @@ pub async fn install_mrpack(
         })
         .map_err(|err| Error::Generic(err.to_string()))?;
 
+    let mut data = Vec::new();
     for file in data_files {
         let profile = profile_id.clone();
         let path = Path::new(&file.path);
@@ -281,29 +287,26 @@ pub async fn install_mrpack(
         let parent = path
             .parent()
             .ok_or_else(|| Error::Generic("Failed to get path parent".to_string()))?
-            .to_string_lossy()
-            .to_string();
-        let content_type = if parent.starts_with("mods") {
-            "Mod"
-        } else if parent.starts_with("resourcepacks") {
-            "Resourcepack"
-        } else if parent.starts_with("shaderpacks") {
-            "Shader"
-        } else {
-            "Unknown"
-        };
+            .to_string_lossy();
 
-        sqlx::query!(
-            "INSERT INTO profile_content ('id','sha1','profile','file_name','type') VALUES (?,?,?,?,?);",
-            "",
+        let content_type = match parent {
+            e if e.starts_with("mods") => "Mod",
+            e if e.starts_with("resourcepacks") => "Resourcepack",
+            e if e.starts_with("shaderpacks") => "Shader",
+            _ => "Unknown",
+        }
+        .to_string();
+
+        data.push((
+            String::new(),
             file.hashes.sha1,
             profile,
             file_name,
             content_type,
-        )
-        .execute(&wdb.0)
-        .await?;
+        ));
     }
+
+    insert_bluk_profile_content(data, &wdb).await?;
 
     on_event
         .send(crate::events::DownloadEvent::Progress {

@@ -6,7 +6,7 @@ import { join } from "@tauri-apps/api/path";
 import { FileImage } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { showInFolder } from "@lib/api/plugins/content";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { getConfig } from "@/lib/models/settings";
 import { Loading } from "@/components/Loading";
 
@@ -46,14 +46,12 @@ function Screenshots() {
 			{query.data.length >= 1 ? (
 				query.data.map((e) => (
 					<Avatar
-						onClick={() =>
-							showInFolder(
-								decodeURIComponent(
-									e
-										.replace("asset://", "")
-										.replace("https://asset.localhost/", ""),
-								),
-							)
+						onClick={() => revealItemInDir(decodeURIComponent(
+							e
+								.replace("asset://", "")
+								.replace("https://asset.localhost/", ""),
+						))
+
 						}
 						className="my-2 aspect-square h-36 rounded-lg w-full hover:scale-105 transition-all"
 						key={e}
