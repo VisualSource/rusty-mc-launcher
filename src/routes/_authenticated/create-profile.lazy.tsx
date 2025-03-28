@@ -1,4 +1,5 @@
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
+import { error } from "@tauri-apps/plugin-log";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Book } from "lucide-react";
@@ -21,11 +22,13 @@ import { TypographyH3 } from "@/components/ui/typography";
 import { ScrollArea } from "@component/ui/scroll-area";
 import { JVMArgForm } from "@/components/JVMArgForm";
 import { queryClient } from "@/lib/api/queryClient";
-import { createToast } from "@component/ui/toast";
+
 import { Button } from "@/components/ui/button";
 import { Profile } from "@lib/models/profiles";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_KEY } from "@/hooks/keys";
+import { toastError } from "@/lib/toast";
+
 
 export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 	component: CreateProfile,
@@ -73,13 +76,13 @@ function CreateProfile() {
 					id: ev.id,
 				},
 			});
-		} catch (error) {
-			createToast({
-				error,
-				variant: "error",
+		} catch (err) {
+			toastError({
+				error: (err as Error),
 				title: "Failed to create profile",
 			});
-			console.error(error);
+			error((err as Error).message, { file: "/create-profile.lazy", line: 83 });
+			console.error(err);
 		}
 	};
 

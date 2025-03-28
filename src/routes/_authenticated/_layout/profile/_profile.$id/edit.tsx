@@ -42,13 +42,13 @@ import { getCategoriesFromProfile } from "@/lib/models/categories";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { query, sqlValue } from "@lib/api/plugins/query";
+import { toastError, toastSuccess } from "@/lib/toast";
 import { QueueItemState } from "@/lib/QueueItemState";
 import { profileQueryOptions } from "../_profile.$id";
 import { JVMArgForm } from "@/components/JVMArgForm";
 import { queryClient } from "@/lib/api/queryClient";
 import { ContentItem } from "@/lib/models/content";
 import { getConfig } from "@/lib/models/settings";
-import { createToast } from "@component/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Profile } from "@/lib/models/profiles";
 import { Loading } from "@/components/Loading";
@@ -305,7 +305,8 @@ function ProfileEdit() {
 								try {
 									const id = crypto.randomUUID();
 									await copyProfile(profileQuery.data, id);
-									createToast({ variant: "success", title: "Copyed profile" });
+
+									toastSuccess({ title: "Copyed Profile" });
 									navigate({
 										to: "/profile/$id",
 										params: {
@@ -314,11 +315,7 @@ function ProfileEdit() {
 									});
 								} catch (error) {
 									console.error(error);
-									createToast({
-										variant: "error",
-										title: "Failed to copy",
-										error,
-									});
+									toastError({ title: "Copy Failed", description: "Failed to copy profile", error: error as Error });
 								}
 							}}
 							type="button"

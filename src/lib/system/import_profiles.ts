@@ -1,11 +1,13 @@
 import { BaseDirectory, readTextFile } from "@tauri-apps/plugin-fs";
 import { dataDir, join } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
+import { error } from "@tauri-apps/plugin-log";
+
+import { toastError, toastLoading, toastUpdateError, toastUpdateSuccess } from "../toast";
 import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
 import { bulk, transaction } from "../api/plugins/query";
 import { ContentType } from "../models/download_queue";
-import { createToast } from "@/components/ui/toast";
 import { queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import type { Profile } from "../models/profiles";
@@ -48,10 +50,11 @@ const import_profiles = async () => {
 	});
 
 	if (!result) {
-		createToast({ variant: "error", title: "Failed to import profiles" });
+		toastError({ title: "Import failed", description: "Failed to import profiles" });
 		return;
 	}
 
+	const toastId = toastLoading({ title: "Importing..." });
 	try {
 		const content = await readTextFile(result, {
 			baseDir: BaseDirectory.AppData,
@@ -84,10 +87,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-						version.replace(
-							"latest-",
-							"",
-						) as keyof (typeof latest_data)["latest"]
+					version.replace(
+						"latest-",
+						"",
+					) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -104,6 +107,7 @@ const import_profiles = async () => {
 				last_played: profile.lastUsed ?? new Date().toISOString(),
 				state: "UNINSTALLED",
 				version,
+				is_modpack: null,
 				loader_version,
 				date_created: profile?.created ?? new Date().toISOString(),
 				resolution_height: null,
@@ -153,10 +157,15 @@ const import_profiles = async () => {
 			queryKey: [KEY_DOWNLOAD_QUEUE, QueueItemState.PENDING],
 		});
 
-		createToast({ variant: "success", title: "Imported Profiles" });
-	} catch (error) {
-		console.error(error);
-		createToast({ variant: "error", title: "Import profile error!", error });
+		toastUpdateSuccess(toastId, {
+			title: "Profiles Imported"
+		})
+	} catch (err) {
+		error((err as Error).message);
+		toastUpdateError(toastId, {
+			title: "Imported Failed",
+			error: err as Error
+		});
 	}
 };
 

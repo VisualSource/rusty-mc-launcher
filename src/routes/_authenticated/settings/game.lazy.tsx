@@ -19,11 +19,11 @@ import {
 	getConfig,
 	upsert,
 } from "@/lib/models/settings";
-import { createToast } from "@component/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
+import { toastSuccess } from "@/lib/toast";
 
 type State = { exitOnStart: boolean; copyOptionsFrom?: string };
 
@@ -74,7 +74,7 @@ function GameSettings() {
 		await upsert(OPTION_EXIT_ON_START, state.exitOnStart ? "TRUE" : "FALSE");
 		await upsert(OPTION_COPY_SETTINGS, state.copyOptionsFrom ?? "");
 
-		createToast({ variant: "success", title: "Settings saved" });
+		toastSuccess({ title: "Settings Saved" });
 	};
 
 	return (

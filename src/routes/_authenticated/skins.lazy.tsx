@@ -1,24 +1,25 @@
 import { ErrorComponent, createLazyFileRoute } from "@tanstack/react-router";
 import { memo, useEffect, useReducer, useRef } from "react";
-import { downloadDir } from "@tauri-apps/api/path";
 import { SkinViewer, IdleAnimation } from "skinview3d";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMutation } from "@tanstack/react-query";
+import { downloadDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
+import { error } from "@tauri-apps/plugin-log";
 import { Plus } from "lucide-react";
 
-import type { Skin } from "@/lib/api/minecraftAccount";
+import { setCape, uploadSkin } from "@/lib/api/minecraft/skinUpload";
+import type { AuthenticationResultExtended } from "@/lib/auth/msal";
 import { Separator } from "@/components/ui/separator";
-import { waitToast } from "@component/ui/toast";
+import type { Skin } from "@/lib/models/account";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { query } from "@/lib/api/plugins/query";
 import { Loading } from "@/components/Loading";
+import { toastAwaitProimse } from "@/lib/toast";
 import { Label } from "@/components/ui/label";
 import useUser from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
-import type { AuthenticationResultExtended } from "@/lib/auth/msal";
-import { query } from "@/lib/api/plugins/query";
-import { setCape, uploadSkin } from "@/lib/api/minecraft/skinUpload";
 
 type Content = {
 	isReady: boolean;
@@ -152,8 +153,9 @@ const MinecraftSkinControl: React.FC = memo(() => {
 			account?.setCapes(data.capes);
 			account?.setSkins(data.skins);
 		},
-		onError(error) {
-			console.error(error);
+		onError(err) {
+			error(err.message, { file: "/skins.lazy" });
+			console.error(err);
 		},
 		mutationFn: async (action: {
 			skinId?: string;
@@ -282,16 +284,11 @@ const MinecraftSkinControl: React.FC = memo(() => {
 						<Button
 							disabled={mutation.isPending}
 							onClick={() =>
-								waitToast({
-									callback: mutation.mutateAsync({
-										capeId: content.activeCapeId,
-										skinId: content.activeSkinId,
-										variant: content.variant,
-									}),
-									pendingTitle: "Updating",
-									errorTitle: "Failed to update",
-									successTitle: "Updated",
-								})
+								toastAwaitProimse(mutation.mutateAsync({
+									capeId: content.activeCapeId,
+									skinId: content.activeSkinId,
+									variant: content.variant,
+								}), { loading: "Updating", error: "Failed to update", success: { title: "Updated" } })
 							}
 							size="sm"
 						>

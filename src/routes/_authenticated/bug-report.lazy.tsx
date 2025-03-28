@@ -11,7 +11,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { createToast, updateToast } from "@component/ui/toast";
+import { toastLoading, toastUpdateError, toastUpdateSuccess } from "@/lib/toast";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -33,10 +33,8 @@ function BugReport() {
 	const form = useForm<FormState>();
 
 	const onSubmit = async (state: FormState) => {
-		const toastId = createToast({
+		const toastId = toastLoading({
 			title: "Submitting report",
-			closeButton: false,
-			opts: { isLoading: true },
 		});
 
 		try {
@@ -61,26 +59,18 @@ function BugReport() {
 
 			const data = (await response.json()) as { html_url: string };
 
-			updateToast(toastId, {
-				variant: "success",
+			toastUpdateSuccess(toastId, {
 				title: "Report submited",
 				description: data.html_url,
-				opts: {
-					isLoading: false,
-					autoClose: 5000,
-				},
 			});
 			navigate({ to: "/" });
 		} catch (err) {
-			error((err as Error).message);
-			updateToast(toastId, {
-				error: err,
-				variant: "error",
-				title: "Failed to submit bug report",
-				opts: {
-					isLoading: false,
-					autoClose: 5000,
-				},
+			error((err as Error).message, { file: "/bug-report.lazy" });
+
+			toastUpdateError(toastId, {
+				error: (err as Error),
+				title: "Submition Failed",
+				description: "Failed to submit report"
 			});
 		}
 	};

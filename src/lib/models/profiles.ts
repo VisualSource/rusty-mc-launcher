@@ -47,7 +47,7 @@ export class Profile {
 	public java_args: string | null;
 	public resolution_width: string | null;
 	public resolution_height: string | null;
-	public isModpack: string | null;
+	public is_modpack: string | null;
 	public state: ProfileState = "UNINSTALLED";
 	constructor(args: z.infer<typeof Profile.schema>) {
 		this.id = args.id;
@@ -62,6 +62,6 @@ export class Profile {
 		this.resolution_width = args.resolution_width;
 		this.resolution_height = args.resolution_height;
 		this.state = args.state;
-		this.isModpack = args.is_modpack;
+		this.is_modpack = args.is_modpack;
 	}
 }

@@ -1,4 +1,5 @@
 import { coerce, minSatisfying } from "semver";
+import { error } from "@tauri-apps/plugin-log";
 
 import type {
 	Project,
@@ -15,8 +16,8 @@ import {
 	uninstallContentByFilename,
 	uninstallContentById,
 } from "@lib/api/plugins/content";
+import { toastLoading, toastUpdateError, toastUpdateInfo, toastUpdateSuccess } from "../toast";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
-import { createToast, updateToast } from "@component/ui/toast";
 import { ContentType } from "@lib/models/download_queue";
 import { askFor } from "@/components/dialog/AskDialog";
 import { QueueItem } from "../models/download_queue";
@@ -254,11 +255,10 @@ export async function install_known(
 }
 
 export async function install(data: Project) {
-	const id = createToast({
+	const id = toastLoading({
 		title: "Preparing install...",
-		closeButton: false,
-		opts: { isLoading: true },
 	});
+
 	try {
 		switch (data.project_type) {
 			case "resourcepack":
@@ -268,13 +268,8 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					updateToast(id, {
-						variant: "info",
+					toastUpdateInfo(id, {
 						title: "Install canceled",
-						opts: {
-							isLoading: false,
-							autoClose: 5000,
-						},
 					});
 					return;
 				}
@@ -339,13 +334,8 @@ export async function install(data: Project) {
 					loaders: data.loaders,
 				});
 				if (!profile) {
-					updateToast(id, {
-						variant: "info",
+					toastUpdateInfo(id, {
 						title: "Install canceled",
-						opts: {
-							isLoading: false,
-							autoClose: 5000,
-						},
 					});
 					return;
 				}
@@ -464,13 +454,8 @@ export async function install(data: Project) {
 				});
 
 				if (!gameVersions.length) {
-					updateToast(id, {
-						variant: "info",
+					toastUpdateInfo(id, {
 						title: "Install canceled",
-						opts: {
-							isLoading: false,
-							autoClose: 5000,
-						},
 					});
 					return;
 				}
@@ -483,13 +468,8 @@ export async function install(data: Project) {
 					options: data.loaders?.map((e) => ({ id: e, name: e })) ?? [],
 				});
 				if (!loaders.length) {
-					updateToast(id, {
-						variant: "info",
+					toastUpdateInfo(id, {
 						title: "Install canceled",
-						opts: {
-							isLoading: false,
-							autoClose: 5000,
-						},
 					});
 					return;
 				}
@@ -547,24 +527,15 @@ export async function install(data: Project) {
 				break;
 		}
 
-		updateToast(id, {
-			variant: "success",
+		toastUpdateSuccess(id, {
 			title: "Staring Install",
-			opts: {
-				isLoading: false,
-				autoClose: 5000,
-			},
 		});
-	} catch (error) {
-		console.error(error);
-		updateToast(id, {
-			variant: "success",
-			error,
+	} catch (err) {
+		console.error(err);
+		error((err as Error).message, { file: "lib/install", line: 537 });
+		toastUpdateError(id, {
+			error: (err as Error),
 			title: "Failed to install content",
-			opts: {
-				isLoading: false,
-				autoClose: 5000,
-			},
 		});
 	}
 }

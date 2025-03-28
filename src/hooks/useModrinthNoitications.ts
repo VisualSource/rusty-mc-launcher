@@ -1,7 +1,10 @@
+import type { NotificationCenterItem } from "react-toastify/addons/use-notification-center";
 import { useQuery } from "@tanstack/react-query";
+import type { Id } from "react-toastify";
 import { useCallback } from "react";
 
 import { getProjects, getVersions } from "@/lib/api/modrinth/sdk.gen";
+import type { ToastData } from "@/components/ui/toast";
 import { queryClient } from "@/lib/api/queryClient";
 import { useModrinth } from "./useModrinth";
 
@@ -71,7 +74,7 @@ export const useModrinthNotifications = () => {
 					cause: versionsResponse,
 				});
 
-			const info = [];
+			const info: NotificationCenterItem<ToastData>[] = [];
 
 			for (const notification of notifications) {
 				const links = notification.link.split("/");
@@ -97,7 +100,15 @@ export const useModrinthNotifications = () => {
 					}
 				}
 
-				info.push(notification);
+				info.push({
+					read: notification.read,
+					createdAt: new Date(notification.created).getTime(),
+					id: notification.id,
+					data: {
+						title: notification.title,
+						description: notification.text,
+					}
+				});
 			}
 
 			return {
@@ -113,7 +124,7 @@ export const useModrinthNotifications = () => {
 		if (!n) return;
 
 		modrinth
-			.readNotifications(n.map((e) => e.id))
+			.readNotifications(n.map((e) => e.id as string))
 			.then(() =>
 				queryClient.invalidateQueries({ queryKey: [NOTIFICATION_KEY] }),
 			);
@@ -124,18 +135,18 @@ export const useModrinthNotifications = () => {
 		const n = data?.notifcations;
 		if (!n?.length) return;
 		modrinth
-			.deleteNotifications(n.map((e) => e.id))
+			.deleteNotifications(n.map((e) => e.id as string))
 			.then(() =>
-				queryClient.invalidateQueries({ queryKey: ["MODRINTH_NOTIFICATIONS"] }),
+				queryClient.invalidateQueries({ queryKey: [NOTIFICATION_KEY] }),
 			);
 	}, [modrinthUser, data?.notifcations, modrinth.deleteNotifications]);
 
 	const remove = useCallback(
-		(id: string) => {
+		(id: Id) => {
 			if (!modrinthUser) return;
-			modrinth.deleteNotification(id).then(() =>
+			modrinth.deleteNotification(id as string).then(() =>
 				queryClient.invalidateQueries({
-					queryKey: ["MODRINTH_NOTIFICATIONS"],
+					queryKey: [NOTIFICATION_KEY],
 				}),
 			);
 		},

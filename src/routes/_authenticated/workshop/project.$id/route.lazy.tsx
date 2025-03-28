@@ -32,13 +32,13 @@ import {
 import { TypographyH1, TypographyH4 } from "@/components/ui/typography";
 import { projectQueryOptions } from "@/lib/query/modrinthProjectQuery";
 import SelectProfile from "@/components/dialog/ProfileSelection";
-import { createToast, updateToast } from "@component/ui/toast";
 import { Gallery } from "@/components/workshop/Gallery";
 import { Team } from "@/components/workshop/Team";
 import { Button } from "@/components/ui/button";
 import { install } from "@/lib/system/install";
 import { Loading } from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
+import { toastLoading, toastUpdateError, toastUpdateSuccess } from "@/lib/toast";
 
 export const Route = createLazyFileRoute(
 	"/_authenticated/workshop/project/$id",
@@ -77,11 +77,11 @@ function Project() {
 				</div>
 
 				{project?.source_url ||
-				project.gallery?.length ||
-				project?.issues_url ||
-				project?.wiki_url ||
-				project?.discord_url ||
-				project?.donation_urls?.length ? (
+					project.gallery?.length ||
+					project?.issues_url ||
+					project?.wiki_url ||
+					project?.discord_url ||
+					project?.donation_urls?.length ? (
 					<section className="rounded-lg bg-blue-900/10 p-2 shadow-2xl">
 						{project.gallery?.length ? (
 							<Gallery gallery={project.gallery} />
@@ -138,22 +138,22 @@ function Project() {
 							) : null}
 							{project.donation_urls
 								? project.donation_urls.map((value) => (
-										<a
-											title={value.url}
-											href={value.url}
-											target="_blank"
-											key={value.id}
-											className="rounded-md hover:bg-zinc-600/50 bg-zinc-600 px-2 py-1 text-sm font-bold inline-flex items-center gap-1"
-											rel="noopener noreferrer"
-										>
-											<DollarSign className="h-5 w-5" />
-											{value.platform
+									<a
+										title={value.url}
+										href={value.url}
+										target="_blank"
+										key={value.id}
+										className="rounded-md hover:bg-zinc-600/50 bg-zinc-600 px-2 py-1 text-sm font-bold inline-flex items-center gap-1"
+										rel="noopener noreferrer"
+									>
+										<DollarSign className="h-5 w-5" />
+										{value.platform
+											? "Donate"
+											: value.platform === "Other"
 												? "Donate"
-												: value.platform === "Other"
-													? "Donate"
-													: value.platform}
-										</a>
-									))
+												: value.platform}
+									</a>
+								))
 								: null}
 						</div>
 					</section>
@@ -168,10 +168,8 @@ function Project() {
 								<Button
 									size="sm"
 									onClick={async () => {
-										const toastId = createToast({
-											closeButton: false,
+										const toastId = toastLoading({
 											title: "Updating",
-											opts: { isLoading: true },
 										});
 										try {
 											const state =
@@ -183,26 +181,17 @@ function Project() {
 												await modrinth.followProject(project.id);
 											}
 
-											updateToast(toastId, {
-												variant: "success",
+											toastUpdateSuccess(toastId, {
 												title: state
 													? `Unfollowed project: ${project.title}`
 													: `Followed project: ${project.title}`,
-												opts: {
-													isLoading: false,
-													autoClose: 5000,
-												},
 											});
 										} catch (error) {
 											console.error(error);
-											updateToast(toastId, {
-												error,
-												variant: "error",
+
+											toastUpdateError(toastId, {
 												title: "Failed to update project follow",
-												opts: {
-													isLoading: false,
-													autoClose: 5000,
-												},
+												error: error as Error
 											});
 										}
 									}}
@@ -210,7 +199,7 @@ function Project() {
 									variant="secondary"
 								>
 									{isModrinthAuthed &&
-									follows.data?.findIndex((e) => e.id === project.id) !== -1 ? (
+										follows.data?.findIndex((e) => e.id === project.id) !== -1 ? (
 										<>
 											<HeartOff className="mr-2 h-5 w-5" /> Unfollow
 										</>

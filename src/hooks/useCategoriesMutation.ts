@@ -1,14 +1,23 @@
 import { fromZodError } from "zod-validation-error";
 import { useMutation } from "@tanstack/react-query";
+import { error } from "@tauri-apps/plugin-log";
 import { z } from "zod";
 
 import { query, transaction } from "@lib/api/plugins/query";
-import { createToast } from "@component/ui/toast";
 import { queryClient } from "@/lib/api/queryClient";
+import { toastError } from "@/lib/toast";
 import { CATEGORIES_KEY } from "./keys";
 
 export const useCategoriesMutation = () => {
 	return useMutation({
+		onError(result) {
+			error(result.message, {
+				file: "useCategories", keyValues: {
+					name: result.name,
+					stack: result.stack,
+				}
+			});
+		},
 		mutationFn: async (payload: {
 			type: "POST" | "PATCH" | "DELETE";
 			data: Record<string, unknown>;
@@ -25,13 +34,13 @@ export const useCategoriesMutation = () => {
 						.object({ name: z.string(), id: z.string() })
 						.safeParse(payload.data);
 					if (content.error) {
-						const message = fromZodError(content.error);
-						createToast({
-							variant: "error",
-							title: "Failed to delete collection!",
-							error: message,
+						const error = fromZodError(content.error);
+						toastError({
+							title: "Update Failed",
+							description: "Failed to update collection!",
+							error: error.message
 						});
-						throw message;
+						throw error;
 					}
 
 					await query`UPDATE settings SET value = ${content.data.name} WHERE key = ${`category.${content.data.id}`};`.run();
@@ -41,15 +50,15 @@ export const useCategoriesMutation = () => {
 				case "DELETE": {
 					const id = z.string().safeParse(payload.data.id);
 					if (id.error) {
-						const message = fromZodError(id.error);
+						const error = fromZodError(id.error);
 
-						createToast({
-							variant: "error",
-							title: "Failed to delete collection!",
-							error: message,
+						toastError({
+							title: "Deletion Failed",
+							description: "Failed to delete collection!",
+							error: error.message
 						});
 
-						throw message;
+						throw error;
 					}
 
 					await transaction((query) => {

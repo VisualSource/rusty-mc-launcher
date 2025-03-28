@@ -17,11 +17,11 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { toastError, toastLoading, toastUpdateError, toastUpdateInfo } from "@/lib/toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
 import { uninstallContentByFilename } from "@lib/api/plugins/content";
 import { getProjectVersions } from "@lib/api/modrinth/sdk.gen";
-import { createToast, updateToast } from "@component/ui/toast";
 import type { ContentType } from "@lib/models/download_queue";
 import type { Project } from "@/lib/api/modrinth/types.gen";
 import type { ContentItem } from "@/lib/models/content";
@@ -44,10 +44,10 @@ async function uninstall(
 		});
 	} catch (error) {
 		console.error(error);
-		createToast({
+		toastError({
 			title: "Failed to uninstall content",
-			description: (error as Error).message,
-			variant: "error",
+			error: error as Error,
+			description: (error as Error).message
 		});
 	}
 }
@@ -58,10 +58,8 @@ const checkForUpdate = async (
 	item: ContentItem,
 ) => {
 	if (!project) return;
-	const toastId = createToast({
-		title: "Checking for update.",
-		closeButton: false,
-		opts: { isLoading: true },
+	const toastId = toastLoading({
+		title: "Checking for update."
 	});
 	try {
 		const { data, error, response } = await getProjectVersions({
@@ -96,13 +94,8 @@ const checkForUpdate = async (
 			);
 
 			if (doUpdate) {
-				updateToast(toastId, {
+				toastUpdateInfo(toastId, {
 					title: "Installing new version",
-					variant: "info",
-					opts: {
-						isLoading: false,
-						autoClose: 5000,
-					},
 				});
 				await install_known(
 					version,
@@ -117,25 +110,17 @@ const checkForUpdate = async (
 			return;
 		}
 
-		updateToast(toastId, {
+
+		toastUpdateInfo(toastId, {
 			title: "Updated to latest version.",
 			description: `Lastest version for ${project.title} installed.`,
-			variant: "info",
-			opts: {
-				isLoading: false,
-				autoClose: 5000,
-			},
 		});
 	} catch (error) {
 		console.error(error);
-		updateToast(toastId, {
+		toastUpdateError(toastId, {
 			title: "Failed to update content",
 			description: (error as Error).message,
-			variant: "error",
-			opts: {
-				isLoading: false,
-				autoClose: 5000,
-			},
+			error: error as Error
 		});
 	}
 };

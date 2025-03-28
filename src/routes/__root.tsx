@@ -53,8 +53,11 @@ const Index: React.FC = () => {
 			</main>
 			<Footer />
 			<ToastContainer
+				autoClose={5000}
 				stacked
-				pauseOnFocusLoss={false}
+				draggable
+				pauseOnHover
+				closeOnClick
 				position="bottom-right"
 				theme="dark"
 			/>
