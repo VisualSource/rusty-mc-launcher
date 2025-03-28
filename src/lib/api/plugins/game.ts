@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { query, sqlValue } from "./query";
 
 export type LaunchConfig = {
 	auth_player_name: string;
@@ -9,6 +10,7 @@ export type LaunchConfig = {
 };
 export async function launchGame(config: LaunchConfig) {
 	try {
+		await query`UPDATE profiles SET last_played = '${sqlValue(new Date().toISOString())}' WHERE id = ${config.profile_id}`.run();
 		await invoke<void>("plugin:rmcl-game|launch_game", {
 			config,
 		});
