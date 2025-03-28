@@ -10,9 +10,10 @@ const MANIFEST_URL =
 	"https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
 //const MINECRAFT_1_12_RELEASE = new Date("2017-06-02T13:50:27+00:00");
 
-export const useMinecraftVersions = (type: ReleaseType) => {
+export const useMinecraftVersions = (type: ReleaseType, enabled?: boolean) => {
 	return useQuery({
 		queryKey: ["minecraft", "versions", type],
+		enabled,
 		queryFn: async (args) => {
 			const select = args.queryKey.at(2);
 			const resposne = await fetch(MANIFEST_URL);

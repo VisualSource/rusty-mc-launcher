@@ -61,7 +61,7 @@ export class QueueItem {
 			metadata: Record<string, unknown>;
 		},
 	) {
-		return query`INSERT INTO download_queue VALUES (${args.id},${args.display ? 0 : 1},${args.priority},${args.display_name},${args.icon},${args.profile_id},${new Date().toISOString()},${args.content_type},${JSON.stringify(args.metadata)},${args.state});`.run();
+		return query`INSERT INTO download_queue VALUES (${args.id},${args.display ? 1 : 0},${args.priority},${args.display_name},${args.icon},${args.profile_id},${new Date().toISOString()},${args.content_type},${JSON.stringify(args.metadata)},${args.state});`.run();
 	}
 	static fromQuery(args: QueryResult) {
 		const data = QueueItem.schema.parse(args);

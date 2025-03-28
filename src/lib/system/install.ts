@@ -528,7 +528,8 @@ export async function install(data: Project) {
 		}
 
 		toastUpdateSuccess(id, {
-			title: "Staring Install",
+			title: "Install Started",
+			description: `Starting installing content for ${data.title}`
 		});
 	} catch (err) {
 		console.error(err);

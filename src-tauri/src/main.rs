@@ -25,7 +25,6 @@ fn main() {
             };
 
             let logger = tauri_plugin_log::Builder::new()
-                .clear_targets()
                 .level(level)
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::Stdout,

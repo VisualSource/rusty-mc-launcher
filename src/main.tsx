@@ -1,4 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
+import { listen } from "@tauri-apps/api/event";
 import { RouterProvider } from "@tanstack/react-router";
 import { MsalProvider } from "@azure/msal-react";
 import { createRoot } from "react-dom/client";
@@ -14,11 +15,22 @@ import { getPCA } from "@auth/msal";
 import { router } from "./router";
 import "./index.css";
 import "react-lazy-load-image-component/src/effects/blur.css";
+import { toastError } from "./lib/toast";
 
 if (import.meta.env.PROD) checkForAppUpdate().catch(logCatchError);
 
 const msa = getPCA();
 const mca = new ModrinthClientApplication();
+listen<string>("rmcl-content-install-failed", (ev) => {
+	const payload = ev.payload;
+
+	toastError({
+		title: "Install failed",
+		description: "A item in the install queue failed",
+		error: payload
+	});
+}).catch(e => console.error(e));
+
 // biome-ignore lint/style/noNonNullAssertion: The dom element with id "root" shall be there.
 const root = createRoot(document.getElementById("root")!);
 root.render(

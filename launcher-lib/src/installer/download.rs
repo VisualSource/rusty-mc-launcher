@@ -2,13 +2,14 @@ use super::{compression, utils};
 use crate::error::{Error, Result};
 use crate::events::DownloadEvent;
 use crate::java::check_java;
-use crate::manifest::{self, asset_index::AssetIndex, Downloads, Library};
+use crate::manifest::{self, Downloads, Library, asset_index::AssetIndex};
 use futures::StreamExt;
 use log::{info, warn};
 
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::path::PathBuf;
+use tokio::fs::read_dir;
 use tokio::{fs, io::AsyncWriteExt};
 
 const JAVA_DOWNLOAD_URL: &str = "https://api.azul.com/metadata/v1/zulu/packages";
@@ -29,10 +30,11 @@ pub async fn download_java(
 
     let temp = std::env::temp_dir();
 
-    let url = &format!("{}?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",
+    let url = &format!(
+        "{}?arch={}&java_version={}&os={}&archive_type=zip&javafx_bundled=false&java_package_type=jre&page_size=1",
         JAVA_DOWNLOAD_URL,
-        std::env::consts::ARCH, 
-        java, 
+        std::env::consts::ARCH,
+        java,
         std::env::consts::OS
     );
 
@@ -90,10 +92,15 @@ pub async fn download_java(
         .join("javaw.exe")
         .normalize();
 
-    let test_java = check_java(&java).await?.ok_or_else(||Error::Generic("Java install check failed.".to_string()))?;
+    let test_java = check_java(&java)
+        .await?
+        .ok_or_else(|| Error::Generic("Java install check failed.".to_string()))?;
 
-    if !test_java.starts_with(java.to_str().unwrap()) {
-        return Err(Error::Generic("Java version returned was not what was expected.".to_string()))
+    if !test_java.starts_with(&java_vesrion) {
+        return Err(Error::Generic(format!(
+            "Java version returned was not what was expected. Found '{}' was expecting '{}'",
+            test_java, java_vesrion
+        )));
     }
 
     Ok((java_vesrion, java))

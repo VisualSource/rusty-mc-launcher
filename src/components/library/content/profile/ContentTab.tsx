@@ -1,10 +1,8 @@
-import { AlertTriangle, Box, LoaderCircle, Trash2 } from "lucide-react";
 import type { UseQueryResult } from "@tanstack/react-query";
+import { AlertTriangle, LoaderCircle } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { UpdateIcon } from "@radix-ui/react-icons";
+import { useCallback, useRef, useState } from "react";
 import { ask } from "@tauri-apps/plugin-dialog";
-import { Link } from "@tanstack/react-router";
-import { useRef } from "react";
 
 import {
 	AlertDialog,
@@ -15,40 +13,43 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toastError, toastLoading, toastUpdateError, toastUpdateInfo } from "@/lib/toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { TypographyH3, TypographyMuted } from "@/components/ui/typography";
+import { toastLoading, toastUpdateError, toastUpdateInfo, toastUpdateSuccess } from "@/lib/toast";
 import { uninstallContentByFilename } from "@lib/api/plugins/content";
 import { getProjectVersions } from "@lib/api/modrinth/sdk.gen";
 import type { ContentType } from "@lib/models/download_queue";
 import type { Project } from "@/lib/api/modrinth/types.gen";
+import { TypographyH3 } from "@/components/ui/typography";
 import type { ContentItem } from "@/lib/models/content";
 import type { Profile } from "@/lib/models/profiles";
 import { install_known } from "@/lib/system/install";
 import { queryClient } from "@/lib/api/queryClient";
-import { Button } from "@/components/ui/button";
+import { ContentListItem } from "./ContentListItem";
 
 async function uninstall(
 	filename: string,
 	type: keyof typeof ContentType,
 	profile: string,
 ) {
+	const toastId = toastLoading({ title: "Removing content" });
 	try {
 		if (!filename) throw new Error("Missing file name");
 		await uninstallContentByFilename(type, profile, filename);
-
 		await queryClient.invalidateQueries({
 			queryKey: ["WORKSHOP_CONTENT", type, profile],
 		});
+
+		toastUpdateSuccess(toastId, { title: "Removed content" });
+
 	} catch (error) {
 		console.error(error);
-		toastError({
-			title: "Failed to uninstall content",
-			error: error as Error,
-			description: (error as Error).message
+
+		toastUpdateError(toastId, {
+			title: "Removal failed",
+			description: "Failed to remove content",
+			error: error as Error
 		});
+
 	}
 }
 
@@ -127,6 +128,7 @@ const checkForUpdate = async (
 
 export const ContentTab: React.FC<{
 	profile: Profile;
+	isModpack: boolean,
 	content_type: keyof typeof ContentType;
 	content: UseQueryResult<
 		{
@@ -135,9 +137,12 @@ export const ContentTab: React.FC<{
 		}[],
 		Error
 	>;
-}> = ({ profile, content_type, content }) => {
+}> = ({ profile, content_type, content, isModpack }) => {
+	const [showUninstall, setShowUninstall] = useState<null | number>(null);
 	const { data, error, isError, isLoading } = content;
 	const container = useRef<HTMLDivElement>(null);
+
+	const updateCheck = useCallback((record: ContentItem, project: Project | null) => checkForUpdate(profile, project, record), [profile]);
 
 	const rowVirtualizer = useVirtualizer({
 		count: data?.length ?? 0,
@@ -146,128 +151,73 @@ export const ContentTab: React.FC<{
 	});
 
 	return (
-		<div ref={container} className="h-full overflow-y-auto scrollbar">
-			{isLoading ? (
-				<div className="flex h-full w-full flex-col items-center justify-center">
-					<div className="flex gap-2">
-						<LoaderCircle className="animate-spin" />
-						<pre>Loading Content</pre>
-					</div>
-				</div>
-			) : isError ? (
-				<div className="flex h-full flex-col items-center justify-center text-zinc-50">
-					<AlertTriangle />
-					<TypographyH3>Something went wrong:</TypographyH3>
-					<pre className="text-red-300">{error.message}</pre>
-				</div>
-			) : (data?.length ?? 0 >= 1) ? (
-				<div
-					className="relative w-full"
-					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-				>
-					{rowVirtualizer.getVirtualItems().map((virtualItem) => (
-						<div
-							key={virtualItem.key}
-							className="absolute left-0 top-0 inline-flex w-full items-center gap-2 pr-2"
-							style={{
-								height: `${virtualItem.size}px`,
-								transform: `translateY(${virtualItem.start}px)`,
+		<>
+			<AlertDialog open={showUninstall !== null} onOpenChange={() => setShowUninstall(null)}>
+				<AlertDialogContent className="text-white">
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							Are you absolutely sure?
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							This action will delete this content, and can not be
+							undone. Deleting this may also break this install if
+							this content is a dependency of other content that is
+							installed.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (!showUninstall) return;
+								const item = data?.at(showUninstall);
+								if (!item) return;
+
+								const filename = item.record.file_name;
+								uninstall(filename, content_type, profile.id)
 							}}
 						>
-							<Avatar className="rounded-md">
-								<AvatarFallback className="rounded-md">
-									<Box />
-								</AvatarFallback>
-								<AvatarImage
-									src={data?.[virtualItem.index].project?.icon_url ?? undefined}
-								/>
-							</Avatar>
-							<div>
-								{data?.[virtualItem.index].project ? (
-									<Link
-										to="/workshop/project/$id"
-										params={{ id: data?.[virtualItem.index].project?.id ?? "" }}
-										className="-mb-1 line-clamp-1 underline"
-									>
-										{data?.[virtualItem.index].project?.title}
-									</Link>
-								) : (
-									<h1 className="-mb-1 line-clamp-1">
-										{data?.[virtualItem.index].project?.title ??
-											data?.[virtualItem.index].record?.file_name}
-									</h1>
-								)}
-								<TypographyMuted>
-									{data?.[virtualItem.index].record?.version ??
-										data?.[virtualItem.index].record?.file_name ??
-										"Unknown"}
-								</TypographyMuted>
-							</div>
-							<div className="ml-auto">
-								{data?.[virtualItem.index].project?.id ? (
-									<Button
-										onClick={async () =>
-											checkForUpdate(
-												profile,
-												data[virtualItem.index].project,
-												data[virtualItem.index].record,
-											)
-										}
-										title="Check for update"
-										variant="ghost"
-										className="mr-2 h-5 w-5"
-										size="icon"
-									>
-										<UpdateIcon className="h-5 w-5 hover:animate-spin" />
-									</Button>
-								) : null}
-								<AlertDialog>
-									<AlertDialogTrigger asChild>
-										<Button
-											variant="destructive"
-											size="icon"
-											title="Delete Mod"
-										>
-											<Trash2 className="h-5 w-5" />
-										</Button>
-									</AlertDialogTrigger>
-									<AlertDialogContent className="text-white">
-										<AlertDialogHeader>
-											<AlertDialogTitle>
-												Are you absolutely sure?
-											</AlertDialogTitle>
-											<AlertDialogDescription>
-												This action will delete this content, and can not be
-												undone. Deleting this may also break this install if
-												this content is a dependency of other content that is
-												installed.
-											</AlertDialogDescription>
-										</AlertDialogHeader>
-										<AlertDialogFooter>
-											<AlertDialogCancel>Cancel</AlertDialogCancel>
-											<AlertDialogAction
-												onClick={() => {
-													const filename =
-														data?.[virtualItem.index].record?.file_name;
-													if (filename) {
-														uninstall(filename, content_type, profile.id);
-													}
-												}}
-											>
-												Ok
-											</AlertDialogAction>
-										</AlertDialogFooter>
-									</AlertDialogContent>
-								</AlertDialog>
-							</div>
+							Ok
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+			<div ref={container} className="h-full overflow-y-auto scrollbar">
+				{isLoading ? (
+					<div className="flex h-full w-full flex-col items-center justify-center">
+						<div className="flex gap-2">
+							<LoaderCircle className="animate-spin" />
+							<pre>Loading Content</pre>
 						</div>
-					))}
-				</div>
-			) : (
-				<div className="w-full h-full flex-1 flex flex-col justify-center items-center">
-					No content installed
-				</div>
-			)}
-		</div>
+					</div>
+				) : isError ? (
+					<div className="flex h-full flex-col items-center justify-center text-zinc-50">
+						<AlertTriangle />
+						<TypographyH3>Something went wrong:</TypographyH3>
+						<pre className="text-red-300">{error.message}</pre>
+					</div>
+				) : (data && (data?.length ?? 0 >= 1)) ? (
+					<div
+						className="relative w-full"
+						style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+					>
+						{rowVirtualizer.getVirtualItems().map((virtualItem) => (
+							<ContentListItem
+								isModpack={isModpack}
+								uninstall={setShowUninstall}
+								key={virtualItem.key}
+								data={data[virtualItem.index]}
+								item={virtualItem}
+								checkForUpdate={updateCheck}
+							/>
+						))}
+					</div>
+				) : (
+					<div className="w-full h-full flex-1 flex flex-col justify-center items-center">
+						No content installed
+					</div>
+				)}
+			</div>
+		</>
 	);
 };

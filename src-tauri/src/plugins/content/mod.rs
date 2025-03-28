@@ -1,6 +1,8 @@
 mod commands;
 mod desktop;
-use minecraft_launcher_lib::events::DownloadEvent;
+use minecraft_launcher_lib::{
+    database::RwDatabase, events::DownloadEvent, models::setting::Setting,
+};
 use std::time::Duration;
 use tauri::{
     Manager, RunEvent, Runtime,
@@ -18,6 +20,22 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-content")
         .setup(|app, _api| {
             app.manage(Mutex::new(Option::<Channel<DownloadEvent>>::None));
+
+            // insure that a path.app setting has been set.
+            if let Err(error) = tauri::async_runtime::block_on(async {
+                let db = app.state::<RwDatabase>();
+                let has_setting = Setting::has("path.app", &db).await?;
+                println!("has path.app: {:#?}", has_setting);
+                if !has_setting {
+                    let path = app.path().app_data_dir()?;
+                    let str_path = path.to_string_lossy().to_string();
+                    Setting::insert("path.app", str_path, None, &db).await?;
+                }
+
+                Ok::<_, Error>(())
+            }) {
+                return Err(error.into());
+            }
 
             let app_handle = app.app_handle().clone();
             let token = CancellationToken::new();

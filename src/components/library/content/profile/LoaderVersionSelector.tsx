@@ -39,12 +39,13 @@ type QuiltMetadata = {
 export const LoaderVersionSelector: React.FC<{
 	form: UseFormReturn<Profile, unknown, undefined>;
 	stable: boolean;
-}> = ({ stable, form }) => {
+	disabled?: boolean
+}> = ({ stable, form, disabled }) => {
 	const btn = useRef<HTMLButtonElement>(null);
 	const [open, setOpen] = useState(false);
 	const [loader, version] = form.watch(["loader", "version"]);
 	const { data, isError, isLoading } = useQuery({
-		enabled: loader !== "vanilla" && !!version,
+		enabled: (loader !== "vanilla" && !!version) && !disabled,
 		queryKey: ["MODLOADER_VERSION", loader, version, stable],
 		queryFn: async () => {
 			switch (loader) {
@@ -125,6 +126,7 @@ export const LoaderVersionSelector: React.FC<{
 	if (loader === "vanilla") return null;
 	return (
 		<FormField
+			disabled={disabled}
 			defaultValue={data?.at(0)}
 			control={form.control}
 			name="loader_version"
@@ -139,8 +141,8 @@ export const LoaderVersionSelector: React.FC<{
 							<PopoverTrigger asChild>
 								<Button
 									ref={btn}
-									className="w-full"
-									disabled={isError}
+									className="w-full disabled:cursor-not-allowed"
+									disabled={isError || field.disabled}
 									variant="outline"
 									type="button"
 									aria-expanded={open}

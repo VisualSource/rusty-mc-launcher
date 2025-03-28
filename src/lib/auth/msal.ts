@@ -72,7 +72,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 
 	private logger = new Logger(
 		{
-			logLevel: LogLevel.Verbose,
+			logLevel: LogLevel.Error,
 			loggerCallback: (level, message) => {
 				switch (level) {
 					case LogLevel.Error:

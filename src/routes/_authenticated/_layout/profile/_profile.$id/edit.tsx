@@ -126,6 +126,8 @@ function ProfileEdit() {
 		defaultValues: profileQuery.data,
 	});
 
+	const isModpack = (profileQuery.data.is_modpack?.length ?? 0) > 1;
+
 	useEffect(() => {
 		const callback = () => onFormChange(profileQuery.data, form.getValues());
 		if (formRef.current) {
@@ -190,7 +192,7 @@ function ProfileEdit() {
 						)}
 					/>
 
-					<ProfileVersionSelector form={form} />
+					<ProfileVersionSelector form={form} isModpack={isModpack} />
 				</section>
 
 				<section className="space-y-4 rounded-lg bg-zinc-900 px-4 py-2 shadow-lg">

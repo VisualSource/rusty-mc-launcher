@@ -118,7 +118,7 @@ pub async fn install_content(
 ) -> Result<()> {
     let root = Setting::path("path.app", db)
         .await?
-        .ok_or_else(|| Error::NotFound("Failed to get application path.".to_string()))?;
+        .ok_or_else(|| Error::NotFound("failed to get application path".to_string()))?;
 
     let profile_direcotry = root.join("profiles").join(&config.profile);
 
@@ -306,7 +306,7 @@ pub async fn install_content(
                 icon,
                 config.profile,
                 &root,
-                Some(file.id.clone()),
+                Some(file.sha1.clone()),
             )
             .await
             {

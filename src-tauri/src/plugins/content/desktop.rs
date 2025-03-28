@@ -13,7 +13,7 @@ use minecraft_launcher_lib::{
     },
 };
 use std::time::Duration;
-use tauri::{AppHandle, Manager, Runtime, ipc::Channel};
+use tauri::{AppHandle, Emitter, Manager, Runtime, ipc::Channel};
 
 async fn install_client(
     item: &QueueItem,
@@ -116,6 +116,11 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
 
             let item_state = if let Err(err) = result {
                 log::error!("{}", err);
+
+                if let Err(err) = app.emit("rmcl-content-install-failed", err.to_string()) {
+                    log::error!("{}", err)
+                };
+
                 QueueState::Errored
             } else {
                 QueueState::Completed

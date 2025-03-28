@@ -20,10 +20,11 @@ import { cn } from "@/lib/utils";
 export const VersionSelector: React.FC<{
 	type?: ReleaseType;
 	defaultValue?: string;
+	disabled?: boolean,
 	onChange?: (value: string) => void;
-}> = ({ onChange, defaultValue, type = "release" }) => {
+}> = ({ onChange, defaultValue, type = "release", disabled }) => {
 	const btn = useRef<HTMLButtonElement>(null);
-	const { data, isLoading } = useMinecraftVersions(type);
+	const { data, isLoading } = useMinecraftVersions(type, !disabled);
 	const [open, setOpen] = useState(false);
 	const [value, setValue] = useState(defaultValue);
 
@@ -32,8 +33,9 @@ export const VersionSelector: React.FC<{
 			<PopoverTrigger asChild>
 				<Button
 					ref={btn}
-					disabled={isLoading}
+					disabled={isLoading || disabled}
 					aria-expanded={open}
+					className="disabled:cursor-not-allowed"
 					type="button"
 					variant="outline"
 				>
