@@ -1,7 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Import, LockOpen } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import { AlertDialog, AlertDialogCancel, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -29,10 +29,11 @@ const unlockModpack = async (id: string) => {
 	}
 }
 
+const MemoedProfileContent = memo(ProfileContent);
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/",
 )({
-	component: ProfileContent,
+	component: MemoedProfileContent,
 	pendingComponent: Loading,
 });
 

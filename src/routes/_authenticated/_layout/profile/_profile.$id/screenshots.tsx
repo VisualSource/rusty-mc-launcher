@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { getConfig } from "@/lib/models/settings";
 import { Loading } from "@/components/Loading";
+import { memo } from "react";
 
 const profileScreenshotsQueryOptions = (id: string) =>
 	queryOptions({
@@ -25,10 +26,11 @@ const profileScreenshotsQueryOptions = (id: string) =>
 		},
 	});
 
+const MemoedScreenshots = memo(Screenshots);
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/screenshots",
 )({
-	component: Screenshots,
+	component: MemoedScreenshots,
 	errorComponent: (error) => <ErrorComponent error={error} />,
 	pendingComponent: Loading,
 	loader: (opts) =>

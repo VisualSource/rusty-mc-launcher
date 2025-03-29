@@ -2,8 +2,9 @@
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 
 import { cn } from "@/lib/utils";
+import { memo } from "react";
 
-function Separator({
+function SeparatorCore({
 	className,
 	orientation = "horizontal",
 	decorative = true,
@@ -23,4 +24,6 @@ function Separator({
 	);
 }
 
+const Separator = memo(SeparatorCore)
+Separator.displayName = "Separator";
 export { Separator };

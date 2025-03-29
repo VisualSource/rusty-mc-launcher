@@ -16,6 +16,7 @@ import { Loading } from "@/components/Loading";
 import PlayButton from "@/components/ui/play";
 import { KEY_PROFILE } from "@/hooks/keys";
 import { formatRelative } from "date-fns/formatRelative";
+import { memo } from "react";
 
 export const profileQueryOptions = (id: string) =>
 	queryOptions({
@@ -33,7 +34,7 @@ export const profileQueryOptions = (id: string) =>
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id",
 )({
-	component: ProfilePage,
+	component: memo(ProfilePage),
 	loader: (opts) =>
 		opts.context.queryClient.ensureQueryData(
 			profileQueryOptions(opts.params.id),
