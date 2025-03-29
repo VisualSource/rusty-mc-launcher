@@ -1,10 +1,15 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { appDataDir, join } from "@tauri-apps/api/path";
-import { BaseDirectory, readDir } from "@tauri-apps/plugin-fs";
+import { BaseDirectory, exists, mkdir, readDir } from "@tauri-apps/plugin-fs";
 
 export const loadThemes = async () => {
     const root = await appDataDir();
     const themesFolder = await join(root, "themes");
+
+    const doesExists = await exists(themesFolder);
+    if (!doesExists) {
+        await mkdir("themes", { baseDir: BaseDirectory.AppData });
+    }
 
     const themeFiles = await readDir("themes", { baseDir: BaseDirectory.AppData });
     const themes = [];
