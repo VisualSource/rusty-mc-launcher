@@ -16,6 +16,7 @@ import { router } from "./router";
 import "./index.css";
 import "react-lazy-load-image-component/src/effects/blur.css";
 import { toastError } from "./lib/toast";
+import { initThemes } from "./lib/api/themes";
 
 if (import.meta.env.PROD) checkForAppUpdate().catch(logCatchError);
 
@@ -23,13 +24,13 @@ const msa = getPCA();
 const mca = new ModrinthClientApplication();
 listen<string>("rmcl-content-install-failed", (ev) => {
 	const payload = ev.payload;
-
 	toastError({
 		title: "Install failed",
 		description: "A item in the install queue failed",
 		error: payload
 	});
 }).catch(e => console.error(e));
+initThemes();
 
 // biome-ignore lint/style/noNonNullAssertion: The dom element with id "root" shall be there.
 const root = createRoot(document.getElementById("root")!);
