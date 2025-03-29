@@ -39,13 +39,13 @@ type QuiltMetadata = {
 export const LoaderVersionSelector: React.FC<{
 	form: UseFormReturn<Profile, unknown, undefined>;
 	stable: boolean;
-	disabled?: boolean
+	disabled?: boolean;
 }> = ({ stable, form, disabled }) => {
 	const btn = useRef<HTMLButtonElement>(null);
 	const [open, setOpen] = useState(false);
 	const [loader, version] = form.watch(["loader", "version"]);
 	const { data, isError, isLoading } = useQuery({
-		enabled: (loader !== "vanilla" && !!version) && !disabled,
+		enabled: loader !== "vanilla" && !!version && !disabled,
 		queryKey: ["MODLOADER_VERSION", loader, version, stable],
 		queryFn: async () => {
 			switch (loader) {

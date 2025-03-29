@@ -37,14 +37,15 @@ export async function profileImportFile(
 		});
 
 		toastUpdateSuccess(toastId, {
-			title: "Content Imported"
+			title: "Content Imported",
 		});
 	} catch (err) {
 		error((err as Error).message);
-		if (toastId) toastUpdateError(toastId, {
-			title: "Import Failed",
-			description: "Failed to import content",
-			error: err as Error
-		});
+		if (toastId)
+			toastUpdateError(toastId, {
+				title: "Import Failed",
+				description: "Failed to import content",
+				error: err as Error,
+			});
 	}
 }

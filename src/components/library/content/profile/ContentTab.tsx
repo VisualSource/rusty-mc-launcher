@@ -14,7 +14,12 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toastLoading, toastUpdateError, toastUpdateInfo, toastUpdateSuccess } from "@/lib/toast";
+import {
+	toastLoading,
+	toastUpdateError,
+	toastUpdateInfo,
+	toastUpdateSuccess,
+} from "@/lib/toast";
 import { uninstallContentByFilename } from "@lib/api/plugins/content";
 import { getProjectVersions } from "@lib/api/modrinth/sdk.gen";
 import type { ContentType } from "@lib/models/download_queue";
@@ -40,16 +45,14 @@ async function uninstall(
 		});
 
 		toastUpdateSuccess(toastId, { title: "Removed content" });
-
 	} catch (error) {
 		console.error(error);
 
 		toastUpdateError(toastId, {
 			title: "Removal failed",
 			description: "Failed to remove content",
-			error: error as Error
+			error: error as Error,
 		});
-
 	}
 }
 
@@ -60,7 +63,7 @@ const checkForUpdate = async (
 ) => {
 	if (!project) return;
 	const toastId = toastLoading({
-		title: "Checking for update."
+		title: "Checking for update.",
 	});
 	try {
 		const { data, error, response } = await getProjectVersions({
@@ -111,7 +114,6 @@ const checkForUpdate = async (
 			return;
 		}
 
-
 		toastUpdateInfo(toastId, {
 			title: "Updated to latest version.",
 			description: `Lastest version for ${project.title} installed.`,
@@ -121,14 +123,14 @@ const checkForUpdate = async (
 		toastUpdateError(toastId, {
 			title: "Failed to update content",
 			description: (error as Error).message,
-			error: error as Error
+			error: error as Error,
 		});
 	}
 };
 
 export const ContentTab: React.FC<{
 	profile: Profile;
-	isModpack: boolean,
+	isModpack: boolean;
 	content_type: keyof typeof ContentType;
 	content: UseQueryResult<
 		{
@@ -142,7 +144,11 @@ export const ContentTab: React.FC<{
 	const { data, error, isError, isLoading } = content;
 	const container = useRef<HTMLDivElement>(null);
 
-	const updateCheck = useCallback((record: ContentItem, project: Project | null) => checkForUpdate(profile, project, record), [profile]);
+	const updateCheck = useCallback(
+		(record: ContentItem, project: Project | null) =>
+			checkForUpdate(profile, project, record),
+		[profile],
+	);
 
 	const rowVirtualizer = useVirtualizer({
 		count: data?.length ?? 0,
@@ -152,17 +158,17 @@ export const ContentTab: React.FC<{
 
 	return (
 		<>
-			<AlertDialog open={showUninstall !== null} onOpenChange={() => setShowUninstall(null)}>
+			<AlertDialog
+				open={showUninstall !== null}
+				onOpenChange={() => setShowUninstall(null)}
+			>
 				<AlertDialogContent className="text-white">
 					<AlertDialogHeader>
-						<AlertDialogTitle>
-							Are you absolutely sure?
-						</AlertDialogTitle>
+						<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
 						<AlertDialogDescription>
-							This action will delete this content, and can not be
-							undone. Deleting this may also break this install if
-							this content is a dependency of other content that is
-							installed.
+							This action will delete this content, and can not be undone.
+							Deleting this may also break this install if this content is a
+							dependency of other content that is installed.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -174,7 +180,7 @@ export const ContentTab: React.FC<{
 								if (!item) return;
 
 								const filename = item.record.file_name;
-								uninstall(filename, content_type, profile.id)
+								uninstall(filename, content_type, profile.id);
 							}}
 						>
 							Ok
@@ -196,7 +202,7 @@ export const ContentTab: React.FC<{
 						<TypographyH3>Something went wrong:</TypographyH3>
 						<pre className="text-red-300">{error.message}</pre>
 					</div>
-				) : (data && (data?.length ?? 0 >= 1)) ? (
+				) : data && (data?.length ?? 0 >= 1) ? (
 					<div
 						className="relative w-full"
 						style={{ height: `${rowVirtualizer.getTotalSize()}px` }}

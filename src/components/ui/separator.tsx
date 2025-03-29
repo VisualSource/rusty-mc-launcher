@@ -24,6 +24,6 @@ function SeparatorCore({
 	);
 }
 
-const Separator = memo(SeparatorCore)
+const Separator = memo(SeparatorCore);
 Separator.displayName = "Separator";
 export { Separator };

@@ -29,7 +29,6 @@ import { Input } from "@/components/ui/input";
 import { CATEGORY_KEY } from "@/hooks/keys";
 import { toastError } from "@/lib/toast";
 
-
 export const Route = createLazyFileRoute("/_authenticated/create-profile")({
 	component: CreateProfile,
 });
@@ -78,7 +77,7 @@ function CreateProfile() {
 			});
 		} catch (err) {
 			toastError({
-				error: (err as Error),
+				error: err as Error,
 				title: "Failed to create profile",
 			});
 			error((err as Error).message, { file: "/create-profile.lazy", line: 83 });

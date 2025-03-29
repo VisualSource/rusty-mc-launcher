@@ -35,18 +35,18 @@ function SystemSettings() {
 				getName(),
 				getTauriVersion(),
 				getVersion(),
-				loadThemes()
+				loadThemes(),
 			]);
 			return {
 				name,
 				tauri,
 				version,
-				themes
+				themes,
 			};
 		},
 	});
 
-	const onSubmit = async () => { };
+	const onSubmit = async () => {};
 
 	return (
 		<div className="space-y-6">
@@ -82,11 +82,28 @@ function SystemSettings() {
 											defaultValue={field.value}
 											className="flex flex-wrap gap-2"
 										>
-											<Theme currentValue={field.value} value="dark" title="Default" />
-											<Theme currentValue={field.value} value="rose" title="Rose" />
-											<Theme currentValue={field.value} value="red" title="Red" />
+											<Theme
+												currentValue={field.value}
+												value="dark"
+												title="Default"
+											/>
+											<Theme
+												currentValue={field.value}
+												value="rose"
+												title="Rose"
+											/>
+											<Theme
+												currentValue={field.value}
+												value="red"
+												title="Red"
+											/>
 											{data.themes.map((theme) => (
-												<Theme key={theme.path} currentValue={field.value} value={theme.name} title={theme.title} />
+												<Theme
+													key={theme.path}
+													currentValue={field.value}
+													value={theme.name}
+													title={theme.title}
+												/>
 											))}
 										</RadioGroup>
 									</FormItem>

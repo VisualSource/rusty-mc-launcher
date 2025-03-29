@@ -317,7 +317,11 @@ function ProfileEdit() {
 									});
 								} catch (error) {
 									console.error(error);
-									toastError({ title: "Copy Failed", description: "Failed to copy profile", error: error as Error });
+									toastError({
+										title: "Copy Failed",
+										description: "Failed to copy profile",
+										error: error as Error,
+									});
 								}
 							}}
 							type="button"

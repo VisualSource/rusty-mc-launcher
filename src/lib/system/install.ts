@@ -16,7 +16,12 @@ import {
 	uninstallContentByFilename,
 	uninstallContentById,
 } from "@lib/api/plugins/content";
-import { toastLoading, toastUpdateError, toastUpdateInfo, toastUpdateSuccess } from "../toast";
+import {
+	toastLoading,
+	toastUpdateError,
+	toastUpdateInfo,
+	toastUpdateSuccess,
+} from "../toast";
 import { selectProfile } from "@/components/dialog/ProfileSelection";
 import { ContentType } from "@lib/models/download_queue";
 import { askFor } from "@/components/dialog/AskDialog";
@@ -529,13 +534,13 @@ export async function install(data: Project) {
 
 		toastUpdateSuccess(id, {
 			title: "Install Started",
-			description: `Starting installing content for ${data.title}`
+			description: `Starting installing content for ${data.title}`,
 		});
 	} catch (err) {
 		console.error(err);
 		error((err as Error).message, { file: "lib/install", line: 537 });
 		toastUpdateError(id, {
-			error: (err as Error),
+			error: err as Error,
 			title: "Failed to install content",
 		});
 	}

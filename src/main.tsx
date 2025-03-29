@@ -27,9 +27,9 @@ listen<string>("rmcl-content-install-failed", (ev) => {
 	toastError({
 		title: "Install failed",
 		description: "A item in the install queue failed",
-		error: payload
+		error: payload,
 	});
-}).catch(e => console.error(e));
+}).catch((e) => console.error(e));
 initThemes();
 
 // biome-ignore lint/style/noNonNullAssertion: The dom element with id "root" shall be there.

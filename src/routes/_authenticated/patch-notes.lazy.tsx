@@ -30,7 +30,6 @@ function PatchNotes() {
 		<div className="w-full h-full flex flex-col bg-accent/50 overflow-y-auto scrollbar py-4">
 			<article className="prose prose-invert container max-w-(--breakpoint-md)">
 				<ReactMarkdown
-
 					components={{
 						a: ({ children, href }) => (
 							<a target="_blank" rel="noopener noreferrer" href={href}>

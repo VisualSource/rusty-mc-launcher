@@ -26,7 +26,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { BadgeHelp } from "lucide-react";
 
 export const ProfileVersionSelector: React.FC<{
-	isModpack: boolean,
+	isModpack: boolean;
 	form: UseFormReturn<Profile, unknown, undefined>;
 }> = ({ form, isModpack }) => {
 	const [showSnapshots, setShowSnapshots] = useState(false);
@@ -37,7 +37,9 @@ export const ProfileVersionSelector: React.FC<{
 				<Alert>
 					<BadgeHelp className="h-4 w-4" />
 					<AlertTitle>Settings Restricted</AlertTitle>
-					<AlertDescription>Some game settings have been restricted due to this being a modpack.</AlertDescription>
+					<AlertDescription>
+						Some game settings have been restricted due to this being a modpack.
+					</AlertDescription>
 				</Alert>
 			) : null}
 			<div className={cn("flex flex-col space-y-2", isModpack && "opacity-40")}>
@@ -59,7 +61,8 @@ export const ProfileVersionSelector: React.FC<{
 									<div className="flex items-center justify-between">
 										<FormDescription>The version of the game.</FormDescription>
 										<div className="flex items-center justify-end gap-2">
-											<Checkbox disabled={isModpack}
+											<Checkbox
+												disabled={isModpack}
 												checked={showSnapshots}
 												onCheckedChange={(e) => setShowSnapshots(e as boolean)}
 											/>
@@ -73,15 +76,20 @@ export const ProfileVersionSelector: React.FC<{
 					)}
 				/>
 
-				<FormField disabled={isModpack}
+				<FormField
+					disabled={isModpack}
 					control={form.control}
 					name="loader"
 					rules={{ required: { message: "A loader is required", value: true } }}
-					render={({ field, }) => (
+					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Mod Loader</FormLabel>
 							<FormControl>
-								<Select disabled={field.disabled} value={field.value} onValueChange={field.onChange}>
+								<Select
+									disabled={field.disabled}
+									value={field.value}
+									onValueChange={field.onChange}
+								>
 									<SelectTrigger className="w-full">
 										<SelectValue />
 									</SelectTrigger>
@@ -95,15 +103,19 @@ export const ProfileVersionSelector: React.FC<{
 								</Select>
 							</FormControl>
 							<FormDescription>
-								The loader that will be used to load mods. Note: vanilla does not
-								support loading mods.
+								The loader that will be used to load mods. Note: vanilla does
+								not support loading mods.
 							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}
 				/>
 
-				<LoaderVersionSelector disabled={isModpack} form={form} stable={showSnapshots} />
+				<LoaderVersionSelector
+					disabled={isModpack}
+					form={form}
+					stable={showSnapshots}
+				/>
 			</div>
 		</>
 	);

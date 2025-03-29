@@ -48,12 +48,14 @@ function Screenshots() {
 			{query.data.length >= 1 ? (
 				query.data.map((e) => (
 					<Avatar
-						onClick={() => revealItemInDir(decodeURIComponent(
-							e
-								.replace("asset://", "")
-								.replace("https://asset.localhost/", ""),
-						))
-
+						onClick={() =>
+							revealItemInDir(
+								decodeURIComponent(
+									e
+										.replace("asset://", "")
+										.replace("https://asset.localhost/", ""),
+								),
+							)
 						}
 						className="my-2 aspect-square h-36 rounded-lg w-full hover:scale-105 transition-all"
 						key={e}

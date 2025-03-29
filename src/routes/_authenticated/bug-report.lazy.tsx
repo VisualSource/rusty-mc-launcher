@@ -11,7 +11,11 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { toastLoading, toastUpdateError, toastUpdateSuccess } from "@/lib/toast";
+import {
+	toastLoading,
+	toastUpdateError,
+	toastUpdateSuccess,
+} from "@/lib/toast";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -68,9 +72,9 @@ function BugReport() {
 			error((err as Error).message, { file: "/bug-report.lazy" });
 
 			toastUpdateError(toastId, {
-				error: (err as Error),
+				error: err as Error,
 				title: "Submition Failed",
-				description: "Failed to submit report"
+				description: "Failed to submit report",
 			});
 		}
 	};

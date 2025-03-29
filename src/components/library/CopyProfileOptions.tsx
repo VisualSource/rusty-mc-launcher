@@ -29,24 +29,35 @@ export const CopyProfileOptions: React.FC<{
 		queryKey: ["COPY_FROM_OPTIONS"],
 		queryFn: async () => {
 			const [globalCopyFrom, profileDirectory, profiles] = await Promise.all([
-				getConfig("option.copy_settings_from").then(e => e?.value),
-				getConfig("path.app").then(e => e?.value),
-				query`SELECT * FROM profiles;`.as(Profile).all()
+				getConfig("option.copy_settings_from").then((e) => e?.value),
+				getConfig("path.app").then((e) => e?.value),
+				query`SELECT * FROM profiles;`.as(Profile).all(),
 			]);
 
 			if (!profileDirectory) throw new Error("Missing profiles directory!");
 
-			const paths = await Promise.all(profiles.map(async e => {
-				const path = await join(profileDirectory, "profiles", e.id, "options.txt");
-				return { name: e.name, icon: e.icon, path }
-			}));
+			const paths = await Promise.all(
+				profiles.map(async (e) => {
+					const path = await join(
+						profileDirectory,
+						"profiles",
+						e.id,
+						"options.txt",
+					);
+					return { name: e.name, icon: e.icon, path };
+				}),
+			);
 
 			if (globalCopyFrom) {
-				paths.unshift({ path: globalCopyFrom, name: "Global Options", icon: null });
+				paths.unshift({
+					path: globalCopyFrom,
+					name: "Global Options",
+					icon: null,
+				});
 			}
 
 			return paths;
-		}
+		},
 	});
 
 	return (

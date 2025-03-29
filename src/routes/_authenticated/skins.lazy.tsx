@@ -34,11 +34,11 @@ type Action =
 	| { type: "SET_CAPE"; id?: string }
 	| { type: "ADD_SKIN"; url: string }
 	| {
-		type: "INIT";
-		activeSkinId?: string;
-		activeCapeId?: string;
-		variant: Skin["variant"];
-	};
+			type: "INIT";
+			activeSkinId?: string;
+			activeCapeId?: string;
+			variant: Skin["variant"];
+	  };
 
 const DEFAULT_NAMES = [
 	"X-Steve",
@@ -284,11 +284,18 @@ const MinecraftSkinControl: React.FC = memo(() => {
 						<Button
 							disabled={mutation.isPending}
 							onClick={() =>
-								toastAwaitProimse(mutation.mutateAsync({
-									capeId: content.activeCapeId,
-									skinId: content.activeSkinId,
-									variant: content.variant,
-								}), { loading: "Updating", error: "Failed to update", success: { title: "Updated" } })
+								toastAwaitProimse(
+									mutation.mutateAsync({
+										capeId: content.activeCapeId,
+										skinId: content.activeSkinId,
+										variant: content.variant,
+									}),
+									{
+										loading: "Updating",
+										error: "Failed to update",
+										success: { title: "Updated" },
+									},
+								)
 							}
 							size="sm"
 						>

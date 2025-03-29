@@ -19,23 +19,23 @@ export type DownloadCurrentItem = {
 };
 export type DownloadEvent =
 	| {
-		event: "init";
-		data: DownloadCurrentItem;
-	}
+			event: "init";
+			data: DownloadCurrentItem;
+	  }
 	| {
-		event: "started";
-		data: {
-			max_progress: number;
-			message: string;
-		};
-	}
+			event: "started";
+			data: {
+				max_progress: number;
+				message: string;
+			};
+	  }
 	| {
-		event: "progress";
-		data: {
-			amount?: number;
-			message?: string;
-		};
-	}
+			event: "progress";
+			data: {
+				amount?: number;
+				message?: string;
+			};
+	  }
 	| { event: "finished"; data: unknown }
 	| { event: "refreshProfile" };
 
@@ -74,15 +74,14 @@ export async function uninstallContentByFilename(
 }
 
 /**
- * 
- * @param args 
+ *
+ * @param args
  * @param copy path to options.txt
  */
 export async function createProfile(
 	args: z.infer<typeof Profile.schema>,
 	copy?: string,
 ) {
-
 	if (copy) {
 		const doesFileExist = await exists(copy);
 		if (!doesFileExist) throw new Error(`File at "${copy}" does not exist!`);

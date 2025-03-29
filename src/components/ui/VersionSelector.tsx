@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 export const VersionSelector: React.FC<{
 	type?: ReleaseType;
 	defaultValue?: string;
-	disabled?: boolean,
+	disabled?: boolean;
 	onChange?: (value: string) => void;
 }> = ({ onChange, defaultValue, type = "release", disabled }) => {
 	const btn = useRef<HTMLButtonElement>(null);

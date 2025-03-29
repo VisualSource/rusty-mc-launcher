@@ -12,10 +12,11 @@ export const useCategoriesMutation = () => {
 	return useMutation({
 		onError(result) {
 			error(result.message, {
-				file: "useCategories", keyValues: {
+				file: "useCategories",
+				keyValues: {
 					name: result.name,
 					stack: result.stack,
-				}
+				},
 			});
 		},
 		mutationFn: async (payload: {
@@ -38,7 +39,7 @@ export const useCategoriesMutation = () => {
 						toastError({
 							title: "Update Failed",
 							description: "Failed to update collection!",
-							error: error.message
+							error: error.message,
 						});
 						throw error;
 					}
@@ -55,7 +56,7 @@ export const useCategoriesMutation = () => {
 						toastError({
 							title: "Deletion Failed",
 							description: "Failed to delete collection!",
-							error: error.message
+							error: error.message,
 						});
 
 						throw error;

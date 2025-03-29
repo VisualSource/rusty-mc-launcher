@@ -1,4 +1,7 @@
-import { type NotificationCenterItem, useNotificationCenter } from "react-toastify/addons/use-notification-center";
+import {
+	type NotificationCenterItem,
+	useNotificationCenter,
+} from "react-toastify/addons/use-notification-center";
 import { Mail } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@component/ui/popover";
@@ -43,10 +46,18 @@ export const Notifications = () => {
 				<div className="max-h-56 pt-4 overflow-y-auto scrollbar">
 					<ul className="min-h-[200px] space-y-2">
 						{system.notifications.map((value) => (
-							<Notification item={value} key={value.id} remove={system.remove} />
+							<Notification
+								item={value}
+								key={value.id}
+								remove={system.remove}
+							/>
 						))}
 						{modrinth.notifications.map((n) => (
-							<Notification item={n as NotificationCenterItem<Partial<ToastData>>} key={n.id} remove={modrinth.remove} />
+							<Notification
+								item={n as NotificationCenterItem<Partial<ToastData>>}
+								key={n.id}
+								remove={modrinth.remove}
+							/>
 						))}
 					</ul>
 				</div>

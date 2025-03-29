@@ -3,8 +3,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Import, LockOpen } from "lucide-react";
 import { memo, useState } from "react";
 
-import { AlertDialog, AlertDialogCancel, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogAction,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ContentTab } from "@/components/library/content/profile/ContentTab";
 import { fetchProfileContent } from "@/lib/profile/fetchProfileContent";
 import { profileImportFile } from "@/lib/profile/profileImportFile";
@@ -22,12 +37,19 @@ const unlockModpack = async (id: string) => {
 	try {
 		await query`UPDATE profiles SET is_modpack = NULL WHERE id = ${id}`.run();
 		await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, id] });
-		toastSuccess({ title: "Profile unlocked", description: "Profile was been unlocked" });
+		toastSuccess({
+			title: "Profile unlocked",
+			description: "Profile was been unlocked",
+		});
 	} catch (error) {
 		console.error(error);
-		toastError({ title: "Unlock failed", description: "Failed to unlock profile", error: error as Error });
+		toastError({
+			title: "Unlock failed",
+			description: "Failed to unlock profile",
+			error: error as Error,
+		});
 	}
-}
+};
 
 const MemoedProfileContent = memo(ProfileContent);
 export const Route = createFileRoute(
@@ -75,41 +97,52 @@ function ProfileContent() {
 
 					<TooltipProvider>
 						<div className="flex gap-2">
-							{isModpack ? (/** 
+							{
+								isModpack /** 
 								TODO: Impl update check
 								<UpdateModpackCheck
 										loader={profile.data.loader}
 										game={profile.data.version}
 										id={profile.data.is_modpack as string}
 									/>
-							*/
-								<>
-									<Tooltip>
-										<AlertDialog>
-											<AlertDialogTrigger asChild>
-												<TooltipTrigger asChild>
-													<Button variant="secondary" size="icon">
-														<LockOpen />
-													</Button>
-												</TooltipTrigger>
-											</AlertDialogTrigger>
-											<AlertDialogContent>
-												<AlertDialogHeader>
-													<AlertDialogTitle>Unlock modpack</AlertDialogTitle>
-													<AlertDialogDescription>Are you sure you want to unlock this pack? This can not be undone. Unlocking this pack will allow you to have full control over all content in this pack but you will no longer get update for this pack.</AlertDialogDescription>
-												</AlertDialogHeader>
-												<AlertDialogFooter>
-													<AlertDialogCancel>Cancel</AlertDialogCancel>
-													<AlertDialogAction onClick={() => unlockModpack(profile.data.id)}>Continue</AlertDialogAction>
-												</AlertDialogFooter>
-											</AlertDialogContent>
-										</AlertDialog>
-										<TooltipContent>
-											<p>Unlock modpack</p>
-										</TooltipContent>
-									</Tooltip>
-								</>
-							) : null /** 
+							*/ ? (
+									<>
+										<Tooltip>
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<TooltipTrigger asChild>
+														<Button variant="secondary" size="icon">
+															<LockOpen />
+														</Button>
+													</TooltipTrigger>
+												</AlertDialogTrigger>
+												<AlertDialogContent>
+													<AlertDialogHeader>
+														<AlertDialogTitle>Unlock modpack</AlertDialogTitle>
+														<AlertDialogDescription>
+															Are you sure you want to unlock this pack? This
+															can not be undone. Unlocking this pack will allow
+															you to have full control over all content in this
+															pack but you will no longer get update for this
+															pack.
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel>Cancel</AlertDialogCancel>
+														<AlertDialogAction
+															onClick={() => unlockModpack(profile.data.id)}
+														>
+															Continue
+														</AlertDialogAction>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+											<TooltipContent>
+												<p>Unlock modpack</p>
+											</TooltipContent>
+										</Tooltip>
+									</>
+								) : null /** 
 								TODO: button for updating all content of a category in a profile 
 							
 								<Tooltip>
@@ -122,7 +155,8 @@ function ProfileContent() {
 										<p>Update All</p>
 									</TooltipContent>
 								</Tooltip>
-							*/}
+							*/
+							}
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<Button

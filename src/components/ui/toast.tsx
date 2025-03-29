@@ -6,12 +6,12 @@ export type ToastData = {
 	title: string;
 	description?: string;
 	error?: string | Error;
-	showCloseBtn?: boolean
-}
+	showCloseBtn?: boolean;
+};
 
 export const Toast: React.FC<ToastContentProps<ToastData>> = ({
 	data: { showCloseBtn = true, ...data },
-	closeToast
+	closeToast,
 }) => {
 	return (
 		<div className="flex flex-col w-full">
@@ -20,7 +20,7 @@ export const Toast: React.FC<ToastContentProps<ToastData>> = ({
 			{showCloseBtn ? <ToastClose onClick={closeToast} /> : null}
 		</div>
 	);
-}
+};
 
 const ToastClose: React.FC<React.ComponentProps<"button">> = ({
 	className,

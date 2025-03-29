@@ -11,7 +11,13 @@ const loaderSchema = z.enum([
 
 type Loader = z.infer<typeof loaderSchema>;
 
-const profileState = z.enum(["UNINSTALLED", "INSTALLING", "INSTALLED", "ERRORED", "UNKNOWN"]);
+const profileState = z.enum([
+	"UNINSTALLED",
+	"INSTALLING",
+	"INSTALLED",
+	"ERRORED",
+	"UNKNOWN",
+]);
 
 export type ProfileState = z.infer<typeof profileState>;
 

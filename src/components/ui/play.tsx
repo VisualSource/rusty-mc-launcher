@@ -78,22 +78,26 @@ const PlayButton: React.FC<Props> = ({ profile, className, ...props }) => {
 					)
 						throw new Error("Missing launch params");
 
-					await toastAwaitProimse(launchGame({
-						auth_access_token: accessToken,
-						auth_player_name: result.account.name,
-						auth_uuid: result.account.id,
-						auth_xuid: result.account?.xuid,
-						profile_id: profile.id,
-					}).then(() => queryClient.invalidateQueries({
-						queryKey: [KEY_PROFILE, profile.id]
-					})), {
-						loading: "Starting Minecrafts",
-						success: {
-							title: "Launched Minecraft"
+					await toastAwaitProimse(
+						launchGame({
+							auth_access_token: accessToken,
+							auth_player_name: result.account.name,
+							auth_uuid: result.account.id,
+							auth_xuid: result.account?.xuid,
+							profile_id: profile.id,
+						}).then(() =>
+							queryClient.invalidateQueries({
+								queryKey: [KEY_PROFILE, profile.id],
+							}),
+						),
+						{
+							loading: "Starting Minecrafts",
+							success: {
+								title: "Launched Minecraft",
+							},
+							error: "Failed to start",
 						},
-						error: "Failed to start"
-					});
-
+					);
 				} catch (error) {
 					console.error(error);
 				}

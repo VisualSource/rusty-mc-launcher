@@ -74,8 +74,8 @@ export const NavbarLower: React.FC = memo(() => {
 								activeProps={{
 									className: "border-b-2 border-blue-300 text-blue-300",
 								}}
-							>WORKSHOP
-
+							>
+								WORKSHOP
 							</Link>
 						</NavigationMenuLink>
 					</NavigationMenuItem>
@@ -86,7 +86,8 @@ export const NavbarLower: React.FC = memo(() => {
 								activeProps={{
 									className: "border-b-2 border-blue-300 text-blue-300",
 								}}
-							>DOWNLOADS
+							>
+								DOWNLOADS
 							</Link>
 						</NavigationMenuLink>
 					</NavigationMenuItem>

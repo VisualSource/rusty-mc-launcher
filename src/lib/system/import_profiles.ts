@@ -3,7 +3,12 @@ import { dataDir, join } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { error } from "@tauri-apps/plugin-log";
 
-import { toastError, toastLoading, toastUpdateError, toastUpdateSuccess } from "../toast";
+import {
+	toastError,
+	toastLoading,
+	toastUpdateError,
+	toastUpdateSuccess,
+} from "../toast";
 import { CATEGORY_KEY, KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { UNCATEGORIZEDP_GUID } from "../models/categories";
 import { bulk, transaction } from "../api/plugins/query";
@@ -50,7 +55,10 @@ const import_profiles = async () => {
 	});
 
 	if (!result) {
-		toastError({ title: "Import failed", description: "Failed to import profiles" });
+		toastError({
+			title: "Import failed",
+			description: "Failed to import profiles",
+		});
 		return;
 	}
 
@@ -87,10 +95,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-					version.replace(
-						"latest-",
-						"",
-					) as keyof (typeof latest_data)["latest"]
+						version.replace(
+							"latest-",
+							"",
+						) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -158,13 +166,13 @@ const import_profiles = async () => {
 		});
 
 		toastUpdateSuccess(toastId, {
-			title: "Profiles Imported"
-		})
+			title: "Profiles Imported",
+		});
 	} catch (err) {
 		error((err as Error).message);
 		toastUpdateError(toastId, {
 			title: "Imported Failed",
-			error: err as Error
+			error: err as Error,
 		});
 	}
 };

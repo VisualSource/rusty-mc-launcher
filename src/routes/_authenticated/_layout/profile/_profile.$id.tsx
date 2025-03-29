@@ -77,7 +77,11 @@ function ProfilePage() {
 					</p>
 					<span className="text-xs text-muted-foreground">
 						<span className="font-bold">Last Played: </span>
-						<span>{data.last_played ? formatRelative(new Date(data.last_played), new Date()) : "Never"}</span>
+						<span>
+							{data.last_played
+								? formatRelative(new Date(data.last_played), new Date())
+								: "Never"}
+						</span>
 					</span>
 				</div>
 				<div className="flex justify-evenly gap-1">
@@ -85,7 +89,7 @@ function ProfilePage() {
 						className="w-full"
 						profile={{
 							id: data.id,
-							state: data.state
+							state: data.state,
 						}}
 					/>
 				</div>

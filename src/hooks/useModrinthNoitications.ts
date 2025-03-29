@@ -107,7 +107,7 @@ export const useModrinthNotifications = () => {
 					data: {
 						title: notification.title,
 						description: notification.text,
-					}
+					},
 				});
 			}
 

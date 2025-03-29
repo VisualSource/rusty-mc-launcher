@@ -14,11 +14,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import {
-	isOption,
-	getConfig,
-	upsert,
-} from "@/lib/models/settings";
+import { isOption, getConfig, upsert } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loading } from "@/components/Loading";

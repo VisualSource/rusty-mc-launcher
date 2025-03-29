@@ -426,7 +426,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	async hydrateCache(
 		_result: AuthenticationResult,
 		_request: SilentRequest | SsoSilentRequest | RedirectRequest | PopupRequest,
-	): Promise<void> { }
+	): Promise<void> {}
 	async clearCache(_logoutRequest?: ClearCacheRequest): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
@@ -450,7 +450,7 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 	): Promise<AuthenticationResult> {
 		throw new Error("Method not implemented.");
 	}
-	public initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void { }
+	public initializeWrapperLibrary(_sku: WrapperSKU, _version: string): void {}
 	public setNavigationClient(_navigationClient: INavigationClient): void {
 		throw new Error("Method not supported");
 	}
@@ -606,12 +606,12 @@ class CustomPublicClientApplication implements IPublicClientApplication {
 			throw new Error(profileResponse.statusText, { cause: profileResponse });
 		const profile = (await profileResponse.json()) as
 			| {
-				capes?: Cape[];
-				id: string;
-				name: string;
-				skins: Skin[];
-				profileActions: Record<string, unknown>;
-			}
+					capes?: Cape[];
+					id: string;
+					name: string;
+					skins: Skin[];
+					profileActions: Record<string, unknown>;
+			  }
 			| { path: string; error: string; errorMessage: string };
 
 		if ("error" in profile) {

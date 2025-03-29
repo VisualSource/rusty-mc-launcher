@@ -65,7 +65,9 @@ const PatchNotesRead: React.FC<{
 			<DrawerContent className="overflow-hidden max-h-screen pb-4">
 				<DrawerHeader>
 					<DrawerTitle>Patch Notes</DrawerTitle>
-					<DrawerDescription>Notes on Minecraft {query.data?.version}</DrawerDescription>
+					<DrawerDescription>
+						Notes on Minecraft {query.data?.version}
+					</DrawerDescription>
 					<div className="flex justify-end">
 						<DrawerClose asChild>
 							<Button variant="outline">

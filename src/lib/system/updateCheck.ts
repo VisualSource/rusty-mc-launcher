@@ -2,7 +2,12 @@ import { ask, message } from "@tauri-apps/plugin-dialog";
 import { check } from "@tauri-apps/plugin-updater";
 import { type Id, toast } from "react-toastify";
 import { info } from "@tauri-apps/plugin-log";
-import { toastLoading, toastUpdateInfo, toastUpdateProgress, toastUpdateSuccess } from "../toast";
+import {
+	toastLoading,
+	toastUpdateInfo,
+	toastUpdateProgress,
+	toastUpdateSuccess,
+} from "../toast";
 
 export async function checkForAppUpdate(forceCheck = false) {
 	let toastId: Id | undefined;
@@ -34,9 +39,10 @@ export async function checkForAppUpdate(forceCheck = false) {
 	}
 
 	if (!update.available) {
-		if (toastId) toastUpdateSuccess(toastId, {
-			title: "No updates available!",
-		});
+		if (toastId)
+			toastUpdateSuccess(toastId, {
+				title: "No updates available!",
+			});
 
 		await info("No update was found.");
 		return;
@@ -55,10 +61,11 @@ export async function checkForAppUpdate(forceCheck = false) {
 
 	if (!yes) {
 		await info("Update was postponed");
-		if (toastId) toastUpdateInfo(toastId, {
-			title: `Update ${update.version}`,
-			description: `Current Version ${update.currentVersion}`,
-		});
+		if (toastId)
+			toastUpdateInfo(toastId, {
+				title: `Update ${update.version}`,
+				description: `Current Version ${update.currentVersion}`,
+			});
 		return;
 	}
 
@@ -72,13 +79,21 @@ export async function checkForAppUpdate(forceCheck = false) {
 				contentLength = ev.data.contentLength ?? 0;
 				oldRange = contentLength - 0;
 				const progress = ((contentLength - 0) * newRange) / oldRange;
-				if (toastId) toastUpdateProgress(toastId, { title: "Downloading Update", progress });
+				if (toastId)
+					toastUpdateProgress(toastId, {
+						title: "Downloading Update",
+						progress,
+					});
 				break;
 			}
 			case "Progress": {
 				currentLength += ev.data.chunkLength;
 				const progress = (currentLength * newRange) / oldRange;
-				if (toastId) toastUpdateProgress(toastId, { title: "Downloading Update", progress });
+				if (toastId)
+					toastUpdateProgress(toastId, {
+						title: "Downloading Update",
+						progress,
+					});
 				break;
 			}
 			case "Finished": {
