@@ -1,3 +1,30 @@
+# v0.9.0
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.7...v0.9.0](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.7...v0.9.0)
+
+### New
+- Theme system.
+- Locked modpacks.
+- Global options copy.
+
+#### Changes
+- Reworked Auth system.
+- Upgrade shadcn components to use react 19 and tailwindcss v4.
+- Render Optimizations.
+- Add Last Played to profile page.
+- Last played is now updated on starting profile.
+- Failed queue items now display a toast on fail.
+- Changed workshop search result card layout.
+- Skin page now no longer shows user profiles list.
+- Added drag handle on pages with profiles list.
+- Reworked toast api and style.
+- Updated ReadMe
+
+#### Fixes
+- Fixed bug where setting 'path.app' was not set on first init.
+- Fixed bug where java install test was not checking the correct value.
+- Fixed pagation layout shifts in workshop search
+- Fixed download queue items visablity not beening set correctly
+
 # v0.8.7
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.6...v0.8.7](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.6...v0.8.7)
 
