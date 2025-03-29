@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 
 export const UpdateModpackCheck: React.FC<{ id: string, game: string; loader: string }> = ({ id, game, loader }) => {
     const { data } = useQuery({
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        initialData: false,
         queryKey: ["MODPACK_SHA1_HASH", id],
         queryFn: async () => {
             const { error, data } = await versionFromHash({
@@ -43,7 +47,6 @@ export const UpdateModpackCheck: React.FC<{ id: string, game: string; loader: st
 
             return isUpdate;
         },
-        initialData: false
     })
 
 

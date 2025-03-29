@@ -1,5 +1,4 @@
 import type { ToastContentProps } from "react-toastify";
-import { cva } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,33 +9,12 @@ export type ToastData = {
 	showCloseBtn?: boolean
 }
 
-const toastVariants = cva(
-	"group pointer-events-auto flex w-full items-center justify-between overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all",
-	{
-		variants: {
-			variant: {
-				default: "border bg-background text-foreground",
-				error:
-					"destructive group border-destructive bg-destructive text-destructive-foreground",
-				info: "",
-				success: "",
-				warning: ""
-			},
-		},
-		defaultVariants: {
-			variant: "default",
-		},
-	},
-);
-
 export const Toast: React.FC<ToastContentProps<ToastData>> = ({
-	toastProps,
 	data: { showCloseBtn = true, ...data },
 	closeToast
 }) => {
-	const className = typeof toastProps.className === "function" ? toastProps.className() : toastProps.className;
 	return (
-		<div role="alert" className={cn(toastVariants({ variant: toastProps.type }), className)}>
+		<div className="flex flex-col w-full">
 			<div className="text-sm font-semibold [&+div]:text-xs">{data.title}</div>
 			<div className="text-sm opacity-90">{data.description}</div>
 			{showCloseBtn ? <ToastClose onClick={closeToast} /> : null}

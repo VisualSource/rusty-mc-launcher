@@ -1,20 +1,33 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Anvil, ArrowUp01, Import, LockOpen } from "lucide-react";
+import { Import, LockOpen } from "lucide-react";
 import { useState } from "react";
 
+import { AlertDialog, AlertDialogCancel, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ContentTab } from "@/components/library/content/profile/ContentTab";
 import { fetchProfileContent } from "@/lib/profile/fetchProfileContent";
 import { profileImportFile } from "@/lib/profile/profileImportFile";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toastError, toastSuccess } from "@/lib/toast";
 import { profileQueryOptions } from "../_profile.$id";
+import { Separator } from "@/components/ui/separator";
+import { queryClient } from "@/lib/api/queryClient";
+import { query } from "@/lib/api/plugins/query";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertDialog, AlertDialogCancel, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { UpdateModpackCheck } from "@/components/library/content/profile/UpdateModpackCheck";
+import { KEY_PROFILE } from "@/hooks/keys";
 
+const unlockModpack = async (id: string) => {
+	try {
+		await query`UPDATE profiles SET is_modpack = NULL WHERE id = ${id}`.run();
+		await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, id] });
+		toastSuccess({ title: "Profile unlocked", description: "Profile was been unlocked" });
+	} catch (error) {
+		console.error(error);
+		toastError({ title: "Unlock failed", description: "Failed to unlock profile", error: error as Error });
+	}
+}
 
 export const Route = createFileRoute(
 	"/_authenticated/_layout/profile/_profile/$id/",
@@ -61,13 +74,15 @@ function ProfileContent() {
 
 					<TooltipProvider>
 						<div className="flex gap-2">
-							{isModpack ? (
-								<>
-									<UpdateModpackCheck
+							{isModpack ? (/** 
+								TODO: Impl update check
+								<UpdateModpackCheck
 										loader={profile.data.loader}
 										game={profile.data.version}
 										id={profile.data.is_modpack as string}
 									/>
+							*/
+								<>
 									<Tooltip>
 										<AlertDialog>
 											<AlertDialogTrigger asChild>
@@ -80,11 +95,11 @@ function ProfileContent() {
 											<AlertDialogContent>
 												<AlertDialogHeader>
 													<AlertDialogTitle>Unlock modpack</AlertDialogTitle>
-													<AlertDialogDescription>Are you sure you want to unlock this pack? Unlocking this pack will allow you to have full control over all content in this pack but you will no longer get update for this pack.</AlertDialogDescription>
+													<AlertDialogDescription>Are you sure you want to unlock this pack? This can not be undone. Unlocking this pack will allow you to have full control over all content in this pack but you will no longer get update for this pack.</AlertDialogDescription>
 												</AlertDialogHeader>
 												<AlertDialogFooter>
 													<AlertDialogCancel>Cancel</AlertDialogCancel>
-													<AlertDialogAction>Continue</AlertDialogAction>
+													<AlertDialogAction onClick={() => unlockModpack(profile.data.id)}>Continue</AlertDialogAction>
 												</AlertDialogFooter>
 											</AlertDialogContent>
 										</AlertDialog>
@@ -93,7 +108,9 @@ function ProfileContent() {
 										</TooltipContent>
 									</Tooltip>
 								</>
-							) : (
+							) : null /** 
+								TODO: button for updating all content of a category in a profile 
+							
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<Button variant="secondary" size="icon">
@@ -104,7 +121,7 @@ function ProfileContent() {
 										<p>Update All</p>
 									</TooltipContent>
 								</Tooltip>
-							)}
+							*/}
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<Button
@@ -125,7 +142,7 @@ function ProfileContent() {
 				<Separator />
 				<div className="pb-2 overflow-y-auto scrollbar h-full">
 					<ContentTab
-						isModpack={isModpack}
+						isModpack={selected === "Mod" && isModpack}
 						content_type={selected}
 						profile={profile.data}
 						content={content}
