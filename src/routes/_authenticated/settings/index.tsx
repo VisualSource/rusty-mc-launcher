@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/settings/")({
 function SystemSettings() {
 	const form = useForm<{ theme: string }>({
 		defaultValues: {
-			theme: "dark",
+			theme: localStorage.getItem("theme") ?? "dark",
 		},
 	});
 	const { data } = useSuspenseQuery({
@@ -77,6 +77,7 @@ function SystemSettings() {
 												field.onChange(value);
 												const htmlDoc = document.querySelector("html");
 												htmlDoc?.setAttribute("data-theme", value);
+												localStorage.setItem("theme", value);
 											}}
 											defaultValue={field.value}
 											className="flex flex-wrap gap-2"
