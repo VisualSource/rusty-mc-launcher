@@ -515,6 +515,7 @@ export async function install(data: Project) {
 					metadata: {
 						content_type: ContentType.Modpack,
 						profile,
+						project_id: data.id,
 						files: [
 							{
 								sha1: file?.hashes.sha1,

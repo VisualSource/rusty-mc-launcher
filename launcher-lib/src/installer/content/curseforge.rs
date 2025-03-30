@@ -5,7 +5,7 @@
 //! download urls for mods as curseforge does not provide a api for resloving mod project id's
 //! the stibility of this method is unstable as the third party api may not work in the future`
 
-use super::{InstallContent, insert_bluk_profile_content};
+use super::{insert_bluk_profile_content, InstallContent, ModpackVersion};
 use crate::{
     database::RwDatabase,
     error::{Error, Result},
@@ -53,12 +53,18 @@ struct CFMFile {
     #[serde(rename = "fileID")]
     file_id: usize,
 }
+
+#[derive(Debug, Deserialize)]
+struct CFProjectUrls {
+    project: String,
+}
+
 #[derive(Debug, Deserialize)]
 struct CFProject {
+    urls: CFProjectUrls,
     files: Vec<CFProjectFile>,
     title: String,
-    #[serde(rename = "type")]
-    project_type: String,
+    //version: String,
 }
 #[derive(Debug, Deserialize)]
 struct CFProjectFile {
@@ -147,14 +153,17 @@ pub async fn install_curseforge_modpack(
 
             let mut project: CFProject = response.json().await?;
 
-            let content_type = match project.project_type.as_str() {
-                "Mods" => "mods",
-                "Resource Packs" => "resourcepacks",
-                "Customization" | "Shaders" => "shaderpacks",
+            let project_content_type = project.urls.project.split('/').take(3).nth(2).unwrap_or("unknown");
+            
+            let content_type = match project_content_type {
+                "mc-mods" => "mods",
+                "texture-packs" => "resourcepacks",
+                "shaders" => "shaderpacks",
                 _ => {
                     return Err(Error::Generic(format!(
-                        "Unable to determine content type for {}",
-                        project.title
+                        "Unable to determine content type for {}. Given {}",
+                        project.title,
+                        project_content_type
                     )))
                 }
             };
@@ -326,15 +335,18 @@ pub async fn install_curseforge_modpack(
     let loader = modloader.to_string().to_lowercase();
 
     let pack_name = format!("{}: {}", pack.name, pack.version);
+    let pack_data = serde_json::to_string(&ModpackVersion::new("curseforge_semver".to_string(), pack.version,None))?;
+
     sqlx::query!(
-        "INSERT INTO profiles ('id','name','date_created','version','loader','loader_version','java_args','state') VALUES (?,?,current_timestamp,?,?,?,?,?);",
+        "INSERT INTO profiles ('id','name','date_created','version','loader','loader_version','java_args','state','is_modpack') VALUES (?,?,current_timestamp,?,?,?,?,?,?);",
         profile_id,
         pack_name,
         pack.minecraft.version,
         loader,
         loader_version,
         "-Xmx4G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
-        "INSTALLED"
+        "INSTALLED",
+        pack_data
     )
     .execute(&wdb.0)
     .await?;

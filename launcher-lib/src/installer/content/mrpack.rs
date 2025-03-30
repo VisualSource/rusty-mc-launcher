@@ -22,7 +22,7 @@ use futures::StreamExt;
 use serde::Deserialize;
 use tokio::fs::{self, File};
 
-use super::insert_bluk_profile_content;
+use super::{ModpackVersion, insert_bluk_profile_content};
 
 const WHITELISTED_DOMAINS: [&str; 4] = [
     "https://cdn.modrinth.com",
@@ -67,7 +67,7 @@ struct Dependencies {
 struct MrPack {
     format_version: usize,
     icon: Option<String>,
-    //version_id: String,
+    version_id: String,
     name: String,
     files: Vec<PackFile>,
     dependencies: Dependencies,
@@ -80,7 +80,7 @@ pub async fn install_mrpack(
     icon: Option<String>,
     profile_id: String,
     runtime_directory: &Path,
-    pack_id: Option<String>,
+    project_id: Option<String>,
 ) -> Result<()> {
     let mut archive = compression::open_archive(File::open(&mrpack_path).await?).await?;
     let pack = compression::parse_extract::<MrPack>(&mut archive, "modrinth.index.json").await?;
@@ -250,6 +250,13 @@ pub async fn install_mrpack(
         .map_err(|err| Error::Generic(err.to_string()))?;
 
     let loader = modloader.to_string().to_lowercase();
+
+    let pack_data = serde_json::to_string(&ModpackVersion::new(
+        "modrinth_id".to_string(),
+        pack.version_id,
+        project_id,
+    ))?;
+
     sqlx::query!(
         "INSERT INTO profiles ('id','name','icon','date_created','version','loader','loader_version','java_args','state','is_modpack') VALUES (?,?,?,current_timestamp,?,?,?,?,?,?);",
             profile_id,
@@ -260,7 +267,7 @@ pub async fn install_mrpack(
             loader_version,
             "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
             "INSTALLED",
-            pack_id
+            pack_data
         )
         .execute(&wdb.0)
         .await?;

@@ -13,9 +13,26 @@ use crate::{
 
 use futures::StreamExt;
 pub use mrpack::install_mrpack;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::QueryBuilder;
 use tokio::fs;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ModpackVersion {
+    version_type: String,
+    version: String,
+    project_id: Option<String>,
+}
+
+impl ModpackVersion {
+    pub fn new(version_type: String, version: String, project_id: Option<String>) -> Self {
+        Self {
+            version,
+            version_type,
+            project_id,
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub enum ContentType {
@@ -50,6 +67,7 @@ pub struct InstallContent {
     content_type: ContentType,
     profile: String,
     files: Vec<InstallFile>,
+    project_id: Option<String>,
 }
 
 async fn download_files(output_direcotry: &std::path::Path, files: Vec<InstallFile>) -> Result<()> {
@@ -306,7 +324,7 @@ pub async fn install_content(
                 icon,
                 config.profile,
                 &root,
-                Some(file.sha1.clone()),
+                config.project_id,
             )
             .await
             {
