@@ -9,7 +9,6 @@ use log::{info, warn};
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::path::PathBuf;
-use tokio::fs::read_dir;
 use tokio::{fs, io::AsyncWriteExt};
 
 const JAVA_DOWNLOAD_URL: &str = "https://api.azul.com/metadata/v1/zulu/packages";
