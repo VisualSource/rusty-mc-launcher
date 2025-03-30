@@ -5,7 +5,7 @@
 //! download urls for mods as curseforge does not provide a api for resloving mod project id's
 //! the stibility of this method is unstable as the third party api may not work in the future`
 
-use super::{insert_bluk_profile_content, InstallContent, ModpackVersion};
+use super::{InstallContent, ModpackVersion, insert_bluk_profile_content};
 use crate::{
     database::RwDatabase,
     error::{Error, Result},
@@ -20,6 +20,7 @@ use futures::StreamExt;
 use normalize_path::NormalizePath;
 use serde::Deserialize;
 use std::{os::windows::fs::MetadataExt, path::PathBuf, str::FromStr, time::Duration};
+use tauri::Url;
 use urlencoding::encode;
 use uuid::Uuid;
 
@@ -153,8 +154,8 @@ pub async fn install_curseforge_modpack(
 
             let mut project: CFProject = response.json().await?;
 
-            let project_content_type = project.urls.project.split('/').take(3).nth(2).unwrap_or("unknown");
-            
+            let project_url = Url::parse(&project.urls.project).map_err(|e|Error::Generic(e.to_string()))?;
+            let project_content_type = project_url.path().split('/').take(2).nth(1).unwrap_or("unknown");
             let content_type = match project_content_type {
                 "mc-mods" => "mods",
                 "texture-packs" => "resourcepacks",
@@ -335,7 +336,11 @@ pub async fn install_curseforge_modpack(
     let loader = modloader.to_string().to_lowercase();
 
     let pack_name = format!("{}: {}", pack.name, pack.version);
-    let pack_data = serde_json::to_string(&ModpackVersion::new("curseforge_semver".to_string(), pack.version,None))?;
+    let pack_data = serde_json::to_string(&ModpackVersion::new(
+        "curseforge_semver".to_string(),
+        pack.version,
+        None,
+    ))?;
 
     sqlx::query!(
         "INSERT INTO profiles ('id','name','date_created','version','loader','loader_version','java_args','state','is_modpack') VALUES (?,?,current_timestamp,?,?,?,?,?,?);",
