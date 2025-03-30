@@ -1,8 +1,14 @@
-# v0.9.3
-**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.3](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.3)
+# v0.9.4
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.4](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.4)
+
+### Changes
+- Changed format of modpack metadata
 
 ### Fixes
 - Resloved isuse where content type could not be determined for content when importing a curseforge modpack.
+
+### Other 
+- Fixed github action
 
 # v0.9.2
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.1...v0.9.2](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.1...v0.9.2)
