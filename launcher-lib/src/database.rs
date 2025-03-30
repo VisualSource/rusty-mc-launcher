@@ -52,7 +52,9 @@ impl Database {
             .map(|(_, a)| format!("sqlite:{}", a))
             .ok_or_else(|| Error::Generic("Failed to get database connection string".into()))?;
 
-        Sqlite::create_database(&conn_str).await?;
+        if !Sqlite::database_exists(&conn_str).await? {
+            Sqlite::create_database(&conn_str).await?;
+        }
 
         let db = SqlitePoolOptions::new().connect_lazy(&conn_str)?;
         Ok(Self(db))
