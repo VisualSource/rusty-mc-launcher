@@ -1,8 +1,15 @@
 # v0.9.1
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.1...v0.9.2](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.1...v0.9.2)
+
+### Fixes
+- Fixed bug where download settings page does not load on fresh install.
+
+
+# v0.9.1
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.0...v0.9.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.0...v0.9.1)
 
 ### Fixes
-- Fixed bug where database was not able to be created on new freesh install.
+- Fixed bug where database was not able to be created on new fresh install.
 
 # v0.9.0
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.7...v0.9.0](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.8.7...v0.9.0)
