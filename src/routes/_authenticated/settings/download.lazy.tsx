@@ -64,6 +64,41 @@ const UpdateCheckBtn: React.FC = () => {
 	);
 };
 
+const getVersions = async (runtimeDir: string) => {
+	const dir = await join(runtimeDir, "versions");
+	const doesExist = await exists(dir);
+	if (!doesExist) return [];
+	return readDir(dir);
+}
+
+const getInstalledJREs = async (runtimeDir: string) => {
+	const dir = await join(runtimeDir, "java");
+	const doesExist = await exists(dir);
+	if (!doesExist) return [];
+
+	const folders = await readDir(dir);
+
+	const versions = [];
+	for (const folder of folders) {
+		const match = folder.name.match(JavaJREForamt);
+		if (!match) {
+			versions.push({ name: folder.name, folder: folder.name })
+			continue;
+		};
+
+		const zuluBuild = match.groups?.zulu ?? "Unknown";
+		const jre = match.groups?.jre ?? "Unknown";
+		const platform = match.groups?.platform ?? "Unknown";
+
+		versions.push({
+			name: `Java ${jre} for ${platform}. (Zulu ${zuluBuild})`,
+			folder: folder.name,
+		})
+	}
+
+	return versions;
+}
+
 function DownloadSettings() {
 	const { data } = useSuspenseQuery({
 		queryKey: [APLICATION_RUNTIMES_AND_VERSIONS],
@@ -71,31 +106,9 @@ function DownloadSettings() {
 			const path = await getConfig(OPTION_PATH_APP);
 			if (!path) return { java: [], versions: [] };
 			const runtime_dir = await join(path.value, "runtime");
-
 			const [versions, java] = await Promise.all([
-				join(runtime_dir, "versions").then((dir) => readDir(dir)),
-				join(runtime_dir, "java")
-					.then((dir) => readDir(dir))
-					.then((dirs) =>
-						dirs.map((dir) => {
-							const match = dir.name.match(JavaJREForamt);
-							if (!match) {
-								return {
-									name: dir.name,
-									folder: dir.name,
-								};
-							}
-
-							const zuluBuild = match.groups?.zulu ?? "Unknown";
-							const jre = match.groups?.jre ?? "Unknown";
-							const platform = match.groups?.platform ?? "Unknown";
-
-							return {
-								name: `Java ${jre} for ${platform}. (Zulu ${zuluBuild})`,
-								folder: dir.name,
-							};
-						}),
-					),
+				getVersions(runtime_dir),
+				getInstalledJREs(runtime_dir),
 			]);
 
 			return {
