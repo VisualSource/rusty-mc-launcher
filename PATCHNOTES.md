@@ -1,9 +1,14 @@
-# v0.9.1
+# v0.9.3
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.3](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.3)
+
+### Fixes
+- Resloved isuse where content type could not be determined for content when importing a curseforge modpack.
+
+# v0.9.2
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.1...v0.9.2](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.1...v0.9.2)
 
 ### Fixes
 - Fixed bug where download settings page does not load on fresh install.
-
 
 # v0.9.1
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.0...v0.9.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.0...v0.9.1)
