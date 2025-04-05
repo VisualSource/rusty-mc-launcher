@@ -155,7 +155,7 @@ pub async fn install_curseforge_modpack(
             let mut project: CFProject = response.json().await?;
 
             let project_url = Url::parse(&project.urls.project).map_err(|e|Error::Generic(e.to_string()))?;
-            let project_content_type = project_url.path().split('/').take(2).nth(1).unwrap_or("unknown");
+            let project_content_type = project_url.path().split('/').filter(|e| !e.is_empty()).take(2).nth(1).unwrap_or("unknown");
             let content_type = match project_content_type {
                 "mc-mods" => "mods",
                 "texture-packs" => "resourcepacks",
