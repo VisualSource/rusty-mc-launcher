@@ -4,13 +4,15 @@ import { Loader2 } from "lucide-react";
 import bg from "../images/background.png";
 import { TypographyH4 } from "@/components/ui/typography";
 
+
+
 export const Route = createFileRoute("/_authenticated")({
 	component: () => {
 		const location = useLocation();
 		const isAuth = useIsAuthenticated();
 		const masl = useMsal();
 
-		if (location.pathname.startsWith("/settings")) {
+		if (location.pathname.startsWith("/settings") || location.pathname.startsWith("/patch-notes")) {
 			return <Outlet />;
 		}
 
