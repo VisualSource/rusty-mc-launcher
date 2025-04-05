@@ -1,7 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod deeplink;
 mod error;
 mod plugins;
 use tauri::Manager;
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 fn main() {
     tauri::Builder::default()
@@ -59,6 +61,19 @@ fn main() {
             handle.plugin(plugins::content::init())?;
             handle.plugin(plugins::game::init())?;
             handle.plugin(plugins::auth::init())?;
+
+            if let Err(err) = deeplink::ensure_deeplink_windows() {
+                if err.kind() == std::io::ErrorKind::PermissionDenied {
+                    app.dialog()
+                        .message("Unable to set deeplinks: Please run appliaction as administrator")
+                        .kind(MessageDialogKind::Error)
+                        .title("Error")
+                        .blocking_show();
+                }
+                log::error!("[Deeplink] {}", err);
+
+                return Err(Box::new(err));
+            }
 
             Ok(())
         })
