@@ -34,6 +34,7 @@ impl From<String> for QueueType {
             "shader" => Self::Shader,
             "curseforgemodpack" => Self::CurseforgeModpack,
             "update" => Self::Update,
+            "client" => Self::Client,
             _ => Self::Unknown,
         }
     }

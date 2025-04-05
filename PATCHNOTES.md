@@ -1,3 +1,9 @@
+# v0.9.8
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.7...v0.9.8](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.7...v0.9.8)
+
+### Fixes
+- Fixed failing client installs
+
 # v0.9.7
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.7](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.7)
 
