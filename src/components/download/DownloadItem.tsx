@@ -14,6 +14,7 @@ import { queryClient, invalidateQueries } from "@/lib/api/queryClient";
 import { KEY_DOWNLOAD_QUEUE } from "@/hooks/keys";
 import { Button } from "../ui/button";
 import { query } from "@/lib/api/plugins/query";
+import { formatRelative } from "date-fns/formatRelative";
 
 const QueuItemContent: React.FC<{ state: QueueItem["state"]; id: string }> = ({
 	state,
@@ -101,6 +102,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 	state,
 	display_name,
 	content_type,
+	completed,
 	icon,
 }) => {
 	return (
@@ -120,7 +122,7 @@ const DownloadItem: React.FC<QueueItem> = ({
 				</Avatar>
 				<div>
 					<TypographyH4 className="-mb-2">{display_name}</TypographyH4>
-					<span className="text-sm text-zinc-400">{content_type}</span>
+					<span className="text-sm text-accent-foreground font-light">{content_type}{completed ? (<span className="text-muted-foreground"> | Finished {formatRelative(new Date(), new Date(completed))}</span>) : null}</span>
 				</div>
 			</div>
 

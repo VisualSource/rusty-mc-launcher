@@ -130,6 +130,7 @@ pub async fn unpack_mrpack(
     event: &Emitter,
     mrpack_path: &Path,
     output_directory: &Path,
+    override_existing: bool,
 ) -> Result<PackData> {
     let mut archive = compression::open_archive(File::open(&mrpack_path).await?).await?;
     let pack = compression::parse_extract::<MrPack>(&mut archive, "modrinth.index.json").await?;
@@ -219,6 +220,7 @@ pub async fn unpack_mrpack(
         "overrides",
         output_directory,
         Some(|file| file.replace("overrides", "")),
+        override_existing,
     )
     .await?;
 
@@ -234,6 +236,7 @@ pub async fn unpack_mrpack(
         "client-overrides",
         output_directory,
         Some(|file| file.replace("client-overrides", "")),
+        override_existing,
     )
     .await?;
 
@@ -288,7 +291,7 @@ pub async fn install_mrpack(
         fs::create_dir_all(&current_profile_dir).await?;
     }
 
-    let pack = unpack_mrpack(on_event, mrpack_path, &current_profile_dir).await?;
+    let pack = unpack_mrpack(on_event, mrpack_path, &current_profile_dir, false).await?;
 
     let title = format!(
         "Minecraft {} {} {}",

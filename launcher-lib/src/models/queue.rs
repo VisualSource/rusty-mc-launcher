@@ -1,5 +1,9 @@
-use crate::{database::RwDatabase, error::Result};
+use crate::{
+    database::RwDatabase,
+    error::{Error, Result},
+};
 use serde::{Deserialize, Serialize};
+use time::format_description::well_known::Rfc3339;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum QueueType {
@@ -11,11 +15,12 @@ pub enum QueueType {
     Datapack,
     CurseforgeModpack,
     Update,
+    Unknown,
 }
 
 impl Default for QueueType {
     fn default() -> Self {
-        Self::Client
+        Self::Unknown
     }
 }
 
@@ -28,7 +33,8 @@ impl From<String> for QueueType {
             "resourcepack" => Self::Resourcepack,
             "shader" => Self::Shader,
             "curseforgemodpack" => Self::CurseforgeModpack,
-            _ => Self::Client,
+            "update" => Self::Update,
+            _ => Self::Unknown,
         }
     }
 }
@@ -85,6 +91,7 @@ pub struct QueueItem {
     pub icon: Option<String>,
     pub profile_id: String,
     pub created: time::OffsetDateTime,
+    pub completed: Option<time::OffsetDateTime>,
     pub content_type: QueueType,
     pub metadata: Option<String>,
     pub state: QueueState,
@@ -134,11 +141,37 @@ impl QueueItem {
     pub async fn set_state(id: &str, state: QueueState, rwdb: &RwDatabase) -> Result<()> {
         let db = rwdb.write().await;
 
-        sqlx::query("UPDATE download_queue SET state = ? WHERE id = ?;")
-            .bind(state.to_string())
-            .bind(id)
-            .execute(&db.0)
-            .await?;
+        let state_str = state.to_string();
+        match state {
+            QueueState::Pending
+            | QueueState::Postponed
+            | QueueState::Unknown
+            | QueueState::Current => {
+                sqlx::query!(
+                    "UPDATE download_queue SET state = ? WHERE id = ?;",
+                    state_str,
+                    id
+                )
+                .execute(&db.0)
+                .await?;
+            }
+            _ => {
+                let now = std::time::SystemTime::now();
+                let offset: time::OffsetDateTime = now.into();
+                let timestamp = offset
+                    .format(&Rfc3339)
+                    .map_err(|e| Error::Generic(e.to_string()))?;
+                sqlx::query!(
+                    "UPDATE download_queue SET state = ?, completed = ? WHERE id = ?;",
+                    state_str,
+                    timestamp,
+                    id
+                )
+                .execute(&db.0)
+                .await?;
+            }
+        }
+
         Ok(())
     }
 }

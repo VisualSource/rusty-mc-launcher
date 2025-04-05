@@ -81,7 +81,7 @@ pub async fn download_java(
 
     let mut archive = compression::open_archive(file).await?;
 
-    compression::extract_all(&mut archive, &java_directory).await?;
+    compression::extract_all(&mut archive, &java_directory, false).await?;
 
     fs::remove_file(temp_file).await?;
 
@@ -228,7 +228,7 @@ pub async fn download_libraries(
                     let mut archive =
                         compression::open_archive(fs::File::open(&path).await?).await?;
 
-                    compression::extract_all(&mut archive, &nat_dir).await?;
+                    compression::extract_all(&mut archive, &nat_dir, false).await?;
 
                     fs::remove_file(&path).await?;
                 }

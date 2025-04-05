@@ -36,6 +36,7 @@ export class QueueItem {
 		icon: z.ostring().nullable().default(null),
 		profile_id: z.string().uuid(),
 		created: z.string(),
+		completed: z.ostring().nullable().default(null),
 		metadata: z
 			.string()
 			.transform((arg, ctx) => {
@@ -68,7 +69,7 @@ export class QueueItem {
 		state = QueueItemState.PENDING,
 		...args }: InsertArgs
 	) {
-		return query`INSERT INTO download_queue VALUES (${id},${display ? 1 : 0},${priority},${args.display_name},${args.icon},${args.profile_id},${created},${args.content_type},${JSON.stringify(args.metadata)},${state});`.run();
+		return query`INSERT INTO download_queue VALUES (${id},${display ? 1 : 0},${priority},${args.display_name},${args.icon},${args.profile_id},${created},${args.content_type},${JSON.stringify(args.metadata)},${state},${null});`.run();
 	}
 
 	static fromQuery(args: QueryResult) {
@@ -82,6 +83,7 @@ export class QueueItem {
 	public icon: string | null;
 	public profile_id: string;
 	public created: string;
+	public completed: string | null;
 	public metadata: Record<string, unknown>;
 	public content_type: z.infer<typeof contentTypeSchema>;
 	public state: keyof typeof QueueItemState = "PENDING";
@@ -96,5 +98,6 @@ export class QueueItem {
 		this.created = args.created;
 		this.metadata = args.metadata;
 		this.content_type = args.content_type;
+		this.completed = args.completed;
 	}
 }

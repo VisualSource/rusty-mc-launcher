@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE download_queue SET state = ? AND completed = ? WHERE id = ?;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "ff6b31d027588ad8518be1e63998850739c67af78a18a152e965b9c4e01d892f"
+}

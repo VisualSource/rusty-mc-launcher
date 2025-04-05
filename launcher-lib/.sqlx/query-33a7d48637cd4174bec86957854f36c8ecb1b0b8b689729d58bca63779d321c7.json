@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE profiles SET is_modpack = json_replace(is_modpack,'$.version',?) WHERE id = ?;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "33a7d48637cd4174bec86957854f36c8ecb1b0b8b689729d58bca63779d321c7"
+}

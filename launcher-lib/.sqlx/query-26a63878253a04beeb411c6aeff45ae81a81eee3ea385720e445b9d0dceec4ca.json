@@ -52,6 +52,11 @@
         "name": "state",
         "ordinal": 9,
         "type_info": "Text"
+      },
+      {
+        "name": "completed",
+        "ordinal": 10,
+        "type_info": "Datetime"
       }
     ],
     "parameters": {
@@ -67,7 +72,8 @@
       false,
       false,
       true,
-      false
+      false,
+      true
     ]
   },
   "hash": "26a63878253a04beeb411c6aeff45ae81a81eee3ea385720e445b9d0dceec4ca"

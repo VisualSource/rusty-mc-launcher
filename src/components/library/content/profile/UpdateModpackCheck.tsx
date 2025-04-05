@@ -26,13 +26,11 @@ export const UpdateModpackCheck: React.FC<{
 		queryKey: ["MODPACK_PACK_METADATA", profile.is_modpack],
 		queryFn: async () => {
 			if (!profile.is_modpack) throw new Error("No modpack metadata was provided");
-
 			const content = JSON.parse(profile.is_modpack) as {
 				version_type: string,
 				version: string,
 				project_id: string | null,
 			};
-
 			switch (content.version_type) {
 				case "curseforge_semver": {
 					return { hasUpdate: false, nextVersionData: null };
@@ -56,7 +54,6 @@ export const UpdateModpackCheck: React.FC<{
 					const hasUpdate = compare(content.version, version.version_number) === -1;
 					return { hasUpdate: hasUpdate, nextVersionData: hasUpdate ? version : null };
 				}
-
 				default:
 					throw new Error(`Unknown modpack metadat type: Given ${content.version_type}`);
 			}

@@ -256,7 +256,7 @@ pub async fn run_installer(
 
         utils::download_file(&download_url, &installer_path, None, None).await?;
 
-        info!("Extracting and parseing install_profile");
+        log::debug!("Extracting and parseing install_profile");
         let mut archive = open_archive(File::open(&installer_path).await?).await?;
         let profile =
             compression::parse_extract::<InstallProfile>(&mut archive, "install_profile.json")
@@ -265,9 +265,10 @@ pub async fn run_installer(
         let version_directory = runtime_directory.join("versions").join(&profile.version);
         let modded_manifest_path = version_directory.join(format!("{}.json", &profile.version));
 
-        info!("Extracting version.json");
+        log::debug!("Extracting version.json");
         // extract version manifest and rename
-        compression::extract_file_to(&mut archive, "version.json", &version_directory).await?;
+        compression::extract_file_to(&mut archive, "version.json", &version_directory, false)
+            .await?;
 
         fs::rename(
             version_directory.join("version.json"),
@@ -275,7 +276,7 @@ pub async fn run_installer(
         )
         .await?;
 
-        info!("Extracting files from dir");
+        log::debug!("Extracting files from dir");
         // extract libs in installer jar
         let libraries_directory = runtime_directory.join("libraries");
         compression::extract_dir(
@@ -283,12 +284,13 @@ pub async fn run_installer(
             "maven",
             &libraries_directory,
             Some(|filepath| filepath.replace("maven", "")),
+            false,
         )
         .await?;
 
-        info!("Extract file client.lzma");
+        log::debug!("Extract file client.lzma");
         // extract client.lzma
-        compression::extract_file_to(&mut archive, "data/client.lzma", &temp).await?;
+        compression::extract_file_to(&mut archive, "data/client.lzma", &temp, false).await?;
 
         (profile, modded_manifest_path)
     };
@@ -331,7 +333,7 @@ pub async fn run_installer(
         .join(format!("{}.jar", &profile.version));
     let copyed = fs::copy(&vanilla_jar, &modded_jar).await?;
 
-    info!(
+    log::debug!(
         "Copyed {} to {} | {} bytes",
         vanilla_jar.to_string_lossy(),
         modded_jar.to_string_lossy(),

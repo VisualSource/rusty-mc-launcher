@@ -17,11 +17,11 @@ use serde::{Deserialize, Serialize};
 use sqlx::QueryBuilder;
 use tokio::fs;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModpackVersion {
-    version_type: String,
-    version: String,
-    project_id: Option<String>,
+    pub version_type: String,
+    pub version: String,
+    pub project_id: Option<String>,
 }
 
 impl ModpackVersion {
@@ -367,7 +367,7 @@ pub async fn install_update(
     config: UpdateContent,
     db: &RwDatabase,
     on_event: &tauri::ipc::Channel<DownloadEvent>,
-) -> Result<()> {
+) -> Result<String> {
     let root = Setting::path("path.app", db)
         .await?
         .ok_or_else(|| Error::NotFound("failed to get application path".to_string()))?;
@@ -398,7 +398,13 @@ pub async fn install_update(
                 })
                 .map_err(|err| Error::Generic(err.to_string()))?;
 
-            let pack_info = mrpack::unpack_mrpack(on_event, &temp, &profile_direcotry).await?;
+            let mod_dir = profile_direcotry.join("mods");
+            if mod_dir.is_dir() && mod_dir.exists() {
+                tokio::fs::remove_dir_all(&mod_dir).await?;
+            }
+
+            let pack_info =
+                mrpack::unpack_mrpack(on_event, &temp, &profile_direcotry, true).await?;
 
             if temp.is_file() && temp.exists() {
                 tokio::fs::remove_file(&temp).await?;
@@ -419,8 +425,8 @@ pub async fn install_update(
                     message: None,
                 })
                 .map_err(|err| Error::Generic(err.to_string()))?;
+
+            Ok(file.version.clone())
         }
     }
-
-    Ok(())
 }

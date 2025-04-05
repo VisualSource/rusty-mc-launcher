@@ -164,6 +164,21 @@ impl Profile {
 
         Ok(())
     }
+
+    pub async fn set_pack_data_version(id: &str, version: &str, wdb: &RwDatabase) -> Result<()> {
+        let db = wdb.write().await;
+
+        sqlx::query!(
+            "UPDATE profiles SET is_modpack = json_replace(is_modpack,'$.version',?) WHERE id = ?;",
+            version,
+            id
+        )
+        .execute(&db.0)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn set_state(id: &str, state: ProfileState, rwdb: &RwDatabase) -> Result<()> {
         let db = rwdb.write().await;
 

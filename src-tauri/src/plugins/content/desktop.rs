@@ -4,7 +4,7 @@ use minecraft_launcher_lib::{
     events::DownloadEvent,
     installer::{
         InstallConfig,
-        content::{self, InstallContent, curseforge::install_curseforge_modpack},
+        content::{self, InstallContent, UpdateContent, curseforge::install_curseforge_modpack},
         minecraft::install_minecraft,
     },
     models::{
@@ -88,7 +88,8 @@ async fn install_update(
     on_event: &Channel<DownloadEvent>,
 ) -> Result<()> {
     let config = if let Some(metadata) = &item.metadata {
-        serde_json::from_str(metadata)?
+        log::debug!("{}", metadata);
+        serde_json::from_str::<UpdateContent>(metadata)?
     } else {
         return Err(Error::Reason("Invalid update metadata".to_string()));
     };
@@ -100,8 +101,9 @@ async fn install_update(
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     match content::install_update(&item.profile_id, config, db, on_event).await {
-        Ok(()) => {
+        Ok(updated_version) => {
             Profile::set_state(&item.profile_id, ProfileState::Installed, db).await?;
+            Profile::set_pack_data_version(&item.profile_id, &updated_version, db).await?;
             Ok(())
         }
 
@@ -152,6 +154,7 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
                 QueueType::Datapack => Err(Error::Reason("Datapack not supported".to_string())),
                 QueueType::CurseforgeModpack => install_cf_modpack(&item, &db, emitter).await,
                 QueueType::Update => install_update(&item, &db, emitter).await,
+                QueueType::Unknown => Err(Error::Reason("Invalid queue item type".into())),
             };
 
             let item_state = if let Err(err) = result {

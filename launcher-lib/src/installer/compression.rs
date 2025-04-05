@@ -74,7 +74,12 @@ where
 }
 
 /// extract a file from a archive
-pub async fn extract_file_to(archive: &mut Archive, filename: &str, outdir: &Path) -> Result<u64> {
+pub async fn extract_file_to(
+    archive: &mut Archive,
+    filename: &str,
+    outdir: &Path,
+    override_file: bool,
+) -> Result<u64> {
     let file_index = archive
         .file()
         .entries()
@@ -82,7 +87,7 @@ pub async fn extract_file_to(archive: &mut Archive, filename: &str, outdir: &Pat
         .position(|item| item.filename().as_str().is_ok_and(|x| x == filename))
         .ok_or(Error::NotFound("Failed to get index of file".to_string()))?;
 
-    extract_file_at(archive, file_index, outdir, None).await
+    extract_file_at(archive, file_index, outdir, None, override_file).await
 }
 
 /// Extract a directory in the archive
@@ -91,6 +96,7 @@ pub async fn extract_dir(
     dir: &str,
     outdir: &Path,
     modpath: Option<fn(&str) -> String>,
+    override_files: bool,
 ) -> Result<()> {
     for index in 0..archive.file().entries().len() {
         let entry = archive
@@ -102,7 +108,7 @@ pub async fn extract_dir(
         let file_name = entry.filename().as_str()?;
         if file_name.starts_with(dir) {
             debug!("Extracting file {}", file_name);
-            extract_file_at(archive, index, outdir, modpath).await?;
+            extract_file_at(archive, index, outdir, modpath, override_files).await?;
         }
     }
 
@@ -110,9 +116,9 @@ pub async fn extract_dir(
 }
 
 /// Extract all files from archive
-pub async fn extract_all(archive: &mut Archive, outdir: &Path) -> Result<()> {
+pub async fn extract_all(archive: &mut Archive, outdir: &Path, override_files: bool) -> Result<()> {
     for index in 0..archive.file().entries().len() {
-        extract_file_at(archive, index, outdir, None).await?;
+        extract_file_at(archive, index, outdir, None, override_files).await?;
     }
 
     Ok(())
@@ -123,6 +129,7 @@ async fn extract_file_at(
     index: usize,
     outdir: &Path,
     modpath: Option<fn(&str) -> String>,
+    override_file: bool,
 ) -> Result<u64> {
     let entry = archive
         .file()
@@ -149,7 +156,10 @@ async fn extract_file_at(
         Ok(0)
     } else {
         if file_path.exists() && file_path.is_file() {
-            return Ok(0);
+            if !override_file {
+                return Ok(0);
+            }
+            tokio::fs::remove_file(&file_path).await?;
         }
 
         if let Some(parent) = file_path.parent() {
@@ -219,7 +229,7 @@ mod tests {
         .await
         .expect("Failed to open archive");
 
-        extract_dir(&mut archive, "maven", &file.join("libraries"), None)
+        extract_dir(&mut archive, "maven", &file.join("libraries"), None, false)
             .await
             .expect("Failed to extract");
     }
