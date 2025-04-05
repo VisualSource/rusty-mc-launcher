@@ -1,3 +1,13 @@
+# v0.9.5
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.4...v0.9.5](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.4...v0.9.5)
+
+### Changes
+- Add deeplink checks
+- Allow viewing patch notes when not logged in.
+
+### Fixes
+- Fix importing for curseforge modpack imports
+
 # v0.9.4
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.4](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.2...v0.9.4)
 
