@@ -1,3 +1,15 @@
+# v0.9.6
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.6](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.6)
+
+### New
+- Added Modrinth modpacks installed from workshop to have a updater
+
+### Changes
+- Add timestamp to queue items
+
+### Fixes
+- Now fixed curseforge modpack imports
+
 # v0.9.5
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.4...v0.9.5](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.4...v0.9.5)
 
