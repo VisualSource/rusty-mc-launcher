@@ -1,5 +1,5 @@
-# v0.9.6
-**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.6](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.6)
+# v0.9.7
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.7](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.5...v0.9.7)
 
 ### New
 - Added Modrinth modpacks installed from workshop to have a updater
