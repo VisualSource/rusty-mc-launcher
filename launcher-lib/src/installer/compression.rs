@@ -1,6 +1,6 @@
 use async_zip::base::read::seek::ZipFileReader;
 use futures::AsyncReadExt;
-use log::info;
+use log::debug;
 use normalize_path::NormalizePath;
 use serde::de::DeserializeOwned;
 use std::path::{Path, PathBuf};
@@ -33,7 +33,8 @@ pub async fn get_mainclass(file: &Path) -> Result<String> {
 
     let mut buffer = String::new();
     let bytes = entry_reader.read_to_string(&mut buffer).await?;
-    info!("Read {} bytes from archive", bytes);
+
+    debug!("Read {} bytes from archive", bytes);
 
     let (_, main_class) = lazy_regex::regex_captures!(r"Main-Class: (?<main_class>.+)", &buffer)
         .ok_or(Error::NotFound("Failed to get main class".to_string()))?;
@@ -67,7 +68,7 @@ where
     let mut buffer = Vec::new();
     let bytes = entry_reader.read_to_end(&mut buffer).await?;
 
-    info!("Read {} bytes from archive", bytes);
+    debug!("Read {} bytes from archive", bytes);
 
     serde_json::from_slice::<T>(&buffer).map_err(Error::from)
 }
@@ -100,7 +101,7 @@ pub async fn extract_dir(
 
         let file_name = entry.filename().as_str()?;
         if file_name.starts_with(dir) {
-            info!("Extracting file {}", file_name);
+            debug!("Extracting file {}", file_name);
             extract_file_at(archive, index, outdir, modpath).await?;
         }
     }
@@ -139,7 +140,7 @@ async fn extract_file_at(
         outdir.join(sanitize_file_path(filename)).normalize()
     };
 
-    info!("Extracting file to {}", file_path.to_string_lossy());
+    debug!("Extracting file to {}", file_path.to_string_lossy());
 
     if entry.dir()? {
         if !file_path.exists() {
@@ -165,7 +166,7 @@ async fn extract_file_at(
             .await?;
 
         let bytes = futures::io::copy(&mut entry_reader, &mut writer.compat_write()).await?;
-        info!("Extracted {} bytes from archive", bytes);
+        debug!("Extracted {} bytes from archive", bytes);
 
         Ok(bytes)
     }

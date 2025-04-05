@@ -2,6 +2,11 @@ import { z } from "zod";
 import { type QueryResult, query } from "../api/plugins/query";
 import { QueueItemState } from "../QueueItemState";
 
+type InsertArgs =
+	Omit<z.infer<typeof QueueItem.schema>, "id" | "created" | "display" | "state" | "priority"> &
+	Partial<Pick<z.infer<typeof QueueItem.schema>, "id" | "created" | "display" | "state" | "priority">> &
+	{ metadata: Record<string, unknown>; }
+
 export const contentTypeSchema = z.enum([
 	"Client",
 	"Mod",
@@ -10,7 +15,7 @@ export const contentTypeSchema = z.enum([
 	"Shader",
 	"Datapack",
 	"CurseforgeModpack",
-	"SystemUpdate",
+	"Update"
 ]);
 export const ContentType = z.util.arrayToEnum([
 	"Client",
@@ -19,8 +24,7 @@ export const ContentType = z.util.arrayToEnum([
 	"Mod",
 	"Shader",
 	"Datapack",
-	"CurseforgeModpack",
-	"SystemUpdate",
+	"CurseforgeModpack"
 ]);
 
 export class QueueItem {
@@ -54,15 +58,19 @@ export class QueueItem {
 			QueueItemState.ERRORED,
 			QueueItemState.PENDING,
 			QueueItemState.POSTPONED,
-		]),
+		])
 	});
-	static async insert(
-		args: z.infer<typeof QueueItem.schema> & {
-			metadata: Record<string, unknown>;
-		},
+	static async insert({
+		id = crypto.randomUUID(),
+		priority = 0,
+		display = true,
+		created = new Date().toISOString(),
+		state = QueueItemState.PENDING,
+		...args }: InsertArgs
 	) {
-		return query`INSERT INTO download_queue VALUES (${args.id},${args.display ? 1 : 0},${args.priority},${args.display_name},${args.icon},${args.profile_id},${new Date().toISOString()},${args.content_type},${JSON.stringify(args.metadata)},${args.state});`.run();
+		return query`INSERT INTO download_queue VALUES (${id},${display ? 1 : 0},${priority},${args.display_name},${args.icon},${args.profile_id},${created},${args.content_type},${JSON.stringify(args.metadata)},${state});`.run();
 	}
+
 	static fromQuery(args: QueryResult) {
 		const data = QueueItem.schema.parse(args);
 		return new QueueItem(data);

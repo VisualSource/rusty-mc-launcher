@@ -1,8 +1,8 @@
-use log::{info, warn};
+use log::{debug, warn};
 use sha1::{Digest, Sha1};
 use std::path::Path;
 use std::time::Duration;
-use tokio::fs::{create_dir_all, File};
+use tokio::fs::{File, create_dir_all};
 use tokio::io::AsyncWriteExt;
 
 use crate::error::{Error, Result};
@@ -34,7 +34,7 @@ pub async fn get_file_hash(path: &Path) -> Result<String> {
     let mut hasher = Sha1::new();
     let size = std::io::copy(&mut file, &mut hasher)?;
     let file_hash = hasher.finalize();
-    info!("Current size of file on disk: {}", size);
+    debug!("File at {:?} has size of {} on disk", path, size);
 
     Ok(hex::encode(file_hash))
 }
@@ -72,7 +72,10 @@ pub async fn download_file(
                 return Ok(());
             }
         } else {
-            warn!("File was found on disk but now removing it and redownloading from source as it can not be verified. {:?}",output_directory);
+            warn!(
+                "File was found on disk but now removing it and redownloading from source as it can not be verified. {:?}",
+                output_directory
+            );
             tokio::fs::remove_file(&output_directory).await?;
         }
     }
@@ -83,7 +86,7 @@ pub async fn download_file(
 
     for attempt in 1..=(FETCH_ATTEMPTS + 1) {
         if attempt > 1 {
-            log::debug!(
+            log::warn!(
                 "Fetch Attempt {} | Duration {}ms | Task {}",
                 attempt,
                 15_000 * attempt,
@@ -147,7 +150,7 @@ mod tests {
     async fn test_download() {
         init();
         let dir = std::env::temp_dir().join("test.jar");
-        info!("{}", dir.to_string_lossy());
+        log::info!("{}", dir.to_string_lossy());
         download_file("https://piston-data.mojang.com/v1/objects/05b6f1c6b46a29d6ea82b4e0d42190e42402030f/client.jar", &dir, None, Some("05b6f1c6b46a29d6ea82b4e0d42190e42402030f"))
             .await
             .expect("Failed to download");

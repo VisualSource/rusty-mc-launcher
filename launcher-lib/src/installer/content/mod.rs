@@ -70,6 +70,17 @@ pub struct InstallContent {
     project_id: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum UpdateContentType {
+    Modpack,
+}
+#[derive(Debug, Deserialize)]
+pub struct UpdateContent {
+    files: Vec<InstallFile>,
+    content_type: UpdateContentType,
+}
+
 async fn download_files(output_direcotry: &std::path::Path, files: Vec<InstallFile>) -> Result<()> {
     let result = futures::stream::iter(files.into_iter().map(|file| async move {
         let name = file
@@ -349,4 +360,67 @@ pub async fn install_content(
             Ok(())
         }
     }
+}
+
+pub async fn install_update(
+    profile_id: &str,
+    config: UpdateContent,
+    db: &RwDatabase,
+    on_event: &tauri::ipc::Channel<DownloadEvent>,
+) -> Result<()> {
+    let root = Setting::path("path.app", db)
+        .await?
+        .ok_or_else(|| Error::NotFound("failed to get application path".to_string()))?;
+
+    let profile_direcotry = root.join("profiles").join(profile_id);
+
+    match config.content_type {
+        UpdateContentType::Modpack => {
+            on_event
+                .send(crate::events::DownloadEvent::Started {
+                    max_progress: 100,
+                    message: "Installing Modpack".to_string(),
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+            let file = config
+                .files
+                .first()
+                .ok_or_else(|| Error::NotFound("Missing download mrpack file".to_string()))?;
+
+            let id = uuid::Uuid::new_v4();
+            let temp = std::env::temp_dir().join(format!("{id}.mrpack"));
+            utils::download_file(&file.url, &temp, None, Some(&file.sha1)).await?;
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(2),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+
+            let pack_info = mrpack::unpack_mrpack(on_event, &temp, &profile_direcotry).await?;
+
+            if temp.is_file() && temp.exists() {
+                tokio::fs::remove_file(&temp).await?;
+            }
+
+            {
+                let wdb = db.write().await;
+                sqlx::query!("DELETE FROM profile_content WHERE profile = ?;", profile_id)
+                    .execute(&wdb.0)
+                    .await?;
+
+                pack_info.insert_files_to_db(&wdb, profile_id).await?;
+            }
+
+            on_event
+                .send(crate::events::DownloadEvent::Progress {
+                    amount: Some(1),
+                    message: None,
+                })
+                .map_err(|err| Error::Generic(err.to_string()))?;
+        }
+    }
+
+    Ok(())
 }

@@ -33,12 +33,21 @@ async fn install_client(
     }
     tokio::time::sleep(Duration::from_secs(1)).await;
 
-    if let Some(loader_version) = install_minecraft(config, db, on_event).await? {
-        Profile::set_loader_version(&item.profile_id, &loader_version, db).await?;
-    }
-    Profile::set_state(&item.profile_id, ProfileState::Installed, db).await?;
+    match install_minecraft(config, db, on_event).await {
+        Ok(loader) => {
+            if let Some(loader_version) = loader {
+                Profile::set_loader_version(&item.profile_id, &loader_version, db).await?;
+            }
+            Profile::set_state(&item.profile_id, ProfileState::Installed, db).await?;
 
-    Ok(())
+            Ok(())
+        }
+        Err(err) => {
+            Profile::set_state(&item.profile_id, ProfileState::Errored, db).await?;
+
+            Err(err.into())
+        }
+    }
 }
 
 async fn install_cf_modpack(
@@ -71,6 +80,36 @@ async fn install_content(
     content::install_content(config, item.icon.clone(), db, on_event).await?;
 
     Ok(())
+}
+
+async fn install_update(
+    item: &QueueItem,
+    db: &RwDatabase,
+    on_event: &Channel<DownloadEvent>,
+) -> Result<()> {
+    let config = if let Some(metadata) = &item.metadata {
+        serde_json::from_str(metadata)?
+    } else {
+        return Err(Error::Reason("Invalid update metadata".to_string()));
+    };
+
+    Profile::set_state(&item.profile_id, ProfileState::Installing, db).await?;
+    if let Err(err) = on_event.send(DownloadEvent::RefreshProfile) {
+        log::error!("{}", err)
+    }
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
+    match content::install_update(&item.profile_id, config, db, on_event).await {
+        Ok(()) => {
+            Profile::set_state(&item.profile_id, ProfileState::Installed, db).await?;
+            Ok(())
+        }
+
+        Err(err) => {
+            Profile::set_state(&item.profile_id, ProfileState::Errored, db).await?;
+            Err(err.into())
+        }
+    }
 }
 
 pub async fn install<R: Runtime>(app: &AppHandle<R>) {
@@ -112,6 +151,7 @@ pub async fn install<R: Runtime>(app: &AppHandle<R>) {
                 | QueueType::Resourcepack => install_content(&item, &db, emitter).await,
                 QueueType::Datapack => Err(Error::Reason("Datapack not supported".to_string())),
                 QueueType::CurseforgeModpack => install_cf_modpack(&item, &db, emitter).await,
+                QueueType::Update => install_update(&item, &db, emitter).await,
             };
 
             let item_state = if let Err(err) = result {

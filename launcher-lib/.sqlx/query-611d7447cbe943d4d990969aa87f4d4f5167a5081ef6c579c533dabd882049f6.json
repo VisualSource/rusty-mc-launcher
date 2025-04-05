@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM profile_content WHERE profile = ?;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "611d7447cbe943d4d990969aa87f4d4f5167a5081ef6c579c533dabd882049f6"
+}

@@ -162,7 +162,7 @@ pub async fn install_curseforge_modpack(
                 "shaders" => "shaderpacks",
                 _ => {
                     return Err(Error::Generic(format!(
-                        "Unable to determine content type for {}. Given {}",
+                        "Unable to determine content type for {}. Given type was {}",
                         project.title,
                         project_content_type
                     )))

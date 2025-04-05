@@ -4,7 +4,7 @@ use crate::events::DownloadEvent;
 use crate::java::check_java;
 use crate::manifest::{self, Downloads, Library, asset_index::AssetIndex};
 use futures::StreamExt;
-use log::{info, warn};
+use log::warn;
 
 use normalize_path::NormalizePath;
 use serde::Deserialize;
@@ -121,7 +121,8 @@ pub async fn download_client(
     let client_jar = versions_directory
         .join(format!("{}.jar", version))
         .normalize();
-    info!("Client jar file path: {}", client_jar.to_string_lossy());
+
+    log::debug!("Client jar file path: {}", client_jar.to_string_lossy());
 
     utils::download_file(
         &downloads.client.url,
@@ -300,7 +301,7 @@ pub async fn download_assets(
     let assets = futures::stream::iter(asset_manifest.objects.into_iter().map(|(key, asset)| {
         let root = assets_objects_directory.clone();
         async move {
-            info!("Fetching asset: {}", key);
+            log::debug!("Fetching asset: {}", key);
 
             let hash = format!(
                 "{}/{}",

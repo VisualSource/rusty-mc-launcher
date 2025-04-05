@@ -10,6 +10,7 @@ pub enum QueueType {
     Shader,
     Datapack,
     CurseforgeModpack,
+    Update,
 }
 
 impl Default for QueueType {
