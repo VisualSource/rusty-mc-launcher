@@ -1,3 +1,10 @@
+# v0.9.9
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.8...v0.9.9](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.8...v0.9.9)
+
+### Changes
+    - Changed how themes are defined.
+
+
 # v0.9.8
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.7...v0.9.8](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.7...v0.9.8)
 

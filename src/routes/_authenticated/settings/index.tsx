@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { Theme } from "@/components/settings/Theme";
 import { Loading } from "@/components/Loading";
 import { loadThemes } from "@/lib/api/themes";
+import { ThemeControl } from "@/components/settings/ThemeGroup";
+import { LightDarkControl } from "@/components/settings/LightDarkControl";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
 	component: SystemSettings,
@@ -31,22 +33,20 @@ function SystemSettings() {
 	const { data } = useSuspenseQuery({
 		queryKey: ["APPLICATION_DATA"],
 		queryFn: async () => {
-			const [name, tauri, version, themes] = await Promise.all([
+			const [name, tauri, version] = await Promise.all([
 				getName(),
 				getTauriVersion(),
 				getVersion(),
-				loadThemes(),
 			]);
 			return {
 				name,
 				tauri,
 				version,
-				themes,
 			};
 		},
 	});
 
-	const onSubmit = async () => {};
+
 
 	return (
 		<div className="space-y-6">
@@ -61,54 +61,9 @@ function SystemSettings() {
 				<div>
 					<h3 className="mb-4 text-lg font-medium">Appearance</h3>
 					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)}>
-							<FormField
-								control={form.control}
-								name="theme"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Theme</FormLabel>
-										<FormDescription>
-											Select the theme for the dashboard.
-										</FormDescription>
-										<FormMessage />
-										<RadioGroup
-											onValueChange={(value) => {
-												field.onChange(value);
-												const htmlDoc = document.querySelector("html");
-												htmlDoc?.setAttribute("data-theme", value);
-												localStorage.setItem("theme", value);
-											}}
-											defaultValue={field.value}
-											className="flex flex-wrap gap-2"
-										>
-											<Theme
-												currentValue={field.value}
-												value="dark"
-												title="Default"
-											/>
-											<Theme
-												currentValue={field.value}
-												value="rose"
-												title="Rose"
-											/>
-											<Theme
-												currentValue={field.value}
-												value="red"
-												title="Red"
-											/>
-											{data.themes.map((theme) => (
-												<Theme
-													key={theme.path}
-													currentValue={field.value}
-													value={theme.name}
-													title={theme.title}
-												/>
-											))}
-										</RadioGroup>
-									</FormItem>
-								)}
-							/>
+						<form className="flex flex-col gap-2">
+							<LightDarkControl />
+							<ThemeControl />
 						</form>
 					</Form>
 				</div>

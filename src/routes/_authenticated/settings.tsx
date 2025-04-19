@@ -21,7 +21,7 @@ function Settings() {
 	const location = useLocation();
 
 	return (
-		<div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0 h-full">
+		<div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0 h-full bg-card">
 			<aside className="-mx-4 lg:w-1/5 px-10 py-10">
 				<nav className="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
 					<Link
@@ -74,7 +74,7 @@ function Settings() {
 					</Link>
 				</nav>
 			</aside>
-			<div className="flex-1 pr-10 overflow-y-scroll h-full scrollbar">
+			<div className="flex-1 pr-10 overflow-y-scroll h-full scrollbar py-4">
 				<Outlet />
 			</div>
 		</div>

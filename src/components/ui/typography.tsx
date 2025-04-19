@@ -137,6 +137,6 @@ export function TypographyMuted({
 }: React.PropsWithChildren<{ asChild?: boolean; className?: string }>) {
 	const Comp = asChild ? Slot : "div";
 	return (
-		<Comp className={cn("text-sm text-zinc-500", className)}>{children}</Comp>
+		<Comp className={cn("text-sm text-muted-foreground", className)}>{children}</Comp>
 	);
 }

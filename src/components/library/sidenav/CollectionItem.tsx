@@ -9,7 +9,7 @@ const CollectionItem: React.FC<{
 	icon: string;
 }> = ({ uuid, name, icon }) => {
 	return (
-		<li className="py-1 pl-3 pr-1 text-zinc-50 hover:bg-zinc-700/75 @4xs/main:pl-5">
+		<li className="py-1 pl-3 pr-1 text-foreground hover:bg-accent/30 @4xs/main:pl-5">
 			<Link
 				to="/profile/$id"
 				params={{ id: uuid }}

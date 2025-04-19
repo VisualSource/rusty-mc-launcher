@@ -25,10 +25,10 @@ export const Notifications = () => {
 				<button
 					type="button"
 					className={cn(
-						"mr-2 flex items-center px-2.5 text-white transition-colors group",
+						"mr-2 flex items-center px-2.5 text-foreground transition-colors group",
 						{
-							"bg-green-500": unreadCount > 0,
-							"bg-zinc-800": unreadCount === 0,
+							"bg-chart-2": unreadCount > 0,
+							"bg-accent": unreadCount === 0,
 						},
 					)}
 				>

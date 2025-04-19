@@ -110,7 +110,7 @@ export const NavbarUpper: React.FC = memo(() => {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<button
-							className="mr-2 flex items-center rounded-s-none justify-center bg-white px-3 text-black"
+							className="mr-2 flex items-center rounded-s-none justify-center px-3 bg-accent-foreground text-accent rounded-e-lg"
 							type="button"
 						>
 							<span className="mr-1 text-sm">

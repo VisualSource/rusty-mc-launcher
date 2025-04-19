@@ -142,7 +142,7 @@ const Footer = memo(() => {
 	};
 
 	return (
-		<footer className="flex h-16 shrink-0 grow-0 bg-zinc-950 text-zinc-400 shadow-sm">
+		<footer className="flex h-16 shrink-0 grow-0 bg-background text-foreground shadow-sm border-t">
 			<AuthenticatedTemplate>
 				<div className="flex h-full w-full shrink items-center justify-start">
 					<Dialog open={openDialog} onOpenChange={setOpen}>
@@ -210,8 +210,8 @@ const Footer = memo(() => {
 									variant="ghost"
 									className="group dark:hover:bg-transparent"
 								>
-									<PlusSquare />
-									<TypographyMuted className="transition-colors dark:group-hover:text-zinc-300">
+									<PlusSquare className="text-muted-foreground group-hover:text-foreground transition-colors" />
+									<TypographyMuted className="transition-colors dark:group-hover:text-foreground">
 										Add a Profile
 									</TypographyMuted>
 								</Button>
@@ -277,12 +277,12 @@ const Footer = memo(() => {
 								</div>
 							</div>
 						) : (
-							<>
-								<Download />
-								<TypographyMuted className="group-hover:text-zinc-300 transition-colors">
+							<div className="group inline-flex gap-2">
+								<Download className="group-hover:text-foreground text-muted-foreground  transition-colors" />
+								<TypographyMuted className="group-hover:text-foreground transition-colors">
 									Manage Downloads
 								</TypographyMuted>
-							</>
+							</div>
 						)}
 					</Link>
 				</Button>
