@@ -1,8 +1,8 @@
 
-import { appDataDir, join } from "@tauri-apps/api/path";
 import { BaseDirectory, type DirEntry, exists, mkdir, readDir, readTextFile } from "@tauri-apps/plugin-fs";
-import { toastError } from "../toast";
+import { appDataDir, join } from "@tauri-apps/api/path";
 import { error } from "@tauri-apps/plugin-log";
+import { toastError } from "../toast";
 
 type Theme = {
 	name: string;
@@ -24,8 +24,6 @@ const loadTheme = async (file: DirEntry, themesFolder: string) => {
 	const stylesheet = new CSSStyleSheet();
 	stylesheet.replaceSync(content);
 
-	if (stylesheet.cssRules.length !== 3) throw new Error(`Invalid number rules in theme file '${file.name}'`);
-
 	let themeName: string | undefined;
 	let themeId: string | undefined;
 	let lightTheme: string | undefined;
@@ -38,7 +36,6 @@ const loadTheme = async (file: DirEntry, themesFolder: string) => {
 					throw new Error(`Theme from file '${file.name}' has invalid config`);
 				}
 
-				console.log(rule);
 				themeName = (rule as CSSStyleRule).styleMap.get("--name")?.toString().replaceAll("\"", "");
 				themeId = (rule as CSSStyleRule).styleMap.get("--id")?.toString().replaceAll("\"", "");;
 				break;
