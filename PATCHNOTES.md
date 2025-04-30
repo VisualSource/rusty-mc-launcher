@@ -1,3 +1,15 @@
+# v0.9.10
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.9...v0.9.10](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.9...v0.9.10)
+
+### Changes
+    - New Bug reporting system.
+
+### Fixes
+    - Fixed bug #27
+    - Fixed profile names being displayed incorrectly.
+    - Removed a console.log
+    - Fixed a few type errors.
+
 # v0.9.9
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.8...v0.9.9](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.8...v0.9.9)
 
