@@ -36,6 +36,7 @@ import { Notifications } from "./Notifications";
 import { Button } from "@component/ui/button";
 import useUser from "@/hooks/useUser";
 import { memo } from "react";
+import Shake, { ShakeScreen } from "@shakebugs/browser";
 
 const appWindow = getCurrentWebviewWindow();
 
@@ -63,11 +64,9 @@ export const NavbarUpper: React.FC = memo(() => {
 								Settings
 							</Link>
 						</DropdownMenuItem>
-						<DropdownMenuItem>
-							<Link to="/bug-report" className="flex items-center">
-								<Bug className="h-4 w-4 mr-2" />
-								Bug Report
-							</Link>
+						<DropdownMenuItem onClick={() => Shake.show(ShakeScreen.NEW_TICKET)}>
+							<Bug className="h-4 w-4 mr-2" />
+							Bug Report
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={() => exit()}>

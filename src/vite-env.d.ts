@@ -11,6 +11,7 @@ interface ImportMetaEnv {
 	readonly VITE_GITHUB_API_VERSION: string;
 	readonly VITE_DEBUG: string;
 	readonly VITE_REACT_DEVTOOLS: string;
+	readonly VITE_SHAKE_APIKEY: string;
 }
 
 interface ImportMeta {

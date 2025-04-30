@@ -55,7 +55,7 @@
 		"windows": [
 			{
 				"shadow": false,
-				"userAgent": "VisualSource/rusty-mc-launcher/0.10.x",
+				"userAgent": "VisualSource/rusty-mc-launcher/0.9.x Linux",
 				"fullscreen": false,
 				"focus": true,
 				"height": 630,

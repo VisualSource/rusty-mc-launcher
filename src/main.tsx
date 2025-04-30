@@ -1,8 +1,9 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { listen } from "@tauri-apps/api/event";
 import { RouterProvider } from "@tanstack/react-router";
+import { listen } from "@tauri-apps/api/event";
 import { MsalProvider } from "@azure/msal-react";
 import { createRoot } from "react-dom/client";
+import Shake from '@shakebugs/browser';
 import { StrictMode } from "react";
 
 import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
@@ -17,11 +18,20 @@ import "./index.css";
 import "react-lazy-load-image-component/src/effects/blur.css";
 import { toastError } from "./lib/toast";
 import { initThemes } from "./lib/api/themes";
+import { getTauriVersion, getVersion } from "@tauri-apps/api/app";
 
+initThemes();
 if (import.meta.env.PROD) checkForAppUpdate().catch(logCatchError);
 
-const msa = getPCA();
-const mca = new ModrinthClientApplication();
+Promise.all([getTauriVersion(), getVersion()]).then(([tauri, app]) => {
+	Shake.config.floatingButtonEnabled = false;
+	Shake.report.screenshotIncluded = false;
+	Shake.report.isSessionReplayEnabled = false;
+	Shake.setMetadata("app_version", app);
+	Shake.setMetadata("tauri", tauri);
+	Shake.start(import.meta.env.VITE_SHAKE_APIKEY);
+});
+
 listen<string>("rmcl-content-install-failed", (ev) => {
 	const payload = ev.payload;
 	toastError({
@@ -30,7 +40,10 @@ listen<string>("rmcl-content-install-failed", (ev) => {
 		error: payload,
 	});
 }).catch((e) => console.error(e));
-initThemes();
+
+
+const msa = getPCA();
+const mca = new ModrinthClientApplication();
 
 // biome-ignore lint/style/noNonNullAssertion: The dom element with id "root" shall be there.
 const root = createRoot(document.getElementById("root")!);

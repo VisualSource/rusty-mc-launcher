@@ -104,6 +104,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.1.8
         version: 1.1.8(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@shakebugs/browser':
+        specifier: ^2.12.0
+        version: 2.12.0
       '@tanstack/react-query':
         specifier: ^5.71.10
         version: 5.71.10(react@19.1.0)
@@ -1372,6 +1375,9 @@ packages:
     resolution: {integrity: sha512-yAkUOkIKZlK5dl7u6dg897doBgLXmUHhIINM2c+sND3DZwnrdQkkSiDh7N75Ll4mM4dxSkYfXqU9fW3lLkMFug==}
     cpu: [x64]
     os: [win32]
+
+  '@shakebugs/browser@2.12.0':
+    resolution: {integrity: sha512-PkRX5QwmT0bPY39HzDqQG9YpUDKdqWkBhlt+UK7zS8U0vhNxUX1mvYy24OenE4Viqx4PP1Fl2gSKHzwTm8tKhw==}
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
@@ -4113,6 +4119,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.39.0':
     optional: true
+
+  '@shakebugs/browser@2.12.0': {}
 
   '@standard-schema/utils@0.3.0': {}
 
