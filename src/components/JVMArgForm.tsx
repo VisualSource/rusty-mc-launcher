@@ -79,7 +79,7 @@ export const JVMArgForm: React.FC<{
 				max = 32;
 			}
 
-			return { min: 2, max }
+			return { min: 2, max };
 		},
 	});
 	const ref = useRef<HTMLDivElement>(null);

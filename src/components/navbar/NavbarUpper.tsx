@@ -64,7 +64,9 @@ export const NavbarUpper: React.FC = memo(() => {
 								Settings
 							</Link>
 						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => Shake.show(ShakeScreen.NEW_TICKET)}>
+						<DropdownMenuItem
+							onClick={() => Shake.show(ShakeScreen.NEW_TICKET)}
+						>
 							<Bug className="h-4 w-4 mr-2" />
 							Bug Report
 						</DropdownMenuItem>

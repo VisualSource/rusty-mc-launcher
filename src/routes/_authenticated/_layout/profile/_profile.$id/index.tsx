@@ -98,47 +98,46 @@ function ProfileContent() {
 
 					<TooltipProvider>
 						<div className="flex gap-2">
-							{isModpack ? (
-								<>
-									<UpdateModpackCheck
-										profile={profile.data}
-									/>
-									<Tooltip>
-										<AlertDialog>
-											<AlertDialogTrigger asChild>
-												<TooltipTrigger asChild>
-													<Button variant="secondary" size="icon">
-														<LockOpen />
-													</Button>
-												</TooltipTrigger>
-											</AlertDialogTrigger>
-											<AlertDialogContent>
-												<AlertDialogHeader>
-													<AlertDialogTitle>Unlock modpack</AlertDialogTitle>
-													<AlertDialogDescription>
-														Are you sure you want to unlock this pack? This
-														can not be undone. Unlocking this pack will allow
-														you to have full control over all content in this
-														pack but you will no longer get update for this
-														pack.
-													</AlertDialogDescription>
-												</AlertDialogHeader>
-												<AlertDialogFooter>
-													<AlertDialogCancel>Cancel</AlertDialogCancel>
-													<AlertDialogAction
-														onClick={() => unlockModpack(profile.data.id)}
-													>
-														Continue
-													</AlertDialogAction>
-												</AlertDialogFooter>
-											</AlertDialogContent>
-										</AlertDialog>
-										<TooltipContent>
-											<p>Unlock modpack</p>
-										</TooltipContent>
-									</Tooltip>
-								</>
-							) : null /** 
+							{
+								isModpack ? (
+									<>
+										<UpdateModpackCheck profile={profile.data} />
+										<Tooltip>
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<TooltipTrigger asChild>
+														<Button variant="secondary" size="icon">
+															<LockOpen />
+														</Button>
+													</TooltipTrigger>
+												</AlertDialogTrigger>
+												<AlertDialogContent>
+													<AlertDialogHeader>
+														<AlertDialogTitle>Unlock modpack</AlertDialogTitle>
+														<AlertDialogDescription>
+															Are you sure you want to unlock this pack? This
+															can not be undone. Unlocking this pack will allow
+															you to have full control over all content in this
+															pack but you will no longer get update for this
+															pack.
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel>Cancel</AlertDialogCancel>
+														<AlertDialogAction
+															onClick={() => unlockModpack(profile.data.id)}
+														>
+															Continue
+														</AlertDialogAction>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+											<TooltipContent>
+												<p>Unlock modpack</p>
+											</TooltipContent>
+										</Tooltip>
+									</>
+								) : null /** 
 								TODO: button for updating all content of a category in a profile 
 							
 								<Tooltip>

@@ -122,7 +122,15 @@ const DownloadItem: React.FC<QueueItem> = ({
 				</Avatar>
 				<div>
 					<TypographyH4 className="-mb-2">{display_name}</TypographyH4>
-					<span className="text-sm text-accent-foreground font-light">{content_type}{completed ? (<span className="text-muted-foreground"> | Finished {formatRelative(new Date(), new Date(completed))}</span>) : null}</span>
+					<span className="text-sm text-accent-foreground font-light">
+						{content_type}
+						{completed ? (
+							<span className="text-muted-foreground">
+								{" "}
+								| Finished {formatRelative(new Date(), new Date(completed))}
+							</span>
+						) : null}
+					</span>
 				</div>
 			</div>
 

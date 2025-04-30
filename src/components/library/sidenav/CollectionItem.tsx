@@ -21,9 +21,7 @@ const CollectionItem: React.FC<{
 						<Layers3 />
 					</AvatarFallback>
 				</Avatar>
-				<span className="line-clamp-1">
-					{name}
-				</span>
+				<span className="line-clamp-1">{name}</span>
 			</Link>
 		</li>
 	);

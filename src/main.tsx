@@ -3,7 +3,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { listen } from "@tauri-apps/api/event";
 import { MsalProvider } from "@azure/msal-react";
 import { createRoot } from "react-dom/client";
-import Shake from '@shakebugs/browser';
+import Shake from "@shakebugs/browser";
 import { StrictMode } from "react";
 
 import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
@@ -40,7 +40,6 @@ listen<string>("rmcl-content-install-failed", (ev) => {
 		error: payload,
 	});
 }).catch((e) => console.error(e));
-
 
 const msa = getPCA();
 const mca = new ModrinthClientApplication();

@@ -69,7 +69,7 @@ const getVersions = async (runtimeDir: string) => {
 	const doesExist = await exists(dir);
 	if (!doesExist) return [];
 	return readDir(dir);
-}
+};
 
 const getInstalledJREs = async (runtimeDir: string) => {
 	const dir = await join(runtimeDir, "java");
@@ -82,9 +82,9 @@ const getInstalledJREs = async (runtimeDir: string) => {
 	for (const folder of folders) {
 		const match = folder.name.match(JavaJREForamt);
 		if (!match) {
-			versions.push({ name: folder.name, folder: folder.name })
+			versions.push({ name: folder.name, folder: folder.name });
 			continue;
-		};
+		}
 
 		const zuluBuild = match.groups?.zulu ?? "Unknown";
 		const jre = match.groups?.jre ?? "Unknown";
@@ -93,11 +93,11 @@ const getInstalledJREs = async (runtimeDir: string) => {
 		versions.push({
 			name: `Java ${jre} for ${platform}. (Zulu ${zuluBuild})`,
 			folder: folder.name,
-		})
+		});
 	}
 
 	return versions;
-}
+};
 
 function DownloadSettings() {
 	const { data } = useSuspenseQuery({

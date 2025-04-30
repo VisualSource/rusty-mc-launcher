@@ -19,23 +19,23 @@ export type DownloadCurrentItem = {
 };
 export type DownloadEvent =
 	| {
-		event: "init";
-		data: DownloadCurrentItem;
-	}
+			event: "init";
+			data: DownloadCurrentItem;
+	  }
 	| {
-		event: "started";
-		data: {
-			max_progress: number;
-			message: string;
-		};
-	}
+			event: "started";
+			data: {
+				max_progress: number;
+				message: string;
+			};
+	  }
 	| {
-		event: "progress";
-		data: {
-			amount?: number;
-			message?: string;
-		};
-	}
+			event: "progress";
+			data: {
+				amount?: number;
+				message?: string;
+			};
+	  }
 	| { event: "finished"; data: unknown }
 	| { event: "refreshProfile" };
 
