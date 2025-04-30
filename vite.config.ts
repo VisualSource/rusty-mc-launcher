@@ -3,7 +3,52 @@ import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, type ResolvedConfig, type Plugin } from 'vite';
+
+const devtoolsPlugin = () => {
+  let cfg: ResolvedConfig;
+
+  return {
+    name: 'devtools',
+    configResolved(config) {
+      cfg = config;
+    },
+    transformIndexHtml(html) {
+      if (!cfg.env.DEV) return;
+
+      const disableReactDevtools = cfg.env.DEVTOOLS_REACT === "0";
+      const disableReactScan = cfg.env.DEVTOOLS_REACT_SCANE === "0";
+      const disableAll = cfg.env.DEVTOOLS === "0";
+
+      const output = [];
+
+      if (!disableAll || !disableReactDevtools) {
+        output.push({
+          attrs: { src: "http://localhost:8097", "data-name": "react-devtools" },
+          tag: "script",
+          injectTo: "head"
+        });
+      }
+
+      if (!disableAll && !disableReactScan) {
+        // <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js"></script>
+        output.push({
+          tag: "script",
+          injectTo: "head",
+          attrs: {
+            src: "https://unpkg.com/react-scan/dist/auto.global.js",
+            crossOrigin: "anonymous",
+            "data-name": "react-scane"
+          },
+        });
+      }
+
+      return output;
+    }
+  } as Plugin
+}
+
+
 
 const aliases = [
   ["@"],
@@ -21,7 +66,7 @@ const aliases = [
 ];
 
 export default defineConfig({
-  plugins: [TanStackRouterVite(), react(), tailwindcss()],
+  plugins: [TanStackRouterVite(), react(), tailwindcss(), devtoolsPlugin()],
   resolve: {
     alias: aliases.reduce((prev, [alias, path]) => {
       prev[alias] = path ? resolve(__dirname, join("src", path)) : resolve(__dirname, "src");
