@@ -21,13 +21,7 @@ const CollectionItem: React.FC<{
 						<Layers3 />
 					</AvatarFallback>
 				</Avatar>
-				<span className="line-clamp-1 @4xs/main:hidden">
-					{name
-						.split(" ")
-						.map((e) => e[0])
-						.join(".")}
-				</span>
-				<span className="line-clamp-1 hidden @4xs/main:inline-block">
+				<span className="line-clamp-1">
 					{name}
 				</span>
 			</Link>
