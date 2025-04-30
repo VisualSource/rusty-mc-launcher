@@ -38,9 +38,6 @@ const AuthenticatedDownloadsLazyImport = createFileRoute(
 const AuthenticatedCreateProfileLazyImport = createFileRoute(
   '/_authenticated/create-profile',
 )()
-const AuthenticatedBugReportLazyImport = createFileRoute(
-  '/_authenticated/bug-report',
-)()
 const AuthenticatedLayoutIndexLazyImport = createFileRoute(
   '/_authenticated/_layout/',
 )()
@@ -96,16 +93,6 @@ const AuthenticatedCreateProfileLazyRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/create-profile.lazy').then((d) => d.Route),
   )
-
-const AuthenticatedBugReportLazyRoute = AuthenticatedBugReportLazyImport.update(
-  {
-    id: '/bug-report',
-    path: '/bug-report',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any,
-).lazy(() =>
-  import('./routes/_authenticated/bug-report.lazy').then((d) => d.Route),
-)
 
 const AuthenticatedSettingsRoute = AuthenticatedSettingsImport.update({
   id: '/settings',
@@ -257,13 +244,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/bug-report': {
-      id: '/_authenticated/bug-report'
-      path: '/bug-report'
-      fullPath: '/bug-report'
-      preLoaderRoute: typeof AuthenticatedBugReportLazyImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/create-profile': {
@@ -451,7 +431,6 @@ const AuthenticatedSettingsRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedLayoutRoute: typeof AuthenticatedLayoutRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
-  AuthenticatedBugReportLazyRoute: typeof AuthenticatedBugReportLazyRoute
   AuthenticatedCreateProfileLazyRoute: typeof AuthenticatedCreateProfileLazyRoute
   AuthenticatedDownloadsLazyRoute: typeof AuthenticatedDownloadsLazyRoute
   AuthenticatedPatchNotesLazyRoute: typeof AuthenticatedPatchNotesLazyRoute
@@ -464,7 +443,6 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLayoutRoute: AuthenticatedLayoutRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
-  AuthenticatedBugReportLazyRoute: AuthenticatedBugReportLazyRoute,
   AuthenticatedCreateProfileLazyRoute: AuthenticatedCreateProfileLazyRoute,
   AuthenticatedDownloadsLazyRoute: AuthenticatedDownloadsLazyRoute,
   AuthenticatedPatchNotesLazyRoute: AuthenticatedPatchNotesLazyRoute,
@@ -483,7 +461,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '': typeof AuthenticatedLayoutRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
-  '/bug-report': typeof AuthenticatedBugReportLazyRoute
   '/create-profile': typeof AuthenticatedCreateProfileLazyRoute
   '/downloads': typeof AuthenticatedDownloadsLazyRoute
   '/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
@@ -505,7 +482,6 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '': typeof AuthenticatedRouteWithChildren
-  '/bug-report': typeof AuthenticatedBugReportLazyRoute
   '/create-profile': typeof AuthenticatedCreateProfileLazyRoute
   '/downloads': typeof AuthenticatedDownloadsLazyRoute
   '/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
@@ -529,7 +505,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/_layout': typeof AuthenticatedLayoutRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
-  '/_authenticated/bug-report': typeof AuthenticatedBugReportLazyRoute
   '/_authenticated/create-profile': typeof AuthenticatedCreateProfileLazyRoute
   '/_authenticated/downloads': typeof AuthenticatedDownloadsLazyRoute
   '/_authenticated/patch-notes': typeof AuthenticatedPatchNotesLazyRoute
@@ -554,7 +529,6 @@ export interface FileRouteTypes {
   fullPaths:
     | ''
     | '/settings'
-    | '/bug-report'
     | '/create-profile'
     | '/downloads'
     | '/patch-notes'
@@ -575,7 +549,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | ''
-    | '/bug-report'
     | '/create-profile'
     | '/downloads'
     | '/patch-notes'
@@ -597,7 +570,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/_layout'
     | '/_authenticated/settings'
-    | '/_authenticated/bug-report'
     | '/_authenticated/create-profile'
     | '/_authenticated/downloads'
     | '/_authenticated/patch-notes'
@@ -644,7 +616,6 @@ export const routeTree = rootRoute
       "children": [
         "/_authenticated/_layout",
         "/_authenticated/settings",
-        "/_authenticated/bug-report",
         "/_authenticated/create-profile",
         "/_authenticated/downloads",
         "/_authenticated/patch-notes",
@@ -672,10 +643,6 @@ export const routeTree = rootRoute
         "/_authenticated/settings/game",
         "/_authenticated/settings/"
       ]
-    },
-    "/_authenticated/bug-report": {
-      "filePath": "_authenticated/bug-report.lazy.tsx",
-      "parent": "/_authenticated"
     },
     "/_authenticated/create-profile": {
       "filePath": "_authenticated/create-profile.lazy.tsx",
