@@ -1,3 +1,9 @@
+# v0.9.11
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11)
+
+### Fixes
+    - Fix bug report
+
 # v0.9.10
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.9...v0.9.10](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.9...v0.9.10)
 
