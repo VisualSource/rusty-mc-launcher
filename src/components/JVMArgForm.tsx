@@ -34,7 +34,7 @@ const TickedSilder: React.FC<{
 }> = ({ min, max, disabled, value, onValueChange }) => {
 	const tickRange = useMemo(() => range(min, max, 1), [min, max]);
 	return (
-		<div className="grow items-center">
+		<div className="grow items-center w-full">
 			<MarkedSlider
 				onValueChange={onValueChange}
 				value={value}
@@ -70,7 +70,17 @@ export const JVMArgForm: React.FC<{
 		refetchOnReconnect: false,
 		refetchOnWindowFocus: false,
 		queryKey: ["SYSTEM_RAM"],
-		queryFn: () => getSystemRam(),
+		staleTime: Number.POSITIVE_INFINITY,
+		queryFn: async () => {
+			const ram = await getSystemRam();
+
+			let max = ram;
+			if (ram >= 32) {
+				max = 32;
+			}
+
+			return { min: 2, max }
+		},
 	});
 	const ref = useRef<HTMLDivElement>(null);
 	const [showDialog, setShowDialog] = useState(false);
@@ -117,8 +127,8 @@ export const JVMArgForm: React.FC<{
 	return (
 		<div className="space-y-4" ref={ref}>
 			<Separator />
-			<div className="flex gap-4 items-center mb-8">
-				<Label>Max Memory</Label>
+			<div className="flex flex-col gap-4 items-center mb-8">
+				<Label className="text-left w-full">Max Memory</Label>
 				<TickedSilder
 					value={state.memory}
 					onValueChange={(v) =>
@@ -128,8 +138,8 @@ export const JVMArgForm: React.FC<{
 							return data;
 						})
 					}
-					min={2}
-					max={ram - 5}
+					min={ram.min}
+					max={ram.max - 5}
 				/>
 			</div>
 
