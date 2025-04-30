@@ -3,8 +3,8 @@ import { type QueryResult, query } from "../api/plugins/query";
 import { QueueItemState } from "../QueueItemState";
 
 type InsertArgs =
-	Omit<z.infer<typeof QueueItem.schema>, "id" | "created" | "display" | "state" | "priority"> &
-	Partial<Pick<z.infer<typeof QueueItem.schema>, "id" | "created" | "display" | "state" | "priority">> &
+	Omit<z.infer<typeof QueueItem.schema>, "id" | "created" | "display" | "state" | "priority" | "completed"> &
+	Partial<Pick<z.infer<typeof QueueItem.schema>, "id" | "created" | "display" | "state" | "priority" | "completed">> &
 	{ metadata: Record<string, unknown>; }
 
 export const contentTypeSchema = z.enum([
@@ -65,6 +65,7 @@ export class QueueItem {
 		id = crypto.randomUUID(),
 		priority = 0,
 		display = true,
+		completed = null,
 		created = new Date().toISOString(),
 		state = QueueItemState.PENDING,
 		...args }: InsertArgs
