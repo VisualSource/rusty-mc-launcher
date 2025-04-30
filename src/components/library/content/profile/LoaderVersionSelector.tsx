@@ -37,7 +37,7 @@ type QuiltMetadata = {
 };
 
 export const LoaderVersionSelector: React.FC<{
-	form: UseFormReturn<Profile, unknown, undefined>;
+	form: UseFormReturn<Profile>;
 	stable: boolean;
 	disabled?: boolean;
 }> = ({ stable, form, disabled }) => {

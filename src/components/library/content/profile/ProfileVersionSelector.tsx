@@ -27,7 +27,7 @@ import { BadgeHelp } from "lucide-react";
 
 export const ProfileVersionSelector: React.FC<{
 	isModpack: boolean;
-	form: UseFormReturn<Profile, unknown, undefined>;
+	form: UseFormReturn<Profile>;
 }> = ({ form, isModpack }) => {
 	const [showSnapshots, setShowSnapshots] = useState(false);
 
