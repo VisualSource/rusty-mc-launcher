@@ -3,7 +3,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { listen } from "@tauri-apps/api/event";
 import { MsalProvider } from "@azure/msal-react";
 import { createRoot } from "react-dom/client";
-import Shake, { } from "@shakebugs/browser";
+import Shake, {} from "@shakebugs/browser";
 import { StrictMode } from "react";
 
 import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
@@ -30,9 +30,11 @@ Promise.all([getTauriVersion(), getVersion()]).then(([tauri, app]) => {
 	Shake.report.isSessionReplayEnabled = false;
 	Shake.setMetadata("app_version", app);
 	Shake.setMetadata("tauri", tauri);
-	Shake.start(import.meta.env.VITE_SHAKE_APIKEY).catch((err) => {
-		error((err as Error)?.message);
-	}).then(() => info("Shake is ready"));
+	Shake.start(import.meta.env.VITE_SHAKE_APIKEY)
+		.catch((err) => {
+			error((err as Error)?.message);
+		})
+		.then(() => info("Shake is ready"));
 });
 
 listen<string>("rmcl-content-install-failed", (ev) => {
