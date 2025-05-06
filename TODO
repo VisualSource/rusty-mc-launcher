@@ -1,12 +1,13 @@
 Todo:
-  ✔ Fix workshop search @done(25-03-03 13:01)
+  ☐ Cache skins
   ☐ Fix content uninstall (NEEDS TESTING)
   ☐ Update content check deps
   ☐ update to latest version (for vanilla)
   ☐ Validate Content
   ☐ performance changes
   ☐ Resourcepack's mod requirement checks
-  ☐ Add Completed timestamp to download queue
+  ☐ Setup csp
+  ☐ Update modrinth login to be on pair with microsoft login.
   
   
 Bugs:
@@ -14,6 +15,8 @@ Bugs:
   ☐ (Modrinth) OAuth2 Bug: https://github.com/modrinth/code/issues/2339
 
 Archive:
+  ✔ Fix workshop search @done(25-03-03 13:01)
+  ✔ Add Completed timestamp to download queue @done(25-05-06 18:42)
   ✔ Finished rewrite on installs @done(24-12-25 19:55)
   ✔ Working neoforge install @done(24-12-26 17:26)
   ✔ modrinth login fix @done(24-07-17 13:59)
