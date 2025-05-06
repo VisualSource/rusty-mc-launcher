@@ -2,7 +2,7 @@
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "Rusty Minecraft Launcher",
 	"identifier": "us.visualsource.rmcl",
-	"version": "0.9.11",
+	"version": "0.9.12",
 	"build": {
 		"beforeBuildCommand": "pnpm build",
 		"beforeDevCommand": "pnpm dev",

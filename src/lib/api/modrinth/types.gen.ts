@@ -1095,7 +1095,7 @@ export type Statistics = {
      */
     projects?: number;
     /**
-     * Number of projects on Modrinth
+     * Number of versions on Modrinth
      */
     versions?: number;
     /**
@@ -2465,6 +2465,40 @@ export type GetUsersResponses = {
 };
 
 export type GetUsersResponse = GetUsersResponses[keyof GetUsersResponses];
+
+export type DeleteUserIconData = {
+    body?: never;
+    path: {
+        /**
+         * The ID or username of the user
+         */
+        'id|username': string;
+    };
+    query?: never;
+    url: '/user/{id|username}/icon';
+};
+
+export type DeleteUserIconErrors = {
+    /**
+     * Request was invalid, see given error
+     */
+    400: InvalidInputError;
+    /**
+     * The requested item(s) were not found or no authorization to access the requested item(s)
+     */
+    404: unknown;
+};
+
+export type DeleteUserIconError = DeleteUserIconErrors[keyof DeleteUserIconErrors];
+
+export type DeleteUserIconResponses = {
+    /**
+     * Expected response to a valid request
+     */
+    204: void;
+};
+
+export type DeleteUserIconResponse = DeleteUserIconResponses[keyof DeleteUserIconResponses];
 
 export type ChangeUserIconData = {
     body?: Image;
