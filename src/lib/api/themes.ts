@@ -86,9 +86,14 @@ const loadTheme = async (file: DirEntry, themesFolder: string) => {
 	} as Theme;
 };
 
-export const loadThemes = async () => {
+export const getThemesDirectory = async () => {
 	const root = await appDataDir();
 	const themesFolder = await join(root, "themes");
+	return themesFolder;
+}
+
+export const loadThemes = async () => {
+	const themesFolder = await getThemesDirectory();
 
 	const doesExists = await exists(themesFolder);
 	if (!doesExists) {

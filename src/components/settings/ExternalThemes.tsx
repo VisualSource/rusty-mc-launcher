@@ -17,7 +17,7 @@ export const ExternalThemes: React.FC<{ current: string }> = ({ current }) => {
 	if (error) throw error;
 
 	return (
-		<div className="flex flex-wrap gap-2">
+		<>
 			{data.themes.map((theme) => (
 				<Theme
 					key={theme.id}
@@ -26,6 +26,6 @@ export const ExternalThemes: React.FC<{ current: string }> = ({ current }) => {
 					title={theme.name}
 				/>
 			))}
-		</div>
+		</>
 	);
 };
