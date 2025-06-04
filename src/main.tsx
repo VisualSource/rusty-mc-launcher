@@ -3,10 +3,10 @@ import { RouterProvider } from "@tanstack/react-router";
 import { listen } from "@tauri-apps/api/event";
 import { MsalProvider } from "@azure/msal-react";
 import { createRoot } from "react-dom/client";
-import Shake, {} from "@shakebugs/browser";
+import Shake, { } from "@shakebugs/browser";
 import { StrictMode } from "react";
 
-import { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
+
 import { ModrinthProvider } from "./components/providers/ModrinthProvider";
 import { ProcessProvider } from "@component/providers/ProcessProvider";
 import { checkForAppUpdate } from "./lib/system/updateCheck";
@@ -20,6 +20,7 @@ import { toastError } from "./lib/toast";
 import { initThemes } from "./lib/api/themes";
 import { getTauriVersion, getVersion } from "@tauri-apps/api/app";
 import { error, info } from "@tauri-apps/plugin-log";
+import { ModrinthClientApplication } from "./lib/auth/modrinth";
 
 initThemes();
 if (import.meta.env.PROD) checkForAppUpdate().catch(logCatchError);

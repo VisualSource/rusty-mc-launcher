@@ -1,4 +1,4 @@
-import type { ModrinthClientApplication } from "@lib/api/modrinth/auth/ModrinthClientApplication";
+import type { ModrinthClientApplication } from "@/lib/auth/modrinth";
 import { modrinthContext } from "@lib/context/ModrinthContext";
 
 export const ModrinthProvider = ({
