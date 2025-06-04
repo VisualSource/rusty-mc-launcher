@@ -31,7 +31,7 @@ export const ThemeControl: React.FC = () => {
 				<div className="flex gap-2">
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button variant="secondary" onClick={() => getThemesDirectory().then(e => openPath(e)).catch(err => error((err as Error).message))}>
+							<Button type="button" variant="secondary" onClick={() => getThemesDirectory().then(e => openPath(e)).catch(err => error((err as Error).message))}>
 								<Folder />
 							</Button>
 						</TooltipTrigger>
@@ -41,7 +41,7 @@ export const ThemeControl: React.FC = () => {
 					</Tooltip>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button onClick={() => initThemes()}>
+							<Button type="button" onClick={() => initThemes()}>
 								<RefreshCcw />
 							</Button>
 						</TooltipTrigger>
@@ -69,8 +69,6 @@ export const ThemeControl: React.FC = () => {
 						</Suspense>
 					</ErrorBoundary>
 				</div>
-
-
 			</RadioGroup>
 		</FormItem>
 	);
