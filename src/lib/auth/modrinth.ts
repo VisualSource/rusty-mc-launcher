@@ -1,8 +1,13 @@
 import type { AccountInfo, AuthenticationResult, AuthorizationCodeRequest, BrowserConfiguration, ClearCacheRequest, EndSessionPopupRequest, EndSessionRequest, EventCallbackFunction, EventType, INavigationClient, InitializeApplicationRequest, IPublicClientApplication, ITokenCache, Logger, PerformanceCallbackFunction, PopupRequest, RedirectRequest, SilentRequest, SsoSilentRequest, WrapperSKU } from "@azure/msal-browser";
 import type { AccountFilter } from "@azure/msal-common";
 
-export class ModrinthClientApplication implements IPublicClientApplication {
-    initialize(request?: InitializeApplicationRequest): Promise<void> {
+export class ModrinthClientApplication extends EventTarget implements IPublicClientApplication {
+    public isAuthed = false;
+    public isLoading = false;
+
+    async getFollowed() { }
+
+    async initialize(request?: InitializeApplicationRequest): Promise<void> {
 
     }
     acquireTokenPopup(request: PopupRequest): Promise<AuthenticationResult> {

@@ -4,17 +4,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import {
 	Form,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
 } from "@/components/ui/form";
-import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { Theme } from "@/components/settings/Theme";
 import { Loading } from "@/components/Loading";
-import { loadThemes } from "@/lib/api/themes";
 import { ThemeControl } from "@/components/settings/ThemeGroup";
 import { LightDarkControl } from "@/components/settings/LightDarkControl";
 

@@ -124,21 +124,21 @@ function AccountsSettings() {
 							<>
 								{modrinthAccount ? (
 									<li
-										key={modrinthAccount.id}
+										key={modrinthAccount.homeAccountId}
 										className="flex flex-row items-center gap-4 rounded-lg border p-4"
 									>
 										<Avatar>
 											<AvatarFallback>
 												<User2 />
 											</AvatarFallback>
-											<AvatarImage src={modrinthAccount.avatar_url} />
+											<AvatarImage src={modrinthAccount.idTokenClaims?.avatar_url as string} />
 										</Avatar>
 										<div className="flex flex-col">
 											<span className="text-lg">
 												{modrinthAccount.username}
 											</span>
 											<span className="text-muted-foreground text-sm">
-												{modrinthAccount.name ?? modrinthAccount.email}
+												{modrinthAccount.name ?? modrinthAccount.idTokenClaims?.email as string}
 											</span>
 										</div>
 									</li>
