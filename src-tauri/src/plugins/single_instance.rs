@@ -1,8 +1,11 @@
 use log::debug;
 use tauri::{AppHandle, Manager};
 
-pub fn handle_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
-    debug!("request for new app instance {:#?}", args);
+pub fn handle_instance(app: &AppHandle, args: Vec<String>, cwd: String) {
+    debug!(
+        "request for new app instance ARGS: {:#?} CMD: {:#?}",
+        args, cwd
+    );
     show_window(app);
 }
 
