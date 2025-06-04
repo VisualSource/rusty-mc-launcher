@@ -22,14 +22,6 @@ const devtoolsPlugin = () => {
 
       const output = [];
 
-      if (!disableAll || !disableReactDevtools) {
-        output.push({
-          attrs: { src: "http://localhost:8097", "data-name": "react-devtools" },
-          tag: "script",
-          injectTo: "head"
-        });
-      }
-
       if (!disableAll && !disableReactScan) {
         // <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js"></script>
         output.push({
@@ -42,6 +34,14 @@ const devtoolsPlugin = () => {
           },
         });
       }
+      if (!disableAll || !disableReactDevtools) {
+        output.push({
+          attrs: { src: "http://localhost:8097", "data-name": "react-devtools" },
+          tag: "script",
+          injectTo: "head"
+        });
+      }
+
 
       return output;
     }
