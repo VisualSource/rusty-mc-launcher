@@ -39,6 +39,15 @@
         }
       ]
     },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$APPDATA/**"
+        }
+      ]
+    },
+    "opener:allow-reveal-item-in-dir",
     "core:window:allow-request-user-attention",
     "core:webview:allow-webview-size",
     "core:webview:allow-set-webview-size",

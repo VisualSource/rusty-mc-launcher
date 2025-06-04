@@ -1,8 +1,7 @@
 import { Book, Copy, FolderCheck, FolderOpen, Trash2 } from "lucide-react";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { join } from "@tauri-apps/api/path";
 import { useForm } from "react-hook-form";
@@ -50,7 +49,7 @@ import { queryClient } from "@/lib/api/queryClient";
 import { ContentItem } from "@/lib/models/content";
 import { getConfig } from "@/lib/models/settings";
 import { Button } from "@/components/ui/button";
-import { Profile } from "@/lib/models/profiles";
+import type { Profile } from "@/lib/models/profiles";
 import { Loading } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
 
@@ -122,7 +121,6 @@ function ProfileEdit() {
 	const params = Route.useParams();
 	const profileQuery = useSuspenseQuery(profileQueryOptions(params.id));
 	const form = useForm<Profile>({
-		resolver: zodResolver(Profile.schema),
 		defaultValues: profileQuery.data,
 	});
 
@@ -286,7 +284,7 @@ function ProfileEdit() {
 									profileQuery.data.id,
 									"/",
 								);
-								await revealItemInDir(path);
+								await openPath(path);
 							}}
 							type="button"
 							variant="secondary"
