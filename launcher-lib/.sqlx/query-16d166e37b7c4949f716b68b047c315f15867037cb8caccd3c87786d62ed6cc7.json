@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO download_queue ('id','display','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,?,?,'PENDING')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "16d166e37b7c4949f716b68b047c315f15867037cb8caccd3c87786d62ed6cc7"
+}

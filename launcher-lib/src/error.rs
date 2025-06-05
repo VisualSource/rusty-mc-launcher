@@ -1,4 +1,4 @@
-use serde::{ser::Serializer, Serialize};
+use serde::{Serialize, ser::Serializer};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -8,6 +8,9 @@ pub enum Error {
     Sqlx(#[from] sqlx::Error),
     #[error(transparent)]
     SqlxMigration(#[from] sqlx::migrate::MigrateError),
+
+    #[error(transparent)]
+    TimeFormat(#[from] time::error::Format),
 
     #[error(transparent)]
     Uuid(#[from] uuid::Error),

@@ -17,6 +17,7 @@ use crate::{
         utils::{self},
     },
     models::profile::Loader,
+    utils::current_timestamp,
 };
 use futures::StreamExt;
 use serde::Deserialize;
@@ -311,13 +312,15 @@ pub async fn install_mrpack(
     let cicon = icon.clone();
 
     let wdb = db.write().await;
-    sqlx::query!("INSERT INTO download_queue ('id','display','icon','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,current_timestamp,?,?,'PENDING')",
+    let timestamp = current_timestamp()?;
+    sqlx::query!("INSERT INTO download_queue ('id','display','icon','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,?,?,?,'PENDING')",
             queue_id,
             1,
             cicon,
             0,
             title,
             profile_id,
+            timestamp,
             "Client",
             metadata
         ).execute(&wdb.0).await?;

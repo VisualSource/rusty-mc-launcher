@@ -1,9 +1,5 @@
-use crate::{
-    database::RwDatabase,
-    error::{Error, Result},
-};
+use crate::{database::RwDatabase, error::Result, utils::current_timestamp};
 use serde::{Deserialize, Serialize};
-use time::format_description::well_known::Rfc3339;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum QueueType {
@@ -157,11 +153,7 @@ impl QueueItem {
                 .await?;
             }
             _ => {
-                let now = std::time::SystemTime::now();
-                let offset: time::OffsetDateTime = now.into();
-                let timestamp = offset
-                    .format(&Rfc3339)
-                    .map_err(|e| Error::Generic(e.to_string()))?;
+                let timestamp = current_timestamp()?;
                 sqlx::query!(
                     "UPDATE download_queue SET state = ?, completed = ? WHERE id = ?;",
                     state_str,

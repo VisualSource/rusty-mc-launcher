@@ -15,6 +15,7 @@ use crate::{
         utils::{self, REQUEST_CLIENT, get_file_hash},
     },
     models::{profile::Loader, setting::Setting},
+    utils::current_timestamp,
 };
 use futures::StreamExt;
 use normalize_path::NormalizePath;
@@ -317,12 +318,14 @@ pub async fn install_curseforge_modpack(
 
     let wdb = db.write().await;
 
-    sqlx::query!("INSERT INTO download_queue ('id','display','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,current_timestamp,?,?,'PENDING')",
+    let timestamp = current_timestamp()?;
+    sqlx::query!("INSERT INTO download_queue ('id','display','priority','display_name','profile_id','created','content_type','metadata','state') VALUES (?,?,?,?,?,?,?,?,'PENDING')",
         queue_id,
         1,
         0,
         title,
         profile_id,
+        timestamp,
         "Client",
         metadata
     ).execute(&wdb.0).await?;

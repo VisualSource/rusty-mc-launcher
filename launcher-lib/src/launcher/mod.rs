@@ -2,7 +2,7 @@ pub mod arguments;
 pub mod logs;
 
 use self::arguments::Arguments;
-use crate::database::{Database, RwDatabase};
+use crate::database::RwDatabase;
 use crate::manifest::Library;
 
 use crate::models::{profile::Profile, setting::Setting};
