@@ -255,7 +255,7 @@ pub async fn start_game(
     args.push(manifest.main_class);
     args.extend(game_args);
 
-    let max_wait_time = Setting::get_as_u64("max_launch_wait", db).await?;
+    let max_wait_time = Setting::get_as_u64("option.max_launch_wait", db).await?;
 
     log::debug!("Spawning processes");
     let ps = Process::spawn(
