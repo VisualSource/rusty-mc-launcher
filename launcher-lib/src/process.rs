@@ -1,10 +1,14 @@
-use std::{collections::HashMap, path::Path};
-use tokio::process::{Child, Command};
+use std::{collections::HashMap, path::Path, time::Duration};
+use tokio::{
+    process::{Child, Command},
+    task,
+};
 use uuid::Uuid;
 
 use crate::{
     database::RwDatabase,
     error::{Error, Result},
+    launcher::logs,
 };
 
 #[derive(Default)]
@@ -140,6 +144,8 @@ impl Process {
         args: Vec<String>,
         profile_id: String,
         game_directory: &Path,
+        on_ready: tokio::sync::oneshot::Sender<String>,
+        max_wait_to_start: Option<u64>,
     ) -> Result<Self> {
         let uuid = Uuid::new_v4().to_string();
 
@@ -176,6 +182,63 @@ impl Process {
         // =====================
         // END: get-process-info
         // =====================
+        let log_file = game_directory.join("logs/latest.log");
+        task::spawn(async move {
+            let mut interval =
+                tokio::time::interval(Duration::from_millis(max_wait_to_start.unwrap_or(250)));
+            let watched = pid;
+
+            let mut cursor = 0;
+            let mut tick_count = 0;
+
+            // wait for log file to be rotated
+            tokio::time::sleep(Duration::from_secs(2)).await;
+
+            'watcher: loop {
+                interval.tick().await;
+
+                match logs::get_latest_log_cursor(&log_file, cursor).await {
+                    Ok(result) => {
+                        cursor = result.cursor;
+                        for x in result.line.split('\n') {
+                            if x.contains("[Render thread/INFO]: Sound engine started") {
+                                log::debug!("Game is ready!");
+                                if let Err(err) = on_ready.send("ok".to_string()) {
+                                    log::error!("Failed to send on ready. {}", err);
+                                }
+                                break 'watcher;
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        log::error!("Launch watcher errored! {}", err);
+                        if let Err(err) = on_ready.send("error::io".to_string()) {
+                            log::error!("Failed to send on ready. {}", err);
+                        }
+                        break 'watcher;
+                    }
+                }
+
+                tick_count += 1;
+                // wait about 1min
+                if tick_count >= 240 {
+                    let mut system = sysinfo::System::new();
+                    system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+                    if let Some(process) = system.process(watched) {
+                        process.kill();
+                    }
+
+                    log::debug!("Game failed to launch killing.");
+
+                    if let Err(err) = on_ready.send("error::timeout".to_string()) {
+                        log::error!("Failed to send on ready. {}", err);
+                    }
+
+                    break 'watcher;
+                }
+            }
+        });
 
         Ok(Self {
             pid: pid.as_u32() as i64,

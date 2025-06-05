@@ -14,6 +14,16 @@ pub struct Setting {
 }
 
 impl Setting {
+    pub async fn get_as_u64(key: &str, db: &RwDatabase) -> Result<Option<u64>> {
+        if let Some(setting) = Self::get(key, db).await? {
+            return Ok(Some(
+                u64::from_str(&setting.value).map_err(|e| Error::Generic(e.to_string()))?,
+            ));
+        }
+
+        Ok(None)
+    }
+
     pub async fn path(key: &str, db: &RwDatabase) -> Result<Option<PathBuf>> {
         if let Some(setting) = Self::get(key, db).await? {
             let path = PathBuf::from_str(&setting.value)

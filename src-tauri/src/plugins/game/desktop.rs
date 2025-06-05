@@ -60,30 +60,6 @@ pub async fn process_watcher<R: Runtime>(app: &AppHandle<R>) {
                 e if e < 0 => continue,
                 // error exit code
                 e if e > 0 => {
-                    let err = if let InstanceType::Full(child) = &mut ps.child {
-                        if let Some(mut output) = child.stderr.take() {
-                            let mut io = String::new();
-                            if let Err(err) = output.read_to_string(&mut io).await {
-                                log::error!("{}", err);
-                            };
-                            log::error!(
-                                "===== PROCESS CRASHED =====\n{}\n====================",
-                                io
-                            );
-                            io
-                        } else {
-                            String::new()
-                        }
-                    } else {
-                        String::new()
-                    };
-
-                    if let Err(err) = app.emit(
-                        PROCESS_CRASH_EVENT,
-                        ProcessCrashEvent::new(profile_id.clone(), err, e),
-                    ) {
-                        log::error!("{}", err);
-                    }
                     log::debug!("Process crashed: {}", uuid);
                     removable.push((uuid.clone(), profile_id));
                 }

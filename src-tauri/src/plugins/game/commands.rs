@@ -5,6 +5,7 @@ use minecraft_launcher_lib::launcher::{LaunchConfig, start_game};
 use tauri::{Emitter, Runtime};
 
 use crate::error::Error;
+use crate::plugins::game::desktop::{PROCESS_CRASH_EVENT, ProcessCrashEvent};
 
 #[tauri::command]
 pub async fn launch_game<R: Runtime>(
@@ -17,13 +18,36 @@ pub async fn launch_game<R: Runtime>(
 
     log::debug!("Starting processes: Profile UUID: {}", profile_id);
 
-    if let Err(err) = start_game(&db, &ps.0, config).await.map_err(Error::Lib) {
+    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+
+    if let Err(err) = start_game(&db, &ps.0, config, tx).await.map_err(Error::Lib) {
         log::error!("{}", err);
         return Err(err);
     }
 
-    if let Err(err) = app.emit(PROCESSES_STATE_EVENT, ProcessStatePayload::Add(profile_id)) {
+    if let Err(err) = app.emit(
+        PROCESSES_STATE_EVENT,
+        ProcessStatePayload::Add(profile_id.clone()),
+    ) {
         log::error!("{}", err);
+    }
+
+    match rx.await {
+        Ok(result) => {
+            if result.as_str() == "error::timeout" {
+                if let Err(err) = app.emit(
+                    PROCESS_CRASH_EVENT,
+                    ProcessCrashEvent::new(profile_id, "Launch timeout".to_string(), 1),
+                ) {
+                    log::error!("{}", err);
+                }
+
+                return Err(Error::Reason("Game luanch timed out!".to_string()));
+            }
+        }
+        Err(err) => {
+            log::error!("{}", err)
+        }
     }
 
     Ok(())

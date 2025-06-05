@@ -1,7 +1,8 @@
 pub mod arguments;
+pub mod logs;
 
 use self::arguments::Arguments;
-use crate::database::RwDatabase;
+use crate::database::{Database, RwDatabase};
 use crate::manifest::Library;
 
 use crate::models::{profile::Profile, setting::Setting};
@@ -138,6 +139,7 @@ pub async fn start_game(
     db: &RwDatabase,
     processes: &tokio::sync::RwLock<crate::process::Processes>,
     launch_config: LaunchConfig,
+    on_ready: tokio::sync::oneshot::Sender<String>,
 ) -> Result<()> {
     let root_directory = Setting::path("path.app", db)
         .await?
@@ -253,8 +255,18 @@ pub async fn start_game(
     args.push(manifest.main_class);
     args.extend(game_args);
 
+    let max_wait_time = Setting::get_as_u64("max_launch_wait", db).await?;
+
     log::debug!("Spawning processes");
-    let ps = Process::spawn(java_exe, args, profile.id, &game_directory).await?;
+    let ps = Process::spawn(
+        java_exe,
+        args,
+        profile.id,
+        &game_directory,
+        on_ready,
+        max_wait_time,
+    )
+    .await?;
 
     let mut state = processes.write().await;
     state.insert(ps);
