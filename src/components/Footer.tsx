@@ -66,35 +66,35 @@ const Footer = memo(() => {
 		const display =
 			state.importFrom === "modrinth"
 				? {
-						queue: {
-							name: "MrPack($PACK_PATH)",
-							type: "Modpack",
-						},
-						dialog: {
-							title: "Import Mrpack",
-							filters: [
-								{
-									name: "Mrpack",
-									extensions: ["mrpack"],
-								},
-							],
-						},
-					}
+					queue: {
+						name: "MrPack($PACK_PATH)",
+						type: "Modpack",
+					},
+					dialog: {
+						title: "Import Mrpack",
+						filters: [
+							{
+								name: "Mrpack",
+								extensions: ["mrpack"],
+							},
+						],
+					},
+				}
 				: {
-						queue: {
-							name: "Curseforge Modpack ($PACK_PATH)",
-							type: "CurseforgeModpack",
-						},
-						dialog: {
-							title: "Import Modpack",
-							filters: [
-								{
-									name: "Zip",
-									extensions: ["zip"],
-								},
-							],
-						},
-					};
+					queue: {
+						name: "Curseforge Modpack ($PACK_PATH)",
+						type: "CurseforgeModpack",
+					},
+					dialog: {
+						title: "Import Modpack",
+						filters: [
+							{
+								name: "Zip",
+								extensions: ["zip"],
+							},
+						],
+					},
+				};
 
 		const result = await open({
 			multiple: false,
@@ -208,15 +208,15 @@ const Footer = memo(() => {
 							<DropdownMenuTrigger asChild>
 								<Button
 									variant="ghost"
-									className="group dark:hover:bg-transparent"
+									className="group dark:hover:bg-transparent ml-2"
 								>
 									<PlusSquare className="text-muted-foreground group-hover:text-foreground transition-colors" />
 									<TypographyMuted className="transition-colors dark:group-hover:text-foreground">
-										Add a Profile
+										Add
 									</TypographyMuted>
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent>
+							<DropdownMenuContent align="start">
 								<DropdownMenuItem asChild>
 									<Link to="/create-profile">Create Profile</Link>
 								</DropdownMenuItem>
