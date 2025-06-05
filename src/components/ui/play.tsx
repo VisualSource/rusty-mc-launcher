@@ -91,7 +91,7 @@ const PlayButton: React.FC<Props> = ({ profile, className, ...props }) => {
 							}),
 						),
 						{
-							loading: "Starting Minecrafts",
+							loading: "Starting Minecraft",
 							success: {
 								title: "Launched Minecraft",
 							},
