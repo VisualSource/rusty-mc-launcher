@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/resizable";
 import Sidebar, { SidebarError } from "@/components/library/sidenav/Sidebar";
 import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/Loading";
 
 export const Route = createFileRoute("/_authenticated/_layout")({
 	component: Layout,
@@ -33,11 +34,11 @@ function Layout() {
 				ref={panel}
 				defaultSize={22}
 				maxSize={22}
-				className="@container/main bg-accent/25"
+				className="h-full flex"
 			>
-				<div className="overflow-hidden animate-in fade-in-5">
+				<div className="overflow-hidden animate-in fade-in-5 grow flex flex-col">
 					{(panel.current?.isExpanded() ?? true) ? (
-						<div>
+						<>
 							<div className="flex gap-1.5 bg-zinc-950 p-2 shadow-lg">
 								<Button
 									size="sm"
@@ -59,11 +60,11 @@ function Layout() {
 								</Button>
 							</div>
 							<ErrorBoundary FallbackComponent={SidebarError}>
-								<Suspense fallback={"Loading..."}>
+								<Suspense fallback={<Loading />}>
 									<Sidebar />
 								</Suspense>
 							</ErrorBoundary>
-						</div>
+						</>
 					) : null}
 				</div>
 			</ResizablePanel>
