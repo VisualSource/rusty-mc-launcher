@@ -21,7 +21,7 @@ const loadSaved = () => {
 	const values = localStorage.getItem("categories-open");
 	if (!values) return;
 
-	return values.split(",").map(e => atob(e))
+	return values.split(",").filter(Boolean).map(e => atob(e))
 }
 
 const saveValues = (values: string[]) => {

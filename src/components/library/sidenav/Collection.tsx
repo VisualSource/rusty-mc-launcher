@@ -5,11 +5,12 @@ import {
 } from "@/components/ui/accordion";
 import useCategoryGroup from "@hook/useCategoryGroup";
 import CollectionItem from "./CollectionItem";
+import { memo } from "react";
 
 const Collection: React.FC<{
 	id: string | null;
 	name: string;
-}> = ({ id, name }) => {
+}> = memo(({ id, name }) => {
 	const collections = useCategoryGroup(id);
 
 	return (
@@ -33,6 +34,8 @@ const Collection: React.FC<{
 			</AccordionContent>
 		</AccordionItem>
 	);
-};
+});
+
+Collection.displayName = "Collection";
 
 export default Collection;
