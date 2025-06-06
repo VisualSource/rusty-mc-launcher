@@ -19,25 +19,27 @@ export type DownloadCurrentItem = {
 };
 export type DownloadEvent =
 	| {
-			event: "init";
-			data: DownloadCurrentItem;
-	  }
+		event: "init";
+		data: DownloadCurrentItem;
+	}
 	| {
-			event: "started";
-			data: {
-				max_progress: number;
-				message: string;
-			};
-	  }
+		event: "started";
+		data: {
+			max_progress: number;
+			message: string;
+		};
+	}
 	| {
-			event: "progress";
-			data: {
-				amount?: number;
-				message?: string;
-			};
-	  }
+		event: "progress";
+		data: {
+			amount?: number;
+			message?: string;
+		};
+	}
 	| { event: "finished"; data: unknown }
-	| { event: "refreshProfile" };
+	| { event: "refreshProfile" }
+	| { event: "toast", data: { status: string; message: string } }
+	| { event: "invalidateQuery", data: { query_key: string[] } };
 
 export async function registerDownloadListener(
 	channel: Channel<DownloadEvent>,

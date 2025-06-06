@@ -19,6 +19,13 @@ pub enum DownloadEvent {
         amount: Option<usize>,
         message: Option<String>,
     },
+    InvalidateQuery {
+        query_key: Vec<String>,
+    },
+    Toast {
+        status: String,
+        message: String,
+    },
     RefreshProfile,
     Finished,
 }

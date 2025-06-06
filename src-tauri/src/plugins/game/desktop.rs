@@ -1,8 +1,7 @@
 use minecraft_launcher_lib::database::RwDatabase;
-use minecraft_launcher_lib::process::{InstanceType, Processes};
+use minecraft_launcher_lib::process::Processes;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, Runtime};
-use tokio::io::AsyncReadExt;
 use tokio::sync::RwLock;
 pub const PROCESS_CRASH_EVENT: &str = "rmcl::process-crash";
 pub const PROCESSES_STATE_EVENT: &str = "rmcl::process-state";

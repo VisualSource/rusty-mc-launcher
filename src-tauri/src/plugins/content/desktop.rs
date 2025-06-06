@@ -40,6 +40,19 @@ async fn install_client(
             }
             Profile::set_state(&item.profile_id, ProfileState::Installed, db).await?;
 
+            if let Err(err) = on_event.send(DownloadEvent::InvalidateQuery {
+                query_key: vec!["categories".to_string()],
+            }) {
+                log::error!("{}", err)
+            }
+
+            if let Err(err) = on_event.send(DownloadEvent::Toast {
+                status: "success".to_string(),
+                message: "Client has been installed!".to_string(),
+            }) {
+                log::error!("{}", err)
+            }
+
             Ok(())
         }
         Err(err) => {

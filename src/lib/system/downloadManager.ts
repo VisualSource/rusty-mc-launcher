@@ -8,6 +8,7 @@ import {
 import { invalidateQueries, queryClient } from "@lib/api/queryClient";
 import { QueueItemState } from "../QueueItemState";
 import { KEY_DOWNLOAD_QUEUE, KEY_PROFILE } from "@/hooks/keys";
+import { toastSuccess } from "../toast";
 
 export const DOWNLOAD_MANAGER_EVENT_PROGRESS = "update::progress";
 export const DOWNLOAD_MANAGER_EVENT_CURRENT = "update::current";
@@ -93,9 +94,24 @@ class DownloadManager extends EventTarget {
 			case "refreshProfile":
 				queryClient.invalidateQueries({
 					queryKey: [KEY_PROFILE, this.current?.profile ?? ""],
-				});
+				}).catch(e => console.error(e));
 				break;
+
+			case "invalidateQuery": {
+				queryClient.invalidateQueries({
+					queryKey: ev.data.query_key
+				}).catch(e => console.error(e));
+				break;
+			}
+			case "toast": {
+				if (ev.data.status === "success") {
+					toastSuccess({ title: "Download", description: ev.data.message });
+				}
+
+				break;
+			}
 			default:
+				console.error("Unknown event", ev);
 				break;
 		}
 	};
