@@ -68,7 +68,12 @@ impl Database {
         Ok(())
     }
 
-    pub async fn execute(&self, query: String, args: Vec<serde_json::Value>) -> Result<(u64, i64)> {
+    pub async fn execute(&self, query: &str) -> Result<(u64, i64)> {
+        let result = sqlx::raw_sql(query).execute(&self.0).await?;
+        Ok((result.rows_affected(), result.last_insert_rowid()))
+    }
+
+    pub async fn prepare(&self, query: String, args: Vec<serde_json::Value>) -> Result<(u64, i64)> {
         let mut stmt = sqlx::query(&query);
 
         for arg in args {

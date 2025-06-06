@@ -19,8 +19,11 @@ export type QueryResult = Record<string, string | number | null | boolean>;
 
 const querySelect = <T>(query: string, args: unknown[]) =>
 	invoke<T[]>("plugin:rmcl-query|select", { query, args });
-const queryExecute = (query: string, args: unknown[]) =>
-	invoke<[number, number]>("plugin:rmcl-query|execute", { query, args });
+const queryExecute = (query: string) =>
+	invoke<[number, number]>("plugin:rmcl-query|execute", { query });
+
+const queryPrepare = (query: string, args: unknown[]) => invoke<[number, number]>("plugin:rmcl-query|prepare", { query, args });
+
 
 /** functions for passing raw sql values */
 
@@ -101,11 +104,12 @@ export async function transaction(actions: (tx: TagFunc) => void) {
 
 	actions(tx);
 
+	console.debug(stmts);
+
 	return queryExecute(
 		`BEGIN TRANSACTION;
-							${stmts.join("")} 
-						COMMIT;`,
-		argsList,
+			${stmts.join("")} 
+		COMMIT;`,
 	);
 }
 
@@ -118,7 +122,7 @@ export function query<T = QueryResult>(
 	return {
 		all: () => querySelect<T>(stmt, args),
 		get: () => querySelect<T>(stmt, args).then((e) => e.at(0)),
-		run: () => queryExecute(stmt, args),
+		run: () => queryPrepare(stmt, args),
 		as<A>(Model: { fromQuery(args: QueryResult): A }) {
 			return {
 				all: () =>

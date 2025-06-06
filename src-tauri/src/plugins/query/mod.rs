@@ -42,6 +42,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             commands::execute,
             commands::select,
+            commands::prepare
         ])
         .build()
 }

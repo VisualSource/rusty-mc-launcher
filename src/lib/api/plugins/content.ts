@@ -108,7 +108,7 @@ export async function createProfile(
 
 export async function copyProfile(oldProfile: Profile, newProfile: string) {
 	await transaction((tx) => {
-		tx`INSERT INTO profiles VALUES (${bulk([
+		tx`INSERT INTO profiles VALUES ${bulk([
 			[
 				newProfile,
 				`${oldProfile.name}: Duplicate`,
@@ -122,15 +122,15 @@ export async function copyProfile(oldProfile: Profile, newProfile: string) {
 				oldProfile.resolution_width,
 				oldProfile.resolution_height,
 				oldProfile.state,
+				oldProfile.is_modpack
 			],
-		])});`;
-		tx`
-		CREATE TEMPORARY TABLE temp_table ENGINE=MEMORY AS (
+		])};`;
+		tx`CREATE TEMPORARY TABLE temp_table ENGINE=MEMORY AS (
 		 	SELECT * FROM profile_content WHERE profile = ${oldProfile.id}
-		);
-		UPDATE temp_table SET profile = ${newProfile};
-		INSERT INTO profile_content SELECT * FROM temp_table;
-		DROP TABLE temp_table;`;
+			);`;
+		tx`UPDATE temp_table SET profile = ${newProfile};`
+		tx`INSERT INTO profile_content SELECT * FROM temp_table;`;
+		tx`DROP TABLE temp_table;`;
 	});
 
 	await queryClient.invalidateQueries({
