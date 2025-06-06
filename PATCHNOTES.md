@@ -1,3 +1,8 @@
+# v0.9.12
+
+### Fixes
+    - Fix reveal in dir permission
+
 # v0.9.11
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11)
 

@@ -1,18 +1,29 @@
 Todo:
-  ☐ Cache skins
-  ☐ Fix content uninstall (NEEDS TESTING)
-  ☐ Update content check deps
-  ☐ update to latest version (for vanilla)
-  ☐ Validate Content
-  ☐ performance changes
-  ☐ Resourcepack's mod requirement checks
-  ☐ Setup csp
-  ☐ Update modrinth login to be on pair with microsoft login.
-  
-  
+  V0.10:
+    ✔ return minecraft logs on crash @done(25-06-05 18:59)
+       ✘ console @cancelled(25-06-05 18:59)
+       ✔ timeout on startup @done(25-06-05 17:14)
+    ✔ toast on profile finished installed @started(25-06-05 19:00) @done(25-06-05 19:25) @lasted(25m49s)
+    ✔ invaliate profiles list on profile add. @started(25-06-05 19:00) @done(25-06-05 19:21) @lasted(21m15s)
+    ☐ Cache skins
+    ☐ Update modrinth login to be on pair with microsoft login.
+    ☐ fix copy profile
+    ✔ fix timestamp @done(25-06-05 18:59)
+  Life Time:
+    ☐ End to End testing
+    ☐ regression testing
+    ☐ Fix content uninstall (NEEDS TESTING)
+    ☐ Update content check deps
+    ☐ update to latest version (for vanilla)
+    ☐ Validate Content
+    ☐ performance changes
+    ☐ Resourcepack's mod requirement checks
+    ☐ Setup csp
+
 Bugs:
   ✔ (Tauri) Window Size and Fullscreen Issues: https://github.com/tauri-apps/tauri/issues/11788 https://github.com/tauri-apps/tauri/issues/11654 @done(25-03-03 13:01)
   ☐ (Modrinth) OAuth2 Bug: https://github.com/modrinth/code/issues/2339
+  ☐ (UI) Navigation menu content not render bug: https://github.com/shadcn-ui/ui/issues/7528
 
 Archive:
   ✔ Fix workshop search @done(25-03-03 13:01)
