@@ -89,24 +89,32 @@ const parseQuery = (stmts: TemplateStringsArray, args: unknown[]) => {
  * Builds a sql tranaction
  */
 export async function transaction(actions: (tx: TagFunc) => void) {
-	const argsList: unknown[] = [];
-
 	const stmts: string[] = [];
 
 	const tx: TagFunc = (strings, ...values) => {
-		const { stmt, args } = parseQuery(strings, values);
-		argsList.push(...args);
+		let stmt = "";
+		for(let i = 0; i < strings.length; i++){
+			stmt += strings[i];
+			if (i >= args.length) continue;
+
+			const arg = args[i];
+
+			//TODO: do check for sql include functions
+				
+			// embed arg
+			if(typeof arg === "string") {
+			   stmt += `'${arg}'`;
+			} else {
+			   stmt += arg.toString();
+			}
+		}
+		
 		stmts.push(stmt);
 	};
 
 	actions(tx);
 
-	return queryExecute(
-		`BEGIN TRANSACTION;
-							${stmts.join("")} 
-						COMMIT;`,
-		argsList,
-	);
+	return queryExecute(`BEGIN TRANSACTION;${stmts.join("")}COMMIT;`,[]);
 }
 
 export function query<T = QueryResult>(
