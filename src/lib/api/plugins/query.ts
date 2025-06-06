@@ -92,8 +92,6 @@ const parseQuery = (stmts: TemplateStringsArray, args: unknown[]) => {
  * Builds a sql tranaction
  */
 export async function transaction(actions: (tx: TagFunc) => void) {
-	const argsList: unknown[] = [];
-
 	const stmts: string[] = [];
 
 	const tx: TagFunc = (strings, ...values) => {
