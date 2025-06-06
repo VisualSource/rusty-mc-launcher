@@ -17,6 +17,19 @@ const EMPTY_DATA = [
 	{ id: UNCATEGORIZEDP_GUID, name: "Uncategorized" },
 ];
 
+const loadSaved = () => {
+	const values = localStorage.getItem("categories-open");
+	if (!values) return;
+
+	return values.split(",").map(e => atob(e))
+}
+
+const saveValues = (values: string[]) => {
+	const data = values.map(e => btoa(e)).join(",");
+
+	localStorage.setItem("categories-open", data);
+}
+
 export const SidebarError: React.FC<{
 	error: Error;
 	resetErrorBoundary: () => void;
@@ -42,41 +55,43 @@ export const SidebarError: React.FC<{
 const Sidebar = memo(() => {
 	const collections = useCategories();
 
+	const defaultValues = loadSaved();
+
 	return (
 		<ScrollArea>
-			<Accordion type="multiple">
+			<Accordion type="multiple" defaultValue={defaultValues} onValueChange={saveValues} >
 				{collections.length
 					? collections.map((category) => (
-							<QueryErrorResetBoundary key={category.metadata}>
-								{({ reset }) => (
-									<ErrorBoundary
-										onReset={reset}
-										fallback={<CollectionError name={category?.value ?? ""} />}
-									>
-										<Suspense fallback={<CollectionLoading />}>
-											<Collection
-												name={category.value ?? "Unknown Name"}
-												id={category.metadata}
-											/>
-										</Suspense>
-									</ErrorBoundary>
-								)}
-							</QueryErrorResetBoundary>
-						))
+						<QueryErrorResetBoundary key={category.metadata}>
+							{({ reset }) => (
+								<ErrorBoundary
+									onReset={reset}
+									fallback={<CollectionError name={category?.value ?? ""} />}
+								>
+									<Suspense fallback={<CollectionLoading />}>
+										<Collection
+											name={category.value ?? "Unknown Name"}
+											id={category.metadata}
+										/>
+									</Suspense>
+								</ErrorBoundary>
+							)}
+						</QueryErrorResetBoundary>
+					))
 					: EMPTY_DATA.map((item) => (
-							<QueryErrorResetBoundary key={`${item.name}_${item.id}`}>
-								{({ reset }) => (
-									<ErrorBoundary
-										onReset={reset}
-										fallback={<CollectionError name={item.name} />}
-									>
-										<Suspense fallback={<CollectionLoading />}>
-											<Collection id={item.name} name={item.name} />
-										</Suspense>
-									</ErrorBoundary>
-								)}
-							</QueryErrorResetBoundary>
-						))}
+						<QueryErrorResetBoundary key={`${item.name}_${item.id}`}>
+							{({ reset }) => (
+								<ErrorBoundary
+									onReset={reset}
+									fallback={<CollectionError name={item.name} />}
+								>
+									<Suspense fallback={<CollectionLoading />}>
+										<Collection id={item.name} name={item.name} />
+									</Suspense>
+								</ErrorBoundary>
+							)}
+						</QueryErrorResetBoundary>
+					))}
 			</Accordion>
 		</ScrollArea>
 	);
