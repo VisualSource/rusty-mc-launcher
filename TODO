@@ -9,6 +9,9 @@ Todo:
     ✔ fix copy profile @done(25-06-06 21:11)
     ✔ fix timestamp @done(25-06-05 18:59)
   Life Time:
+    ☐ Jvm version updater
+    ☐ Jvm deletable installs.
+    ☐ minecraft version delete 
     ☐ Cache skins
     ☐ End to End testing
     ☐ regression testing
