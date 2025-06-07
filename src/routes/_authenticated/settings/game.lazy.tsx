@@ -174,7 +174,7 @@ function GameSettings() {
 									<Input placeholder="1 minute" {...field} type="number" step="1" />
 								</FormControl>
 								<FormDescription>
-									The max amount of time the launcher will wait for minecraft to launch. (Default 1 minute)
+									The max amount of time the launcher will wait for minecraft to launch. (Default 5 minutes)
 								</FormDescription>
 								<FormMessage />
 							</FormItem>

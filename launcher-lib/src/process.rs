@@ -1,4 +1,9 @@
-use std::{collections::HashMap, path::Path, time::Duration};
+use log::error;
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 use tokio::{
     process::{Child, Command},
     task,
@@ -127,6 +132,13 @@ impl Processes {
     }
 }
 
+fn get_modified_time(file: &Path, now: &std::time::SystemTime) -> std::io::Result<bool> {
+    let metadata = file.metadata()?;
+    let modified = metadata.modified()?;
+
+    Ok(&modified > now)
+}
+
 #[derive(Debug, sqlx::FromRow)]
 pub struct Process {
     pub pid: i64,
@@ -148,6 +160,8 @@ impl Process {
         max_wait_to_start: Option<u64>,
     ) -> Result<Self> {
         let uuid = Uuid::new_v4().to_string();
+
+        let now = std::time::SystemTime::now();
 
         let ps = Command::new(&exe)
             .current_dir(game_directory)
@@ -184,44 +198,57 @@ impl Process {
         // =====================
         let log_file = game_directory.join("logs/latest.log");
         task::spawn(async move {
-            let mut interval =
-                tokio::time::interval(Duration::from_millis(max_wait_to_start.unwrap_or(250)));
+            let mut interval = tokio::time::interval(Duration::from_millis(250));
             let watched = pid;
-
-            let mut cursor = 0;
+            // default is wait about 1min
+            let max_ticks = max_wait_to_start.unwrap_or(1200) + 8;
+            let mut log_file_ready = false;
             let mut tick_count = 0;
-
-            // wait for log file to be rotated
-            tokio::time::sleep(Duration::from_secs(2)).await;
+            let mut cursor = 0;
 
             'watcher: loop {
                 interval.tick().await;
 
-                match logs::get_latest_log_cursor(&log_file, cursor).await {
-                    Ok(result) => {
-                        cursor = result.cursor;
-                        for x in result.line.split('\n') {
-                            if x.contains("[Render thread/INFO]: Sound engine started") {
-                                log::debug!("Game is ready!");
-                                if let Err(err) = on_ready.send("ok".to_string()) {
-                                    log::error!("Failed to send on ready. {}", err);
-                                }
-                                break 'watcher;
+                tick_count += 1;
+
+                if !log_file_ready {
+                    match get_modified_time(&log_file, &now) {
+                        Ok(ready) => {
+                            log_file_ready = ready;
+                        }
+                        Err(err) => {
+                            error!("{}", err);
+                            if let Err(err) = on_ready.send("error::io".to_string()) {
+                                log::error!("Failed to send on ready. {}", err);
                             }
+                            break 'watcher;
                         }
                     }
-                    Err(err) => {
-                        log::error!("Launch watcher errored! {}", err);
-                        if let Err(err) = on_ready.send("error::io".to_string()) {
-                            log::error!("Failed to send on ready. {}", err);
+                } else {
+                    match logs::get_latest_log_cursor(&log_file, cursor).await {
+                        Ok(result) => {
+                            cursor = result.cursor;
+                            for x in result.line.split('\n') {
+                                if x.contains("[Render thread/INFO]: Sound engine started") {
+                                    log::debug!("Game is ready!");
+                                    if let Err(err) = on_ready.send("ok".to_string()) {
+                                        log::error!("Failed to send on ready. {}", err);
+                                    }
+                                    break 'watcher;
+                                }
+                            }
                         }
-                        break 'watcher;
+                        Err(err) => {
+                            log::error!("Launch watcher errored! {}", err);
+                            if let Err(err) = on_ready.send("error::io".to_string()) {
+                                log::error!("Failed to send on ready. {}", err);
+                            }
+                            break 'watcher;
+                        }
                     }
                 }
 
-                tick_count += 1;
-                // wait about 1min
-                if tick_count >= 240 {
+                if tick_count >= max_ticks {
                     let mut system = sysinfo::System::new();
                     system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
 
