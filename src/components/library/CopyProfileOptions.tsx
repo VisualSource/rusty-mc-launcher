@@ -23,7 +23,7 @@ import { query } from "@/lib/api/plugins/query";
 import { join } from "@tauri-apps/api/path";
 
 export const CopyProfileOptions: React.FC<{
-	form: UseFormReturn<Profile & { copyOptions?: string }, unknown, undefined>;
+	form: UseFormReturn<Profile & { copyOptions?: string }>;
 }> = ({ form }) => {
 	const { data } = useSuspenseQuery({
 		queryKey: ["COPY_FROM_OPTIONS"],
