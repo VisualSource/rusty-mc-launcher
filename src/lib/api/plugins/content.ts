@@ -8,7 +8,7 @@ import { ContentType } from "@/lib/models/download_queue";
 import type { Profile } from "@/lib/models/profiles";
 import { bulk, query, transaction } from "./query";
 import { queryClient } from "../queryClient";
-import { CATEGORY_KEY } from "@/hooks/keys";
+import { CATEGORIES_KEY, CATEGORY_KEY } from "@/hooks/keys";
 import { exists } from "@tauri-apps/plugin-fs";
 
 export type DownloadCurrentItem = {
@@ -108,38 +108,33 @@ export async function createProfile(
 
 export async function copyProfile(oldProfile: Profile, newProfile: string) {
 	await transaction((tx) => {
-		tx`INSERT INTO profiles VALUES ${bulk([
-			[
-				newProfile,
-				`${oldProfile.name}: Duplicate`,
-				oldProfile.icon,
-				oldProfile.date_created,
-				oldProfile.last_played,
-				oldProfile.version,
-				oldProfile.loader,
-				oldProfile.loader_version,
-				oldProfile.java_args,
-				oldProfile.resolution_width,
-				oldProfile.resolution_height,
-				oldProfile.state,
-				oldProfile.is_modpack
-			],
-		])};`;
-		tx`CREATE TEMPORARY TABLE temp_table ENGINE=MEMORY AS (
-		 	SELECT * FROM profile_content WHERE profile = ${oldProfile.id}
-			);`;
-		tx`UPDATE temp_table SET profile = ${newProfile};`
-		tx`INSERT INTO profile_content SELECT * FROM temp_table;`;
-		tx`DROP TABLE temp_table;`;
-	});
-
-	await queryClient.invalidateQueries({
-		queryKey: [CATEGORY_KEY, UNCATEGORIZEDP_GUID],
+		tx`INSERT INTO profiles VALUES (
+			${newProfile},
+			${`${oldProfile.name}: Duplicate`},
+			${oldProfile.icon},
+			${new Date().toISOString()},
+			${null},
+			${oldProfile.version},
+			${oldProfile.loader},
+			${oldProfile.loader_version},
+			${oldProfile.java_args},
+			${oldProfile.resolution_width},
+			${oldProfile.resolution_height},
+			${oldProfile.state},
+			${oldProfile.is_modpack});`;
+		tx`CREATE TEMPORARY TABLE copy_profile_row AS SELECT * FROM profile_content WHERE profile = ${oldProfile.id};`;
+		tx`UPDATE copy_profile_row SET profile = ${newProfile};`
+		tx`INSERT INTO profile_content SELECT * FROM copy_profile_row;`;
+		tx`DROP TABLE copy_profile_row;`;
 	});
 
 	await invoke<void>("plugin:rmcl-content|copy_profile", {
-		new_profile: newProfile,
-		old_profile: oldProfile,
+		oldProfile: oldProfile.id,
+		newProfile: newProfile,
+	});
+
+	await queryClient.invalidateQueries({
+		queryKey: [CATEGORY_KEY],
 	});
 }
 

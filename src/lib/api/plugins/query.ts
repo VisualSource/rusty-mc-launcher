@@ -9,7 +9,6 @@ type Query<T> = {
 		"as" | "run"
 	>;
 };
-
 type RawSql = { isSql: true; stmt: string; args?: unknown[] };
 export type TagFunc = (
 	strings: TemplateStringsArray,
@@ -17,23 +16,82 @@ export type TagFunc = (
 ) => void;
 export type QueryResult = Record<string, string | number | null | boolean>;
 
+//#region Tauri Bindings
 const querySelect = <T>(query: string, args: unknown[]) =>
 	invoke<T[]>("plugin:rmcl-query|select", { query, args });
+
 const queryExecute = (query: string) =>
 	invoke<[number, number]>("plugin:rmcl-query|execute", { query });
 
-const queryPrepare = (query: string, args: unknown[]) => invoke<[number, number]>("plugin:rmcl-query|prepare", { query, args });
-
-
-/** functions for passing raw sql values */
+const queryPrepare = (query: string, args: unknown[]) =>
+	invoke<[number, number]>("plugin:rmcl-query|prepare", { query, args });
+//#endregion Tauri Bindings
 
 /**
- * Pass a a raw sql value to parser
+ * Coverts sql templete string array into a single sql string.
+ *
+ * Args with a object of ```{ isSql: true, stmt: string, args?: unknown[] }```
+ * will be concated into the sql string rather then being replace by a ? param
+ */
+const parseQuery = (stmts: TemplateStringsArray, args: unknown[], useNumberParams = false) => {
+	const values: unknown[] = [];
+	let stmt = "";
+	let param = 1;
+	for (let index = 0; index < stmts.length; index++) {
+		stmt += stmts[index];
+
+		if (index >= args.length) continue;
+
+		const arg = args[index];
+
+		if (arg && typeof arg === "object" && "isSql" in arg && "stmt" in arg) {
+			stmt += arg.stmt;
+			if ("args" in arg && Array.isArray(arg.args)) {
+				values.push(...arg.args);
+			}
+			continue;
+		}
+
+
+		stmt += useNumberParams ? `$${param++}` : "?";
+		values.push(arg);
+	}
+
+	if (!stmt.endsWith(";")) stmt += ";";
+
+	return {
+		stmt,
+		args: values,
+	};
+};
+
+const asString = (arg: unknown): string => {
+	switch (typeof arg) {
+		case "string":
+			return `'${arg}'`;
+		case "number":
+			return arg.toString();
+		case "boolean":
+			return arg ? "TRUE" : "FALSE"
+		case "object":
+			if (arg === null) return "NULL";
+			return `'${JSON.stringify(arg)}'`;
+		default:
+			throw new Error(`Unsupported data type: "${typeof arg}"`, { cause: arg });
+	}
+}
+
+//#region Public Api
+
+
+/**
+ * Pass a raw sql value
  */
 export const sqlValue = (value: string): RawSql => ({
 	isSql: true,
 	stmt: value,
 });
+
 /**
  * Build a param list out of a list of values. example ```(?,?,?,?),(?,?,?,?)```
  */
@@ -51,66 +109,36 @@ export const bulk = (values: unknown[][]): RawSql => {
 	return { isSql: true, stmt, args: values.flat() };
 };
 
-/**
- * Coverts sql templete string array into a single sql string.
- *
- * Args with a object of ```{ isSql: true, stmt: string, args?: unknown[] }```
- * will be concated into the sql string rather then being replace by a ? param
- */
-const parseQuery = (stmts: TemplateStringsArray, args: unknown[]) => {
-	const values: unknown[] = [];
-	let stmt = "";
-
-	for (let index = 0; index < stmts.length; index++) {
-		stmt += stmts[index];
-
-		if (index >= args.length) continue;
-
-		const arg = args[index];
-
-		if (arg && typeof arg === "object" && "isSql" in arg && "stmt" in arg) {
-			stmt += arg.stmt;
-			if ("args" in arg && Array.isArray(arg.args)) {
-				values.push(...arg.args);
-			}
-			continue;
-		}
-
-		stmt += "?";
-		values.push(arg);
-	}
-
-	if (!stmt.endsWith(";")) stmt += ";";
-
-	return {
-		stmt,
-		args: values,
-	};
-};
 
 /**
- * Builds a sql tranaction
+ * Function for building and executing mutiple sql querys at once.
  */
 export async function transaction(actions: (tx: TagFunc) => void) {
 	const stmts: string[] = [];
 
-	const tx: TagFunc = (strings, ...values) => {
-		const { stmt, args } = parseQuery(strings, values);
-		argsList.push(...args);
-		stmts.push(stmt);
+	const tx: TagFunc = (strings, ...args) => {
+		const { stmt, args: finalArgs } = parseQuery(strings, args, true);
+
+		const stringifyArgs = finalArgs.map(arg => asString(arg));
+
+		let param = 1;
+		let query = stmt.replaceAll(/\t|\r|\n/g, "");
+		for (const arg of stringifyArgs) {
+			query = query.replace(`$${param++}`, arg);
+		}
+
+		stmts.push(query);
 	};
 
 	actions(tx);
-
-	console.debug(stmts);
-
-	return queryExecute(
-		`BEGIN TRANSACTION;
-			${stmts.join("")} 
-		COMMIT;`,
-	);
+	return queryExecute(`BEGIN;${stmts.join("")};COMMIT;`);
 }
 
+/**
+ * sql string builder
+ * 
+ * allows for returning value as a model
+ */
 export function query<T = QueryResult>(
 	stmts: TemplateStringsArray,
 	...values: unknown[]
@@ -137,3 +165,5 @@ export function query<T = QueryResult>(
 		},
 	};
 }
+
+//#region Public Api

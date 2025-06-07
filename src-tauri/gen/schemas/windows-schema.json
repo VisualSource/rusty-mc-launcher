@@ -6471,16 +6471,22 @@
           "markdownDescription": "Stop a started game"
         },
         {
-          "description": "Default permissions for the rmcl-query plugin\n#### This default permission set includes:\n\n- `allow-execute`\n- `allow-select`",
+          "description": "Default permissions for the rmcl-query plugin\n#### This default permission set includes:\n\n- `allow-execute`\n- `allow-select`\n- `allow-prepare`",
           "type": "string",
           "const": "rmcl-query:default",
-          "markdownDescription": "Default permissions for the rmcl-query plugin\n#### This default permission set includes:\n\n- `allow-execute`\n- `allow-select`"
+          "markdownDescription": "Default permissions for the rmcl-query plugin\n#### This default permission set includes:\n\n- `allow-execute`\n- `allow-select`\n- `allow-prepare`"
         },
         {
           "description": "Enables the execute command.",
           "type": "string",
           "const": "rmcl-query:allow-execute",
           "markdownDescription": "Enables the execute command."
+        },
+        {
+          "description": "Allow for select operation",
+          "type": "string",
+          "const": "rmcl-query:allow-prepare",
+          "markdownDescription": "Allow for select operation"
         },
         {
           "description": "Allow for select operation",
