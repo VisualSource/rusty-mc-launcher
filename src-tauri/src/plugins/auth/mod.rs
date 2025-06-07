@@ -1,5 +1,6 @@
 mod commands;
 mod desktop;
+mod mr_auth;
 use tokio::sync::Mutex;
 
 use desktop::{
@@ -11,6 +12,11 @@ use tauri::{
 };
 use tauri_plugin_deep_link::DeepLinkExt;
 
+use crate::plugins::auth::mr_auth::{
+    EVENT_MR_LOGIN_WINDOW_DESTORYED, ModrinthLoginState, is_modrinth_callback,
+    validate_modrinth_code,
+};
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::<R>::new("rmcl-auth")
         .setup(|app, _api| {
@@ -18,6 +24,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
             let state = AuthState::new()?;
             app.manage(Mutex::new(state));
+            app.manage(Mutex::new(ModrinthLoginState::new()));
 
             let app_handle = app.clone();
             app.listen(EVENT_LOGIN_WINDOW_DESTORYED, move |_event| {
@@ -32,6 +39,22 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     auth_state.flow = None;
                 });
                 log::debug!("Login window has been destoryed");
+            });
+
+            let mr_app_handle = app.clone();
+            app.listen(EVENT_MR_LOGIN_WINDOW_DESTORYED, move |_ev| {
+                let handle = mr_app_handle.clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(error) = handle.emit("rmcl-auth-login-mr-error", "Window was closed")
+                    {
+                        log::error!("{}", error);
+                    }
+                    let state = handle.state::<Mutex<ModrinthLoginState>>();
+                    let mut auth_state = state.lock().await;
+                    if let Err(err) = auth_state.reset() {
+                        log::error!("{}", err);
+                    }
+                });
             });
 
             let app_handle = app.clone();
@@ -53,13 +76,15 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                             }
                         });
                     }
-                    /*e if is_modrinth_callback(e) => {
+                    e if is_modrinth_callback(e) => {
                         let handle = app_handle.clone();
                         let data = url.clone();
-                        tauri::async_runtime::spawn(async {
-                            validate_modrinth(handle, data).await;
+                        tauri::async_runtime::spawn(async move {
+                            if let Err(err) = validate_modrinth_code(handle, data).await {
+                                log::error!("{}", err);
+                            }
                         });
-                    }*/
+                    }
                     _ => {}
                 }
             });
@@ -70,7 +95,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::refresh,
             commands::authenticate,
             commands::logout,
-            //commands::modrinth_authenticate
+            mr_auth::mr_authenticate
         ])
         .build()
 }

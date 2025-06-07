@@ -1,109 +1,121 @@
-import type { AccountInfo, AuthenticationResult, AuthorizationCodeRequest, BrowserConfiguration, ClearCacheRequest, EndSessionPopupRequest, EndSessionRequest, EventCallbackFunction, EventType, INavigationClient, InitializeApplicationRequest, IPublicClientApplication, ITokenCache, Logger, PerformanceCallbackFunction, PopupRequest, RedirectRequest, SilentRequest, SsoSilentRequest, WrapperSKU } from "@azure/msal-browser";
-import type { AccountFilter } from "@azure/msal-common";
+import { addSeconds, compareAsc } from "date-fns";
+import { followProject, getFollowedProjects, getUserFromAuth, unfollowProject, type User } from "../api/modrinth";
+import { modrinthAuthenticate } from "../api/plugins/auth";
 
-export class ModrinthClientApplication extends EventTarget implements IPublicClientApplication {
+type ModrinthAccount = User;
+export class ModrinthClientApplication extends EventTarget {
     public isAuthed = false;
     public isLoading = false;
+    private user: ModrinthAccount | null = null;
+    private details: { access_token: string; expires: Date } | null = null;
 
-    async getFollowed() { }
+    async initialize(): Promise<void> {
+        const account = localStorage.getItem("modrinth");
+        if (!account) return;
 
-    async initialize(request?: InitializeApplicationRequest): Promise<void> {
+        const data = JSON.parse(atob(account)) as { token: string; expires: string; }
 
+        this.details = {
+            access_token: data.token,
+            expires: new Date(data.expires)
+        }
     }
-    acquireTokenPopup(request: PopupRequest): Promise<AuthenticationResult> {
-        throw new Error("Method not implemented.");
+
+    async acquireTokenPopup(): Promise<{ access_token: string; expires: Date }> {
+        if (this.details && compareAsc(new Date(), this.details.expires) === -1) {
+            return this.details;
+        }
+
+        const result = await modrinthAuthenticate();
+
+        const details = {
+            access_token: result.access_token,
+            expires: addSeconds(new Date(), result.expires_in)
+        }
+
+        this.details = details;
+
+        this.isAuthed = true;
+
+        return this.details;
     }
-    acquireTokenRedirect(request: RedirectRequest): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    getActiveAccount(): ModrinthAccount | null {
+        return this.user;
     }
-    acquireTokenSilent(silentRequest: SilentRequest): Promise<AuthenticationResult> {
-        throw new Error("Method not implemented.");
+
+    async getFollowed() {
+        if (!this.user) throw new Error("No user logged in!");
+
+        const { data, error } = await getFollowedProjects({
+            path: {
+                "id|username": this.user.id
+            }
+        });
+
+        if (error) throw error;
+
+        return data;
     }
-    acquireTokenByCode(request: AuthorizationCodeRequest): Promise<AuthenticationResult> {
-        throw new Error("Method not implemented.");
+
+    async unfollowProject(projectId: string) {
+        const details = await this.acquireTokenPopup();
+
+        const { data, error } = await unfollowProject({
+            auth: details.access_token,
+            path: {
+                "id|slug": projectId
+            }
+        });
+
+        if (error) throw error;
+        return data;
     }
-    addEventCallback(callback: EventCallbackFunction, eventTypes?: Array<EventType>): string | null {
-        throw new Error("Method not implemented.");
+
+    async followProject(projectId: string) {
+        const details = await this.acquireTokenPopup();
+
+        const { data, error } = await followProject({
+            auth: details.access_token,
+            path: {
+                "id|slug": projectId
+            }
+        });
+
+        if (error) throw error;
+        return data;
     }
-    removeEventCallback(callbackId: string): void {
-        throw new Error("Method not implemented.");
+
+    async loginPopup() {
+        const details = await this.acquireTokenPopup();
+
+        const { error, data: user } = await getUserFromAuth({
+            auth: details.access_token
+        });
+        if (error) throw error;
+
+        this.user = user;
+
+        localStorage.setItem("modrinth", btoa(JSON.stringify({
+            token: details.access_token,
+            expires: details.expires.toISOString()
+        })));
+
+        this.dispatchEvent(new CustomEvent("update-data"));
+
+        return {
+            user,
+            details
+        };
     }
-    addPerformanceCallback(callback: PerformanceCallbackFunction): string {
-        throw new Error("Method not implemented.");
-    }
-    removePerformanceCallback(callbackId: string): boolean {
-        throw new Error("Method not implemented.");
-    }
-    enableAccountStorageEvents(): void {
-        throw new Error("Method not implemented.");
-    }
-    disableAccountStorageEvents(): void {
-        throw new Error("Method not implemented.");
-    }
-    getAccount(accountFilter: AccountFilter): AccountInfo | null {
-        throw new Error("Method not implemented.");
-    }
-    getAccountByHomeId(homeAccountId: string): AccountInfo | null {
-        throw new Error("Method not implemented.");
-    }
-    getAccountByLocalId(localId: string): AccountInfo | null {
-        throw new Error("Method not implemented.");
-    }
-    getAccountByUsername(userName: string): AccountInfo | null {
-        throw new Error("Method not implemented.");
-    }
-    getAllAccounts(): AccountInfo[] {
-        throw new Error("Method not implemented.");
-    }
-    handleRedirectPromise(hash?: string): Promise<AuthenticationResult | null> {
-        throw new Error("Method not implemented.");
-    }
-    loginPopup(request?: PopupRequest): Promise<AuthenticationResult> {
-        throw new Error("Method not implemented.");
-    }
-    loginRedirect(request?: RedirectRequest): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-    logout(logoutRequest?: EndSessionRequest): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-    logoutRedirect(logoutRequest?: EndSessionRequest): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-    logoutPopup(logoutRequest?: EndSessionPopupRequest): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-    ssoSilent(request: SsoSilentRequest): Promise<AuthenticationResult> {
-        throw new Error("Method not implemented.");
-    }
-    getTokenCache(): ITokenCache {
-        throw new Error("Method not implemented.");
-    }
-    getLogger(): Logger {
-        throw new Error("Method not implemented.");
-    }
-    setLogger(logger: Logger): void {
-        throw new Error("Method not implemented.");
-    }
-    setActiveAccount(account: AccountInfo | null): void {
-        throw new Error("Method not implemented.");
-    }
-    getActiveAccount(): AccountInfo | null {
-        return null;
-    }
-    initializeWrapperLibrary(sku: WrapperSKU, version: string): void {
-        throw new Error("Method not implemented.");
-    }
-    setNavigationClient(navigationClient: INavigationClient): void {
-        throw new Error("Method not implemented.");
-    }
-    getConfiguration(): BrowserConfiguration {
-        throw new Error("Method not implemented.");
-    }
-    hydrateCache(result: AuthenticationResult, request: SilentRequest | SsoSilentRequest | RedirectRequest | PopupRequest): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-    clearCache(logoutRequest?: ClearCacheRequest): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    logout() {
+        localStorage.removeItem("modrinth");
+
+        this.user = null;
+        this.details = null;
+        this.isAuthed = false;
+
+        this.dispatchEvent(new CustomEvent("update-data"));
     }
 }

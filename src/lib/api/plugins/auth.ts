@@ -1,5 +1,5 @@
+import { once, type Event } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { once, type UnlistenFn, type Event } from "@tauri-apps/api/event";
 
 export type LoginResponse = {
 	access_token: string;
@@ -10,39 +10,74 @@ export type LoginResponse = {
 	token_type: string;
 };
 
+export type ModrinthLoginResponse = {
+	access_token: string;
+	token_type: string;
+	expires_in: number;
+}
+
+export async function modrinthAuthenticate() {
+	const { resolve, reject, promise } = Promise.withResolvers<ModrinthLoginResponse>();
+
+	const handleEvent = (ev: Event<unknown>) => {
+		switch (ev.event) {
+			case "rmcl-auth-login-rm-success": {
+				resolve(ev.payload as ModrinthLoginResponse);
+				break;
+			}
+			default:
+				reject(new Error("Login errored", { cause: ev }));
+		}
+	}
+
+	const unsubscribeError = await once("rmcl-auth-login-mr-error", handleEvent);
+	const unsubscribeSuccess = await once("rmcl-auth-login-rm-success", handleEvent);
+
+	await invoke("plugin:rmcl-auth|mr_authenticate");
+
+	try {
+		const result = await promise;
+		return result;
+	} catch (error) {
+		throw new Error("Modrinth login failed", { cause: error });
+	} finally {
+		unsubscribeError();
+		unsubscribeSuccess();
+	}
+}
+
 const DEFAULT_SCOPES = new Set(["profile", "offline_access"]);
 export async function authenticate(scopes: string[]) {
-	const result = new Promise<LoginResponse>((ok, reject) => {
-		let onSuccess: Promise<UnlistenFn> | undefined = undefined;
-		let onError: Promise<UnlistenFn> | undefined = undefined;
-		const handleEvent = (ev: Event<unknown>) => {
-			switch (ev.event) {
-				case "rmcl-auth-login-error":
-					reject(new Error(ev.payload as string));
-					break;
-				case "rmcl-auth-login-success": {
-					ok(ev.payload as LoginResponse);
-					break;
-				}
-				default:
-					reject(new Error(`Unknown event "${ev.event}"`, { cause: ev }));
-					break;
+	const { reject, resolve, promise } = Promise.withResolvers<LoginResponse>();
+	const handleEvent = (ev: Event<unknown>) => {
+		switch (ev.event) {
+			case "rmcl-auth-login-success": {
+				resolve(ev.payload as LoginResponse);
+				break;
 			}
-			Promise.all([onSuccess, onError])
-				.then((e) => {
-					for (const unsub of e) unsub?.call(null);
-				})
-				.catch((e) => console.error(e));
-		};
+			default:
+				reject(new Error("Login failed", { cause: ev }));
+				break;
+		}
+	};
 
-		onError = once("rmcl-auth-login-error", handleEvent);
-		onSuccess = once("rmcl-auth-login-success", handleEvent);
-	});
+	const onError = await once("rmcl-auth-login-error", handleEvent);
+	const onSuccess = await once("rmcl-auth-login-success", handleEvent);
+
 	await invoke("plugin:rmcl-auth|authenticate", {
 		scopes: Array.from(new Set(scopes).union(DEFAULT_SCOPES)),
 	});
 
-	return result;
+	try {
+		const result = await promise;
+
+		return result;
+	} catch (error) {
+		throw new Error("Microsoft login failed!", { cause: error });
+	} finally {
+		onError();
+		onSuccess();
+	}
 }
 
 export async function refresh(token: string): Promise<LoginResponse> {

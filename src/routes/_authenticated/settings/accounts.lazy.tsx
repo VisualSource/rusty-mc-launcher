@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { toastAwaitProimse } from "@/lib/toast";
 
 export const Route = createLazyFileRoute("/_authenticated/settings/accounts")({
 	component: AccountsSettings,
@@ -86,21 +87,14 @@ function AccountsSettings() {
 					<div className="flex justify-between items-center mb-4 ">
 						<div className="mr-1">
 							<h3 className="text-lg font-medium">Modrinth Account</h3>
-							<p className="text-muted-foreground text-sm">
-								Modrinth account login is currently bugged. Please login into
-								the{" "}
-								<a
-									className="underline text-blue-500"
-									href="https://modrinth.com"
-								>
-									modrinth website
-								</a>{" "}
-								then click the login button below.
-							</p>
 						</div>
 						<Button
 							onClick={() =>
-								modrinthAccount ? modrinth.logout() : modrinth.loginPopup()
+								modrinthAccount ? modrinth.logout() : toastAwaitProimse(modrinth.loginPopup(), {
+									loading: "Logging in",
+									error: "Failed to login",
+									success: { title: "Success", text: "Logged into your modrinth account!" }
+								})
 							}
 							size="sm"
 						>
@@ -124,21 +118,21 @@ function AccountsSettings() {
 							<>
 								{modrinthAccount ? (
 									<li
-										key={modrinthAccount.homeAccountId}
+										key={modrinthAccount.id}
 										className="flex flex-row items-center gap-4 rounded-lg border p-4"
 									>
 										<Avatar>
 											<AvatarFallback>
 												<User2 />
 											</AvatarFallback>
-											<AvatarImage src={modrinthAccount.idTokenClaims?.avatar_url as string} />
+											<AvatarImage src={modrinthAccount.avatar_url} />
 										</Avatar>
 										<div className="flex flex-col">
 											<span className="text-lg">
 												{modrinthAccount.username}
 											</span>
 											<span className="text-muted-foreground text-sm">
-												{modrinthAccount.name ?? modrinthAccount.idTokenClaims?.email as string}
+												{modrinthAccount.name ?? modrinthAccount.email}
 											</span>
 										</div>
 									</li>

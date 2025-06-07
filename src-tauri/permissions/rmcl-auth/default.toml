@@ -5,7 +5,7 @@ permissions = ["allow-authenticate","allow-logout","allow-refresh"]
 [[permission]]
 identifier = "allow-authenticate"
 description = "Allow to start authentication flow"
-commands.allow = ["authenticate"]
+commands.allow = ["authenticate","mr_authenticate"]
 
 [[permission]]
 identifier = "allow-logout"
@@ -16,3 +16,5 @@ commands.allow = ["logout"]
 identifier = "allow-refresh"
 description = "Allow refresh"
 commands.allow = ["refresh"]
+
+
