@@ -49,6 +49,7 @@ listen<string>("rmcl-content-install-failed", (ev) => {
 
 const msa = getPCA();
 const mca = new ModrinthClientApplication();
+mca.initialize().catch(e => console.error(e));
 
 // biome-ignore lint/style/noNonNullAssertion: The dom element with id "root" shall be there.
 const root = createRoot(document.getElementById("root")!);
