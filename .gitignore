@@ -5,6 +5,8 @@
 dist 
 node_modules
 
+/**/.cargo/config.toml
+
 ### Node ###
 # Logs
 logs
