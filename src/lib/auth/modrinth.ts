@@ -19,6 +19,13 @@ export class ModrinthClientApplication extends EventTarget {
             access_token: data.token,
             expires: new Date(data.expires)
         }
+        const { error, data: user } = await getUserFromAuth({
+            auth: this.details.access_token
+        });
+        if (error) throw error;
+        this.user = user;
+        this.isAuthed = true;
+        this.dispatchEvent(new CustomEvent("update-data"));
     }
 
     async acquireTokenPopup(): Promise<{ access_token: string; expires: Date }> {
