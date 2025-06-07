@@ -1,9 +1,5 @@
 use log::error;
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{collections::HashMap, path::Path, time::Duration};
 use tokio::{
     process::{Child, Command},
     task,
