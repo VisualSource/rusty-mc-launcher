@@ -42,7 +42,7 @@ export const ProfileVersionSelector: React.FC<{
 					</AlertDescription>
 				</Alert>
 			) : null}
-			<div className={cn("flex flex-col space-y-2", isModpack && "opacity-40")}>
+			<div className={cn("flex flex-col space-y-2", isModpack && "opacity-40")} inert={isModpack ? true : undefined}>
 				<FormField
 					disabled={isModpack}
 					control={form.control}
