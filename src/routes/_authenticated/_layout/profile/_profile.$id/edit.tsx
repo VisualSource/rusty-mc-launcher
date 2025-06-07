@@ -338,7 +338,7 @@ function ProfileEdit() {
 							</FormDescription>
 						</div>
 
-						<Button className="w-32" type="button" variant="secondary">
+						<Button disabled className="w-32" type="button" variant="secondary">
 							<FolderCheck className="mr-2 h-5 w-5" />
 							Validate
 						</Button>
