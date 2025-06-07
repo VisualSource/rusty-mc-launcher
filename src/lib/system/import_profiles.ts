@@ -95,10 +95,10 @@ const import_profiles = async () => {
 			if (["latest-release", "latest-snapshot"].includes(version)) {
 				version =
 					latest_data.latest[
-						version.replace(
-							"latest-",
-							"",
-						) as keyof (typeof latest_data)["latest"]
+					version.replace(
+						"latest-",
+						"",
+					) as keyof (typeof latest_data)["latest"]
 					];
 			}
 
@@ -110,7 +110,7 @@ const import_profiles = async () => {
 				icon: profile.icon.length ? profile.icon : null,
 				id,
 				java_args:
-					"-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
+					"-Xmx4G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
 				loader,
 				last_played: profile.lastUsed ?? new Date().toISOString(),
 				state: "UNINSTALLED",
