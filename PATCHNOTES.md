@@ -1,7 +1,29 @@
-# v0.9.12
+# v0.10.0
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.11...v0.10.0](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.11...v0.10.0)
+
+### New 
+    - Launcher timeout
+
+### Changes
+    - New Modrinth impl. 
+    - Updated javascript deps.
+    - Updated rust deps.
+    - Changes order of themes in settings.
+    - Disabled 'validate' in profile settings.
+    - Categories remember state
+    - Added fonts
+    - Profiles use 4GB by default.
+    - Show logs on crash
+    - Toast on profile installed.
 
 ### Fixes
-    - Fix reveal in dir permission
+    - Fix reveal in dir.
+    - Fix invalid timestamps in download queue.
+    - Fix navigation menu bug.
+    - Fix typo in download queue.
+    - Fix copy profile.
+    - Fix profiles list not being invalidated on modpack install.
+    - Fix #26
 
 # v0.9.11
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11)
