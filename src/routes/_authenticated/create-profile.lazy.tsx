@@ -37,7 +37,7 @@ const resolver = zodResolver(Profile.schema);
 
 function CreateProfile() {
 	const navigate = useNavigate();
-	const form = useForm<Profile & { copyOptions?: string }>({
+	const form = useForm({
 		resolver,
 		defaultValues: {
 			id: crypto.randomUUID(),
@@ -45,7 +45,7 @@ function CreateProfile() {
 			version: "latest-release",
 			loader: "vanilla",
 			java_args:
-				"-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
+				"-Xmx4G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
 			date_created: new Date().toISOString(),
 		},
 	});
