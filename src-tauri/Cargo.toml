@@ -24,8 +24,6 @@ tauri-plugin-shell = "2.2.1"
 tauri-plugin-log = "2.4.0"
 tauri-plugin-fs = "2.3.0"
 
-
-
 minecraft-launcher-lib = { path = "../launcher-lib"  }
 openidconnect = { version = "4.0.0", default-features = false}
 tokio = { version = "1.44.0", features = ["sync"] }

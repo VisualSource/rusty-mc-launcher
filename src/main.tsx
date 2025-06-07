@@ -5,7 +5,8 @@ import { MsalProvider } from "@azure/msal-react";
 import { createRoot } from "react-dom/client";
 import Shake, { } from "@shakebugs/browser";
 import { StrictMode } from "react";
-
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 
 import { ModrinthProvider } from "./components/providers/ModrinthProvider";
 import { ProcessProvider } from "@component/providers/ProcessProvider";
