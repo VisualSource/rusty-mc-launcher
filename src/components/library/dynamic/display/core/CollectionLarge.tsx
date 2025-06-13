@@ -63,12 +63,12 @@ const CollectionLarge: React.FC<{ cat: string }> = ({ cat }) => {
 							</div>
 						</div>
 						<div className="flex gap-4">
-							<Button className="w-full" variant="secondary" asChild>
+							<Button className="flex-1" variant="secondary" asChild>
 								<Link to="/profile/$id" params={{ id: value.id }}>
 									View
 								</Link>
 							</Button>
-							<PlayButton className="w-full" profile={value} />
+							<PlayButton className="flex-1" profile={value} />
 						</div>
 					</div>
 				))
