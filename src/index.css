@@ -58,6 +58,7 @@
 
 	--shake-sdk-font-family: var(--font-sans);
 	--shake-sdk-color-accent: var(--accent);
+	--toastify-color-dark: var(--background);
 }
 
 .dark {
