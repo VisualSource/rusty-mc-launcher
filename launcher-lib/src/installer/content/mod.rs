@@ -412,16 +412,6 @@ pub async fn install_update(
 
             {
                 let wdb = db.write().await;
-
-                sqlx::query!(
-                    "UPDATE profiles SET loader = ?, loader_version = ? WHERE id = ?;",
-                    profile_id,
-                    pack_info.loader,
-                    pack_info.loader_version
-                )
-                .execute(&wdb.0)
-                .await?;
-
                 sqlx::query!("DELETE FROM profile_content WHERE profile = ?;", profile_id)
                     .execute(&wdb.0)
                     .await?;
