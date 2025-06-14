@@ -37,7 +37,6 @@ import { ProfileVersionSelector } from "@/components/library/content/profile/Pro
 import CategorySelect from "@/components/library/content/profile/CategorySelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ContentType, QueueItem } from "@/lib/models/download_queue";
-import { getCategoriesFromProfile } from "@/lib/models/categories";
 import { TypographyH3 } from "@/components/ui/typography";
 import { CATEGORY_KEY, KEY_PROFILE } from "@/hooks/keys";
 import { query, sqlValue } from "@lib/api/plugins/query";
@@ -107,12 +106,7 @@ const onFormChange = debounce(async (og: Profile, profile: Profile) => {
 		}
 	}
 	await queryClient.invalidateQueries({ queryKey: [KEY_PROFILE, og.id] });
-	const cats = await getCategoriesFromProfile(og.id);
-	await Promise.allSettled(
-		cats.map((e) =>
-			queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY, e.category] }),
-		),
-	);
+	await queryClient.invalidateQueries({ queryKey: [CATEGORY_KEY] });
 }, 500);
 
 function ProfileEdit() {

@@ -9,7 +9,7 @@ export function parseJVMArgs(value: string | undefined | null) {
 	if (xmxIndex !== -1) {
 		const arg = splitedArgs.splice(xmxIndex, 1).at(0);
 		if (arg) {
-			const target = arg.match(/-Xmx(?<value>\d+)(?<size>[KMGkmg])/g);
+			const target = arg.match(/-Xmx(?<value>\d+)(?<size>[KMGkmg])/);
 			if (target?.groups) {
 				memory = Number.parseInt(target.groups.value);
 			}
