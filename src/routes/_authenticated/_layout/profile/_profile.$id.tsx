@@ -6,6 +6,8 @@ import {
 } from "@tanstack/react-router";
 import { AlertTriangle, Box, Images, Package, Settings } from "lucide-react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { formatRelative } from "date-fns/formatRelative";
+import { memo } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -15,8 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import PlayButton from "@/components/ui/play";
 import { KEY_PROFILE } from "@/hooks/keys";
-import { formatRelative } from "date-fns/formatRelative";
-import { memo } from "react";
 
 export const profileQueryOptions = (id: string) =>
 	queryOptions({

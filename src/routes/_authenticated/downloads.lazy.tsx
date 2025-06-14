@@ -71,7 +71,7 @@ function Download() {
 				) : null}
 
 				<DownloadSection label="Postponed" group={QueueItemState.POSTPONED} />
-				<DownloadSection label="Completed" group={QueueItemState.COMPLETED} />
+				<DownloadSection label="Completed" orderBy="completed" group={QueueItemState.COMPLETED} />
 				<DownloadSection
 					label="Errored"
 					group={QueueItemState.ERRORED}

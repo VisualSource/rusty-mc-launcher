@@ -26,12 +26,13 @@ export function useCurrentQueue() {
 
 export function useQueue(
 	queue: keyof typeof QueueItemState,
+	orderBy: "priority" | "completed" | "created" = "priority",
 	order: "ASC" | "DESC" = "DESC",
 ) {
 	return useQuery({
-		queryKey: [KEY_DOWNLOAD_QUEUE, queue],
+		queryKey: [KEY_DOWNLOAD_QUEUE, queue, order],
 		queryFn: () =>
-			query`SELECT * FROM download_queue WHERE state = ${queue} AND display = TRUE ORDER BY priority ${sqlValue(order)};`
+			query`SELECT * FROM download_queue WHERE state = ${queue} AND display = TRUE ORDER BY ${sqlValue(orderBy)} ${sqlValue(order)};`
 				.as(QueueItem)
 				.all(),
 	});

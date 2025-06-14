@@ -10,9 +10,10 @@ import { Button } from "../ui/button";
 export const DownloadSection: React.FC<{
 	label: string;
 	order?: "ASC" | "DESC";
+	orderBy?: "priority" | "completed" | "created",
 	group: keyof typeof QueueItemState;
-}> = ({ group, order, label }) => {
-	const queue = useQueue(group, order);
+}> = ({ group, order, orderBy, label }) => {
+	const queue = useQueue(group, orderBy, order);
 
 	if (queue.isError) return null;
 	if (queue.isLoading) return null;
