@@ -2,7 +2,7 @@
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "Rusty Minecraft Launcher",
 	"identifier": "us.visualsource.rmcl",
-	"version": "0.10.0",
+	"version": "0.10.1",
 	"build": {
 		"beforeBuildCommand": "pnpm build",
 		"beforeDevCommand": "pnpm dev",
@@ -32,8 +32,7 @@
 		"resources": [
 			"./migrations/*"
 		],
-		"shortDescription": "Game Launcher",
-		"createUpdaterArtifacts": "v1Compatible"
+		"shortDescription": "Game Launcher"
 	},
 	"plugins": {
 		"deep-link": {
@@ -55,7 +54,7 @@
 		"windows": [
 			{
 				"shadow": false,
-				"userAgent": "VisualSource/rusty-mc-launcher/0.9.x Linux",
+				"userAgent": "VisualSource/rusty-mc-launcher/0.10.x Windows",
 				"fullscreen": false,
 				"focus": true,
 				"height": 630,

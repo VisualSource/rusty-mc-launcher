@@ -1,4 +1,18 @@
 # v0.10.0
+**Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.10.0...v0.10.1](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.10.1...v0.10.1)
+
+### Changes
+ - Order completed queue items by date.
+
+### Fixes
+ - fix render bug in profile edit.
+ - Fix bug [#34](https://github.com/VisualSource/rusty-mc-launcher/issues/34). profile fav list buttons not alighing correctly.
+ - Fix bug [#33](https://github.com/VisualSource/rusty-mc-launcher/issues/33). Taost background not match theme.
+ - Fix bug [#32](https://github.com/VisualSource/rusty-mc-launcher/issues/32). Modrinth modpack updater not setting profile loader version
+ - Fix bug [#30](https://github.com/VisualSource/rusty-mc-launcher/issues/31). toast exiting too soon for new profiles.
+ - Fix bug [#30](https://github.com/VisualSource/rusty-mc-launcher/issues/30). memory slider not displaying correctly
+
+# v0.10.0
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.11...v0.10.0](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.11...v0.10.0)
 
 ### New 
@@ -29,25 +43,25 @@
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.10...v0.9.11)
 
 ### Fixes
-    - Fix bug report
+- Fix bug report
 
 # v0.9.10
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.9...v0.9.10](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.9...v0.9.10)
 
 ### Changes
-    - New Bug reporting system.
+- New Bug reporting system.
 
 ### Fixes
-    - Fixed bug #27
-    - Fixed profile names being displayed incorrectly.
-    - Removed a console.log
-    - Fixed a few type errors.
+- Fixed bug #27
+- Fixed profile names being displayed incorrectly.
+- Removed a console.log
+- Fixed a few type errors.
 
 # v0.9.9
 **Full Changelog**: [https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.8...v0.9.9](https://github.com/VisualSource/rusty-mc-launcher/compare/v0.9.8...v0.9.9)
 
 ### Changes
-    - Changed how themes are defined.
+- Changed how themes are defined.
 
 
 # v0.9.8
