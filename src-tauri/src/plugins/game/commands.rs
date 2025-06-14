@@ -34,6 +34,10 @@ pub async fn launch_game<R: Runtime>(
 
     match rx.await {
         Ok(result) => {
+            if result.as_str() == "process::exited" {
+                return Err(Error::Reason("Process was stopped".to_string()));
+            }
+
             if result.as_str() == "error::timeout" {
                 if let Err(err) = app.emit(
                     PROCESS_CRASH_EVENT,

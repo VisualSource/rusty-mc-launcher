@@ -2,7 +2,7 @@ use log::error;
 use std::{collections::HashMap, path::Path, time::Duration};
 use tokio::{
     process::{Child, Command},
-    task,
+    task::{self},
 };
 use uuid::Uuid;
 
@@ -28,6 +28,10 @@ impl Processes {
     pub fn remove(&mut self, uuid: &str) {
         if let Some(data) = self.state.remove(uuid) {
             self.ptu.remove(&data.profile_id);
+
+            if let Some(watcher) = data.startup_watcher {
+                watcher.cancel();
+            }
         }
     }
 
@@ -144,6 +148,8 @@ pub struct Process {
     pub profile_id: String,
     #[sqlx(skip)]
     pub child: InstanceType,
+    #[sqlx(skip)]
+    pub startup_watcher: Option<tokio_util::sync::CancellationToken>,
 }
 
 impl Process {
@@ -192,7 +198,11 @@ impl Process {
         // =====================
         // END: get-process-info
         // =====================
+
+        let cancellation_token = tokio_util::sync::CancellationToken::new();
+
         let log_file = game_directory.join("logs/latest.log");
+        let token = cancellation_token.clone();
         task::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_millis(250));
             let watched = pid;
@@ -205,19 +215,28 @@ impl Process {
             'watcher: loop {
                 interval.tick().await;
 
+                if token.is_cancelled() {
+                    if let Err(err) = on_ready.send("process::exited".to_string()) {
+                        log::error!("Failed to send on ready. {}", err);
+                    }
+                    break;
+                }
+
                 tick_count += 1;
 
                 if !log_file_ready {
-                    match get_modified_time(&log_file, &now) {
-                        Ok(ready) => {
-                            log_file_ready = ready;
-                        }
-                        Err(err) => {
-                            error!("{}", err);
-                            if let Err(err) = on_ready.send("error::io".to_string()) {
-                                log::error!("Failed to send on ready. {}", err);
+                    if log_file.exists() {
+                        match get_modified_time(&log_file, &now) {
+                            Ok(ready) => {
+                                log_file_ready = ready;
                             }
-                            break 'watcher;
+                            Err(err) => {
+                                error!("{}", err);
+                                if let Err(err) = on_ready.send("error::io".to_string()) {
+                                    log::error!("Failed to send on ready. {}", err);
+                                }
+                                break 'watcher;
+                            }
                         }
                     }
                 } else {
@@ -270,6 +289,7 @@ impl Process {
             exe: exe_path,
             profile_id,
             child,
+            startup_watcher: Some(cancellation_token),
         })
     }
     pub async fn status(&mut self) -> Result<Option<i32>> {
@@ -298,6 +318,10 @@ impl Process {
         }
     }
     pub async fn kill(&mut self) -> Result<()> {
+        if let Some(watcher) = &self.startup_watcher {
+            watcher.cancel();
+        }
+
         match &mut self.child {
             InstanceType::Unknown => Err(Error::Generic("No active instance".to_string())),
             InstanceType::Full(child) => Ok(child.kill().await?),
