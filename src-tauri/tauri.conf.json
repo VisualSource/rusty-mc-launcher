@@ -32,7 +32,8 @@
 		"resources": [
 			"./migrations/*"
 		],
-		"shortDescription": "Game Launcher"
+		"shortDescription": "Game Launcher",
+		"createUpdaterArtifacts": true
 	},
 	"plugins": {
 		"deep-link": {

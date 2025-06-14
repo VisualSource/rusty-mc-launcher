@@ -3,6 +3,9 @@
 
 ### Changes
  - Order completed queue items by date.
+ - Drop support for v1Compatible updater artifacts.
+ - update launcher user agent.
+ - update launcher lib version to 0.12.1.
 
 ### Fixes
  - fix render bug in profile edit.
