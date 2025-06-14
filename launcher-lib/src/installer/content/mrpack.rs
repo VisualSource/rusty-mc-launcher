@@ -81,8 +81,8 @@ pub struct PackData {
     version_id: String,
     icon: Option<String>,
     minecraft: String,
-    loader: Loader,
-    loader_version: Option<String>,
+    pub loader: Loader,
+    pub loader_version: Option<String>,
     files: Vec<PackFile>,
 }
 
