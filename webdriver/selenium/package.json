@@ -1,0 +1,20 @@
+{
+  "name": "selenium",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.0",
+  "dependencies": {
+    "selenium-webdriver": "^4.33.0",
+    "vitest": "^3.2.3"
+  },
+  "devDependencies": {
+    "@types/selenium-webdriver": "^4.1.28"
+  }
+}

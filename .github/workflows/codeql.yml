@@ -1,12 +1,7 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
-  schedule:
-    - cron: "3 23 * * 1"
+  workflow_dispatch
 
 jobs:
   analyze:
@@ -20,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ javascript ]
+        language: [ typescript ]
 
     steps:
       - name: Checkout

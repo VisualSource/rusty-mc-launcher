@@ -1,11 +1,11 @@
 # Custom Theme Creation/Example
 
-1. Create a file in the `themes` directory at
+> If you want to tweak the values for the theme check out [Tweakcn](https://tweakcn.com/editor/theme)
 
-Windows `%appdata%/us.visualsource.rmcl/themes`
-
+1. Create a file in the `themes` directory at Windows `%appdata%/us.visualsource.rmcl/themes`
 1. Give it the name of your theme. For example `blue.css`
-2. Insert the follow contents into that file. 
+1. Insert the follow contents into that file. 
+
 ```css
 .config {
   --name: REPLACE_WITH_THEME_NAME
@@ -109,5 +109,3 @@ Windows `%appdata%/us.visualsource.rmcl/themes`
 3. Replace `REPLACE_WITH_THEME_NAME` with the name of your theme.
 4. Replace `REPLACE_WITH_THEME_ID` with a id, its recommened to use a uuid/guid.
 4. Go to Settings -> System -> Apperance then click `Reload Themes` or restart launcher.
-
-> If you want to tweak the values for the theme check out [Tweakcn](https://tweakcn.com/editor/theme)
