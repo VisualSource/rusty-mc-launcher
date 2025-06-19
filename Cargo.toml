@@ -1,0 +1,15 @@
+[workspace]
+resolver = "3"
+members = [
+   "packages/app" 
+]
+
+[workspace.package]
+edition = "2024"
+
+[workspace.dependencies]
+
+[profile.release]
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3

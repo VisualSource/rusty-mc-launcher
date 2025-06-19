@@ -1,0 +1,4 @@
+packages:
+  - 'packages/frontend'
+  - 'packages/e2e'
+  - 'packages/extension'
