@@ -2,18 +2,17 @@
 name = "app"
 version = "0.9.0"
 description = "Minecraft Launcher and mod installer"
-authors = ["Collin Blosser"]
-license = "MIT"
-repository = "https://github.com/VisualSource/rusty-mc-launcher"
 default-run = "app"
-edition = "2024"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 [build-dependencies]
 tauri-build = { version = "2.2.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.5.1", features = ["protocol-asset"] }
+tauri = { workspace = true, features = ["protocol-asset"] }
 tauri-plugin-http = {version ="2.4.4", features = ["multipart", "blocking", "json"] }
 tauri-plugin-single-instance = { version ="2.2.4", features = ["deep-link"] }
 tauri-plugin-deep-link = "2.3.0"
@@ -24,25 +23,20 @@ tauri-plugin-shell = "2.2.1"
 tauri-plugin-log = "2.4.0"
 tauri-plugin-fs = "2.3.0"
 
-minecraft-launcher-lib = { path = "../launcher-lib"  }
+launcher-core = { path ="../launcher-core"  }
 openidconnect = { version = "4.0.0", default-features = false}
-tokio = { version = "1.44.0", features = ["sync"] }
-serde = { version = "1.0", features = ["derive"] }
-tokio-util = "0.7.15"
-serde_json = "1.0"
-thiserror = "2.0.12"
+tokio = { workspace = true, features = ["sync"] }
+serde = {  workspace = true, features = ["derive"] }
+tokio-util = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
 copy_dir = "0.1.3"
-time = "0.3.39"
-log = "0.4.27"
+time = { workspace = true }
+log = { workspace = true }
 winreg = "0.55.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2.7.1"
 
-[profile.release]
-strip = true  # Remove debug symbols
-opt-level = "s"  # Optimize for binary size
-lto = true  # Enables link to optimizations
-codegen-units = 1 # Compile crates one after another so the compiler can optimize better
 
 

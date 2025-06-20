@@ -1,0 +1,23 @@
+[package]
+name = "launcher-content"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+launcher-core = { path = "../launcher-core" }
+log = { workspace = true }
+thiserror = { workspace = true }
+tokio-util = { workspace = true }
+tokio = { workspace = true, features = [ "test-util", "macros", "fs", "process","sync"] }
+serde = {  workspace = true, features = ["derive"] }
+time = { workspace = true, features = ["serde"]}
+async_zip = { version = "0.0.17", features = ["tokio","tokio-fs","deflate"] }
+lazy_static = "1.5.0"
+sha1 = "0.10.6"
+sanitize-filename = "0.6.0"
+normalize-path = "0.2.1"
+futures = "0.3.31"
+reqwest = { version = "0.12.15", features = ["json"] }

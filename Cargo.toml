@@ -1,15 +1,30 @@
 [workspace]
 resolver = "3"
 members = [
-   "packages/app" 
-]
+   "packages/app", "packages/launcher-content","packages/launcher-core"
+, "packages/launcher-installer"]
 
 [workspace.package]
 edition = "2024"
+license = "MIT"
+authors = ["Collin Blosser"]
+repository = "https://github.com/VisualSource/rusty-mc-launcher"
 
 [workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2.5.1", default-features = false }
+tokio = { version = "1.44.0", features = ["sync"]}
+tokio-util = "0.7.15"
+thiserror = "2.0.12"
+log = "0.4.27"
+time = "0.3.39"
 
 [profile.release]
+strip = true  # Remove debug symbols
+opt-level = "s"  # Optimize for binary size
+lto = true  # Enables link to optimizations
+codegen-units = 1 # Compile crates one after another so the compiler can optimize better
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3
