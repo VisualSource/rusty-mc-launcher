@@ -1,38 +1,39 @@
 [package]
-name = "minecraft-launcher-lib"
+name = "launcher-core"
 version = "0.12.1"
 
-edition.workspace = true 
-repository.workspace = true 
-authors.workspace = true
+edition.workspace = true
 license.workspace = true
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors.workspace = true
+repository.workspace = true
 
 [dependencies]
-sqlx = { version = "0.8.6", features = ["runtime-tokio", "sqlite", "macros","time", "migrate"]}
-tokio = { workspace = true, features = [ "test-util", "macros", "fs", "process","sync"] }
-async_zip = { version = "0.0.17", features = ["tokio","tokio-fs","deflate"] }
-tauri = { workspace = true, default-features = false }
-uuid = { version= "1.17.0", features = ["v4","serde"]}
-os_info = { version = "3", default-features = false }
-reqwest = { version = "0.12.15", features = ["json"] }
+#sqlx = { version = "0.8.6", features = ["runtime-tokio", "sqlite", "macros","time", "migrate"]}
+tokio = { workspace = true, features = ["fs"] }
+#async_zip = { version = "0.0.17", features = ["tokio","tokio-fs","deflate"] }
+#tauri = { workspace = true, default-features = false }
+#uuid = { version= "1.17.0", features = ["v4","serde"]}
+#os_info = { version = "3", default-features = false }
+#reqwest = { version = "0.12.15", features = ["json"] }
 serde = {  workspace = true, features = ["derive"] }
-indexmap = { version = "2.9.0", features = ["serde"] }
-time = { workspace = true, features = ["serde"]}
-lenient_semver = "0.4.2"
-sanitize-filename = "0.6.0"
-normalize-path = "0.2.1"
-lazy_static = "1.5.0"
-tokio-util = { workspace = true }
-urlencoding = "2.1.3"
-lazy-regex = "3.4.1"
 serde_json = { workspace = true }
-futures = "0.3.31"
-sysinfo = "0.35.2"
+indexmap = { workspace = true, features = ["serde"] }
+os_info = { workspace = true,default-features = false }
+#indexmap = { version = "2.9.0", features = ["serde"] }
+#time = { workspace = true, features = ["serde"]}
+lenient_semver = "0.4.2"
+#sanitize-filename = "0.6.0"
+normalize-path = { workspace = true }
+#lazy_static = "1.5.0"
+#tokio-util = { workspace = true }
+#urlencoding = "2.1.3"
+lazy-regex = "3.4.1"
+#serde_json = { workspace = true }
+#futures = "0.3.31"
+#sysinfo = "0.35.2"
 thiserror = { workspace = true }
-regex = "1.11.1"
-sha1 = "0.10.6"
+#sha1 = "0.10.6"
 log = { workspace = true }
-hex = "0.4.3"
+#hex = "0.4.3"
 [dev-dependencies]
 env_logger = "0.11"

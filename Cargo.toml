@@ -1,8 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
-   "packages/app", "packages/launcher-content","packages/launcher-core"
-, "packages/launcher-installer"]
+   "packages/app", "packages/launcher-content","packages/launcher-core", "packages/launcher-process", "packages/plugin-query"]
 
 [workspace.package]
 edition = "2024"
@@ -10,15 +9,24 @@ license = "MIT"
 authors = ["Collin Blosser"]
 repository = "https://github.com/VisualSource/rusty-mc-launcher"
 
+[workspace.dev-dependencies]
+
+
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+indexmap = { version = "2.9.0", features = ["serde"] }
 tauri = { version = "2.5.1", default-features = false }
 tokio = { version = "1.44.0", features = ["sync"]}
 tokio-util = "0.7.15"
 thiserror = "2.0.12"
 log = "0.4.27"
 time = "0.3.39"
+normalize-path = "0.2.1"
+regex = "1.11.1"
+os_info = { version = "3", default-features = false }
+# dev dependencies
+env_logger = "0.11"
 
 [profile.release]
 strip = true  # Remove debug symbols
