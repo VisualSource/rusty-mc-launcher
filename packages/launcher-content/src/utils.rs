@@ -1,11 +1,11 @@
+use crate::download::sha::Sha;
+use crate::error::{Error, Result};
 use log::{debug, warn};
 use sha1::{Digest, Sha1};
 use std::path::Path;
 use std::time::Duration;
 use tokio::fs::{File, create_dir_all};
 use tokio::io::AsyncWriteExt;
-
-use crate::error::{Error, Result};
 
 lazy_static::lazy_static! {
     pub static ref REQUEST_CLIENT: reqwest::Client = {
@@ -46,7 +46,7 @@ pub async fn download_file(
     source_url: &str,
     output_directory: &Path,
     auth: Option<&str>,
-    sha1: Option<&str>,
+    sha1: Option<Sha>,
 ) -> Result<()> {
     if let Some(parent) = output_directory.parent() {
         if !parent.exists() {

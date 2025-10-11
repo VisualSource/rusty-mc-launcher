@@ -15,7 +15,7 @@ use library::Library;
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use structs::File;
+use structs::{Downloads, File, JavaVersion, Logging};
 
 /// The minecraft manifest file
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -130,38 +130,6 @@ impl Manifest {
         Ok(classpath.join(Library::PATH_SEPEARTOR))
     }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Downloads {
-    pub client: File,
-    pub server: File,
-    pub server_mappings: Option<File>,
-    pub client_mappings: Option<File>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct JavaVersion {
-    pub component: String,
-    pub major_version: usize,
-}
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Logging {
-    pub client: Option<LoggingClient>,
-}
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LoggingClient {
-    pub argument: String,
-    pub file: File,
-    #[serde(rename = "type")]
-    pub type_field: String,
-}
-
 #[cfg(test)]
 mod tests {
     use crate::manifest::Manifest;

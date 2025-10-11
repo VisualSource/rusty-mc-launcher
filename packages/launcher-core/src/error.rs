@@ -14,4 +14,7 @@ pub enum Error {
 
     #[error("{0}")]
     Semver(String),
+
+    #[error("{0}")]
+    Sha(String),
 }

@@ -2,32 +2,6 @@ use crate::manifest::rule::Rule;
 use lazy_regex::regex_replace_all;
 use serde::{Deserialize, Serialize};
 
-/*const REPLACEMENT_KEYS: [&str; 23] = [
-    "user_type",
-    "clientid",
-    "assets_root",
-    "game_directory",
-    "natives_directory",
-    "assets_index_name",
-    "version_type",
-    "classpath",
-    "version_name",
-    "auth_xuid",
-    "auth_uuid",
-    "auth_access_token",
-    "auth_player_name",
-    "library_directory",
-    "classpath_separator",
-    "quickPlayRealms",
-    "quickPlayMultiplayer",
-    "quickPlaySingleplayer",
-    "quickPlayPath",
-    "launcher_name",
-    "launcher_version",
-    "resolution_width",
-    "resolution_height",
-];*/
-
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Arguments {
     #[serde(default)]

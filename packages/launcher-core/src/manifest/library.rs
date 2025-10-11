@@ -1,6 +1,7 @@
 use crate::manifest::maven::MavenRepository;
 use crate::manifest::rule::Rule;
 use crate::manifest::structs::File;
+use crate::sha::Sha1;
 use indexmap::IndexMap;
 use normalize_path::NormalizePath;
 use serde::{Deserialize, Serialize};
@@ -12,7 +13,8 @@ pub struct Library {
     #[serde(with = "MavenRepository")]
     pub name: MavenRepository,
     pub url: Option<String>,
-    pub sha1: Option<String>,
+
+    pub sha1: Option<Sha1>,
     pub natives: Option<IndexMap<String, String>>,
     pub extract: Option<Extract>,
     #[serde(default)]
@@ -28,6 +30,7 @@ impl Library {
     pub const PATH_SEPEARTOR: &'static str = ":";
 
     /// creates a absulote path given a root
+    /// if is a valid library for the given os
     pub fn get_absolute_path(&self, root: &std::path::Path) -> Option<String> {
         let include = if let Some(rules) = &self.rules {
             Rule::parse_list(rules, |_key, _value| false)
